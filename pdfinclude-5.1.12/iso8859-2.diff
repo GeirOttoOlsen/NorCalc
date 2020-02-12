@@ -1,0 +1,25 @@
+Aogonek breve Lslash currency Lcaron Sacute section dieresis Scaron Scedilla Tcaron Zacute hyphen Zcaron Zdotaccent degree aogonek ogonek lslash acute lcaron sacute caron cedilla scaron scedilla tcaron zacute hungarumlaut zcaron zdotaccent Racute Aacute Acircumflex Abreve Adieresis Lacute Cacute Ccedilla Ccaron Eacute Eogonek Edieresis Ecaron Iacute Icircumflex Dcaron Dcroat Nacute Ncaron Oacute Ocircumflex Ohungarumlaut Odieresis multiply Rcaron Uring Uacute Uhungarumlaut Udieresis Yacute Tcommaaccent germandbls racute aacute acircumflex abreve adieresis lacute cacute ccedilla ccaron eacute eogonek edieresis ecaron iacute icircumflex dcaron dcroat nacute ncaron oacute ocircumflex ohungarumlaut odieresis divide rcaron uring uacute uhungarumlaut udieresis yacute tcommaaccent dotaccent
+161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255
+ref
+A ^ L ¤ L S § ¨ S S T Z - Z Z ° a , l ` l s ^ , s s t z ¨ z z R A A A A L C C C E E E E I I D D N N O O O O x R U U U U Y T B r a a a a l c c c e e e e i i d d n n o o o o _ r u u u u y t .
+
+
+
+The lines above represent:
+
+1. the postscript name of the glyph
+
+2. the character code in the iso8859-2 codepage
+
+3. the type of the following lines.
+   a. When it is "width" (e.g. 1251.diff), there must be 8 lines following.
+      They represent the width of the characters in the fonts:
+      Times-Roman,Times-Bold,Times-Italic,Times-BoldItalic,Helvetica,Helvetica-Bold,Helvetica-Oblique,Helvetica-BoldOblique
+      which are the variable length fonts present in the pdf base fonts.
+   b. when it is "ref" (e.g. iso8859-2.diff), there must be one line following.
+      This line represent the "reference" character to be taken for the character's width.
+
+   The "ref" type is more suitable for latin languages, where the modifications to the letters are accents and the like.
+   The "width" type is more suitable for languages with completely different characters, like Cyrillic.
+
+All the lines below the last meaningful one are ignored.

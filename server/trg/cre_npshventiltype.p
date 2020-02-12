@@ -1,0 +1,2 @@
+TRIGGER PROCEDURE FOR CREATE OF NPSHVentiltype.
+  NPSHVentiltype.Id = NEXT-VALUE(seqNPSHVentiltypeId).

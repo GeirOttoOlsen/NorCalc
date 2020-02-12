@@ -1,0 +1,109 @@
+%PDF-1.4
+%הדֿׂ
+1 0 obj
+<<
+/Author ()
+/CreationDate (D:20120809101545+01'00)
+/Producer ()
+/Creator ()
+/Subject ()
+/Title ()
+/Keywords ()
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+6 0 obj
+<<
+/Font <<  /BF1 5 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject <<  >>
+>>
+endobj
+7 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 6 0 R
+/Contents 8 0 R
+/Rotate 0
+/MediaBox[0 0 612 792]
+>>
+endobj
+8 0 obj
+<<
+/Length 9 0 R
+>>
+stream
+BT
+1 0 0 1 10 742 Tm
+/BF1 10 Tf
+(Hello World! ) Tj
+2 0 0 6 88 742 Tm
+(Hello World! ) Tj
+1 0 0 1.00002 244 742 Tm
+(Hello World! ) Tj
+1 0 .2679545514 1.00002 322 742 Tm
+(Hello World! ) Tj
+1 -.5773502692 .5773618162 1.00002 400 742 Tm
+(Hello World! ) Tj
+1.3333333333 .3572655899 .3572727352 1.33336 478 742 Tm
+(Hello World! ) Tj
+ET
+endstream
+endobj
+9 0 obj
+329
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 
+7 0 R 
+]
+>>
+endobj
+xref
+0 10
+0000000000 65535 f
+0000000017 00000 n
+0000000987 00000 n
+0000001114 00000 n
+0000000160 00000 n
+0000000234 00000 n
+0000000338 00000 n
+0000000454 00000 n
+0000000577 00000 n
+0000000965 00000 n
+trailer
+<<
+/Size 10
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+1184
+%%EOF

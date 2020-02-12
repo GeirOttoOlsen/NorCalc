@@ -1,0 +1,16 @@
+Table 5–1: Predefined Report Engine parameters (1 of 2)
+Parameter name Contents Data type
+
+RB-REPORT-LIBRARY 	Report library name. CHARACTER
+RB-REPORT-NAME 		Report name. CHARACTER
+RB-DB-CONNECTION 	Database connection overridestring. CHARACTER
+RB-INCLUDE-RECORDS 	Filter flag. CHARACTER
+RB-FILTER 		Filter expression. CHARACTER
+RB-MEMO-FILE 		Memo filename. CHARACTER
+RB-PRINT-DESTINATION 	Print destination. CHARACTER
+RB-PRINTER-NAME 	Printer name. CHARACTER
+RB-PRINTER-PORT 	Printer port. CHARACTER
+RB-OUTPUT-FILE 		Output filename. CHARACTER
+RB-NUMBER-COPIES 	Number of copies. INTEGER
+RB-BEGIN-PAGE 		Beginning page number. INTEGER
+RB-END-PAGE 		Ending page number. INTEGER

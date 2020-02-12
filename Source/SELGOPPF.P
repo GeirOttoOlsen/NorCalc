@@ -1,0 +1,148 @@
+/* Procedyre for utskrift av oppf. lister for  - selger/uke - ALLE PRODUKTER*/
+
+    DEFINE VAR fomUkeParam AS INTEGER INITIAL 0.
+    DEFINE VAR tomUkeParam AS INTEGER INITIAL 0.
+    DEFINE VAR maanedParam AS INTEGER INITIAL 0.
+    DEFINE VAR aarParam AS INTEGER.
+    DEFINE VAR selgerParam AS CHAR INITIAL "True".
+    DEFINE VAR filterUttrykk AS CHAR INITIAL "".
+    
+    aarParam = YEAR(TODAY).
+    RUN SHOPFPRM.W PERSISTENT (INPUT-OUTPUT fomUkeParam,  INPUT-OUTPUT tomUkeParam, 
+                INPUT-OUTPUT  maanedParam, INPUT-OUTPUT selgerParam, INPUT-OUTPUT aarParam).
+
+    /* Hvis ukeParam = -1, er cancel trykket */
+    IF fomUkeParam = -1 THEN
+        RETURN.
+        
+    /* Bygg opp SQL  for AGGREGATER */
+    filterUttrykk = "NPAGANLG.aktivt = TRUE ".
+    IF fomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  < current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPAGTOPP.neste_oppf_uke >= " + string(fomUkeParam) + " ".
+
+    IF tomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  > current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPAGTOPP.neste_oppf_uke <= " + string(tomUkeParam) + " ".
+
+    IF aarParam > 0 THEN
+        filterUttrykk = filterUttrykk + " AND NPAGTOPP.neste_oppf_aar = " + string(aarParam) + " ".
+    IF selgerParam = ? THEN
+        filterUttrykk = filterUttrykk + " AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt' ".
+    ELSE
+        filterUttrykk = filterUttrykk + "AND  NPAGANLG.selger = ' " + selgerParam + " '
+                        AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt' ".
+                        
+/* MESSAGE filterUttrykk VIEW-AS ALERT-BOX TITLE 'Filteruttrykk agg'.*/
+                        
+    /* SKRIV UT FOR AGGREGATER */
+    RUN aderb/_printrb.p
+                    ("report\noragg.prl",
+                    "Aggregat - oppf - uke selger",
+                    JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+                    "O", 
+                    filterUttrykk,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    no,
+                    "Aggregatttilbud - oppfølging for uke",
+                    yes,
+                    yes,
+                    no,
+                    "").        
+
+    /* Bygg opp SQL  for SHUNTER */
+    filterUttrykk = "NPSHANLG.aktivt = TRUE ".
+    IF fomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  < current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPSHTOPP.neste_oppf_uke >= " + string(fomUkeParam) + " ".
+
+    IF tomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  > current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPSHTOPP.neste_oppf_uke <= " + string(tomUkeParam) + " ".
+
+    IF aarParam > 0 THEN
+        filterUttrykk = filterUttrykk + " AND NPSHTOPP.neste_oppf_aar = " + string(aarParam) + " ". 
+    IF selgerParam = ? THEN
+        filterUttrykk = filterUttrykk + " AND NOT NPSHTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPSHTOPP.oppf_status BEGINS 'Tapt' ".
+    ELSE
+        filterUttrykk = filterUttrykk + "AND  NPSHANLG.selger = ' " + selgerParam + " '
+                        AND NOT NPSHTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPSHTOPP.oppf_status BEGINS 'Tapt' ".
+
+/* MESSAGE filterUttrykk VIEW-AS ALERT-BOX TITLE 'Filteruttrykk shunt'.*/ 
+
+    /* SKRIV UT FOR SHUNTER */
+    RUN aderb/_printrb.p
+                    ("report\norshunt.prl",
+                    "Shunttilbud - oppf - uke selger",
+                    JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+                    "O", 
+                    filterUttrykk,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    no,
+                    "Shunttilbud - oppfølging for uke",
+                    yes,
+                    yes,
+                    no,
+                    "").        
+
+    /* Bygg opp SQL  for SPIROVENT */
+    filterUttrykk = "NPSPANLG.aktivt = TRUE ".
+    IF fomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  < current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPSPTOPP.neste_oppf_uke >= " + string(fomUkeParam) + " ".
+
+    IF tomUkeParam > 0 THEN 
+        /* Hvis denne er 0, skal den ikke tas med, da skal alle uker  > current uke skrives */
+        filterUttrykk = filterUttrykk +  " AND NPSPTOPP.neste_oppf_uke <= " + string(tomUkeParam) + " ".
+
+    IF aarParam > 0 THEN
+        filterUttrykk = filterUttrykk + " AND NPSPTOPP.neste_oppf_aar = " + string(aarParam) + " ".
+    IF selgerParam = ? THEN
+        filterUttrykk = filterUttrykk + " AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt' ".
+    ELSE
+        filterUttrykk = filterUttrykk + "AND  NPSPANLG.selger = ' " + selgerParam + " '
+                        AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE' 
+                        AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt' ".
+
+/* MESSAGE filterUttrykk VIEW-AS ALERT-BOX TITLE 'Filteruttrykk spiro'.*/
+
+    /* SKRIV UT FOR SPIRO */
+    RUN aderb/_printrb.p
+                    ("report\norvent.prl",
+                    "Spirovent - oppf - uke selger",
+                    JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+                    "O", 
+                    filterUttrykk,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    no,
+                    "Spiroventtilbud - oppfølging for uke",
+                    yes,
+                    yes,
+                    no,
+                    "").        

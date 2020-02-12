@@ -1,0 +1,30 @@
+De las lenguas siníticas, la más importante demográficamente es chino mandarín (850 millones de hablantes) llamado simplemente "chino", que es la variedad en la que se basa el chino estándar. Le siguen en importancia, el idioma wu (77 millones), el idioma min (70 millones) y el idioma cantonés (55 millones). El cantonés estándar es común e influyente en las comunidades cantonés-parlantes de ultramar, y permanece como una de las lenguas oficiales de Hong Kong (junto con el inglés) y de Macao (junto con el portugués). El min del sur, parte del grupo lingüístico min, es ampliamente hablado en el sur de Fujian, Taiwán y el Sureste Asiático.
+
+Una clasificación completa es la siguiente:
+
+* El habla del Norte o mandarín (<font=SIMYOU>北方話</font> / <font=SIMYOU>北方话</font>), 836 millones de hablantes.
+* El wú (<font=SIMYOU>吳語</font> / <font=SIMYOU>吴语</font>), 77 millones.
+* Los dialectos mǐn (<font=SIMYOU>閩語</font> / <font=SIMYOU>闽语</font>), 70 millones.
+* El cantonés o yuè (<font=SIMYOU>粵語</font> / <font=SIMYOU>粤语</font>), 55 millones.
+* El jin (<font=SIMYOU>晉語</font> / <font=SIMYOU>晋语</font>), 45 millones.
+* El Idioma xiang o hunanés (<font=SIMYOU>湘語</font> / <font=SIMYOU>湘语</font>), 36 millones.
+* El hakka o kèjiā (<font=SIMYOU>客家語</font> / <font=SIMYOU>客家语</font>), 34 millones.
+* El gàn (<font=SIMYOU>贛語</font> / <font=SIMYOU>赣语</font>), 31 millones.
+* El huī (<font=SIMYOU>徽語</font> / <font=SIMYOU>徽语</font>), 3,2 millones.
+* El pínghuà (<font=SIMYOU>平話</font> / <font=SIMYOU>平话</font>), 3.5 millones.
+
+Los verbos no varían según la persona, el número o el tiempo gramatical. El aspecto perfecto se marca con el clítico le (<font=SIMYOU>了</font>) pero la adjunción de ese clítico y otros no supone una auténtica conjugación verbal. Como puede verse en (1a) y (1b) el chino usualmente no marca el tiempo gramatical sobre el verbo sino dicha información está en los adverbios de tiempo ('ayer', 'hoy', 'mañana', etc). La marca de perfecto se aplica tanto al pasado (1a) como al futuro:
+
+(1a) Wŏ zuótiān xià le kè yĭhòu qù kàn diànyĭng
+
+    <font=SIMYOU>我昨天下了课以后去看电影</font>
+    yo ayer acabar PERF lección ir ver película
+    'Ayer, cuando acabó la clase, fui a ver una película'
+
+(1b) Wŏ míngtiān xià le kè yĭhòu qù kàn diànyĭng
+
+    <font=SIMYOU>我明天下了课以后去看电影</font>
+    yo mañana acabar PERF lección ir ver película
+    'Mañana, cuando acabe la clase, iré a ver una película'
+
+El chino posee además un verbo copulativo <u>shi (<font=SIMYOU>是</font>) "ser"</u> , que no cambia de forma con el tiempo verbal, la persona o el número. Esto último constituye una importante ventaja frente a otras lenguas en su aprendizaje, ya que uno puede formular muchas expresiones siempre que conozca cierto número de palabras y maneje algunas reglas gramaticales que son realmente muy simples.

@@ -1,0 +1,155 @@
+%PDF-1.4
+%הדֿׂ
+1 0 obj
+<<
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+6 0 obj
+<<
+/Font <<  /BF1 5 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject <<  >>
+>>
+endobj
+7 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 6 0 R
+/Rotate 0
+/MediaBox[0 0 595 842]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 9 0 R
+>>
+stream
+BT
+1 0 0 1 10 792 Tm
+/BF1 10 Tf
+(                        Ligne entete 1) Tj
+0 -10 TD
+(                        Ligne entete 2) Tj
+0 -10 TD
+(                        Ligne entete 3) Tj
+0 -10 TD
+(                        Ligne entete 4) Tj
+0 -10 TD
+(                        Ligne entete 5) Tj
+0 -60 TD
+(                    ligne 1) Tj
+0 -10 TD
+(                    ligne 2) Tj
+ET
+endstream
+endobj
+9 0 obj
+375
+endobj
+10 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 6 0 R
+/Rotate 0
+/MediaBox[0 0 595 842]
+/Contents 11 0 R
+>>
+endobj
+11 0 obj
+<<
+/Length 12 0 R
+>>
+stream
+BT
+1 0 0 1 10 792 Tm
+/BF1 10 Tf
+(                        Ligne entete 1) Tj
+0 -10 TD
+(                        Ligne entete 2) Tj
+0 -10 TD
+(                        Ligne entete 3) Tj
+0 -10 TD
+(                        Ligne entete 4) Tj
+0 -10 TD
+(                        Ligne entete 5) Tj
+0 -60 TD
+(                    ligne 3) Tj
+0 -10 TD
+(                    ligne 4) Tj
+0 -10 TD
+(                    ligne 5) Tj
+0 -10 TD
+(                    ligne 6) Tj
+0 -10 TD
+(                    ligne 7) Tj
+0 -10 TD
+(                    ligne 8) Tj
+0 -10 TD
+(                    ligne 9) Tj
+ET
+endstream
+endobj
+12 0 obj
+585
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 2
+/Kids [ 
+7 0 R 
+10 0 R 
+]
+>>
+endobj
+xref
+0 13
+0000000000 65535 f
+0000000017 00000 n
+0000001710 00000 n
+0000001837 00000 n
+0000000043 00000 n
+0000000117 00000 n
+0000000221 00000 n
+0000000337 00000 n
+0000000460 00000 n
+0000000894 00000 n
+0000000916 00000 n
+0000001041 00000 n
+0000001687 00000 n
+trailer
+<<
+/Size 13
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+1916
+%%EOF

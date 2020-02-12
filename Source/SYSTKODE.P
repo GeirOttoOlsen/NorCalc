@@ -1,0 +1,177 @@
+DEFINE SHARED VAR  anleggsnrParam LIKE NPSHANL.anleggsnr.
+DEFINE SHARED VAR  systemnrParam LIKE npshsyst.systemnr.
+DEFINE VAR c_kode AS CHAR.
+
+/* Fyll ut de felt som har data - resten med ?? */
+FIND NPSHSYST WHERE NPSHSYST.anleggsnr = anleggsnrParam 
+     and npshsyst.systemnr = systemnrparam
+    EXCLUSIVE-LOCK NO-ERROR NO-WAIT.
+
+IF LOCKED NPSHSYST THEN MESSAGE 'TABELLEN ER LÅST' VIEW-AS ALERT-BOX.
+IF AVAILABLE NPSHSYST THEN 
+DO:
+    /* Type */
+    IF  NPSHSYST.type <> "" THEN
+        c_kode = NPSHSYST.type.
+    ELSE
+        c_kode = '??'.
+    /* Dimm */
+    IF  NPSHSYST.shunt_dimmensjon <> "" THEN
+        c_kode = c_kode  + TRIM(NPSHSYST.shunt_dimmensjon).
+    ELSE
+        c_kode = c_kode + '??'.
+    /* Legg til automatikkfabrikat ved MS */
+    IF NPSHSYST.type = 'MS' THEN
+        c_kode = c_kode + '/' + NPSHSYST.ms_automatikk_fabrikat.   
+    /* KVS Hovedport (2-1)  og ventilkarakteristikk */
+    IF  NPSHSYST.kvs_hovedport > 0 THEN
+        DO:
+            c_kode = c_kode + '-Kvs' + STRING(NPSHSYST.kvs_hovedport).
+            c_kode = c_kode + ' ' + NPSHSYST.ventil_karakteristikk_hoved.
+        END.        
+    ELSE
+        c_kode = TRIM(c_kode) + '- Kvs' + '??-??'.
+    IF NPSHSYST.type = 'FM' THEN
+    DO:
+        /* KVS Shuntport (3-1) og ventilkarakteristikk */
+        IF  NPSHSYST.kvs_shuntport > 0 THEN
+            DO:
+                c_kode = c_kode + '/Kvs' + STRING(NPSHSYST.kvs_shuntport).
+                c_kode = c_kode + ' ' + NPSHSYST.ventil_karakteristikk_shunt.
+            END.        
+    END.
+/* Koblingsalternativ */
+c_kode = c_kode + '-' + STRING(NPSHSYST.koblings_alternativ).
+/* Beregnet anvendelse */
+CASE NPSHSYST.beregnet_anvendelse:
+    WHEN 'Varme' THEN
+        c_kode = c_kode + '-V'.
+    WHEN 'Lavtemperatur' THEN
+        c_kode = c_kode + '-L'.
+    WHEN 'Kjøle' THEN
+        c_kode = c_kode + '-K'.
+    WHEN 'Fryse' THEN
+        c_kode = c_kode + '-F'.
+    WHEN 'Varmegjenvinning' THEN
+        c_kode = c_kode + '-VG'.
+END CASE.
+/* Reguleringsmotor */
+IF NPSHSYST.tillegg_forstilling = 'Ingen' THEN
+    c_kode = c_kode + '-0'.
+ELSE
+    c_kode = c_kode + '-<' + NPSHSYST.tillegg_forstilling + '>'.
+
+/* Strupeventil type og dimmensjon */
+IF NPSHSYST.tillegg_strupe THEN
+    DO:
+      CASE NPSHSYST.koblings_alternativ:
+        WHEN '1' OR WHEN '7A' THEN
+            /* prim‘r og sekund‘r er like */
+            DO:
+                IF  NPSHSYST.strupe_dimmensjon_sek <> "" THEN
+                    c_kode = c_kode + '-' + NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_sek + '/' +  
+                        NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_sek.
+                ELSE
+                    c_kode = c_kode + '- 0/0'.
+            END.
+        WHEN '2' OR WHEN '3' OR WHEN '6' THEN
+            /* kun sekundærside */
+            DO:
+                IF  NPSHSYST.strupe_dimmensjon_sek <> "" THEN
+                    c_kode = c_kode + '-KUL' + NPSHSYST.strupe_dimmensjon_sek + '/' + NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_sek.
+                ELSE
+                    c_kode = c_kode + '-0/0'.
+            END.
+        WHEN '4' THEN
+            /* kun prim‘rside */
+            DO:
+                IF  NPSHSYST.strupe_dimmensjon_prim <> "" THEN
+                    c_kode = c_kode + '-' +  NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_prim + '/KUL' + NPSHSYST.strupe_dimmensjon_prim.
+                ELSE
+                    c_kode = c_kode + '-0/0'.
+            END.
+        WHEN '5' OR WHEN '7' THEN
+            /* både primærside or sekundærside */
+            DO:
+                IF  NPSHSYST.strupe_dimmensjon_prim <> "" THEN
+                    c_kode = c_kode + '- ' +  NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_prim + '/' +
+                        NPSHSYST.fabrikat + NPSHSYST.strupe_dimmensjon_sek.
+                ELSE
+                    c_kode = c_kode + '0/0'.
+            END.
+        END CASE.
+    END.
+ELSE
+    c_kode = c_kode + '-0/0'.
+
+    /* Stengeventil type og dimmensjon */
+    /* Koblingsalternativ uaktuelt - styres ved registrering av tillegg */
+    CASE NPSHSYST.koblings_alternativ:
+        WHEN '5' OR WHEN '7 '  THEN
+        DO:
+            IF NPSHSYST.tillegg_stengeventil_type_prim = 'Kule' THEN
+                DO:
+                    IF NPSHSYST.tillegg_kuleventil_prim THEN
+                      c_kode = c_kode + '-KUL' + NPSHSYST.strupe_dimmensjon_prim + '/'.
+                    ELSE
+                      c_kode = c_kode + '-0/'.            
+                END.
+            ELSE IF NPSHSYST.tillegg_stengeventil_type_prim = 'Spjeld' THEN
+                DO:
+                    IF NPSHSYST.tillegg_spjeldventil_prim THEN
+                      c_kode = c_kode + '-SPJ' + NPSHSYST.strupe_dimmensjon_prim + '/'.
+                    ELSE
+                      c_kode = c_kode + '-0/'.            
+                END.
+            IF NPSHSYST.tillegg_stengeventil_type_sek = 'Kule' THEN
+                DO:                
+                    IF NPSHSYST.tillegg_kuleventil_sek THEN
+                      c_kode = c_kode + 'KUL' + NPSHSYST.strupe_dimmensjon_sek.
+                    ELSE
+                      c_kode = c_kode + '0'.
+               END.
+            ELSE IF NPSHSYST.tillegg_stengeventil_type_sek = 'Spjeld' THEN
+                DO:
+                    IF NPSHSYST.tillegg_spjeldventil_sek THEN
+                      c_kode = c_kode + '-SPJ' + NPSHSYST.strupe_dimmensjon_sek.
+                    ELSE
+                      c_kode = c_kode + '0'.            
+               END.
+        END.
+    OTHERWISE
+        DO:
+           IF NPSHSYST.tillegg_kuleventil_sek THEN
+             c_kode = c_kode + '-KUL' + NPSHSYST.strupe_dimmensjon_prim + '/' +  
+              'KUL' + NPSHSYST.strupe_dimmensjon_sek.
+           ELSE IF NPSHSYST.tillegg_spjeldventil_sek THEN
+              c_kode = c_kode + '-SPJ' + NPSHSYST.strupe_dimmensjon_prim + '/' +  
+               'SPJ' + NPSHSYST.strupe_dimmensjon_sek.
+           ELSE
+              c_kode = c_kode + '-0/0'.
+        END.
+    END CASE.
+        
+    /* Pumpe */
+    IF  NPSHSYST.tillegg_pumpe_fabrikat = "Ingen" THEN
+        c_kode = c_kode + '-0'.
+    ELSE
+        c_kode = c_kode + '-P'.
+     
+    /* Montasje */
+    IF  NPSHSYST.tillegg_montasje <> "" THEN
+        c_kode = c_kode + '-' + SUBSTRING(NPSHSYST.tillegg_montasje, 1, 1).
+    ELSE
+        c_kode = c_kode + '- ??'.
+ 
+  /*  Kapsling */
+  IF  NPSHSYST.tillegg_kapsling <> "Kapsling, Ingen" THEN
+    c_kode = c_kode + '-' + SUBSTRING(NPSHSYST.tillegg_kapsling, 10, 11).
+
+  ASSIGN NPSHSYST.system_kode = c_kode.
+END.
+ELSE    /* Systemtabell løst */
+  DO:
+    MESSAGE 'Tabellen for shuntsystem med anleggsnr ' anleggsnrParam ' er låst. Kunne ikke oppdatere koden.' 
+        VIEW-AS ALERT-BOX TITLE 'Oppdateringsfeil'.
+    RETURN.
+  END.

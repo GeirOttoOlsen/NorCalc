@@ -1,0 +1,155 @@
+%PDF-1.4
+%הדֿׂ
+1 0 obj
+<<
+/Author ()
+/CreationDate (D:20120806185349+01'00)
+/Producer ()
+/Creator ()
+/Subject ()
+/Title ()
+/Keywords ()
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF5
+/Encoding 4 0 R
+/BaseFont /Helvetica
+>>
+endobj
+10 0 obj<</BaseFont/Courier/Encoding<</BaseEncoding/WinAnsiEncoding/Type/Encoding>>/Name/BF1/Subtype/Type1/Type/Font>>
+endobj
+11 0 obj
+<<
+/Type /XObject
+/Subtype /Form
+/FormType 1
+/Matrix [1 0 0 1 0 0]
+/BBox [0 0 612 792]
+/Resources <<
+/Font << /BF1 10 0 R >>
+>>
+/Length 12 0 R
+>>
+stream
+BT
+/BF1 10 Tf
+ 1 0 0 1 10 742 Tm
+/BF1 10 Tf
+(Hello World!) Tj
+ET
+
+endstream
+endobj
+12 0 obj
+  65
+endobj
+13 0 obj
+<<
+/Font <<  /BF1 5 0 R /BF5 9 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject << /jcc1 11 0 R >>
+>>
+endobj
+14 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 13 0 R
+/Contents 15 0 R
+/Rotate 0
+/MediaBox[0 0 612 792]
+>>
+endobj
+15 0 obj
+<<
+/Length 16 0 R
+>>
+stream
+BT
+/BF1 10 Tf
+1 0 0 1 10 742 Tm
+/BF1 10 Tf
+ET
+q
+/jcc1 Do
+Q
+BT
+/BF1 10 Tf
+1 0 0 1 10 742 Tm
+/BF5 12 Tf
+1 0 0 rg
+/BF5 12 Tf
+1 0 0 rg
+1 0 0 1 350 557 Tm
+(Hello world!) Tj
+ET
+endstream
+endobj
+16 0 obj
+171
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 
+14 0 R 
+]
+>>
+endobj
+xref
+0 17
+0000000000 65535 f
+0000000017 00000 n
+0000001378 00000 n
+0000001505 00000 n
+0000000160 00000 n
+0000000234 00000 n
+0000000000 65635 f
+0000000000 65635 f
+0000000000 65635 f
+0000000338 00000 n
+0000000443 00000 n
+0000000572 00000 n
+0000000833 00000 n
+0000000857 00000 n
+0000000997 00000 n
+0000001123 00000 n
+0000001355 00000 n
+trailer
+<<
+/Size 17
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+1576
+%%EOF

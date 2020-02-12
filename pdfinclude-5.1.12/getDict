@@ -1,0 +1,1 @@
+FIND {1} WHERE {1}.dict_id = {2} &IF "{4}" EQ "" &THEN AND {1}.dict_key = "{3}" &ELSE AND {1}.value_type = "{3}" AND {1}.dict_key = "{4}" &ENDIF NO-ERROR

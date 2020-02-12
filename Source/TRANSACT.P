@@ -1,0 +1,5 @@
+/* transact.p */
+
+MESSAGE "A transaction" (IF TRANSACTION THEN "is " ELSE "is not ")
+    "active now".
+

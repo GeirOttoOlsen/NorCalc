@@ -1,0 +1,30 @@
+De las lenguas siníticas, la más importante demográficamente es chino mandarín (850 millones de hablantes) llamado simplemente "chino", que es la variedad en la que se basa el chino estándar. Le siguen en importancia, el idioma wu (77 millones), el idioma min (70 millones) y el idioma cantonés (55 millones). El cantonés estándar es común e influyente en las comunidades cantonés-parlantes de ultramar, y permanece como una de las lenguas oficiales de Hong Kong (junto con el inglés) y de Macao (junto con el portugués). El min del sur, parte del grupo lingüístico min, es ampliamente hablado en el sur de Fujian, Taiwán y el Sureste Asiático.
+
+Una clasificación completa es la siguiente:
+
+* El habla del Norte o mandarín (北方話 / 北方话), 836 millones de hablantes.
+* El wú (吳語 / 吴语), 77 millones.
+* Los dialectos mǐn (閩語 / 闽语), 70 millones.
+* El cantonés o yuè (粵語 / 粤语), 55 millones.
+* El jin (晉語 / 晋语), 45 millones.
+* El Idioma xiang o hunanés (湘語 / 湘语), 36 millones.
+* El hakka o kèjiā (客家語 / 客家语), 34 millones.
+* El gàn (贛語 / 赣语), 31 millones.
+* El huī (徽語 / 徽语), 3,2 millones.
+* El pínghuà (平話 / 平话), 3.5 millones.
+
+Los verbos no varían según la persona, el número o el tiempo gramatical. El aspecto perfecto se marca con el clítico le (了) pero la adjunción de ese clítico y otros no supone una auténtica conjugación verbal. Como puede verse en (1a) y (1b) el chino usualmente no marca el tiempo gramatical sobre el verbo sino dicha información está en los adverbios de tiempo ('ayer', 'hoy', 'mañana', etc). La marca de perfecto se aplica tanto al pasado (1a) como al futuro:
+
+(1a) Wŏ zuótiān xià le kè yĭhòu qù kàn diànyĭng
+
+    我昨天下了课以后去看电影
+    yo ayer acabar PERF lección ir ver película
+    'Ayer, cuando acabó la clase, fui a ver una película'
+
+(1b) Wŏ míngtiān xià le kè yĭhòu qù kàn diànyĭng
+
+    我明天下了课以后去看电影
+    yo mañana acabar PERF lección ir ver película
+    'Mañana, cuando acabe la clase, iré a ver una película'
+
+El chino posee además un verbo copulativo <u>shi (是) "ser"</u> , que no cambia de forma con el tiempo verbal, la persona o el número. Esto último constituye una importante ventaja frente a otras lenguas en su aprendizaje, ya que uno puede formular muchas expresiones siempre que conozca cierto número de palabras y maneje algunas reglas gramaticales que son realmente muy simples.

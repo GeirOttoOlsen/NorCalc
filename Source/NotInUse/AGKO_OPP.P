@@ -1,0 +1,83 @@
+/* Skriver ut oppfølgingslister for konsulenter - aggregater */
+
+    DEFINE VAR svar AS LOGICAL INITIAL TRUE.
+    DEFINE VAR konsulentnrParam AS CHAR INITIAL '0'.
+    DEFINE VAR konsulentnavnParam AS CHAR INITIAL "".
+    DEFINE VAR funnet AS INTEGER INITIAL 0.
+        
+    RUN VELGKONS.W PERSISTENT (INPUT-OUTPUT konsulentnrParam, 
+          INPUT-OUTPUT konsulentnavnParam).
+    IF konsulentnrParam = '0' THEN
+         DO:
+             MESSAGE 'Konsulent ble ikke valgt' VIEW-AS ALERT-BOX TITLE 'Feil'.
+             RETURN.
+        END.            
+    MESSAGE 'Vil du bare ha  AKTIVE anlegg?' VIEW-AS ALERT-BOX QUESTION 
+        BUTTONS YES-NO TITLE 'Anlegg/tilbudsliste'  UPDATE svar.
+    IF svar THEN
+    DO:
+        SELECT COUNT(*) INTO funnet FROM  NPKUNDE, NPAGANLG
+        WHERE NPKUNDE.kundenr =  konsulentnrParam
+              AND   NPAGANLG.aktivt = TRUE 
+              AND NPKUNDE.kundenr = NPAGANLG.kundenr.
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_prntrb2.p
+           ("report\noragg.prl",
+             "Aggregat - oppf - konsulent",
+           "-db norcalc -H 10.11.0.22 -S 4000 -U norcalc -P norcalc123",              
+            "O", 
+              "KONSULENT.kundenr = " + '"' + konsulentnrParam + '"' +
+             " AND NPAGANLG.aktivt = TRUE AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingssliste for aggregatkonsulenter",
+            yes,
+             yes,
+            no,
+             "",
+             "status.out").        
+        END.
+    ELSE
+       DO:
+        SELECT COUNT(*) INTO funnet FROM  NPKUNDE, NPAGANLG
+        WHERE NPKUNDE.kundenr =  konsulentnrParam
+              AND NPKUNDE.kundenr = NPAGANLG.kundenr.
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_prntrb2.p
+           ("report\noragg.prl",
+             "Aggregat - oppf - konsulent",
+            "-db norcalc -H 10.11.0.22 -S 4000 -U norcalc -P norcalc123",              
+            "O", 
+             "KONSULENT.kundenr = " + '"' + konsulentnrParam + '"',
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for aggregatkonsulenter",
+            yes,
+             yes,
+            no,
+             "",
+             "status.out").        
+    END.  

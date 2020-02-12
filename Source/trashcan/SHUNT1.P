@@ -1,0 +1,22 @@
+DEFINE SHARED VAR anleggsnrParam AS CHAR.
+
+    RUN aderb/_printrb.p
+        ("report\norshunt.prl",
+        "Prefab. Shuntgrupper",
+        "-db norcalc -H 10.11.0.22 -S 4000 -U norcalc -P norcalc123",
+        "O",
+        "NPSHANLG.anleggsnr =  anleggsnrParam",
+        "shunt1.txt",
+        "D",
+        "",
+        "",
+        "",
+        1,
+        1,
+        9999,
+        no,
+        "Prefab. Shuntgrupper",
+        yes,
+        yes,
+        no,
+        "").        

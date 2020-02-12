@@ -1,0 +1,2 @@
+TRIGGER PROCEDURE FOR CREATE OF NPSHmkvs.
+  NPSHmkvs.kvs_Id = NEXT-VALUE(seqNPFellesId).

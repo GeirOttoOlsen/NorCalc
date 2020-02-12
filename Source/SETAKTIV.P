@@ -1,0 +1,30 @@
+DEFINE INPUT PARAMETER prosjektidParam AS INTEGER.
+DEFINE VAR ag_aktivt AS LOGICAL INITIAL FALSE.
+DEFINE VAR sh_aktivt AS LOGICAL INITIAL FALSE.
+DEFINE VAR sp_aktivt AS LOGICAL INITIAL FALSE.
+
+/* Sjekk alle aggregater på dette prosjektet */
+FIND FIRST NPAGANLG WHERE NPAGANLG.prosjektid = prosjektidParam 
+    AND NPAGANLG.aktivt = TRUE NO-LOCK NO-ERROR.
+IF AVAILABLE NPAGANLG THEN ag_aktivt = TRUE.
+ELSE ag_aktivt = FALSE.
+   
+/* Sjekk alle shunter på dette prosjektet */
+FIND FIRST NPSHANLG WHERE NPSHANLG.prosjektid = prosjektidParam 
+    AND NPSHANLG.aktivt = TRUE NO-LOCK  NO-ERROR.
+IF AVAILABLE NPSHANLG THEN sh_aktivt = TRUE.
+ELSE sh_aktivt = FALSE.
+
+/* Sjekk alle spiroer på dette prosjektet */
+FIND FIRST NPSPANLG WHERE NPSPANLG.prosjektid = prosjektidParam 
+    AND NPSPANLG.aktivt = TRUE NO-LOCK  NO-ERROR.
+IF AVAILABLE NPSPANLG THEN sp_aktivt = TRUE.
+ELSE sp_aktivt = FALSE.
+
+/* Sett aktivt på prosjektnivå */
+IF ag_aktivt OR sh_aktivt OR sp_aktivt THEN
+    UPDATE NORPROSJEKT SET aktivt = TRUE
+        WHERE prosjektid = prosjektidParam.
+ELSE
+    UPDATE NORPROSJEKT SET aktivt = FALSE
+        WHERE prosjektid = prosjektidParam.

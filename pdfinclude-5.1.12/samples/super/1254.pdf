@@ -1,0 +1,177 @@
+%PDF-1.4
+%äãÏÒ
+1 0 obj
+<<
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+/Differences [
+128 /Euro
+130 /quotesinglbase /florin /quotedblbase /ellipsis /dagger /daggerdbl /circumflex /perthousand /Scaron /guilsinglleft /OE
+145 /quoteleft /quoteright /quotedblleft /quotedblright /bullet /endash /emdash /tilde /trademark /scaron /guilsinglright /oe
+159 /Ydieresis
+208 /Gbreve
+221 /Idot /Scedilla
+240 /gbreve
+253 /dotlessi /scedilla
+]
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF5
+/Encoding 4 0 R
+/BaseFont /Helvetica
+/FirstChar 0
+/LastChar 255
+/Widths [ 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 278 278 355 556 556 889 667 191 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 556 556 278 278 584 584 584 556 1015 667 667 722 722 667 611 778 722 278 500 667 556 833 722 778 667 778 722 667 611 722 667 944 667 667 611 278 278 278 469 556 333 556 556 500 556 556 278 556 556 222 222 500 222 833 556 556 556 556 333 500 278 556 500 722 500 500 500 334 260 334 584 350 556 278 278 556 333 944 611 611 469 944 667 500 944 278 278 278 278 191 191 333 333 556 556 722 584 667 500 667 833 278 278 667 556 278 500 556 500 667 260 556 333 1015 400 500 556 556 1015 556 400 584 400 400 333 556 667 278 278 400 400 500 944 944 944 556 667 667 667 667 667 667 944 722 667 667 667 667 278 278 278 278 778 722 778 778 778 778 778 500 778 722 722 722 722 278 667 667 556 556 556 556 556 556 722 500 556 556 556 556 222 222 222 222 556 556 556 556 556 556 556 556 556 556 556 556 556 222 500 500 ]
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF9
+/Encoding 4 0 R
+/BaseFont /Times-Roman
+/FirstChar 0
+/LastChar 255
+/Widths [ 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 788 250 333 408 500 500 833 778 180 333 333 500 564 250 333 250 278 500 500 500 500 500 500 500 500 500 500 278 278 564 564 564 444 921 722 667 667 722 611 556 722 722 333 389 722 611 889 722 722 556 722 667 556 611 722 722 944 722 722 611 333 278 333 469 500 333 444 500 444 500 444 333 500 500 278 278 500 278 778 500 500 500 500 333 389 278 500 500 722 500 500 444 480 200 480 541 350 500 250 250 500 333 944 611 611 469 944 556 444 944 250 250 250 250 180 180 333 333 500 500 722 541 556 444 556 778 250 250 722 500 333 444 611 444 722 200 500 333 921 400 444 500 500 921 500 400 564 400 400 333 500 556 250 250 400 400 444 944 944 944 444 722 722 722 722 722 722 944 667 611 611 611 611 333 333 333 333 722 722 722 722 722 722 722 500 722 722 722 722 722 333 556 667 444 444 444 444 444 444 722 444 444 444 444 444 278 278 278 278 500 500 500 500 500 500 500 500 500 500 500 500 500 278 389 500 ]
+>>
+endobj
+14 0 obj
+<<
+/Font <<  /BF1 5 0 R /BF5 9 0 R /BF9 13 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject <<  >>
+>>
+endobj
+15 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 14 0 R
+/Rotate 0
+/MediaBox[0 0 612 792]
+/Contents 16 0 R
+>>
+endobj
+16 0 obj
+<<
+/Length 17 0 R
+>>
+stream
+BT
+1 0 0 1 36 700 Tm
+/BF5 12 Tf
+(Lorem Ipsum , masaüstü yayýncýlýk ve basýn) Tj
+1 0 0 1 36 689.5 Tm
+(yayýn sektöründe kullanýlan taklit yazý bloðu) Tj
+1 0 0 1 36 679 Tm
+(olarak tanýmlanýr. Lipsum, oluþturulacak þablon) Tj
+1 0 0 1 36 668.5 Tm
+(ve taslaklarda içerik yerine geçerek yazý) Tj
+1 0 0 1 36 658 Tm
+(bloðunu doldurmak için kullanýlýr.) Tj
+1 0 0 1 36 647.5 Tm
+() Tj
+1 0 0 1 36 637 Tm
+(Lipsum, 1500’lerin baþlarýnda bir matbaacýnýn) Tj
+1 0 0 1 36 626.5 Tm
+(font model kitabý oluþturmak için , bir yazý tipi) Tj
+1 0 0 1 36 616 Tm
+(kütüphanesindeki harflerin sýralamasýný) Tj
+1 0 0 1 36 605.5 Tm
+(bozarak yerleþtirdiðinden bu yana endüstri) Tj
+1 0 0 1 36 595 Tm
+(standardý haline gelmiþtir.) Tj
+1 0 0 1 144 300 Tm
+/BF9 12 Tf
+(Lorem Ipsum , masaüstü yayýncýlýk ve basýn yayýn) Tj
+1 0 0 1 144 289.5 Tm
+(sektöründe kullanýlan taklit yazý bloðu olarak) Tj
+1 0 0 1 144 279 Tm
+(tanýmlanýr. Lipsum, oluþturulacak þablon ve) Tj
+1 0 0 1 144 268.5 Tm
+(taslaklarda içerik yerine geçerek yazý bloðunu) Tj
+1 0 0 1 144 258 Tm
+(doldurmak için kullanýlýr.) Tj
+1 0 0 1 144 247.5 Tm
+() Tj
+1 0 0 1 144 237 Tm
+(Lipsum, 1500’lerin baþlarýnda bir matbaacýnýn font) Tj
+1 0 0 1 144 226.5 Tm
+(model kitabý oluþturmak için , bir yazý tipi) Tj
+1 0 0 1 144 216 Tm
+(kütüphanesindeki harflerin sýralamasýný bozarak) Tj
+1 0 0 1 144 205.5 Tm
+(yerleþtirdiðinden bu yana endüstri standardý haline) Tj
+1 0 0 1 144 195 Tm
+(gelmiþtir.) Tj
+ET
+endstream
+endobj
+17 0 obj
+1409
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 
+15 0 R 
+]
+>>
+endobj
+xref
+0 18
+0000000000 65535 f
+0000000017 00000 n
+0000004700 00000 n
+0000004827 00000 n
+0000000043 00000 n
+0000000486 00000 n
+0000000000 65635 f
+0000000000 65635 f
+0000000000 65635 f
+0000000590 00000 n
+0000000000 65635 f
+0000000000 65635 f
+0000000000 65635 f
+0000001765 00000 n
+0000002940 00000 n
+0000003080 00000 n
+0000003206 00000 n
+0000004676 00000 n
+trailer
+<<
+/Size 18
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+4898
+%%EOF

@@ -1,0 +1,194 @@
+/* Skriver ut prosjektoppfølgingsliser for kunder */
+
+    DEFINE VAR kundenrParam AS CHAR INITIAL "".
+    DEFINE VAR kundenavnParam AS CHAR INITIAL "".
+    DEFINE VAR rabattParam AS DECIMAL.
+    DEFINE VAR antallFunnet AS INTEGER.
+        
+    RUN VELGKUND.W PERSISTENT (INPUT-OUTPUT kundenrParam, 
+          INPUT-OUTPUT kundenavnParam, OUTPUT rabattParam).
+    IF kundenrParam = "" THEN
+          DO:
+              MESSAGE 'Kunde ble ikke valgt' VIEW-AS ALERT-BOX TITLE 'Feil'.
+              RETURN.
+         END.            
+
+       /* Finnes aggregat - data ? */
+        SELECT COUNT(*) INTO antallFunnet
+        FROM NPKUNDE, NPAGANLG, NPAGTOPP, NPAGTILBUD 
+        WHERE NPAGTILBUD.kundenr = kundenrParam
+        AND NPAGANLG.aktivt = TRUE
+        AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt' 
+        AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE'
+        AND NPAGTILBUD.kundenr = NPKUNDE.kundenr
+        AND  NPAGANLG.anleggsnr = NPAGTILBUD.anleggsnr 
+        AND NPAGTILBUD.id = NPAGTOPP.id.
+
+        /* Ingen data funnet */
+        IF antallFunnet = 0 THEN DO:        
+           RUN aderb/_printrb.p
+           ("report\noragg.prl",   /* RB-REPORT-LIBRARY */
+              "Tilbud-kunde-ingen",                                             /* RB-REPORT-NAME */
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),                                                                                      /* RB-DB-CONNECTION */
+            "O",                                                                                   /* RB-INCLUDE-RECORDS */
+             "NPKUNDE.kundenr = " + '"' + kundenrParam + '"' ,  /* RB-FILTER */
+            "",                                                                                      /* RB-MEMO-FILE */     
+             "",                                                                                    /* RB-PRINT-DESTINATION */
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Prosjektoppfølgingsliste for aktive aggregatkunder",
+            yes,
+             yes,
+            no,
+             "").        
+        END.
+        ELSE DO:
+        /* Data funnet */
+           RUN aderb/_printrb.p
+           ("report\noragg.prl",
+              "Aggregat - oppf - kunde",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPAGTILBUD.kundenr = " + '"' + kundenrParam + '"' +
+             " AND NPAGANLG.aktivt = TRUE AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Prosjektoppfølgingsliste for aktive aggregatkunder",
+            yes,
+             yes,
+            no,
+             "").        
+           END.
+
+        /* Finnes shunt - data ? */
+        SELECT COUNT(*) INTO antallFunnet
+        FROM NPKUNDE, NPSHANLG, NPSHTOPP, NPSHTILBUD 
+        WHERE NPSHTILBUD.kundenr = kundenrParam
+        AND NPSHANLG.aktivt = TRUE
+        AND NOT NPSHTOPP.oppf_status BEGINS 'Tapt' 
+        AND NOT NPSHTOPP.oppf_status BEGINS 'ORDRE'
+        AND NPSHTILBUD.kundenr = NPKUNDE.kundenr
+        AND  NPSHANLG.anleggsnr = NPSHTILBUD.anleggsnr 
+        AND NPSHTILBUD.id = NPSHTOPP.id.
+
+
+        /* Ingen data funnet */
+        IF antallFunnet = 0 THEN DO:
+           RUN aderb/_printrb.p
+           ("report\norshunt.prl",
+              "Tilbud-kunde-ingen",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPKUNDE.kundenr = " + '"' + kundenrParam + '"' ,
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Prosjektoppfølgingsliste for aktive shuntkunder",
+            yes,
+             yes,
+            NO,
+             "").
+          END.        
+        ELSE DO:
+        /* Data funnet */
+           RUN aderb/_printrb.p
+           ("report\norshunt.prl",
+              "Shunttilbud - oppf - kunde",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPSHTILBUD.kundenr = " + '"' + kundenrParam + '"' +
+             " AND NPSHANLG.aktivt = TRUE AND NOT NPSHTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPSHTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for shuntkunde",
+            yes,
+             yes,
+            no,
+             "").        
+         end.
+        /* Finnes spirovent  - data ? */
+        SELECT COUNT(*) INTO antallFunnet
+        FROM NPKUNDE, NPSPANLG, NPSPTOPP, NPSPTILBUD 
+        WHERE NPSPTILBUD.kundenr = kundenrParam
+        AND NPSPANLG.aktivt = TRUE
+        AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt' 
+        AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE'
+        AND NPSPTILBUD.kundenr = NPKUNDE.kundenr
+        AND  NPSPANLG.anleggsnr = NPSPTILBUD.anleggsnr 
+        AND NPSPTILBUD.id = NPSPTOPP.id.
+
+        /* Ingen data funnet */
+        IF antallFunnet = 0 THEN DO:
+           RUN aderb/_printrb.p
+           ("report\norvent.prl",
+              "Tilbud-kunde-ingen",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPKUNDE.kundenr = " + '"' + kundenrParam + '"' ,
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Prosjektoppfølgingsliste for aktive spiroventkunder",
+            yes,
+             yes,
+            NO,
+             "").
+         END.        
+        ELSE DO:
+        /* Data funnet */
+           RUN aderb/_printrb.p
+           ("report\norvent.prl",
+              "Spirovent - oppf - kunde",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPSPTILBUD.kundenr = " + '"' + kundenrParam + '"' +
+             " AND NPSPANLG.aktivt = TRUE AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for spiroventkunde",
+            yes,
+             yes,
+            NO,
+             "").        
+    END.

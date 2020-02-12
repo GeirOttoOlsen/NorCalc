@@ -1,0 +1,422 @@
+/* for each npshfkvs:
+    delete npshfkvs.
+end.
+*/
+
+/* FM 25 
+create npshfkvs.
+ASSIGN
+    kvs_id = 1
+    shunt_dimmensjon = '25'
+    kvs_verdi = 0.63
+    nedre_sek_kapasitet = 0.03
+    ovre_sek_kapasitet = 0.17.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 2
+    shunt_dimmensjon = '25'
+    kvs_verdi = 0.8
+    nedre_sek_kapasitet = 0.04
+    ovre_sek_kapasitet = 0.22.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 3
+    shunt_dimmensjon = '25'
+    kvs_verdi = 1.0
+    nedre_sek_kapasitet = 0.05
+    ovre_sek_kapasitet = 0.26.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 4
+    shunt_dimmensjon = '25'
+    kvs_verdi = 1.25
+    nedre_sek_kapasitet = 0.06
+    ovre_sek_kapasitet = 0.33.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 5
+    shunt_dimmensjon = '25'
+    kvs_verdi = 1.6
+    nedre_sek_kapasitet = 0.08
+    ovre_sek_kapasitet = 0.44.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 6
+    shunt_dimmensjon = '25'
+    kvs_verdi = 2.5
+    nedre_sek_kapasitet = 0.12
+    ovre_sek_kapasitet = 0.69.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 7
+    shunt_dimmensjon = '25'
+    kvs_verdi = 3.2
+    nedre_sek_kapasitet = 0.15
+    ovre_sek_kapasitet = 0.88.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 8
+    shunt_dimmensjon = '25'
+    kvs_verdi = 4.0
+    nedre_sek_kapasitet = 0.19
+    ovre_sek_kapasitet = 1.1.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 9
+    shunt_dimmensjon = '25'
+    kvs_verdi = 5.0
+    nedre_sek_kapasitet = 0.25
+    ovre_sek_kapasitet = 1.38.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 10
+    shunt_dimmensjon = '25'
+    kvs_verdi = 6.3
+    nedre_sek_kapasitet = 0.3
+    ovre_sek_kapasitet = 1.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 11
+    shunt_dimmensjon = '25'
+    kvs_verdi = 8.0
+    nedre_sek_kapasitet = 0.38
+    ovre_sek_kapasitet = 2.2.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 12
+    shunt_dimmensjon = '25'
+    kvs_verdi = 10.0
+    nedre_sek_kapasitet = 0.5
+    ovre_sek_kapasitet = 2.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 13
+    shunt_dimmensjon = '25'
+    kvs_verdi = 12.5
+    nedre_sek_kapasitet = 0.61
+    ovre_sek_kapasitet = 3.47.
+
+
+/* FM 50 */
+create npshfkvs.
+ASSIGN
+    kvs_id = 14
+    shunt_dimmensjon = '50'
+    kvs_verdi = 0.63
+    nedre_sek_kapasitet = 0.03
+    ovre_sek_kapasitet = 0.17.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 15
+    shunt_dimmensjon = '50'
+    kvs_verdi = 0.8
+    nedre_sek_kapasitet = 0.04
+    ovre_sek_kapasitet = 0.22.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 16
+    shunt_dimmensjon = '50'
+    kvs_verdi = 1.0
+    nedre_sek_kapasitet = 0.05
+    ovre_sek_kapasitet = 0.26.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 17
+    shunt_dimmensjon = '50'
+    kvs_verdi = 1.25
+    nedre_sek_kapasitet = 0.06
+    ovre_sek_kapasitet = 0.33.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 18
+    shunt_dimmensjon = '50'
+    kvs_verdi = 1.6
+    nedre_sek_kapasitet = 0.08
+    ovre_sek_kapasitet = 0.44.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 19
+    shunt_dimmensjon = '50'
+    kvs_verdi = 2.5
+    nedre_sek_kapasitet = 0.12
+    ovre_sek_kapasitet = 0.69.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 20
+    shunt_dimmensjon = '50'
+    kvs_verdi = 3.2
+    nedre_sek_kapasitet = 0.15
+    ovre_sek_kapasitet = 0.88.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 21
+    shunt_dimmensjon = '50'
+    kvs_verdi = 4.0
+    nedre_sek_kapasitet = 0.19
+    ovre_sek_kapasitet = 1.1.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 22
+    shunt_dimmensjon = '50'
+    kvs_verdi = 5.0
+    nedre_sek_kapasitet = 0.25
+    ovre_sek_kapasitet = 1.38.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 23
+    shunt_dimmensjon = '50'
+    kvs_verdi = 6.3
+    nedre_sek_kapasitet = 0.3
+    ovre_sek_kapasitet = 1.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 24
+    shunt_dimmensjon = '50'
+    kvs_verdi = 8.0
+    nedre_sek_kapasitet = 0.38
+    ovre_sek_kapasitet = 2.2.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 25
+    shunt_dimmensjon = '50'
+    kvs_verdi = 10.0
+    nedre_sek_kapasitet = 0.5
+    ovre_sek_kapasitet = 2.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 26
+    shunt_dimmensjon = '50'
+    kvs_verdi = 12.5
+    nedre_sek_kapasitet = 0.61
+    ovre_sek_kapasitet = 3.47.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 27
+    shunt_dimmensjon = '50'
+    kvs_verdi = 16.0
+    nedre_sek_kapasitet = 0.77
+    ovre_sek_kapasitet = 4.44.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 28
+    shunt_dimmensjon = '50'
+    kvs_verdi = 20.0
+    nedre_sek_kapasitet = 0.95
+    ovre_sek_kapasitet = 5.55.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 29
+    shunt_dimmensjon = '50'
+    kvs_verdi = 25.0
+    nedre_sek_kapasitet = 1.65
+    ovre_sek_kapasitet = 6.94.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 30
+    shunt_dimmensjon = '50'
+    kvs_verdi = 31
+    nedre_sek_kapasitet = 1.52
+    ovre_sek_kapasitet = 8.88.
+
+/* FM 65 */
+create npshfkvs.
+ASSIGN
+    kvs_id = 31
+    shunt_dimmensjon = '65'
+    kvs_verdi = 0.63
+    nedre_sek_kapasitet = 0.03
+    ovre_sek_kapasitet = 0.17.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 32
+    shunt_dimmensjon = '65'
+    kvs_verdi = 0.8
+    nedre_sek_kapasitet = 0.04
+    ovre_sek_kapasitet = 0.22.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 33
+    shunt_dimmensjon = '65'
+    kvs_verdi = 1.0
+    nedre_sek_kapasitet = 0.05
+    ovre_sek_kapasitet = 0.26.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 34
+    shunt_dimmensjon = '65'
+    kvs_verdi = 1.25
+    nedre_sek_kapasitet = 0.06
+    ovre_sek_kapasitet = 0.33.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 35
+    shunt_dimmensjon = '65'
+    kvs_verdi = 1.6
+    nedre_sek_kapasitet = 0.08
+    ovre_sek_kapasitet = 0.44.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 36
+    shunt_dimmensjon = '65'
+    kvs_verdi = 2.5
+    nedre_sek_kapasitet = 0.12
+    ovre_sek_kapasitet = 0.69.
+  
+create npshfkvs.
+ASSIGN
+    kvs_id = 37
+    shunt_dimmensjon = '65'
+    kvs_verdi = 3.2
+    nedre_sek_kapasitet = 0.15
+    ovre_sek_kapasitet = 0.88.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 38
+    shunt_dimmensjon = '65'
+    kvs_verdi = 4.0
+    nedre_sek_kapasitet = 0.19
+    ovre_sek_kapasitet = 1.1.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 39
+    shunt_dimmensjon = '65'
+    kvs_verdi = 5.0
+    nedre_sek_kapasitet = 0.25
+    ovre_sek_kapasitet = 1.38.
+    
+create npshfkvs.
+ASSIGN
+    kvs_id = 40
+    shunt_dimmensjon = '65'
+    kvs_verdi = 6.3
+    nedre_sek_kapasitet = 0.3
+    ovre_sek_kapasitet = 1.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 41
+    shunt_dimmensjon = '65'
+    kvs_verdi = 8.0
+    nedre_sek_kapasitet = 0.38
+    ovre_sek_kapasitet = 2.2.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 42
+    shunt_dimmensjon = '65'
+    kvs_verdi = 10.0
+    nedre_sek_kapasitet = 0.5
+    ovre_sek_kapasitet = 2.77.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 43
+    shunt_dimmensjon = '65'
+    kvs_verdi = 12.5
+    nedre_sek_kapasitet = 0.61
+    ovre_sek_kapasitet = 3.47.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 44
+    shunt_dimmensjon = '65'
+    kvs_verdi = 16.0
+    nedre_sek_kapasitet = 0.77
+    ovre_sek_kapasitet = 4.44.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 45
+    shunt_dimmensjon = '65'
+    kvs_verdi = 20.0
+    nedre_sek_kapasitet = 0.95
+    ovre_sek_kapasitet = 5.55.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 46
+    shunt_dimmensjon = '65'
+    kvs_verdi = 65.0
+    nedre_sek_kapasitet = 1.65
+    ovre_sek_kapasitet = 6.94.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 47
+    shunt_dimmensjon = '65'
+    kvs_verdi = 31
+    nedre_sek_kapasitet = 1.52
+    ovre_sek_kapasitet = 8.88.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 48
+    shunt_dimmensjon = '65'
+    kvs_verdi = 39
+    nedre_sek_kapasitet = 1.88
+    ovre_sek_kapasitet =  10.55.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 49
+    shunt_dimmensjon = '65'
+    kvs_verdi = 49
+    nedre_sek_kapasitet = 2.5
+    ovre_sek_kapasitet =  14.44.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 50
+    shunt_dimmensjon = '65'
+    kvs_verdi = 63
+    nedre_sek_kapasitet = 3.33
+    ovre_sek_kapasitet =  18.05.
+
+create npshfkvs.
+ASSIGN
+    kvs_id = 51
+    shunt_dimmensjon = '65'
+    kvs_verdi = 80
+    nedre_sek_kapasitet = 3.89
+    ovre_sek_kapasitet =  22.22.
+*/
+FOR each npshfkvs by npshfkvs.kvs_id:
+    display kvs_id shunt_dimmensjon kvs_verdi nedre_sek_kapasitet ovre_sek_kapasitet.
+END.
+
+pause.

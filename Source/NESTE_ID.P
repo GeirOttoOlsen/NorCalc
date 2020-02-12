@@ -1,0 +1,21 @@
+/* PROCEDURE Neste_Id.p
+    Hensikt:    Returnerer neste gyldige id for en gitt tabell
+    Parameter: Tabellnavn
+    Retur:          Neste id. Ved feil returneres 0
+*/
+
+DEFINE INPUT PARAMETER cp_tabell_navn AS CHAR.
+DEFINE OUTPUT PARAMETER ip_neste_id AS INTEGER INITIAL 0.
+
+FIND NPSEKVENS WHERE tabell_navn = cp_tabell_navn EXCLUSIVE-LOCK 
+    NO-WAIT NO-ERROR.
+IF AVAILABLE NPSEKVENS THEN
+    DO:
+        ip_neste_id = NPSEKVENS.sist_brukt + 1.
+        ASSIGN NPSEKVENS.sist_brukt = ip_neste_id.
+    END.
+
+ RETURN.
+    
+    
+/* End Procedure Next_id.p */

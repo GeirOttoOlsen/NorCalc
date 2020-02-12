@@ -1,0 +1,14 @@
+define var ls as decimal  initial 100.00.
+define var v as decimal format ">>>9.9999".
+define var pi as decimal initial 3.14.
+
+for each NPindrediam by integer(dimm):
+    v= ls * 1000 / (indre_diameter * indre_diameter * pi / 4).
+    display dimm indre_diameter  v.
+end.
+    
+     
+
+     
+
+

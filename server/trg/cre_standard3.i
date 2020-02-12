@@ -1,0 +1,2 @@
+TRIGGER PROCEDURE FOR CREATE OF {1}.
+  {1}.{1}Obj = NEXT-VALUE(seqObj).

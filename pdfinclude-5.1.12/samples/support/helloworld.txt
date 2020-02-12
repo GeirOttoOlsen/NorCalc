@@ -1,0 +1,74 @@
+Albanian	Pershëndetje Botë
+Armenian	Բարե՛ւ, աշխարհ։ (barev ash'kharh)
+Azeri	Salam Dünya
+Czech	Ahoj Světe!
+Basque/Euskara	Kaixo mundua!
+Belarusian	 (Pryvitan'ne, Swet!)
+Bemba	Shani Mwechalo!
+Bengali	Shagatam Prithivi!
+Bosnian	Zdravo Svijete!
+Bulgarian	 (Zdrav'ei svi'at)
+Catalan	Hola món!
+Chinese	 (ni hao shi jie)
+Chinook Wawa	Klahowya Hayas Klaska
+Croatian	Bok Svijete!
+Danish	Hej, Verden!
+Dutch	Hallo, wereld!
+English	Hello World!
+Esperanto	Saluton mondo!
+Estonian	Tere maailm!
+Finnish	Hei maailma!
+French	Salut le Monde!
+Frisian	Hallo, wrâld!
+Galician	Ola mundo!
+German	Hallo Welt!
+Greek	Γεια σου κόσμε! (Geia soy kosme)
+Hawaiian	Aloha Honua
+Hebrew	 (Shalom Olam)
+Hindi	 (namaste duniya)
+Hmong	Nyob zoo ntiaj teb.
+Hungarian	Helló világ!
+Icelandic	Halló heimur!
+Indonesian	Halo Dunia!
+Irish	Dia dhaoibh, a dhomhain!
+Italian	Ciao Mondo!
+Japanese	 (konnichiwa sekai)
+Kannada	 (namaste prapancha)
+Kiswahili	Habari dunia!
+Kikuyu	Niatia thi!
+Korean	 (annyeong, sesangah)
+Latin	AVE MVNDE (ave munde)
+Latvian	Sveika, Pasaule!
+Lithuanian	Sveikas, Pasauli
+Luxembourgish	Moien Welt!
+Malagasy	Manao ahoana ry tany!
+Malayalam	Namaskaram, lokame
+Maltese 	Merhba lid-dinja
+Norwegian	Hallo verden!
+Persian	!سلام دنیا (Salaam Donyaa!)
+Polish	Witaj siecie!
+Portuguese	Olá, mundo!
+Romanian	Salut lume!
+Russian	 (Zdra'vstvuj mi'r)
+Serbian	Zdravo Svete!
+Slovak	Ahoj, svet!
+Slovenian	Pozdravljen svet!
+Spanish	¡Hola mundo!
+Swedish	Hejsan världen!
+Tagalog	Kamusta mundo!
+Tamil	 (Vanakkam Ulake!)
+Turkish	Merhaba Dünya!
+Ukrainian	 (Pryvi't svi'te)
+Vietnamese	Xin chào thế giới
+Welsh	S'mae byd!
+
+English /ˈɪŋɡlɪʃ/	Hello
+Esperanto	Saluton (Eĥoŝanĝo ĉiuĵaŭde)
+Estonian (eesti keel)	Tere päevast / Tere õhtust
+Finnish (suomi)	Hei / Hyvää päivää
+French (français)	Bonjour / Salut
+Georgian (ქართველი)	გამარჯობა
+German (Deutsch)	Guten Tag / Grüß Gott
+Japanese	おはよう（ございます） ohayoou (gozaimasu)
+Korean	안녕하세요 ahn nyeong ha se yo (formal) 안녕 ahn nyeong (informal)
+Chinese	你好 nei* ho/lei ho (Cantonese) nǐ hǎo (Mandarin)

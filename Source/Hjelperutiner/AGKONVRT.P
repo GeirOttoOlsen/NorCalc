@@ -1,0 +1,67 @@
+/*for each npagsyst:
+            create NPAGTILLUFT.
+            NPAGTILLUFT.aggregattype = NPAGSYST.tilluft_aggregattype.
+            NPAGTILLUFT.aktuell_kapasitet  = NPAGSYST.tilluft_aktuell_kapasitet .
+            NPAGTILLUFT.anleggsnr  = NPAGSYST.anleggsnr .
+            NPAGTILLUFT.batteri_stand_utb  = NPAGSYST.tilluft_batteri_stand_utb .
+            NPAGTILLUFT.del_nr = 1.
+            NPAGTILLUFT.del_pris = 0.
+            NPAGTILLUFT.el_batteri = NPAGSYST.tilluft_el_batteri .
+            NPAGTILLUFT.fratrekksmaal = NPAGSYST.fratrekksmaal .
+            NPAGTILLUFT.fronthast_batt_flate = NPAGSYST.tilluft_fronthast_batt_flate .
+            NPAGTILLUFT.fronthast_kabinett = NPAGSYST.tilluft_fronthast_kabinett .
+            NPAGTILLUFT.fundament_maal = '030'.
+            NPAGTILLUFT.fundament_type = "" .
+            NPAGTILLUFT.inspeksjon = NPAGSYST.tilluft_inspeksjon .
+            NPAGTILLUFT.isolasjon = NPAGSYST.tilluft_isolasjon .
+            NPAGTILLUFT.kabinettype = NPAGSYST.tilluft_kabinettype .
+            NPAGTILLUFT.kabinett_delinger = NPAGSYST.tilluft_kabinett_delinger .
+            NPAGTILLUFT.materialkvalitet = NPAGSYST.tilluft_materialkvalitet .
+            NPAGTILLUFT.nom_kapasitet = NPAGSYST.tilluft_nom_kapasitet .
+            NPAGTILLUFT.nom_temp = NPAGSYST.tilluft_nom_temp .
+            NPAGTILLUFT.rf = NPAGSYST.tilluft_rf .
+            NPAGTILLUFT.rortype = NPAGSYST.tilluft_rortype .
+            NPAGTILLUFT.spes_vekt = 1.2.
+            NPAGTILLUFT.systemnr = NPAGSYST.systemnr.
+            NPAGTILLUFT.utv_bredde = NPAGSYST.tilluft_utv_bredde .
+            NPAGTILLUFT.utv_hoyde = NPAGSYST.tilluft_utv_hoyde .
+            NPAGTILLUFT.utv_lengde = NPAGSYST.tilluft_utv_lengde. 
+            NPAGTILLUFT.vann_batteri = NPAGSYST.tilluft_vann_batteri.
+    END.
+*/
+for each npagsyst:
+            create NPAGFRALUFT.
+            NPAGFRALUFT.aggregattype = NPAGSYST.fraluft_aggregattype.
+            NPAGFRALUFT.aktuell_kapasitet  = NPAGSYST.fraluft_aktuell_kapasitet .
+            NPAGFRALUFT.anleggsnr  = NPAGSYST.anleggsnr .
+            NPAGFRALUFT.batteri_stand_utb  = NPAGSYST.fraluft_batteri_stand_utb .
+            NPAGFRALUFT.del_nr = 1.
+            NPAGFRALUFT.del_pris = 0.
+            NPAGFRALUFT.el_batteri = NPAGSYST.fraluft_el_batteri .
+            NPAGFRALUFT.fratrekksmaal = NPAGSYST.fratrekksmaal .
+            NPAGFRALUFT.fronthast_batt_flate = NPAGSYST.fraluft_fronthast_batt_flate .
+            NPAGFRALUFT.fronthast_kabinett = NPAGSYST.fraluft_fronthast_kabinett .
+            NPAGFRALUFT.fundament_maal = '030'.
+            NPAGFRALUFT.fundament_type = "" .
+            NPAGFRALUFT.inspeksjon = NPAGSYST.fraluft_inspeksjon .
+            NPAGFRALUFT.isolasjon = NPAGSYST.fraluft_isolasjon .
+            NPAGFRALUFT.kabinettype = NPAGSYST.fraluft_kabinettype .
+            NPAGFRALUFT.kabinett_delinger = NPAGSYST.fraluft_kabinett_delinger .
+            NPAGFRALUFT.materialkvalitet = NPAGSYST.fraluft_materialkvalitet .
+            NPAGFRALUFT.nom_kapasitet = NPAGSYST.fraluft_nom_kapasitet .
+            NPAGFRALUFT.nom_temp = NPAGSYST.fraluft_nom_temp .
+            NPAGFRALUFT.rf = NPAGSYST.fraluft_rf .
+            NPAGFRALUFT.rortype = NPAGSYST.fraluft_rortype .
+            NPAGFRALUFT.spes_vekt = 1.2.
+            NPAGFRALUFT.systemnr = NPAGSYST.systemnr.
+            NPAGFRALUFT.utv_bredde = NPAGSYST.fraluft_utv_bredde .
+            NPAGFRALUFT.utv_hoyde = NPAGSYST.fraluft_utv_hoyde .
+            NPAGFRALUFT.utv_lengde = NPAGSYST.fraluft_utv_lengde. 
+            NPAGFRALUFT.vann_batteri = NPAGSYST.fraluft_vann_batteri.
+    END.
+
+
+
+
+
+            

@@ -1,0 +1,30 @@
+De las lenguas siníticas, la más importante demográficamente es chino mandarín (850 millones de hablantes) llamado simplemente "chino", que es la variedad en la que se basa el chino estándar. Le siguen en importancia, el idioma wu (77 millones), el idioma min (70 millones) y el idioma cantonés (55 millones). El cantonés estándar es común e influyente en las comunidades cantonés-parlantes de ultramar, y permanece como una de las lenguas oficiales de Hong Kong (junto con el inglés) y de Macao (junto con el portugués). El min del sur, parte del grupo lingüístico min, es ampliamente hablado en el sur de Fujian, Taiwán y el Sureste Asiático.
+
+Una clasificación completa es la siguiente:
+
+* El habla del Norte o mandarín (<b>北方話</b> / <b>北方话</b>), 836 millones de hablantes.
+* El wú (<b>吳語</b> / <b>吴语</b>), 77 millones.
+* Los dialectos mǐn (<b>閩語</b> / <b>闽语</b>), 70 millones.
+* El cantonés o yuè (<b>粵語</b> / <b>粤语</b>), 55 millones.
+* El jin (<b>晉語</b> / <b>晋语</b>), 45 millones.
+* El Idioma xiang o hunanés (<b>湘語</b> / <b>湘语</b>), 36 millones.
+* El hakka o kèjiā (<b>客家語</b> / <b>客家语</b>), 34 millones.
+* El gàn (<b>贛語</b> / <b>赣语</b>), 31 millones.
+* El huī (<b>徽語</b> / <b>徽语</b>), 3,2 millones.
+* El pínghuà (<b>平話</b> / <b>平话</b>), 3.5 millones.
+
+Los verbos no varían según la persona, el número o el tiempo gramatical. El aspecto perfecto se marca con el clítico le (<b>了</b>) pero la adjunción de ese clítico y otros no supone una auténtica conjugación verbal. Como puede verse en (1a) y (1b) el chino usualmente no marca el tiempo gramatical sobre el verbo sino dicha información está en los adverbios de tiempo ('ayer', 'hoy', 'mañana', etc). La marca de perfecto se aplica tanto al pasado (1a) como al futuro:
+
+(1a) Wŏ zuótiān xià le kè yĭhòu qù kàn diànyĭng
+
+    <b>我昨天下了课以后去看电影</b>
+    yo ayer acabar PERF lección ir ver película
+    'Ayer, cuando acabó la clase, fui a ver una película'
+
+(1b) Wŏ míngtiān xià le kè yĭhòu qù kàn diànyĭng
+
+    <b>我明天下了课以后去看电影</b>
+    yo mañana acabar PERF lección ir ver película
+    'Mañana, cuando acabe la clase, iré a ver una película'
+
+El chino posee además un verbo copulativo shi (<b>是</b>) "ser" , que no cambia de forma con el tiempo verbal, la persona o el número. Esto último constituye una importante ventaja frente a otras lenguas en su aprendizaje, ya que uno puede formular muchas expresiones siempre que conozca cierto número de palabras y maneje algunas reglas gramaticales que son realmente muy simples.

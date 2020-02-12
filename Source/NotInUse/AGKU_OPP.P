@@ -1,0 +1,87 @@
+/* Skriver ut oppfølgingsliser for kunder - aggregater */
+
+    DEFINE VAR svar AS LOGICAL INITIAL TRUE.
+    DEFINE VAR kundenrParam AS CHAR INITIAL "".
+    DEFINE VAR kundenavnParam AS CHAR INITIAL "".
+    DEFINE VAR rabattParam AS DECIMAL.
+    DEFINE VAR funnet AS INTEGER INITIAL 0.
+        
+    RUN VELGKUND.W PERSISTENT (INPUT-OUTPUT kundenrParam, 
+          INPUT-OUTPUT kundenavnParam, OUTPUT rabattParam).
+    IF kundenrParam = "" THEN
+          DO:
+              MESSAGE 'Kunde ble ikke valgt' VIEW-AS ALERT-BOX TITLE 'Feil'.
+              RETURN.
+         END.            
+    MESSAGE 'Vil du bare ha  AKTIVE anlegg?' VIEW-AS ALERT-BOX QUESTION 
+        BUTTONS YES-NO TITLE 'Oppfølgingsliste for kunder'  UPDATE svar.
+    IF svar THEN
+    DO:
+        SELECT COUNT(*) INTO funnet FROM  NPAGTILBUD, NPAGANLG, NPAGTOPP
+        WHERE NPAGTILBUD.kundenr =  kundenrParam
+              AND   NPAGANLG.aktivt = TRUE AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE' 
+              AND NPAGTILBUD.anleggsnr = NPAGANLG.anleggsnr
+              AND NPAGTILBUD.id = NPAGTOPP.id .
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_prntrb2.p
+           ("report\noragg.prl",
+              "Aggregat - oppf - kunde",
+            "-db norcalc -H 10.11.0.22 -S 4000 -U norcalc -P norcalc123",              
+            "O", 
+             "NPAGTILBUD.kundenr = " + '"' + kundenrParam + '"' +
+             " AND NPAGANLG.aktivt = TRUE AND NOT NPAGTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPAGTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for aggregatkunde",
+            yes,
+             yes,
+            no,
+             "",
+             "status.out").        
+    END.
+    ELSE
+    DO:    
+        SELECT COUNT(*) INTO funnet FROM  NPAGTILBUD, NPAGANLG, NPAGTOPP
+        WHERE NPAGTILBUD.kundenr =  kundenrParam
+              AND NPAGTILBUD.anleggsnr = NPAGANLG.anleggsnr
+              AND NPAGTILBUD.id = NPAGTOPP.id .
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_prntrb2.p
+           ("report\noragg.prl",
+              "Aggregat - oppf - kunde",
+            "-db norcalc -H 10.11.0.22 -S 4000 -U norcalc -P norcalc123",              
+            "O", 
+             "NPAGTILBUD.kundenr = " + '"' + kundenrParam + '"' ,
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for aggregatkunde",
+            yes,
+             yes,
+            no,
+             "",
+             "status.out").        
+    END.  

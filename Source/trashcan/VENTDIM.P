@@ -1,0 +1,119 @@
+/*for each npshsdim:
+    delete npshsdim.
+end.
+*/
+/*
+create npshsdim.
+ASSIGN
+    dimm_id = 1
+    q_min = 0.03
+    q_max = 0.19
+    dimmensjon = 'DN10'
+    hm_kvs = 2.6
+    ta_kvs = 1.47.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 2
+    q_min = 0.19
+    q_max = 0.3
+    dimmensjon = 'DN15'
+    hm_kvs = 4.2
+    ta_kvs = 2.52.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 3
+    q_min = 0.3
+    q_max = 0.42
+    dimmensjon = 'DN20'
+    hm_kvs = 5.65
+    ta_kvs = 5.7.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 4
+    q_min = 0.42
+    q_max = 0.68
+    dimmensjon = 'DN25'
+    hm_kvs = 9.2
+    ta_kvs = 8.7.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 5
+    q_min = 0.68
+    q_max = 1.05
+    dimmensjon = 'DN32'
+    hm_kvs = 14
+    ta_kvs = 14.2.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 6
+    q_min = 1.05
+    q_max = 1.55
+    dimmensjon = 'DN40'
+    hm_kvs = 20.8
+    ta_kvs = 19.2.
+    
+create npshsdim.
+ASSIGN
+    dimm_id = 7
+    q_min = 1.55
+    q_max = 2.4
+    dimmensjon = 'DN50'
+    hm_kvs = 32.2
+    ta_kvs = 33.
+    
+create npshsdim.
+ASSIGN
+    dimm_id = 8
+    q_min = 2.4
+    q_max = 7.2
+    dimmensjon = 'DN65'
+    hm_kvs = 93.5
+    ta_kvs = 85.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 9
+    q_min = 7.2
+    q_max = 8.25
+    dimmensjon = 'DN80'
+    hm_kvs = 110
+    ta_kvs = 120.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 10
+    q_min = 8.25
+    q_max = 14.2
+    dimmensjon = 'DN100'
+    hm_kvs = 190
+    ta_kvs = 190.
+    
+create npshsdim.
+ASSIGN
+    dimm_id = 11
+    q_min = 14.2
+    q_max = 23
+    dimmensjon = 'DN125'
+    hm_kvs = 301
+    ta_kvs = 300.
+
+create npshsdim.
+ASSIGN
+    dimm_id = 12
+    q_min = 23
+    q_max = 32
+    dimmensjon = 'DN150'
+    hm_kvs = 425
+    ta_kvs = 420.
+*/
+FOR each npshsdim by npshsdim.dimm_id:
+    display dimm_id q_min  q_max  dimmensjon hm_kvs  ta_kvs.
+
+END.
+
+pause.

@@ -1,0 +1,646 @@
+%PDF-1.4
+%הדֿׂ
+1 0 obj
+<<
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF5
+/Encoding 4 0 R
+/BaseFont /Helvetica
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF6
+/Encoding 4 0 R
+/BaseFont /Helvetica-Oblique
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF7
+/Encoding 4 0 R
+/BaseFont /Helvetica-Bold
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF8
+/Encoding 4 0 R
+/BaseFont /Helvetica-BoldOblique
+>>
+endobj
+13 0 obj<</Type /Annot/Subtype /Link/Rect [ 148.072 645 202.084 633]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://en.wikipedia.org/wiki/Hyperlink)  >>>>endobj14 0 obj<</Type /Annot/Subtype /Link/Rect [ 260.116 645 286.108 633]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://www.oehive.org/pdfinclude)  >>>>endobj15 0 obj<</Type /Annot/Subtype /Link/Rect [ 23.344 633 238.108 621]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://www.oehive.org/pdfinclude)  >>>>endobj16 0 obj<</Type /Annot/Subtype /Link/Rect [ 274.728 307.5 328.74 295.5]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://en.wikipedia.org/wiki/Hyperlink)  >>>>endobj17 0 obj<</Type /Annot/Subtype /Link/Rect [ 386.772 307.5 440.112 295.5]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://www.oehive.org/pdfinclude)  >>>>endobj18 0 obj<</Type /Annot/Subtype /Link/Rect [ 150 296 337.416 284]/C [ 0 0 0 ]/Border [0 0 0]/H /N/A <<   /Type /Action  /S /URI  /URI (http://www.oehive.org/pdfinclude)  >>>>endobj19 0 obj
+<<
+/Font <<  /BF1 5 0 R /BF5 9 0 R /BF6 10 0 R /BF7 11 0 R /BF8 12 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject <<  >>
+>>
+endobj
+20 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 19 0 R
+/Rotate 0
+/MediaBox[0 0 612 792]
+/Annots[13 0 R 14 0 R 15 0 R 16 0 R 17 0 R 18 0 R]
+/Contents 21 0 R
+>>
+endobj
+21 0 obj
+<<
+/Length 22 0 R
+>>
+stream
+BT
+1 0 0 1 10 742 Tm
+/BF5 12 Tf
+(    This is some text that illustrates ) Tj
+/BF7 12 Tf
+(bolded) Tj
+/BF5 12 Tf
+(, ) Tj
+/BF6 12 Tf
+(italicized) Tj
+/BF5 12 Tf
+(,) Tj
+0 -12 TD
+(    ) Tj
+(underlined) Tj
+( and ) Tj
+/BF7 12 Tf
+() Tj
+/BF8 12 Tf
+(a ) Tj
+(combination) Tj
+( of both) Tj
+/BF7 12 Tf
+() Tj
+/BF5 12 Tf
+( formatting options.) Tj
+ET
+q
+.5 w
+23.344 729 m
+79.372 729 l
+S
+116.068 729 m
+187.408 729 l
+S
+Q
+BT
+1 0 0 1 10 718 Tm
+(    This is some underlined ) Tj
+(text that ) Tj
+1 0 0 rg
+(will) Tj
+0 0 0 rg
+( wrap, along with) Tj
+ET
+q
+.5 w
+153.388 717 m
+199.42 717 l
+S
+216.076 717 m
+306.112 717 l
+S
+1 0 0 RG
+199.42 717 m
+216.076 717 l
+S
+Q
+BT
+1 0 0 1 10 706 Tm
+(    its underline. The underlined text might wrap on many) Tj
+ET
+q
+.5 w
+23.344 705 m
+308.8 705 l
+S
+Q
+BT
+1 0 0 1 10 694 Tm
+(    lines still being underlined) Tj
+(. Nice uh?) Tj
+ET
+q
+.5 w
+23.344 693 m
+160.732 693 l
+S
+Q
+BT
+1 0 0 1 10 682 Tm
+(    This is in ) Tj
+1 0 0 rg
+(red) Tj
+0 0 0 rg
+(. ) Tj
+(This is striked) Tj
+(.) Tj
+ET
+q
+.5 w
+98.032 687 m
+171.376 687 l
+S
+Q
+BT
+1 0 0 1 10 670 Tm
+(    This ) Tj
+(is ) Tj
+/BF7 12 Tf
+(bold) Tj
+/BF5 12 Tf
+( underlined) Tj
+(.) Tj
+ET
+q
+.5 w
+49.348 669 m
+146.044 669 l
+S
+Q
+BT
+1 0 0 1 10 658 Tm
+(    ) Tj
+() Tj
+1 0 0 rg
+(Starting in red, ) Tj
+(change to ) Tj
+0 0 0 rg
+(black) Tj
+1 0 0 rg
+( then continue in red) Tj
+0 0 0 rg
+( but) Tj
+ET
+q
+.5 w
+160.756 657 m
+188.764 657 l
+S
+160.756 663 m
+188.764 663 l
+S
+297.496 657 m
+317.512 657 l
+S
+297.496 663 m
+317.512 663 l
+S
+1 0 0 RG
+23.344 657 m
+160.756 657 l
+S
+104.716 663 m
+160.756 663 l
+S
+188.764 657 m
+297.496 657 l
+S
+188.764 663 m
+297.496 663 l
+S
+Q
+BT
+1 0 0 1 10 646 Tm
+(    end in default color) Tj
+0 .7843 0 rg
+() Tj
+/BF6 12 Tf
+(,whoops, try ) Tj
+/BF7 12 Tf
+(italicized) Tj
+/BF5 12 Tf
+() Tj
+( green) Tj
+() Tj
+0 0 0 rg
+() Tj
+(.) Tj
+ET
+q
+.5 w
+23.344 645 m
+124.732 645 l
+S
+23.344 651 m
+124.732 651 l
+S
+0 .7843137255 0 RG
+124.732 651 m
+243.448 651 l
+S
+124.732 645 m
+277.468 645 l
+S
+Q
+BT
+1 0 0 1 10 634 Tm
+(    It is also possible to do ) Tj
+.5647 .0471 .5647 rg
+(hyperlinks) Tj
+0 0 0 rg
+(! ) Tj
+/BF7 12 Tf
+(cool) Tj
+/BF5 12 Tf
+( no? ) Tj
+.5647 .0471 .5647 rg
+(Click) Tj
+ET
+q
+.5 w
+.5647058824 .0470588235 .5647058824 RG
+148.072 633 m
+202.084 633 l
+S
+260.116 633 m
+286.108 633 l
+S
+Q
+BT
+1 0 0 1 10 622 Tm
+(    here to access the PDFInclude web site!) Tj
+0 0 0 rg
+(.) Tj
+ET
+q
+.5 w
+.5647058824 .0470588235 .5647058824 RG
+23.344 621 m
+238.108 621 l
+S
+Q
+BT
+1 0 0 1 150 400 Tm
+(This is some text that illustrates ) Tj
+/BF7 12 Tf
+(bolded) Tj
+/BF5 12 Tf
+(, ) Tj
+/BF6 12 Tf
+(italicized) Tj
+/BF5 12 Tf
+(,) Tj
+1 0 0 1 150 388.5 Tm
+() Tj
+(underlined) Tj
+( and ) Tj
+/BF7 12 Tf
+() Tj
+/BF8 12 Tf
+(a ) Tj
+(combination) Tj
+( of both) Tj
+/BF7 12 Tf
+() Tj
+/BF5 12 Tf
+( formatting options.) Tj
+ET
+q
+.5 w
+150 387.5 m
+206.028 387.5 l
+S
+242.724 387.5 m
+314.064 387.5 l
+S
+Q
+BT
+1 0 0 1 150 377 Tm
+(This is some underlined ) Tj
+(text that ) Tj
+1 0 0 rg
+(will) Tj
+0 0 0 rg
+( wrap, along with its) Tj
+ET
+q
+.5 w
+280.044 376 m
+326.076 376 l
+S
+342.732 376 m
+448.104 376 l
+S
+1 0 0 RG
+326.076 376 m
+342.732 376 l
+S
+Q
+BT
+1 0 0 1 150 365.5 Tm
+(underline. The underlined text might wrap on many lines) Tj
+ET
+q
+.5 w
+150 364.5 m
+448.128 364.5 l
+S
+Q
+BT
+1 0 0 1 150 354 Tm
+(still being underlined) Tj
+(. Nice uh?) Tj
+ET
+q
+.5 w
+150 353 m
+259.38 353 l
+S
+Q
+BT
+1 0 0 1 150 342.5 Tm
+(This is in ) Tj
+1 0 0 rg
+(red) Tj
+0 0 0 rg
+(. ) Tj
+(This is striked) Tj
+(.) Tj
+ET
+q
+.5 w
+224.688 347.5 m
+298.032 347.5 l
+S
+Q
+BT
+1 0 0 1 150 331 Tm
+(This ) Tj
+(is ) Tj
+/BF7 12 Tf
+(bold) Tj
+/BF5 12 Tf
+( underlined) Tj
+(.) Tj
+ET
+q
+.5 w
+176.004 330 m
+272.7 330 l
+S
+Q
+BT
+1 0 0 1 150 319.5 Tm
+() Tj
+() Tj
+1 0 0 rg
+(Starting in red, ) Tj
+(change to ) Tj
+0 0 0 rg
+(black) Tj
+1 0 0 rg
+( then continue in red) Tj
+0 0 0 rg
+( but) Tj
+ET
+q
+.5 w
+287.412 318.5 m
+315.42 318.5 l
+S
+287.412 324.5 m
+315.42 324.5 l
+S
+424.152 318.5 m
+444.168 318.5 l
+S
+424.152 324.5 m
+444.168 324.5 l
+S
+1 0 0 RG
+150 318.5 m
+287.412 318.5 l
+S
+231.372 324.5 m
+287.412 324.5 l
+S
+315.42 318.5 m
+424.152 318.5 l
+S
+315.42 324.5 m
+424.152 324.5 l
+S
+Q
+BT
+1 0 0 1 150 308 Tm
+(end in default color) Tj
+0 .7843 0 rg
+() Tj
+/BF6 12 Tf
+(,whoops, try ) Tj
+/BF7 12 Tf
+(italicized) Tj
+/BF5 12 Tf
+() Tj
+( green) Tj
+() Tj
+0 0 0 rg
+() Tj
+(.) Tj
+ET
+q
+.5 w
+150 307 m
+251.388 307 l
+S
+150 313 m
+251.388 313 l
+S
+0 .7843137255 0 RG
+251.388 313 m
+370.104 313 l
+S
+251.388 307 m
+404.124 307 l
+S
+Q
+BT
+1 0 0 1 150 296.5 Tm
+(It is also possible to do ) Tj
+.5647 .0471 .5647 rg
+(hyperlinks) Tj
+0 0 0 rg
+(! ) Tj
+/BF7 12 Tf
+(cool) Tj
+/BF5 12 Tf
+( no? ) Tj
+.5647 .0471 .5647 rg
+(Click here) Tj
+ET
+q
+.5 w
+.5647058824 .0470588235 .5647058824 RG
+274.728 295.5 m
+328.74 295.5 l
+S
+386.772 295.5 m
+440.112 295.5 l
+S
+Q
+BT
+1 0 0 1 150 285 Tm
+(to access the PDFInclude web site!) Tj
+0 0 0 rg
+(.) Tj
+ET
+q
+.5 w
+.5647058824 .0470588235 .5647058824 RG
+150 284 m
+337.416 284 l
+S
+Q
+BT
+1 0 0 1 10 598 Tm
+(    This is some text that has tags like <b>bold</b> and <i>italic</i> but) Tj
+0 -12 TD
+(    tagging has been turned off so they won't be interpreted.) Tj
+0 -24 TD
+(    Then I re-enable the tags like ) Tj
+/BF7 12 Tf
+(bold) Tj
+/BF5 12 Tf
+( and ) Tj
+/BF6 12 Tf
+(italic) Tj
+/BF5 12 Tf
+( but I don't have to ) Tj
+1 0 0 rg
+(reset) Tj
+0 0 0 rg
+() Tj
+0 -12 TD
+(    the tagging configuration.) Tj
+() Tj
+(This) Tj
+( is some ) Tj
+(underlined text) Tj
+() Tj
+ET
+q
+.5 w
+158 555 m
+180.668 555 l
+S
+228.68 549 m
+307.388 549 l
+S
+Q
+BT
+1 0 0 1 10 538 Tm
+(This is some text) Tj
+0 -12 TD
+(This is some text) Tj
+0 -12 TD
+(This is some ) Tj
+(underlined text) Tj
+() Tj
+ET
+q
+.5 w
+80.68 513 m
+159.388 513 l
+S
+Q
+BT
+1 0 0 1 10 502 Tm
+(This is some ) Tj
+(underlined text) Tj
+() Tj
+ET
+q
+.5 w
+80.68 501 m
+159.388 501 l
+S
+Q
+endstream
+endobj
+22 0 obj
+5573
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 
+20 0 R 
+]
+>>
+endobj
+xref
+0 23
+0000000000 65535 f
+0000000017 00000 n
+0000007875 00000 n
+0000008002 00000 n
+0000000043 00000 n
+0000000117 00000 n
+0000000000 65635 f
+0000000000 65635 f
+0000000000 65635 f
+0000000221 00000 n
+0000000327 00000 n
+0000000442 00000 n
+0000000554 00000 n
+0000000673 00000 n
+0000000877 00000 n
+0000001075 00000 n
+0000001272 00000 n
+0000001479 00000 n
+0000001681 00000 n
+0000001875 00000 n
+0000002039 00000 n
+0000002217 00000 n
+0000007851 00000 n
+trailer
+<<
+/Size 23
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+8073
+%%EOF

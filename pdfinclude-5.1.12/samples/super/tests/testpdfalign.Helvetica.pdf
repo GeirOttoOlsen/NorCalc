@@ -1,0 +1,107 @@
+%PDF-1.4
+%הדֿׂ
+1 0 obj
+<<
+ >>
+endobj
+4 0 obj
+<<
+/Type /Encoding
+/BaseEncoding /WinAnsiEncoding
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF1
+/Encoding 4 0 R
+/BaseFont /Courier
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/Name /BF5
+/Encoding 4 0 R
+/BaseFont /Helvetica
+>>
+endobj
+10 0 obj
+<<
+/Font <<  /BF1 5 0 R /BF5 9 0 R >>
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+/XObject <<  >>
+>>
+endobj
+11 0 obj
+<<
+/Type /Page
+/Parent 3 0 R
+/Resources 10 0 R
+/Rotate 0
+/MediaBox[0 0 595 842]
+/Contents 12 0 R
+>>
+endobj
+12 0 obj
+<<
+/Length 13 0 R
+>>
+stream
+BT
+1 0 0 1 490 642 Tm
+/BF5 10 Tf
+(     123,50) Tj
+1 0 0 1 484 632 Tm
+(  67.123,50) Tj
+ET
+endstream
+endobj
+13 0 obj
+89
+endobj
+2 0 obj
+<<
+/Type /Catalog
+/Pages 3 0 R
+/PageMode /UseNone
+/PageLayout /SinglePage
+/ViewerPreferences <<  >>
+>>
+endobj
+3 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 
+11 0 R 
+]
+>>
+endobj
+xref
+0 14
+0000000000 65535 f
+0000000017 00000 n
+0000000753 00000 n
+0000000880 00000 n
+0000000043 00000 n
+0000000117 00000 n
+0000000000 65635 f
+0000000000 65635 f
+0000000000 65635 f
+0000000221 00000 n
+0000000327 00000 n
+0000000455 00000 n
+0000000581 00000 n
+0000000731 00000 n
+trailer
+<<
+/Size 14
+/Root 2 0 R
+/Info 1 0 R
+>>
+startxref
+951
+%%EOF

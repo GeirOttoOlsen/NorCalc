@@ -1,0 +1,60 @@
+  /*
+for each npshfmgr:
+    delete npshfmgr.
+end.
+*/
+
+create npshfmgr.
+ASSIGN
+    gruppe# = 1
+    grunnlag = 'Prim‘rkrets'
+    nedre = 0
+    ovre = 0.89
+    storrelse = '25'.
+create npshfmgr.
+
+ASSIGN
+    gruppe# = 2
+    grunnlag = 'Prim‘rkrets'
+    nedre = 0.89
+    ovre = 2.9
+    storrelse = '50'.
+create npshfmgr.
+
+ASSIGN
+    gruppe# = 3
+    grunnlag = 'Prim‘rkrets'
+    nedre = 2.9
+    ovre = 10.0
+    storrelse = '65'.
+create npshfmgr.
+
+ASSIGN
+    gruppe# = 4
+    grunnlag = 'Sekund‘rkrets'
+    nedre = 0
+    ovre = 1.27
+    storrelse = '25'.
+create npshfmgr.
+
+ASSIGN
+    gruppe# = 5
+    grunnlag = 'Sekund‘rkrets'
+    nedre = 1.27
+    ovre = 4.44
+    storrelse = '50'.
+create npshfmgr.
+
+ASSIGN
+    gruppe# = 6
+    grunnlag = 'Sekund‘rkrets'
+    nedre = 4.44
+    ovre = 10.0
+    storrelse = '65'.
+
+
+FOR each npshfmgr by npshfmgr.grunnlag:
+    display gruppe# grunnlag nedre ovre storrelse.
+END.
+  
+pause.

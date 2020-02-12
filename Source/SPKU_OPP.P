@@ -1,0 +1,85 @@
+/* Skriver ut oppfølgingslister for kunder - spiro */
+
+    DEFINE VAR svar AS LOGICAL INITIAL TRUE.
+    DEFINE VAR kundenrParam AS CHAR INITIAL "".
+    DEFINE VAR kundenavnParam AS CHAR INITIAL "".
+    DEFINE VAR rabattParam AS DECIMAL.
+    DEFINE VAR funnet AS INTEGER INITIAL 0.
+        
+    RUN VELGKUND.W PERSISTENT (INPUT-OUTPUT kundenrParam, 
+          INPUT-OUTPUT kundenavnParam, OUTPUT rabattParam).
+    IF kundenrParam = "" THEN
+          DO:
+              MESSAGE 'Kunde ble ikke valgt' VIEW-AS ALERT-BOX TITLE 'Feil'.
+              RETURN.
+         END.            
+    MESSAGE 'Vil du bare ha  AKTIVE anlegg?' VIEW-AS ALERT-BOX QUESTION 
+        BUTTONS YES-NO TITLE 'Oppfølgingsliste for kunder'  UPDATE svar.
+    IF svar THEN
+    DO:
+        SELECT COUNT(*) INTO funnet FROM  NPSPTILBUD, NPSPANLG, NPSPTOPP
+        WHERE NPSPTILBUD.kundenr =  kundenrParam
+              AND   NPSPANLG.aktivt = TRUE AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE' 
+              AND NPSPTILBUD.anleggsnr = NPSPANLG.anleggsnr
+              AND NPSPTILBUD.id = NPSPTOPP.id .
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_printrb.p
+           ("report\norvent.prl",
+              "Spirovent - oppf - kunde",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPSPTILBUD.kundenr = " + '"' + kundenrParam + '"' +
+             " AND NPSPANLG.aktivt = TRUE AND NOT NPSPTOPP.oppf_status BEGINS 'Tapt'
+              AND NOT NPSPTOPP.oppf_status BEGINS 'ORDRE'",
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for spiroventkunde",
+            yes,
+             yes,
+            no,
+             "").        
+    END.
+    ELSE
+    DO:    
+        SELECT COUNT(*) INTO funnet FROM  NPSPTILBUD, NPSPANLG, NPSPTOPP
+        WHERE NPSPTILBUD.kundenr =  kundenrParam
+              AND NPSPTILBUD.anleggsnr = NPSPANLG.anleggsnr
+              AND NPSPTILBUD.id = NPSPTOPP.id .
+        IF funnet = 0 THEN
+        DO:
+            MESSAGE 'Ingen data funnet. Utskrift ikke mulig' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+            RETURN.
+        END.
+           RUN aderb/_printrb.p
+           ("report\norvent.prl",
+              "Spirovent - oppf - kunde",
+            JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
+            "O", 
+             "NPSPTILBUD.kundenr = " + '"' + kundenrParam + '"' ,
+            "",
+             "",
+            "",
+             "",
+            "",
+             0,
+            0,
+             0,
+            no,
+             "Oppfølgingsliste for spiroventkunde",
+            yes,
+             yes,
+            no,
+             "").        
+    END.  

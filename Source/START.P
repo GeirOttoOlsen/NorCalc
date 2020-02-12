@@ -1,0 +1,8 @@
+CONNECT -db norcalc -S 4000 -H 10.11.0.22 -N TCP.
+
+RUN SOURCE\normeny.w.
+
+DISCONNECT norcalc.
+QUIT.
+    
+

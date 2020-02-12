@@ -1,0 +1,21 @@
+A:active {
+	COLOR: #0000cc
+}
+A:hover {
+	COLOR: #cc0033
+}
+A:link {
+	COLOR: #3366cc
+}
+A:visited {
+	COLOR: #9999cc
+}
+BODY {
+	BACKGROUND-COLOR: #ffffff
+}
+SUP.Footnote {
+	
+}
+DIV.WWHInlineRelatedTopics {
+	MARGIN-TOP: 8px; MARGIN-BOTTOM: 4px
+}
