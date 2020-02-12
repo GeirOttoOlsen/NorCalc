@@ -1,0 +1,19 @@
+/* Class Definition for action - src\adm2\action.cld - 05/25/1999 
+   Class Type: Progress
+   Class Name: action
+   Class DeriveFrom: src/adm2/panel.cld
+   Class SourcePath: src/adm2
+   Class RcodePath: adm2
+   Class TemplatePath:    
+   Class Method: action.i
+   Class Property: actiprop.i
+   Class Super: action.p
+   Class Prototype: actiprto.i
+   Class Template: 
+   Custom Method: customaction.i
+   Custom Property: customactiprop.i
+   Custom Super: customaction.p
+   Custom Prototype: customactiprto.i
+   Custom Exclude: customexclaction.i
+   Custom Instance: customdefsaction.i
+ */
