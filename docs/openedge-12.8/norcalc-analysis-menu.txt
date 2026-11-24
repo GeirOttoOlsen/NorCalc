@@ -1,0 +1,101 @@
+"NODE"|1|"MENU"|"Main"|"RIBBON"|""|0|no
+"NODE"|2|"TV-NAV-BAR"|""|"START-WINDOW"|""|0|no
+"NODE"|3|"MENUBAR"|"Menubar"|"START-WINDOW"|?|0|no
+"NODE"|4|"SUB-MENU"|"System"|"START-WINDOW"|?|0|no
+"NODE"|5|"MENU-ITEM"|"Menyoppsett"|"START-WINDOW"|"JBoxMSTreeMenuMaint.w"|0|no
+"NODE"|6|"SUB-MENU"|"NorShunt"|"START-WINDOW"|?|0|no
+"NODE"|7|"MENU-ITEM"|"Prosjekt"|"START-WINDOW"|"wProsjekt.w"|0|no
+"NODE"|9|"MENU-ITEM"|"Brukeroppsett"|"START-WINDOW"|"JBoxUser.w"|0|no
+"NODE"|28|"RULE"|""|"START-WINDOW"|?|0|no
+"NODE"|29|"MENU-ITEM"|"Gammel oppstart"|"START-WINDOW"|"normeny.w"|0|no
+"NODE"|30|"MENU-ITEM"|"Firmaoppsett"|"START-WINDOW"|"jboxcompany.w"|0|no
+"NODE"|31|"MENU-ITEM"|"Generell kode"|"START-WINDOW"|"jboxgencode.w"|0|no
+"NODE"|32|"MENU-ITEM"|"Drilldown Shuntanlegg"|"DATA-BROWSE"|"wshanleggdrilldown.w"|0|no
+"NODE"|33|"MENU-ITEM"|"Kunde"|"START-WINDOW"|"wNPKunde.w"|0|no
+"NODE"|34|"SUB-MENU"|"Administrasjon"|"START-WINDOW"|?|0|no
+"NODE"|35|"MENU-ITEM"|"Shunt gruppetype"|"START-WINDOW"|"wSHGruppetype.r"|0|no
+"NODE"|37|"MENU-ITEM"|"Shuntgrupper"|"START-WINDOW"|"wSHGruppe.r"|0|no
+"NODE"|38|"MENU-ITEM"|"Fabrikat"|"START-WINDOW"|"wNPfabrikat.w"|0|no
+"NODE"|39|"MENU-ITEM"|"Ventiltype"|"START-WINDOW"|"wnpshventiltype.w"|0|no
+"NODE"|40|"MENU-ITEM"|"Ventil - KVS"|"START-WINDOW"|"wnpshmkvs.w"|0|no
+"NODE"|41|"MENU-ITEM"|"Kundedistrikt"|"START-WINDOW"|"wNPKundedistrikt.w"|0|no
+"NODE"|42|"MENU-ITEM"|"Kontaktperson"|"START-WINDOW"|"wNPKontakt.w"|0|no
+"NODE"|43|"MENU-ITEM"|"Forstillingsorgan"|"START-WINDOW"|"wForstillingsorgan.w"|0|no
+"NODE"|44|"MENU-ITEM"|"Kundekategori"|"START-WINDOW"|"wNPKundekategori.w"|0|no
+"NODE"|45|"SUB-MENU"|"Diverse standard tabeller"|"START-WINDOW"|?|0|no
+"NODE"|46|"MENU-ITEM"|"Postnummer"|"START-WINDOW"|"wPostnummer.w"|0|no
+"NODE"|47|"MENU-ITEM"|"Kommune"|"START-WINDOW"|"wKommune.w"|0|no
+"NODE"|48|"MENU-ITEM"|"Fylke"|"START-WINDOW"|"wDistrikt.w"|0|no
+"NODE"|49|"MENU-ITEM"|"Land"|"START-WINDOW"|"wLand.w"|0|no
+"NODE"|50|"MENU-ITEM"|"Person"|"START-WINDOW"|"wPerson.w"|0|no
+"NODE"|51|"MENU-ITEM"|"Gruppe (Person)"|"START-WINDOW"|"wGruppe.w"|0|no
+"NODE"|52|"MENU-ITEM"|"Spirovent vareliste"|"START-WINDOW"|"wNPSPVareliste.w"|0|no
+"NODE"|53|"MENU-ITEM"|"Vare"|"START-WINDOW"|"wVare.w"|0|no
+"NODE"|54|"MENU-ITEM"|"Varegruppe"|"START-WINDOW"|"wNPVaregruppe.w"|0|no
+"NODE"|55|"MENU-ITEM"|"Varetype"|"START-WINDOW"|"wNPVaretype.w"|0|no
+"NODE"|67|"MENU-ITEM"|"Drilldown Spirovent"|"DATA-BROWSE"|"wspanleggdrilldown.w"|0|no
+"NODE"|68|"MENU-ITEM"|"Drilldown tilbud"|"DATA-BROWSE"|"Drilldown.w"|0|no
+"NODE"|71|"MENU-ITEM"|"Shunt ordre"|"START-WINDOW"|"wshordre.w"|0|no
+"NODE"|72|"SUB-MENU"|"Tillegg"|"START-WINDOW"|?|0|no
+"NODE"|73|"MENU-ITEM"|"Shunt anlegg"|"START-WINDOW"|"wshanlegg.w"|0|no
+"NODE"|74|"MENU-ITEM"|"Tilbudsoppfølging"|"START-WINDOW"|"wSHTilbudoppfolging.w"|0|no
+"NODE"|75|"MENU-ITEM"|"Leveringsbetingelser"|"START-WINDOW"|"wnpleveringsbetingelse.w"|0|no
+"NODE"|76|"SUB-MENU"|"Rapporter"|"START-WINDOW"|?|0|no
+"NODE"|77|"MENU-ITEM"|"Ventil 2"|"START-WINDOW"|"wfmkvsverdier.w"|0|no
+"NODE"|78|"MENU-ITEM"|"Kundekontakt"|"START-WINDOW"|"wNPkontakt.w"|0|no
+"NODE"|80|"MENUBAR"|"Backstage"|"RIBBON"|""|0|no
+"NODE"|81|"SUB-MENU"|"Administrasjon"|""|""|0|no
+"NODE"|82|"MENU-ITEM"|"Menyvedlikehold"|"START-WINDOW"|"jboxmstreemenumaint.w"|0|no
+"NODE"|83|"MENU-ITEM"|"Testrapport CR"|"START-WINDOW"|"adhoc\makeCRdataset.p"|0|no
+"NODE"|84|"MENU-ITEM"|"Betalingsbetingelse"|"START-WINDOW"|"wNPBetalingsbetingelse.w"|0|no
+"NODE"|85|"MENU-ITEM"|"Testing"|"START-WINDOW"|"adhoc/test_velgNPSHgruppe.p"|0|no
+"LINK"|2|1|0
+"LINK"|3|1|0
+"LINK"|80|1|0
+"LINK"|6|2|1
+"LINK"|34|2|3
+"LINK"|72|2|30
+"LINK"|76|2|6
+"LINK"|4|3|0
+"LINK"|5|3|0
+"LINK"|9|4|20
+"LINK"|30|4|10
+"LINK"|31|4|0
+"LINK"|7|6|5
+"LINK"|28|6|3
+"LINK"|29|6|0
+"LINK"|33|6|10
+"LINK"|53|6|20
+"LINK"|74|6|30
+"LINK"|78|6|0
+"LINK"|85|6|1
+"LINK"|35|34|40
+"LINK"|37|34|42
+"LINK"|38|34|20
+"LINK"|39|34|20
+"LINK"|40|34|22
+"LINK"|41|34|15
+"LINK"|42|34|0
+"LINK"|43|34|30
+"LINK"|44|34|17
+"LINK"|45|34|99
+"LINK"|50|34|4
+"LINK"|51|34|0
+"LINK"|52|34|0
+"LINK"|54|34|0
+"LINK"|55|34|0
+"LINK"|75|34|0
+"LINK"|77|34|0
+"LINK"|84|34|0
+"LINK"|46|45|0
+"LINK"|47|45|0
+"LINK"|48|45|0
+"LINK"|49|45|0
+"LINK"|71|72|0
+"LINK"|73|72|0
+"LINK"|32|76|0
+"LINK"|67|76|0
+"LINK"|68|76|0
+"LINK"|83|76|0
+"LINK"|81|80|0
+"LINK"|82|81|0
