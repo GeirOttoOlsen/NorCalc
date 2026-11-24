@@ -69,7 +69,7 @@ DEF VAR bSupprDynDelete   AS LOG  NO-UNDO.
 DEF VAR cReturnParam      AS CHAR NO-UNDO.
 DEF VAR httPreTrans       AS HANDLE NO-UNDO.
 DEF VAR hBuffPreTrans     AS HANDLE NO-UNDO.
-DEF VAR hJbAPI            AS HANDLE NO-UNDO.
+//DEF VAR hJbAPI            AS HANDLE NO-UNDO.
 DEF VAR cExternalFields   AS CHAR  NO-UNDO.
 
 DEF STREAM sDebug.
@@ -141,40 +141,6 @@ FUNCTION dynFkValidate RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getContext) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getContext Procedure 
@@ -251,18 +217,6 @@ FUNCTION getInputParam RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getOutputParam) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getOutputParam Procedure 
@@ -351,18 +305,6 @@ FUNCTION setPreTransBuffer RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-SuppressDynDelete) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD SuppressDynDelete Procedure 
@@ -416,6 +358,11 @@ END.
 {incl/autoassignupdate.i}
 {incl/valexceptionlist.i} 
 
+IF SEARCH("jbserv_init_jboxservertrans.p") NE ? OR SEARCH("jbserv_init_jboxservertrans.r") NE ? THEN DO:
+  RUN jbserv_init_jboxservertrans.p (icSessionId,THIS-PROCEDURE,OUTPUT ocReturn).
+  IF ocReturn NE "" THEN RETURN.    
+END.
+
 RUN processTransaction.
 
 
@@ -456,10 +403,10 @@ IF bDebug THEN
 DELETE OBJECT httTransAction.
 DELETE OBJECT httTransRecord.
 
-IF VALID-HANDLE(hJbAPI) THEN DO:
-  DYNAMIC-FUNCTION("setPreTransBuffer" IN hJbAPI,?).  
-  DELETE PROCEDURE hJbAPI.
-END.
+IF VALID-HANDLE(hJbAPI) THEN 
+  DYNAMIC-FUNCTION("setPreTransBuffer" IN hJbAPI,?).
+//  DELETE PROCEDURE hJbAPI.
+//END.
 
 CATCH eAnyError AS Progress.Lang.ERROR:  
   IF ocReturn  = "" THEN  
@@ -1004,6 +951,14 @@ DEF VAR cFKbuffers     AS CHAR   NO-UNDO.
 DEF VAR bOk            AS LOG    NO-UNDO.
 DEF VAR cWhereString   AS CHAR   NO-UNDO INIT "WHERE ".
 DEF VAR ocReturn       AS CHAR   NO-UNDO.
+DEF VAR hb_field       AS HANDLE NO-UNDO.
+DEF VAR hb_file        AS HANDLE NO-UNDO.
+DEF VAR hqField        AS HANDLE NO-UNDO.
+DEF VAR cTable         AS CHAR   NO-UNDO.
+
+CREATE BUFFER hb_field FOR TABLE "_field" NO-ERROR.
+
+IF NOT VALID-HANDLE(hb_field) THEN RETURN "".
 
 /* Determine PK values: */
 DO ix = 1 TO NUM-ENTRIES(icPKfields):
@@ -1021,13 +976,17 @@ END.
 cWhereString = TRIM(cWhereString," AND ").
 
 /* Seek out FK tables and check for existence. All components of PK must be member of same index in referencing table: */
-FOR EACH _field NO-LOCK
-    WHERE _field._Field-Name = ENTRY(1,icPKfields),
-    FIRST _file OF _field NO-LOCK
-          WHERE _file._File-Name NE ihBuffer:NAME
-            AND _file._tbl-type = "T":
 
-  CREATE BUFFER hFKbuffer FOR TABLE _file._File-Name.
+CREATE BUFFER hb_file FOR TABLE "_file".
+CREATE QUERY hqField.
+hqField:SET-BUFFERS(hb_field,hb_file).
+hqField:QUERY-PREPARE ("FOR EACH _field NO-LOCK WHERE _field._Field-Name = '" + ENTRY(1,icPKfields) + "'"
+                     + ",FIRST _file OF _field NO-LOCK WHERE _file._File-Name NE '" + ihBuffer:NAME + "'"
+                     + " AND _file._tbl-type = 'T'").
+hqField:QUERY-OPEN ().
+REPEAT WHILE hqField:GET-NEXT ():         
+  cTable = hb_file::_File-Name.            
+  CREATE BUFFER hFKbuffer FOR TABLE cTable.
   DO ix = 1 TO 100:
     bFK = FALSE.
     IF hFKbuffer:INDEX-INFORMATION(ix) NE ? THEN DO:
@@ -1043,7 +1002,7 @@ FOR EACH _field NO-LOCK
       IF bFK THEN DO:
         bOK = hFKbuffer:FIND-FIRST(cWhereString,NO-LOCK) NO-ERROR.
         IF bOk THEN
-          ocReturn = ocReturn + _file._File-Name + ", ".
+          ocReturn = ocReturn + hb_file::_File-Name + ", ".
         LEAVE.
       END.
     END.
@@ -1052,7 +1011,12 @@ FOR EACH _field NO-LOCK
   DELETE OBJECT hFKbuffer.
 END.
 
-RETURN TRIM(ocReturn,", ").
+FINALLY:
+  DELETE OBJECT hqField NO-ERROR.
+  DELETE OBJECT hb_field NO-ERROR.
+  DELETE OBJECT hb_file NO-ERROR.
+  RETURN TRIM(ocReturn,", ").
+END.  
 
 END FUNCTION.
 
@@ -1078,14 +1042,24 @@ DEF VAR cFKbuffer      AS CHAR NO-UNDO.
 DEF VAR bOk            AS LOG NO-UNDO.
 DEF VAR cWhereString   AS CHAR NO-UNDO.
 DEF VAR ocReturn       AS CHAR NO-UNDO.
+DEF VAR hb_file        AS HANDLE NO-UNDO.
+DEF VAR hb_field       AS HANDLE NO-UNDO.
+DEF VAR hqField        AS HANDLE NO-UNDO.
+DEF VAR bFound         AS LOG    NO-UNDO.
 
-IF icUpdValCrit NE "" THEN 
+CREATE BUFFER hb_file  FOR TABLE "_file" NO-ERROR.
+
+IF VALID-HANDLE(hb_file) AND icUpdValCrit NE "" THEN DO: 
+  CREATE BUFFER hb_field FOR TABLE "_field" NO-ERROR.
+  CREATE QUERY hqField.
+  hqField:SET-BUFFERS(hb_file,hb_field).
+  
   ValCrit:
   DO ix = 1 TO NUM-ENTRIES(icUpdValCrit,"|"):
     ASSIGN cFKbuffer    = ENTRY(1,ENTRY(ix,icUpdValCrit,"|"),";")
            cWhereString = "WHERE "
            .
-    FIND FIRST _file WHERE _file-name = cCurrBuffer NO-LOCK NO-ERROR.
+    bFound = hb_file:FIND-FIRST("WHERE _file-name = '" + cCurrBuffer + "'", NO-LOCK) NO-ERROR.
 
     CREATE BUFFER hFKbuffer FOR TABLE cFKbuffer.
     DO iy = 1 TO NUM-ENTRIES(ENTRY(2,ENTRY(ix,icUpdValCrit,"|"),";")):
@@ -1094,16 +1068,12 @@ IF icUpdValCrit NE "" THEN
       ELSE cPKvalue = ENTRY(LOOKUP(cPKfield,icValueFields),icCurrValues,CHR(1)).
 
       IF cPKvalue = "0" OR cPKvalue = "" THEN DO:
-        IF AVAIL _file THEN DO:
-          FIND FIRST _field OF _file
-               WHERE _field-name = cPKfield
-               NO-LOCK NO-ERROR.
-          IF AVAIL _field THEN DO:
-            IF NOT _field._mandatory THEN
-              NEXT ValCrit.
-          END.
-          ELSE NEXT ValCrit.
-        END.
+        IF bFound THEN DO:
+          hqField:QUERY-PREPARE ("FOR EACH _file NO-LOCK WHERE _file-name = '" + cCurrBuffer + "'"
+                               + ",FIRST _field OF _file NO-LOCK WHERE _field-name = '" + cPKfield + "' AND _mandatory").
+          hqField:QUERY-OPEN ().
+          IF NOT hqField:GET-FIRST() THEN NEXT ValCrit.
+        END.                      
         ELSE NEXT ValCrit.
       END.
 
@@ -1121,27 +1091,14 @@ IF icUpdValCrit NE "" THEN
     IF NOT bOK THEN 
       ocReturn = ocReturn + "Invalid reference: " + cFKbuffer + " " + cWhereString + CHR(10).
   END.  
+END.
 
-RETURN TRIM(ocReturn,CHR(10)).
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN cCurrUserId.
+FINALLY:
+  DELETE OBJECT hqField NO-ERROR.
+  DELETE OBJECT hb_file NO-ERROR.  
+  DELETE OBJECT hb_field NO-ERROR.  
+  RETURN TRIM(ocReturn,CHR(10)).
+END FINALLY.
 
 END FUNCTION.
 
@@ -1149,45 +1106,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCodeMaster.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCurrCompanyId. 
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getContext) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getContext Procedure 
@@ -1360,26 +1278,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN cCurrLanguage.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getOutputParam) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getOutputParam Procedure 
@@ -1470,25 +1368,36 @@ FUNCTION getUpdValidateCrit RETURNS CHARACTER
   (INPUT icBuffer      AS CHAR,
    INPUT icValueFields AS CHAR):
 
-  DEF VAR bFK            AS LOG NO-UNDO.
+  DEF VAR bFK            AS LOG    NO-UNDO.
   DEF VAR hFKbuffer      AS HANDLE NO-UNDO.
-  DEF VAR cPKfields      AS CHAR NO-UNDO.
-  DEF VAR iy             AS INT NO-UNDO.
-  DEF VAR iz             AS INT NO-UNDO.
-  DEF VAR cReturn        AS CHAR NO-UNDO.
+  DEF VAR cPKfields      AS CHAR   NO-UNDO.
+  DEF VAR iy             AS INT    NO-UNDO.
+  DEF VAR iz             AS INT    NO-UNDO.
+  DEF VAR cReturn        AS CHAR   NO-UNDO.
+  DEF VAR hb_field       AS HANDLE NO-UNDO.
+  DEF VAR hb_file        AS HANDLE NO-UNDO.
+  DEF VAR hqField        AS HANDLE NO-UNDO.
+  DEF VAR cTable         AS CHAR   NO-UNDO.
+  
+  CREATE BUFFER hb_field FOR TABLE "_field" NO-ERROR.
+  IF NOT VALID-HANDLE(hb_field) THEN RETURN "". 
+
+  CREATE BUFFER hb_file FOR TABLE "_file".
+  CREATE QUERY hqField.
+  hqField:SET-BUFFERS(hb_field,hb_file).
 
   DO ix = 1 TO NUM-ENTRIES(icValueFields):
     /* Seek out FK tables. All components of FK must be member of field list: */
     
     IF CAN-DO(cValExceptionList,ENTRY(ix,icValueFields)) THEN NEXT.
 
-    FOR EACH _field NO-LOCK
-        WHERE _field._Field-Name = ENTRY(ix,icValueFields),
-        FIRST _file OF _field NO-LOCK
-              WHERE _file._File-Name NE icBuffer
-                AND _file._tbl-type = "T":
-
-      CREATE BUFFER hFKbuffer FOR TABLE _file._File-Name.
+    hqField:QUERY-PREPARE("FOR EACH _field NO-LOCK WHERE _field._Field-Name = '" + ENTRY(ix,icValueFields) + "'"
+                        + ",FIRST _file OF _field NO-LOCK WHERE _file._File-Name NE '" + icBuffer + "'"
+                        + " AND _file._tbl-type = 'T'").
+    hqField:QUERY-OPEN ().                    
+    REPEAT WHILE hqField:GET-NEXT().
+      cTable = hb_file::_File-Name.
+      CREATE BUFFER hFKbuffer FOR TABLE cTable.
       DO iy = 1 TO 100:
         bFK = TRUE.
         cPKfields = "".
@@ -1501,7 +1410,7 @@ FUNCTION getUpdValidateCrit RETURNS CHARACTER
               ELSE bFK = FALSE.
             END.
             IF bFK THEN 
-              cReturn = cReturn + _file._File-Name + ";" + TRIM(cPKfields,",") + "|".
+              cReturn = cReturn + hb_file::_File-Name + ";" + TRIM(cPKfields,",") + "|".
             LEAVE.
           END.
         END.
@@ -1510,7 +1419,14 @@ FUNCTION getUpdValidateCrit RETURNS CHARACTER
       DELETE OBJECT hFKbuffer.
     END.
   END.
-  RETURN TRIM(cReturn,"|").
+  
+  FINALLY:
+    DELETE OBJECT hqField NO-ERROR.
+    DELETE OBJECT hb_field NO-ERROR.
+    DELETE OBJECT hb_file NO-ERROR.
+      
+    RETURN TRIM(cReturn,"|").
+  END.  
 
 END FUNCTION.
 
@@ -1611,30 +1527,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-IF NOT VALID-HANDLE(hJbAPI) THEN
-  RUN jbserv_api_for_server.p PERSIST SET hJbAPI (icSessionId).
-  
-SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hJbAPI).
-
-RETURN YES.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-SuppressDynDelete) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION SuppressDynDelete Procedure 

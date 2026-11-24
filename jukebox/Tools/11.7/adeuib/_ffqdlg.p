@@ -32,6 +32,9 @@ Changes for JukeBox moved forward 10.sep.14 to ver 11.4 by Brynjar
 08.nov.17 by brynjar for JukeBox
     capable to add query definition just to clipboard and return "exit" which i 
     captured by adeshar\qurytrig.i
+apr 2020 by Brynjar
+    - Only support for clipboard-copy of fields
+    - Added option to position fields    
 ---------------------------------------------------------------------------- */
 
 DEF INPUT        PARAMETER _4GLQury  AS CHARACTER                      NO-UNDO.
@@ -131,21 +134,29 @@ else
                    INPUT-OUTPUT ok-cancel,
                    OUTPUT never-again).
 
-IF CAN-DO("Freeform,JukeBox",ok-cancel) THEN DO:
+IF CAN-DO("JukeBox",ok-cancel) THEN DO:
+/*    IF CAN-DO("Freeform,JukeBox",ok-cancel) THEN DO: */
 
-  DEF VAR bOk AS LOG NO-UNDO.
-  MESSAGE "Copy view + join-definition to clipboard (for use in JBoxQueryWrapper)?"
-          VIEW-AS ALERT-BOX QUESTION BUTTONS YES-NO UPDATE bOk.
-  IF bOK THEN DO:
-    RUN genViewDef.
-    OK-CANCEL = "exit".
-    RETURN.
-  END.
 
   FIND _U WHERE RECID(_U) = _query-u-rec.
   FIND _C WHERE RECID(_C) = _U._x-recid.
   FIND _Q WHERE RECID(_Q) = _C._q-recid. 
   
+  IF _U._TYPE = "BROWSE":U THEN DO:
+    DEF VAR bOk AS LOG NO-UNDO.
+    MESSAGE "Copy view + join-definition to clipboard (for use in JBoxQueryWrapper or as field-spec for JBoxQuery or dynamic JBoxBrowse)?" SKIP(1)
+            "(Traditional free-form query where you edit the display trigger is not available with JukeBox. Use override of DisplayRecord instead.)" SKIP(1)
+            VIEW-AS ALERT-BOX QUESTION BUTTONS OK-CANCEL UPDATE bOk.
+    IF bOK THEN DO:
+      RUN genViewDef.
+      OK-CANCEL = "exit".
+    END.
+    ELSE 
+      OK-CANCEL = "cancel".
+  
+    RETURN.
+  END.
+
   FIND _P WHERE _P._window-handle = _U._window-handle.
 
   ASSIGN _Q._4GLQury = _4GLQury
@@ -170,12 +181,19 @@ IF CAN-DO("Freeform,JukeBox",ok-cancel) THEN DO:
                             + "DEF VAR oBrw" + cPrimaryTable + " AS JBoxBrowse." + CHR(10) + CHR(10) 
                             + "DEF TEMP-TABLE " + cPrimaryTable + CHR(10) */
            cQueryJoin       = (IF NUM-ENTRIES(_4GLQury,CHR(10)) > 1 THEN SUBSTR(_4GLQury,INDEX(_4GLQury,CHR(10))) ELSE "")
+           .
+    REPEAT WHILE INDEX(cQueryJoin,"  ") > 0:
+      cQueryJoin = REPLACE(cQueryJoin,"  "," ").
+    END.
+    ASSIGN
            cQueryJoin       = REPLACE(cQueryJoin,CHR(10),"")
            cQueryJoin       = REPLACE(cQueryJoin,",      EACH",",EACH")
            cQueryJoin       = REPLACE(cQueryJoin,",      FIRST",",FIRST")
            cQueryJoin       = REPLACE(cQueryJoin,",      LAST",",LAST")
            cQueryJoin       = REPLACE(cQueryJoin,"INDEXED-REPOSITION.","")
            cQueryJoin       = TRIM(cQueryJoin)
+           cQueryJoin       = DYNAMIC-FUNCTION("FixQueryOperators",cQueryJoin)
+           cQueryJoin       = DYNAMIC-FUNCTION("FixQueryJoin",cQueryJoin)
            _4GLQury         = ENTRY(1,_4GLQury)
            .
 
@@ -607,6 +625,9 @@ DEF VAR cCode1            AS CHAR NO-UNDO.
 DEF VAR cCode2            AS CHAR NO-UNDO.
 DEF VAR cInitProc         AS CHAR NO-UNDO.
 DEF VAR cFirstTable       AS CHAR NO-UNDO.
+DEF VAR cMandatory        AS CHAR NO-UNDO.
+DEF VAR iMaxSeqFirstTbl   AS INT  NO-UNDO.
+DEF VAR cTableFlds        AS CHAR NO-UNDO EXTENT 15.
 
 
 FIND _P WHERE _P._WINDOW-HANDLE = _h_win NO-ERROR.
@@ -618,8 +639,8 @@ IF NOT AVAIL _P OR NOT AVAIL _U OR NOT AVAIL _C OR NOT AVAIL _Q THEN RETURN.
 
 cCurrDb = IF _db_name NE "" THEN _db_name ELSE LDBNAME("DICTDB").
 
-assign  _4GLQury = right-trim(_4GLQury,":.":U) + ".":U  
-        _4GLQury = REPLACE(_4GLQury," ~~":U + CHR(10) , CHR(10)).
+ASSIGN _4GLQury = RIGHT-TRIM(_4GLQury,":.":U) + ".":U  
+       _4GLQury = REPLACE(_4GLQury," ~~":U + CHR(10) , CHR(10)).
 
 
 IF _4GLQury NE "" THEN DO:
@@ -647,6 +668,68 @@ cTblList = cTableList.
 
 DO ix = 1 TO NUM-ENTRIES(cTblList):
   cTbl = ENTRY(NUM-ENTRIES(ENTRY(1,ENTRY(ix,cTblList)," "),"."),ENTRY(1,ENTRY(ix,cTblList)," "),".").
+  cViewDef = cViewDef + CHR(10) + "  " + (IF ix = 1 THEN "  '" ELSE "+ ',") + cTbl + "'".
+  FOR EACH _BC 
+      WHERE _BC._x-recid = RECID(_U)
+        AND _BC._TABLE   = cTbl
+      BY _BC._SEQUENCE:
+
+    iy = iy + 1.
+
+    cViewDef = cViewDef + CHR(10) + "     + ';" 
+             + (IF _BC._DISABLE-AUTO-ZAP THEN "distinct " 
+                ELSE IF _BC._COLUMN-READ-ONLY THEN "accum " 
+                ELSE "") 
+             + _BC._NAME 
+             + "|" + (IF _BC._LABEL NE ? THEN REPLACE(_BC._LABEL,"!"," ") ELSE "")
+             + "|" + (IF _BC._FORMAT NE ? THEN REPLACE(_BC._FORMAT,",","<") ELSE "") 
+             + (IF cDisplTrg NE "" AND iy NE _BC._SEQUENCE THEN "@" + STRING(_BC._SEQUENCE) ELSE "")
+             + "'". 
+  END.
+  FOR EACH _BC 
+      WHERE _BC._x-recid = RECID(_U)
+        AND _BC._TABLE   = ?
+        AND _BC._DBNAME  = "_<CALC>" 
+        AND ENTRY(1,_BC._DISP-NAME,".") = cTbl
+        AND _BC._DEF-VALEXP NE ""
+      BY _BC._SEQUENCE:
+    cCalcFld = _BC._DEF-VALEXP.
+    cMandatory = "".
+
+    IF ENTRY(NUM-ENTRIES(cCalcFld,"|"),cCalcFld,"|") = "mandatory" THEN
+      ASSIGN cMandatory = "|" + ENTRY(NUM-ENTRIES(cCalcFld,"|"),cCalcFld,"|")
+             cCalcFld = SUBSTR(cCalcFld,1,R-INDEX(cCalcFld,"|") - 1)
+             .
+
+    IF NUM-ENTRIES(cCalcFld,"|") > 1 AND ENTRY(1,cCalcFld,"|") NE "" THEN DO:
+      IF NOT CAN-DO(cCalcProcs,ENTRY(1,cCalcFld,"|")) THEN
+        ASSIGN cCalcProcs    = cCalcProcs + (IF cCalcProcs NE "" THEN "," ELSE "") + ENTRY(1,cCalcFld,"|")
+               cCalcProcFlds = cCalcProcFlds + (IF cCalcProcFlds NE "" THEN ";" ELSE "") + cCalcFld
+               .
+      ELSE cCalcProcFlds = cCalcProcFlds + (IF cCalcProcFlds NE "" THEN "," ELSE "") + ENTRY(2,cCalcFld,"|").
+    END.
+    cCalcFld = ENTRY(NUM-ENTRIES(cCalcFld,"|"),cCalcFld,"|").
+
+    iy = iy + 1.
+
+    cViewDef = cViewDef + CHR(10) + "     + ';+" 
+             + (IF _BC._DISABLE-AUTO-ZAP THEN "distinct " 
+                ELSE IF _BC._COLUMN-READ-ONLY THEN "accum "
+                ELSE "")
+             + ENTRY(NUM-ENTRIES(ENTRY(1,_BC._DISP-NAME),"."),ENTRY(1,_BC._DISP-NAME," "),".")
+             + "|" + (IF _BC._DATA-TYPE NE ? THEN _BC._DATA-TYPE ELSE "CHARACTER")
+             + "|" + (IF _BC._FORMAT NE ? THEN REPLACE(_BC._FORMAT,",","<") ELSE "") 
+             + "|" + cCalcFld + "|" + _BC._LABEL + cMandatory 
+             + (IF cDisplTrg NE "" AND iy NE _BC._SEQUENCE THEN "@" + STRING(_BC._SEQUENCE) ELSE "")
+             + "'"
+             . 
+
+  END.
+END.
+
+/*
+DO ix = 1 TO NUM-ENTRIES(cTblList):
+  cTbl = ENTRY(NUM-ENTRIES(ENTRY(1,ENTRY(ix,cTblList)," "),"."),ENTRY(1,ENTRY(ix,cTblList)," "),".").
   IF cFirstTable = "" THEN cFirstTable = cTbl.
 
   cViewDef = cViewDef + CHR(10) + "  " + (IF ix = 1 THEN "  '" ELSE "+ ',") + cTbl + "'".
@@ -654,7 +737,8 @@ DO ix = 1 TO NUM-ENTRIES(cTblList):
       WHERE _BC._x-recid = RECID(_U)
         AND _BC._TABLE   = cTbl
       BY _BC._SEQUENCE:
-    cViewDef = cViewDef + CHR(10) + "     + ';" + _BC._NAME + "'". 
+    cViewDef = cViewDef + CHR(10) + "     + ';" 
+             + _BC._NAME + "'". 
     IF CAN-DO(cFldList,_BC._NAME) THEN 
       ASSIGN _BC._DEF-VALEXP = _BC._NAME + STRING(ix)
              _BC._DISP-NAME  = _BC._DISP-NAME + STRING(ix).
@@ -678,6 +762,7 @@ DO ix = 1 TO NUM-ENTRIES(cTblList):
              . 
   END.
 END.
+*/
 
 FOR EACH _BC 
     WHERE _BC._x-recid   = RECID(_U)
@@ -740,6 +825,6 @@ ASSIGN cQueryJoin       = REPLACE(cQueryJoin,CHR(10),"")
        cQueryJoin       = DYNAMIC-FUNCTION("FixQueryJoin",cQueryJoin)
       .
 
-CLIPBOARD:VALUE = cViewDef + CHR(10) + "     ,'," + cQueryJoin + "'".
+CLIPBOARD:VALUE = cViewDef + CHR(10) + "     ,'," + cQueryJoin + "'". 
 
 END PROCEDURE.

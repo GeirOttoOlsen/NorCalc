@@ -64,6 +64,7 @@ DEF TEMP-TABLE NPSHGruppe
     FIELD ovre AS decimal
     FIELD grunnlag AS character
     FIELD NPSHGruppeTypeNavn AS character
+    FIELD iNPSHGruppeTypeId AS integer
     FIELD RowIdent1 AS CHARACTER 
     FIELD RowIdent2 AS CHARACTER 
     FIELD RowCount AS INTEGER
@@ -81,12 +82,13 @@ FUNCTION getBuffersAndFieldsBrwNPSHGruppe RETURNS CHARACTER():
      + ';nedre'
      + ';ovre'
      + ';grunnlag'
+     + ';iNPSHGruppeTypeId'
   + ',NPSHGruppeType'
      + ';NPSHGruppeTypeNavn'
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNPSHGruppe RETURNS CHARACTER():
-  RETURN 'FIRST NPSHGruppeType  WHERE NPSHGruppeType.iNPSHGruppeTypeId = NPSHGruppe.iNPSHGruppeTypeId OUTER-JOIN NO-LOCK'.
+  RETURN 'FIRST NPSHGruppeType  WHERE NPSHGruppeType.iNPSHGruppeTypeId = NPSHGruppe.iNPSHGruppeTypeId NO-LOCK'.
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
@@ -110,7 +112,7 @@ END FUNCTION.
 /* Definitions for BROWSE BrwNPSHGruppe                                 */
 &Scoped-define FIELDS-IN-QUERY-BrwNPSHGruppe NPSHGruppe.storrelse ~
 NPSHGruppe.nedre NPSHGruppe.ovre NPSHGruppe.grunnlag ~
-NPSHGruppe.NPSHGruppeTypeNavn 
+NPSHGruppe.NPSHGruppeTypeNavn NPSHGruppe.iNPSHGruppeTypeId 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNPSHGruppe NPSHGruppe.storrelse ~
 NPSHGruppe.NPSHGruppeTypeNavn 
 &Scoped-define QUERY-STRING-BrwNPSHGruppe FOR EACH NPSHGruppe NO-LOCK INDEXED-REPOSITION
@@ -135,7 +137,7 @@ NPSHGruppe.NPSHGruppeTypeNavn
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 /* Query definitions                                                    */
@@ -149,17 +151,22 @@ DEFINE BROWSE BrwNPSHGruppe
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNPSHGruppe C-Win _STRUCTURED
   QUERY BrwNPSHGruppe NO-LOCK DISPLAY
       NPSHGruppe.storrelse COLUMN-LABEL "Størrelse" FORMAT "X(2)":U
+            WIDTH 8.25
       NPSHGruppe.nedre COLUMN-LABEL "Nedre" FORMAT "->>,>>9.99":U
+            WIDTH 10.25
       NPSHGruppe.ovre COLUMN-LABEL "Øvre" FORMAT "->>,>>9.99":U
+            WIDTH 10.25
       NPSHGruppe.grunnlag COLUMN-LABEL "Grunnlag" FORMAT "x(14)":U
       NPSHGruppe.NPSHGruppeTypeNavn COLUMN-LABEL "GruppeType" FORMAT "X(3)":U
-            WIDTH 11.8
+            WIDTH 11.75
+      NPSHGruppe.iNPSHGruppeTypeId COLUMN-LABEL "NPSHGruppeTypeId" FORMAT ">>>>>>>>9":U
+            WIDTH 18.25
   ENABLE
       NPSHGruppe.storrelse
       NPSHGruppe.NPSHGruppeTypeNavn
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 11.71 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 98 BY 11.72 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -168,8 +175,8 @@ DEFINE FRAME DEFAULT-FRAME
      BrwNPSHGruppe AT ROW 1 COL 1 WIDGET-ID 200
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 98 BY 11.71 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SCROLLABLE SIZE 98 BY 11.72 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -188,12 +195,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Velg dimmensjon"
-         HEIGHT             = 11.71
+         HEIGHT             = 11.72
          WIDTH              = 98
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 114.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 114.2
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 114.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 114.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -231,6 +238,9 @@ ASSIGN
        FRAME DEFAULT-FRAME:HEIGHT           = 11.71
        FRAME DEFAULT-FRAME:WIDTH            = 98.
 
+ASSIGN 
+       NPSHGruppe.iNPSHGruppeTypeId:VISIBLE IN BROWSE BrwNPSHGruppe = FALSE.
+
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
 
@@ -246,15 +256,17 @@ THEN C-Win:HIDDEN = yes.
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _TblOptList       = ", FIRST OUTER"
      _FldNameList[1]   > "_<CALC>"
-"NPSHGruppe.storrelse" "Størrelse" "X(2)" "character" ? ? ? ? ? ? yes "" no no "8.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHGruppe.storrelse" "Størrelse" "X(2)" "character" ? ? ? ? ? ? yes "" no no "8.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
-"NPSHGruppe.nedre" "Nedre" "->>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHGruppe.nedre" "Nedre" "->>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
-"NPSHGruppe.ovre" "Øvre" "->>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHGruppe.ovre" "Øvre" "->>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
 "NPSHGruppe.grunnlag" "Grunnlag" "x(14)" "character" ? ? ? ? ? ? no "" no no "14" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > "_<CALC>"
-"NPSHGruppe.NPSHGruppeTypeNavn" "GruppeType" "X(3)" "character" ? ? ? ? ? ? yes "" no no "11.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHGruppe.NPSHGruppeTypeNavn" "GruppeType" "X(3)" "character" ? ? ? ? ? ? yes "" no no "11.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[6]   > "_<CALC>"
+"NPSHGruppe.iNPSHGruppeTypeId" "NPSHGruppeTypeId" ">>>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "18.25" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPSHGruppe */
 &ANALYZE-RESUME
@@ -303,7 +315,6 @@ END.
 &ANALYZE-RESUME
 
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BrwNPSHGruppe C-Win
 ON LEFT-MOUSE-DBLCLICK OF BrwNPSHGruppe IN FRAME DEFAULT-FRAME
 DO:
@@ -312,7 +323,6 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 
 &UNDEFINE SELF-NAME
@@ -374,6 +384,21 @@ END.
 
 /* **********************  Internal Procedures  *********************** */
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DefaultActionBrowse C-Win 
+PROCEDURE DefaultActionBrowse :
+DO WITH FRAME {&FRAME-NAME}:
+  END.
+  RUN SUPER.
+  DO WITH FRAME {&FRAME-NAME}:
+    publish 'setDimmValue' (oBrwNPSHGruppe:BUFFER-HANDLE::storrelse).
+    apply 'close' to this-procedure.
+  END.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI C-Win  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
@@ -428,7 +453,6 @@ DO WITH FRAME {&FRAME-NAME}:
 
   oBrwNPSHGruppe = NEW JBoxBrowse(brwNPSHGruppe:HANDLE).
 /*  oBrwNPSHGruppe:setFilter('nedre,ovre,grunnlag','<,>=,=',string(dKapasitet) + '|' + string(dKapasitet) + '|' + cGrunnlag).*/
-  oBrwNPSHGruppe:baseQuery = 'WHERE (nedre < dec(' + quoter(dKapasitet) + ') and ovre >= dec(' + quoter(dKapasitet) + ')) and grunnlag = ' + quoter(cGrunnlag) .
 /*      FOR EACH xxxNPSHFMGR:                                                           */
 /*      IF  (xxxNPSHFMGR.nedre  <  c_kapasitet  AND                                     */
 /*          xxxNPSHFMGR.ovre  >= c_kapasitet) AND xxxNPSHFMGR.grunnlag = c_grunnlag THEN*/
@@ -442,7 +466,6 @@ DO WITH FRAME {&FRAME-NAME}:
 /*    END.                                                                              */
   
 END.
-oBrwNPSHGruppe:OpenQuery().
 
 
 oContainer:initResize().
@@ -481,14 +504,22 @@ def input param ipType      as char no-undo.
 def input param ipKapasitet as dec  no-undo.
 def input param ipGrunnlag  as char no-undo.
 
+subscribe procedure SOURCE-PROCEDURE to 'setDimmValue' anywhere.
+
 if JBoxServerAPI:Instance:Find('NPSHGruppeType','where NPSHGruppeTypeNavn = ' + quoter(ipType)) then 
   iGruppeTypeId = JBoxServerAPI:Instance:IntValue('iNPSHGruppeTypeId').
 assign 
   dKapasitet = ipKapasitet
   cGrunnlag  = ipGrunnlag
 .
-MESSAGE iGruppeTypeId skip ipKapasitet skip ipGrunnlag
-VIEW-AS ALERT-BOX.
+
+oBrwNPSHGruppe:baseQuery = substitute('WHERE iNPSHGruppeTypeId = &1',iGruppeTypeId).
+oBrwNPSHGruppe:OpenQuery().
+oBrwNPSHGruppe:BUFFER-HANDLE:find-first(substitute('WHERE (nedre < &1 and ovre >= &1) and grunnlag = "&2"',dKapasitet,cGrunnlag)) no-error.
+if oBrwNPSHGruppe:BUFFER-HANDLE:avail then do:
+  oBrwNPSHGruppe:QUERY-HANDLE:reposition-to-rowid(oBrwNPSHGruppe:BUFFER-HANDLE:rowid).
+  oBrwNPSHGruppe:displayRecord().
+end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

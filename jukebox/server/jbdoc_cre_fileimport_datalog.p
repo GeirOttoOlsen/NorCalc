@@ -12,6 +12,8 @@ DEF VAR cCurrLogName    AS CHAR   NO-UNDO INIT "<<<".
 DEF VAR cUserid         AS CHAR   NO-UNDO.
 DEF VAR iCurrHeaderId   AS INT    NO-UNDO.
 
+{incl/validatecaller.i}
+
 cUserid = DYNAMIC-FUNCTION("getAsUserId" IN SOURCE-PROCEDURE) NO-ERROR.
 
 CREATE QUERY hQuery.

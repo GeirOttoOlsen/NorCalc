@@ -21,6 +21,8 @@ DEF VAR cKeyFlds         AS CHAR   NO-UNDO.
 DEF VAR cFindString      AS CHAR   NO-UNDO.
 DEF VAR bAsLibStarted    AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 CREATE BUFFER hRowAccessTable FOR TABLE "JBoxRowAccessTable" NO-ERROR.
 CREATE BUFFER ohBufferAccess  FOR TABLE "JBoxRowAccess" NO-ERROR.
 

@@ -53,6 +53,7 @@ def var hParent     as handle no-undo.
 DEF VAR oBrowse AS JBoxBrowse.
 
 DEF TEMP-TABLE ttRecord
+    FIELD FieldWeight  as int 
     FIELD FieldName    AS CHAR FORMAT "x(30)"  LABEL "Field name"
     FIELD FieldValue   AS CHAR FORMAT "x(256)" LABEL "Value"
     FIELD TableName    AS CHAR
@@ -87,6 +88,16 @@ DEF VAR otbRecord AS JBoxToolbar NO-UNDO.
 /* _UIB-PREPROCESSOR-BLOCK-END */
 &ANALYZE-RESUME
 
+
+/* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setFieldWeight C-Win 
+FUNCTION setFieldWeight RETURNS integer
+  ( INPUT iphBufferField as handle,
+    input ipExtent as int )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 
 /* ***********************  Control Definitions  ********************** */
@@ -239,9 +250,11 @@ ON CLOSE OF THIS-PROCEDURE DO:
   DYNAMIC-FUNCTION("SetCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
   PUBLISH "InvalidateHandle" (THIS-PROCEDURE).
   IF CAN-DO(hParent:INTERNAL-ENTRIES,"MoveToTop") THEN DO:
-    RUN MoveToTop in hParent.
-    hParent:CURRENT-WINDOW:SENSITIVE = TRUE.
-    JBoxSession:Instance:setDelayedFocus(hParent).
+    RUN MoveToTop in hParent NO-ERROR.
+    IF VALID-HANDLE(hParent:CURRENT-WINDOW) THEN DO:
+      hParent:CURRENT-WINDOW:SENSITIVE = TRUE.
+      JBoxSession:Instance:setDelayedFocus(hParent).
+    END.  
   END.  
   RUN disable_UI.
 END.
@@ -344,7 +357,8 @@ DO WITH FRAME {&FRAME-NAME}:
                            BUFFER ttRecord:HANDLE). /* The BUFFER ttCust.. parameter tells the browse that it is works on a local temp-table */
   
   /* Set visible fields by (optionally - sequence doesn't matter) */                         
-  oBrowse:buffersAndFields = "ttRecord;FieldName;FieldValue".
+  oBrowse:buffersAndFields = "ttRecord;!FieldWeight;FieldName;FieldValue".
+  oBrowse:setQuerySort('FieldWeight;Desc').
   
   oBrowse:enabledColumns = "FieldName,FieldValue".
   oBrowse:enableOnDblClick = YES. 
@@ -382,9 +396,26 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE receiveTTRecord C-Win 
+PROCEDURE receiveTTRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM hTT AS handle NO-UNDO.
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewDbRecord C-Win
-PROCEDURE ViewDbRecord:
+IF VALID-HANDLE(hTT) THEN DO:
+  hTT:DEFAULT-BUFFER-HANDLE:FIND-FIRST ("WHERE true").
+  RUN ViewTtRecord(hTT:DEFAULT-BUFFER-HANDLE).
+END.  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewDbRecord C-Win 
+PROCEDURE ViewDbRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -401,36 +432,89 @@ IF VALID-HANDLE(httDbRecord) THEN DO:
 END.  
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewTtRecord C-Win
-PROCEDURE ViewTtRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewTtRecord C-Win 
+PROCEDURE ViewTtRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
 ------------------------------------------------------------------------------*/
 DEF INPUT PARAM ihBuffer AS HANDLE NO-UNDO.
+def var iy as int no-undo.
+def var hField as handle no-undo.
 
 EMPTY TEMP-TABLE ttRecord.
 
 IF ihBuffer:AVAIL THEN DO:
   oBrowse:BROWSE-HANDLE:HELP = ihBuffer:NAME.
   DO ix = 1 TO ihBuffer:NUM-FIELDS:
-    CREATE ttRecord.
-    ASSIGN ttRecord.FieldName  = ihBuffer:BUFFER-FIELD(ix):NAME
-           ttRecord.FieldValue = STRING(ihBuffer:BUFFER-FIELD(ix):BUFFER-VALUE)
-           .
+      if ihBuffer:buffer-field(ix):extent gt 0 then do iy = 1 to ihBuffer:buffer-field(ix):extent:
+      CREATE ttRecord.
+      ASSIGN ttRecord.FieldName   = ihBuffer:BUFFER-FIELD(ix):NAME + (if iy gt 0 then ' [' + string(iy) + ']' else '')
+             ttRecord.FieldValue  = STRING(ihBuffer:BUFFER-FIELD(ix):BUFFER-VALUE(iy))
+             ttRecord.FieldWeight = setFieldWeight(ihBuffer:buffer-field(ix),iy)
+             .
+    end.
+    else do:
+      CREATE ttRecord.
+      ASSIGN ttRecord.FieldName   = ihBuffer:BUFFER-FIELD(ix):NAME 
+             ttRecord.FieldValue  = STRING(ihBuffer:BUFFER-FIELD(ix):BUFFER-VALUE)
+             ttRecord.FieldWeight = setFieldWeight(ihBuffer:buffer-field(ix),0)
+             .
+    end.
+    
   END.    
 END.
 oBrowse:openQuery().
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setFieldWeight C-Win 
+FUNCTION setFieldWeight RETURNS integer
+  ( INPUT iphBufferField AS handle,
+    input ipExtent as int ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+  DO WITH FRAME {&FRAME-NAME}:  
+    if ipExtent gt 0 then   
+    case iphBufferField:data-type:
+      when 'integer'     then if iphBufferField:buffer-value(ipExtent) gt 0 and iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'character'   then if iphBufferField:buffer-value(ipExtent) ne '' and iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'date'        then if iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'datetime'    then if iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'datetime-tz' then if iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'logical'     then if iphBufferField:buffer-value(ipExtent) and iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      when 'decimal'     then if iphBufferField:buffer-value(ipExtent) gt 0 and iphBufferField:buffer-value(ipExtent) ne ? then return 1. else return 0.
+      otherwise return 0.
+    end case.
+    else     
+      case iphBufferField:data-type:
+        when 'integer'     then if iphBufferField:buffer-value gt 0 and iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'character'   then if iphBufferField:buffer-value ne '' and iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'date'        then if iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'datetime'    then if iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'datetime-tz' then if iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'logical'     then if iphBufferField:buffer-value and iphBufferField:buffer-value ne ? then return 1. else return 0.
+        when 'decimal'     then if iphBufferField:buffer-value gt 0 and iphBufferField:buffer-value ne ? then return 1. else return 0.
+        otherwise return 0.
+      end case.
+      
+  END.
+  CATCH eAny AS Progress.Lang.Error :
+    MESSAGE 'herxx:' eAny:GetMessage(1) skip ipExtent skip iphBufferField:name
+    VIEW-AS ALERT-BOX.  
+  END CATCH.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 

@@ -164,6 +164,15 @@ filter_tbNPSHSYST browseconfig_tbNPSHSYST excel_tbNPSHSYST BrwNPSHORD
 &ANALYZE-RESUME
 
 
+/* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setParentBrowse C-Win 
+FUNCTION setParentBrowse RETURNS LOGICAL
+  ( INPUT ipoParentBrowse AS class JBoxBrowse )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 /* ***********************  Control Definitions  ********************** */
 
@@ -489,7 +498,7 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DisplayRecord C-Win 
 PROCEDURE DisplayRecord :
-  DO WITH FRAME {&FRAME-NAME}:     
+DO WITH FRAME {&FRAME-NAME}:     
     if avail NPSHORD then oTabNPSHORD:getPageBrowseObject(2):parentLink = "WHERE cContext = 'NPSHOrd' and cEntityId = '" + string(NPSHORD.ordreid) + "'".
   END.
   run super.
@@ -571,6 +580,27 @@ THIS-PROCEDURE:CURRENT-WINDOW:MOVE-TO-TOP().
 DYNAMIC-FUNCTION("DoLockWindow",?).
 
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setParentBrowse C-Win 
+FUNCTION setParentBrowse RETURNS LOGICAL
+  ( INPUT ipoParentBrowse AS class JBoxBrowse ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+
+DO WITH FRAME {&FRAME-NAME}:
+  oBrwNPSHORD:setParentBrowseObject(ipoParentBrowse, 'ordreid').
+  ipoParentBrowse:displayRecord().
+END.
+
+RETURN YES.
+
+END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

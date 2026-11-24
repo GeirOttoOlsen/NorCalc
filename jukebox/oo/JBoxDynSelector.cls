@@ -12,9 +12,8 @@
 USING Progress.Lang.*.
 
 CLASS JBoxDynSelector:
-  DEF VAR hSourceProc     AS HANDLE NO-UNDO. 
-  DEF VAR hParent         AS HANDLE NO-UNDO.
-  DEF VAR bOk             AS LOG    NO-UNDO.
+  DEF PUBLIC PROPERTY SELECTOR-PROCEDURE    AS HANDLE NO-UNDO GET. PROTECTED SET. 
+  DEF PUBLIC PROPERTY PARENT-PROCEDURE      AS HANDLE NO-UNDO GET. PROTECTED SET. 
   DEF PUBLIC PROPERTY SELECTOR-PANEL-HANDLE AS HANDLE GET. PROTECTED SET.
   DEF PUBLIC PROPERTY SOURCE-BROWSE-OBJECT  AS JBoxBrowse GET. PROTECTED SET. 
   DEF PUBLIC PROPERTY TARGET-BROWSE-OBJECT  AS JBoxBrowse GET. PROTECTED SET. 
@@ -32,8 +31,8 @@ CLASS JBoxDynSelector:
                                      ,INPUT ihToolbar   AS HANDLE 
                                     ):
 
-    ASSIGN hSourceProc = SOURCE-PROCEDURE
-           hParent = ihParent
+    ASSIGN SELECTOR-PROCEDURE   = SOURCE-PROCEDURE
+           PARENT-PROCEDURE     = ihParent
            SOURCE-BROWSE-OBJECT = NEW JBoxBrowse(ihBrwSource,ihParent)
            TARGET-BROWSE-OBJECT = NEW JBoxBrowse(ihBrwTarget,ihParent)
            NAME = SOURCE-BROWSE-OBJECT:BUFFER-HANDLE:NAME
@@ -46,28 +45,38 @@ CLASS JBoxDynSelector:
   END CONSTRUCTOR.
 
   METHOD PUBLIC VOID ExpandSelectorDialog (iiPixelsX AS INT,iiPixelsY AS INT):
-    RUN ExpandSelectorDialog IN hSourceProc (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,iiPixelsX,iiPixelsY).
+    RUN ExpandSelectorDialog IN SELECTOR-PROCEDURE (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,iiPixelsX,iiPixelsY).
   END METHOD.
                                
   METHOD PUBLIC VOID ExpandSelectorDialogX (iiPixels AS INT):
-    RUN ExpandSelectorDialog IN hSourceProc (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,iiPixels,0).
+    RUN ExpandSelectorDialog IN SELECTOR-PROCEDURE (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,iiPixels,0).
   END METHOD.
 
   METHOD PUBLIC VOID ExpandSelectorDialogY (iiPixels AS INT):
-    RUN ExpandSelectorDialog IN hSourceProc (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,0,iiPixels).
+    RUN ExpandSelectorDialog IN SELECTOR-PROCEDURE (SOURCE-BROWSE-OBJECT:BROWSE-HANDLE,0,iiPixels).
   END METHOD.
 
   METHOD PUBLIC VOID setSelectedRowidList (icRowIdList AS CHAR):
     icRowIdList = TRIM(icRowIdList,",") + ",".
-    DYNAMIC-FUNCTION("setSelectedRowids" IN hSourceProc,icRowIdList).
+    DYNAMIC-FUNCTION("setSelectedRowids" IN SELECTOR-PROCEDURE,icRowIdList).
   END METHOD.
+      
+  METHOD PUBLIC VOID OpenQuerySource():
+    DYNAMIC-FUNCTION("setCurrentObject",THIS-OBJECT:SOURCE-BROWSE-OBJECT:BROWSE-HANDLE).
+    RUN OpenQuerySource IN SELECTOR-PROCEDURE.
+  END METHOD.    
+
+  METHOD PUBLIC VOID OpenQueryTarget():
+    DYNAMIC-FUNCTION("setCurrentObject",THIS-OBJECT:TARGET-BROWSE-OBJECT:BROWSE-HANDLE).
+    RUN OpenQueryTarget IN SELECTOR-PROCEDURE.
+  END METHOD.    
       
   METHOD PUBLIC LOGICAL LoadPanel(icPanelProc AS CHAR):
     DEF VAR hPanelFrame  AS HANDLE NO-UNDO.
     DEF VAR hSelectorWin AS HANDLE NO-UNDO.
     
-    IF CAN-DO(hSourceProc:INTERNAL-ENTRIES,"LoadPanel") THEN 
-      RUN LoadPanel IN hSourceProc (icPanelProc,OUTPUT SELECTOR-PANEL-HANDLE).
+    IF CAN-DO(SELECTOR-PROCEDURE:INTERNAL-ENTRIES,"LoadPanel") THEN 
+      RUN LoadPanel IN SELECTOR-PROCEDURE (icPanelProc,OUTPUT SELECTOR-PANEL-HANDLE).
     ELSE RETURN NO.  
     
     IF VALID-HANDLE(SELECTOR-PANEL-HANDLE) THEN DO:
@@ -81,7 +90,7 @@ CLASS JBoxDynSelector:
                hSelectorWin:HEIGHT-PIXELS = hSelectorWin:HEIGHT-PIXELS + hPanelFrame:HEIGHT-PIXELS
                .
         APPLY "window-resized" TO hSelectorWin.
-        DYNAMIC-FUNCTION("adjustBrowseHeight" IN hSourceProc,hPanelFrame:HEIGHT-PIXELS * -1).
+        DYNAMIC-FUNCTION("adjustBrowseHeight" IN SELECTOR-PROCEDURE,hPanelFrame:HEIGHT-PIXELS * -1).
         hPanelFrame:Y = SOURCE-BROWSE-OBJECT:BROWSE-HANDLE:Y + SOURCE-BROWSE-OBJECT:BROWSE-HANDLE:HEIGHT-PIXELS. 
       END.
       ELSE DO:
@@ -93,7 +102,11 @@ CLASS JBoxDynSelector:
     ELSE RETURN NO.
     
     RETURN YES.
-  END.      
+  END.
+        
+  METHOD PUBLIC VOID CloseSelector ():
+    APPLY "CLOSE" TO SELECTOR-PROCEDURE.  
+  END METHOD.
       
   DESTRUCTOR PUBLIC JBoxDynSelector ( ):
   END DESTRUCTOR.

@@ -7,6 +7,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i} 
+
 DEF VAR ix AS INT NO-UNDO.
 
 IF NUM-ENTRIES(icParam,".") NE 2 THEN DO:

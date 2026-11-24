@@ -122,6 +122,9 @@ function freezeWindow returns logical(ibFreeze as log, ibRecursive as log):
 end.
 DEF VAR otbNPSHTILBUD AS JBoxToolbar NO-UNDO.
 
+
+DEF VAR oTabNPSHTILBUD AS JBoxMsTabs NO-UNDO.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -158,8 +161,7 @@ NPSHTILBUD.vaar_ref
 /* Definitions for FRAME DEFAULT-FRAME                                  */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS tbNPSHTILBUD new_tbNPSHTILBUD ~
-edit_tbNPSHTILBUD copy_tbNPSHTILBUD delete_tbNPSHTILBUD ~
+&Scoped-Define ENABLED-OBJECTS tbNPSHTILBUD TabNPSHTILBUD ~
 refresh_tbNPSHTILBUD filter_tbNPSHTILBUD browseconfig_tbNPSHTILBUD ~
 excel_tbNPSHTILBUD BrwNPSHTILBUD 
 
@@ -183,21 +185,6 @@ DEFINE BUTTON browseconfig_tbNPSHTILBUD
      LABEL "Column setup" 
      SIZE 7.8 BY 1.95 TOOLTIP "Column setup (ALT-C)".
 
-DEFINE BUTTON copy_tbNPSHTILBUD 
-     IMAGE-UP FILE "bmp/copy.bmp":U
-     LABEL "Copy" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Copy (ALT-C)".
-
-DEFINE BUTTON delete_tbNPSHTILBUD 
-     IMAGE-UP FILE "bmp/del16e.bmp":U
-     LABEL "Delete" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Delete (CTRL-D)".
-
-DEFINE BUTTON edit_tbNPSHTILBUD 
-     IMAGE-UP FILE "bmp/edit16e.bmp":U
-     LABEL "Edit" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Edit (CTRL-E)".
-
 DEFINE BUTTON excel_tbNPSHTILBUD 
      IMAGE-UP FILE "ico/excel.ico":U
      IMAGE-INSENSITIVE FILE "gif/excel_disabled.gif":U
@@ -210,16 +197,15 @@ DEFINE BUTTON filter_tbNPSHTILBUD
      LABEL "Filter" 
      SIZE 7.8 BY 1.95 TOOLTIP "Filter (CTRL-F)".
 
-DEFINE BUTTON new_tbNPSHTILBUD 
-     IMAGE-UP FILE "bmp/new16e.bmp":U
-     LABEL "New" 
-     SIZE 7.8 BY 1.95 TOOLTIP "New (CTRL-N)".
-
 DEFINE BUTTON refresh_tbNPSHTILBUD 
      IMAGE-UP FILE "ico/document_refresh.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_refresh_disabled.gif":U
      LABEL "Refresh" 
      SIZE 7.8 BY 1.95 TOOLTIP "Refresh (F5)".
+
+DEFINE RECTANGLE TabNPSHTILBUD
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
+     SIZE 137 BY 13.57.
 
 DEFINE RECTANGLE tbNPSHTILBUD
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
@@ -256,22 +242,19 @@ DEFINE BROWSE BrwNPSHTILBUD
       NPSHTILBUD.id
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 137.6 BY 8.1 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 137.6 BY 5 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPSHTILBUD AT ROW 1.1 COL 1 WIDGET-ID 12
-     edit_tbNPSHTILBUD AT ROW 1.1 COL 9 WIDGET-ID 14
-     copy_tbNPSHTILBUD AT ROW 1.1 COL 16.8 WIDGET-ID 16
-     delete_tbNPSHTILBUD AT ROW 1.1 COL 24.6 WIDGET-ID 18
-     refresh_tbNPSHTILBUD AT ROW 1.1 COL 32.4 WIDGET-ID 4
-     filter_tbNPSHTILBUD AT ROW 1.1 COL 40.2 WIDGET-ID 6
-     browseconfig_tbNPSHTILBUD AT ROW 1.1 COL 48 WIDGET-ID 8
-     excel_tbNPSHTILBUD AT ROW 1.1 COL 55.8 WIDGET-ID 10
+     refresh_tbNPSHTILBUD AT ROW 1.1 COL 1 WIDGET-ID 4
+     filter_tbNPSHTILBUD AT ROW 1.1 COL 9 WIDGET-ID 6
+     browseconfig_tbNPSHTILBUD AT ROW 1.1 COL 16.8 WIDGET-ID 8
+     excel_tbNPSHTILBUD AT ROW 1.1 COL 24.6 WIDGET-ID 10
      BrwNPSHTILBUD AT ROW 3.14 COL 1 WIDGET-ID 300
      tbNPSHTILBUD AT ROW 1 COL 1 WIDGET-ID 2
+     TabNPSHTILBUD AT ROW 8.86 COL 1 WIDGET-ID 20
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
@@ -339,7 +322,7 @@ ASSIGN
 
 ASSIGN 
        tbNPSHTILBUD:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
-                "new;New,edit;Edit,copy;Copy,delete;Delete,refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excelmaxborder".
+                "refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excelmaxborder".
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -514,8 +497,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE tbNPSHTILBUD new_tbNPSHTILBUD edit_tbNPSHTILBUD copy_tbNPSHTILBUD 
-         delete_tbNPSHTILBUD refresh_tbNPSHTILBUD filter_tbNPSHTILBUD 
+  ENABLE tbNPSHTILBUD TabNPSHTILBUD refresh_tbNPSHTILBUD filter_tbNPSHTILBUD 
          browseconfig_tbNPSHTILBUD excel_tbNPSHTILBUD BrwNPSHTILBUD 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
@@ -543,6 +525,15 @@ DO WITH FRAME {&FRAME-NAME}:
   otbNPSHTILBUD = NEW JBoxToolbar(tbNPSHTILBUD:HANDLE).
 
   oBrwNPSHTILBUD:TOOLBAR-OBJECT = otbNPSHTILBUD.
+
+  oTabNPSHTILBUD = NEW JBoxMsTabs(TabNPSHTILBUD:HANDLE,oBrwNPSHTILBUD).
+  oTabNPSHTILBUD:pageOneType = "oneToOne".
+  
+  oTabNPSHTILBUD:setLinkFields("Id").
+  
+  oTabNPSHTILBUD:AddPage("Detalj","wSHTilbudDetalj.w").
+  oTabNPSHTILBUD:AddPage("Tillegg","wSHTillegg.w").
+  oTabNPSHTILBUD:AddPage("Ordre","wSHordreBrw.w").
 END.
 oBrwNPSHTILBUD:OpenQuery().
 
@@ -573,30 +564,4 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE NewRecord C-Win 
-PROCEDURE NewRecord :
-  def var hChild as handle no-undo.
-  freezeWindow(true,true).
-  hChild = JBoxMainMenu:Instance:StartChildWindow("wSHTilbudDetalj.w","Tilbud",THIS-PROCEDURE,yes).
-  
-/*  hChild = JBoxMainMenu:Instance:StartNewWindow("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,yes,no).*/
-/*  dynamic-function('setParentBrowse' in hChild ,input oBrwNORPROSJEKT).*/
 
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE EditRecord C-Win 
-PROCEDURE EditRecord :
-  def var hChild as handle no-undo.
-  freezeWindow(true,true).
-  hChild = JBoxMainMenu:Instance:StartChildWindow("wSHTilbudDetalj.w","Tilbud",THIS-PROCEDURE,yes).
-  
-/*  hChild = JBoxMainMenu:Instance:StartNewWindow("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,yes,no).*/
-  dynamic-function('setParentBrowse' in hChild ,input oBrwNPSHTILBUD).
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME

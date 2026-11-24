@@ -43,7 +43,7 @@ DEF VAR hParent      AS HANDLE NO-UNDO.
 DEF VAR hBuffer      AS HANDLE NO-UNDO.
 DEF VAR hABLattr     AS HANDLE NO-UNDO.
 DEF VAR cABLattrList AS CHAR   NO-UNDO
-    INIT "DATA-TYPE,OWNER,SENSITIVE,PARENT,FORMAT,POPUP-MENU,MENU-ITEM,MENU-BAR,SUB-MENU,LABEL,SUBTYPE,CURRENT-WINDOW,STRING-VALUE,BUFFER-VALUE,HELP,HEIGHT,WIDTH,HEIGHT-PIXELS,WIDTH-PIXELS,INITIAL,LIST-ITEMS,LIST-ITEM-PAIRS,SCREEN-VALUE,INPUT-VALUE,EXTENT,PRIVATE-DATA,PREV-SIBLING,NEXT-SIBLING,FIRST-CHILD,ROWID,TABLE,RECID,TABLE-HANDLE,TABLE-NUMBER,ERROR,AVAILABLE,INDEX-INFORMATION,NAME,TYPE,PREPARE-STRING,IS-OPEN,NUM-RESULTS,QUERY-OFF-END,CURRENT-RESULT-ROW,CURRENT-COLUMN,DOWN,DROP-TARGET,FOCUSED-ROW,FONT,FRAME,FIT-LAST-COLUMN,FOCUSED-ROW,HEIGHT-PIXELS,WIDTH-PIXELS,MAX-DATA-GUESS,HIDDEN,MULTIPLE,NEXT-TAB-ITEM,PREV-TAB-ITEM,NUM-COLUMNS,QUERY,SELECTABLE,SELECTED,ROW-MARKERS,TITLE,TOOLTIP,VISIBLE,WINDOW,X,Y,INSTANTIATING-PROCEDURE,LIST-ITEMS,LIST-ITEM-PAIRS,READ-ONLY,HANDLE".
+    INIT "DATA-TYPE,OWNER,SENSITIVE,PARENT,FORMAT,POPUP-MENU,MENU-ITEM,MENU-BAR,SUB-MENU,LABEL,SUBTYPE,CURRENT-WINDOW,STRING-VALUE,BUFFER-VALUE,HELP,HEIGHT,WIDTH,HEIGHT-PIXELS,WIDTH-PIXELS,INITIAL,LIST-ITEMS,LIST-ITEM-PAIRS,SCREEN-VALUE,INPUT-VALUE,EXTENT,PRIVATE-DATA,PREV-SIBLING,NEXT-SIBLING,FIRST-CHILD,ROWID,TABLE,RECID,TABLE-HANDLE,TABLE-NUMBER,ERROR,AVAILABLE,INDEX-INFORMATION,NAME,TYPE,PREPARE-STRING,IS-OPEN,NUM-RESULTS,QUERY-OFF-END,CURRENT-RESULT-ROW,CURRENT-COLUMN,DOWN,DROP-TARGET,FOCUSED-ROW,FONT,FRAME,FIT-LAST-COLUMN,FOCUSED-ROW,HEIGHT-PIXELS,WIDTH-PIXELS,MAX-DATA-GUESS,HIDDEN,MULTIPLE,NEXT-TAB-ITEM,PREV-TAB-ITEM,NUM-COLUMNS,QUERY,SELECTABLE,SELECTED,ROW-MARKERS,TITLE,TOOLTIP,VISIBLE,WINDOW,X,Y,INSTANTIATING-PROCEDURE,LIST-ITEMS,LIST-ITEM-PAIRS,READ-ONLY,HANDLE,NUMERIC-FORMAT,DATE-FORMAT".
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -87,13 +87,13 @@ DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
 /* Definitions of the field level widgets                               */
 DEFINE RECTANGLE rectBrwObjectLink
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 133 BY 21.42.
+     SIZE 133 BY 21.43.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     rectBrwObjectLink AT ROW 1.23 COL 2
+     rectBrwObjectLink AT ROW 1.24 COL 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
@@ -117,11 +117,11 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
          HEIGHT             = 21.81
-         WIDTH              = 135.14
-         MAX-HEIGHT         = 23.54
-         MAX-WIDTH          = 150.57
-         VIRTUAL-HEIGHT     = 23.54
-         VIRTUAL-WIDTH      = 150.57
+         WIDTH              = 135.2
+         MAX-HEIGHT         = 23.52
+         MAX-WIDTH          = 150.6
+         VIRTUAL-HEIGHT     = 23.52
+         VIRTUAL-WIDTH      = 150.6
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -244,9 +244,8 @@ END.
 
 /* **********************  Internal Procedures  *********************** */
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ApplyChooseRecord C-Win
-PROCEDURE ApplyChooseRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ApplyChooseRecord C-Win 
+PROCEDURE ApplyChooseRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -263,15 +262,12 @@ IF NOT ERROR-STATUS:ERROR AND VALID-HANDLE(hh) THEN DO:
 END.
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ApplyDoubleClickRecord C-Win
-PROCEDURE ApplyDoubleClickRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ApplyDoubleClickRecord C-Win 
+PROCEDURE ApplyDoubleClickRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -289,11 +285,45 @@ END.
 
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ApplyReturnRecord C-Win 
+PROCEDURE ApplyReturnRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hh   AS HANDLE NO-UNDO.
+DEF VAR bOk  AS LOG    NO-UNDO.
 
+hh = WIDGET-HANDLE(hBuffer:BUFFER-FIELD("cABLattrValue"):BUFFER-VALUE) NO-ERROR.
+IF NOT ERROR-STATUS:ERROR AND VALID-HANDLE(hh) THEN DO:
+  MESSAGE "Apply Return to" (IF hh:LABEL NE ? THEN hh:LABEL ELSE STRING(hh)) 
+          VIEW-AS ALERT-BOX QUESTION BUTTONS OK-CANCEL UPDATE bOK.
+  IF bOK THEN
+    APPLY "RETURN" TO hh.        
+END.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ContentToExcelRecord C-Win 
+PROCEDURE ContentToExcelRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RUN ToExcelViaFile.p (WIDGET-HANDLE(hBuffer::cABLattrValue),0).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DefaultActionBrowse C-Win 
 PROCEDURE DefaultActionBrowse :
@@ -339,6 +369,16 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DisplayRecord C-Win 
+PROCEDURE DisplayRecord :
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledEvents",IF hBuffer:AVAIL AND NOT CAN-DO("browse,query,buffer",hBuffer::cABLattrName) THEN "ContentToExcel" ELSE "").
+  RUN SUPER.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI C-Win  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
 /*------------------------------------------------------------------------------
@@ -375,12 +415,14 @@ DO WITH FRAME {&FRAME-NAME}:
                                    + ";+cABLattrName|CHARACTER|x(40)||ABL attribute"
                                    + ";+cABLattrValue|CHARACTER|x(256)||Value"
                                    + ";+cABLattrType|CHARACTER|x(256)||Derived"
+                                   + ";+cABLLabel|CHARACTER|x(256)||Label"
                                    ,
                                    "where false",
                                    "sort|cABLattrName").
-  DYNAMIC-FUNCTION("NewMenuBand",hBrowse,"Filter,Excel,MultiSortBrowse,ApplyChoose;Apply Choose,ApplyDoubleClick;Apply Double Click","").
+  DYNAMIC-FUNCTION("NewMenuBand",hBrowse,"Filter,Excel,ContentToExcel;Content to Excel,MultiSortBrowse,ApplyChoose;Apply Choose,ApplyDoubleClick;Apply Double Click,ApplyReturn;Apply Return","").
 
   hBrowse:GET-BROWSE-COLUMN(2):WIDTH-PIXELS = 200.
+  hBrowse:GET-BROWSE-COLUMN(3):WIDTH-PIXELS = 200.
 
   hBrowse:TOOLTIP = "Double-click on handles to drill down on attributes".
 
@@ -447,6 +489,7 @@ DO ix = 1 TO NUM-ENTRIES(LIST-QUERY-ATTRS(ihObject)):
                                                                    ERROR-STATUS:GET-MESSAGE(1)
                                                                  ELSE IF hCall:RETURN-VALUE = ? THEN '?'
                                                                  ELSE hCall:RETURN-VALUE)
+           hBuffer::cABLLabel = (IF hBuffer::cABLattrName = "INSTANTIATING-PROCEDURE" THEN hCall:RETURN-VALUE:FILE-NAME ELSE "")                                                      
            cListed = cListed + ENTRY(ix,LIST-QUERY-ATTRS(ihObject)) + ","
            NO-ERROR.
   END.
@@ -516,6 +559,7 @@ ELSE IF ihObject:TYPE = "frame" THEN DO:
     ASSIGN hBuffer:BUFFER-FIELD("cABLattrName"):BUFFER-VALUE = (IF CAN-QUERY(hWidget,"name") AND hWidget:NAME NE ? THEN hWidget:NAME + " " ELSE "")
            hBuffer:BUFFER-FIELD("cABLattrValue"):BUFFER-VALUE  = STRING(hWidget)
            hBuffer:BUFFER-FIELD("cABLattrType"):BUFFER-VALUE = hWidget:TYPE  
+           hBuffer:BUFFER-FIELD("cABLLabel"):BUFFER-VALUE = (IF CAN-QUERY(hWidget,"LABEL") AND hWidget:LABEL NE ? THEN hWidget:LABEL + " " ELSE "")  
            .
     hWidget = hWidget:NEXT-SIBLING.
   END.

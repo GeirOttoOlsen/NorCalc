@@ -16,8 +16,18 @@ DEFINE VARIABLE cSettingNameList AS CHARACTER   NO-UNDO.
 DEFINE VARIABLE cSourceFile      AS CHARACTER   NO-UNDO.
 DEFINE VARIABLE cSourceUser      AS CHARACTER   NO-UNDO.
 DEFINE VARIABLE ix               AS INTEGER     NO-UNDO.
+DEF VAR hbJBoxUserSetting        AS HANDLE      NO-UNDO.
+DEF VAR bJBoxUserSetting         AS HANDLE      NO-UNDO.
+DEF VAR hbJBoxUser               AS HANDLE      NO-UNDO.
+DEF VAR hqUserSetting            AS HANDLE      NO-UNDO.
+DEF VAR bFound                   AS LOG         NO-UNDO.
 
-DEF BUFFER bJBoxUserSetting FOR JBoxUserSetting.
+{incl/validatecaller.i}
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxUser",OUTPUT hbJBoxUser) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxUserSetting",OUTPUT hbJBoxUserSetting) THEN RETURN.
+
+CREATE BUFFER bJBoxUserSetting FOR TABLE "JBoxUserSetting".
 
 ASSIGN cSourceFile      = ENTRY(1,icParam,"¤")
        cObjectName      = ENTRY(2,icParam,"¤")
@@ -35,74 +45,82 @@ END.
 
 UpdateUserSettings:
 DO TRANSACTION ON ERROR UNDO,LEAVE:
-  IF CAN-FIND(FIRST bJBoxUserSetting NO-LOCK
-              WHERE bJBoxUserSetting.cJBoxUserId = cSourceUser
-                AND bJBoxUserSetting.cSourceFile = cSourceFile
-                AND bJBoxUserSetting.cObjectName = cObjectName
-                AND bJBoxUserSetting.cContext    = cContext
-                AND CAN-DO(cSettingNameList,bJBoxUserSetting.cSettingName))
-     THEN DO:
-    
-    FOR EACH bJBoxUserSetting NO-LOCK
-        WHERE bJBoxUserSetting.cJBoxUserId = cSourceUser
-          AND bJBoxUserSetting.cSourceFile = cSourceFile
-          AND bJBoxUserSetting.cObjectName = cObjectName
-          AND bJBoxUserSetting.cContext    = cContext
-          AND CAN-DO(cSettingNameList,bJBoxUserSetting.cSettingName)
-          :
+  bFound = bJBoxUserSetting:FIND-FIRST("WHERE JBoxUserSetting.cJBoxUserId = '" + cSourceUser + "'"
+                                     + " AND JBoxUserSetting.cSourceFile  = '" + cSourceFile + "'"
+                                     + " AND JBoxUserSetting.cObjectName  = '" + cObjectName + "'"
+                                     + " AND JBoxUserSetting.cContext     = '" + cContext + "'"
+                                     + " AND CAN-DO('" + cSettingNameList + "',cSettingName)",NO-LOCK) NO-ERROR.
+  IF bFound THEN DO:
+    CREATE QUERY hqUserSetting.
+    hqUserSetting:SET-BUFFERS(bJBoxUserSetting).
+    hqUserSetting:QUERY-PREPARE("FOR EACH JBoxUserSetting NO-LOCK"
+                              + " WHERE JBoxUserSetting.cJBoxUserId = '" + cSourceUser + "'"
+                              + " AND JBoxUserSetting.cSourceFile   = '" + cSourceFile + "'"
+                              + " AND JBoxUserSetting.cObjectName   = '" + cObjectName + "'"
+                              + " AND JBoxUserSetting.cContext      = '" + cContext + "'"
+                              + " AND CAN-DO('" + cSettingNameList + "',cSettingName)").
+    hqUserSetting:QUERY-OPEN ().
+    REPEAT WHILE hqUserSetting:GET-NEXT():
       DO ix = 1 TO NUM-ENTRIES(cRowIdList):
-        FIND FIRST JBoxUser NO-LOCK
-             WHERE ROWID(JBoxUser) = TO-ROWID(ENTRY(ix,cRowIdList))
-             NO-ERROR.
-        IF AVAIL JBoxUser AND JBoxUser.cJBoxUserId NE cSourceUser THEN DO:
-          FIND FIRST JBoxUserSetting EXCLUSIVE-LOCK
-               WHERE JBoxUserSetting.cJBoxUserId  = JBoxUser.cJBoxUserId
-                 AND JBoxUserSetting.cSourceFile  = cSourceFile
-                 AND JBoxUserSetting.cObjectName  = cObjectName
-                 AND JBoxUserSetting.cContext     = cContext
-                 AND JBoxUserSetting.cSettingName = bJBoxUserSetting.cSettingName
-               NO-WAIT NO-ERROR.
+        bFound = hbJBoxUser:FIND-FIRST("WHERE ROWID(JBoxUser) = TO-ROWID('" + ENTRY(ix,cRowIdList) + "')",NO-LOCK)
+                                       NO-ERROR.
+        IF bFound AND hbJBoxUser::cJBoxUserId NE cSourceUser THEN DO:
+          bFound = hbJBoxUserSetting:FIND-FIRST("WHERE JBoxUserSetting.cJBoxUserId = '" + hbJBoxUser::cJBoxUserId + "'"
+                                              + " AND JBoxUserSetting.cSourceFile  = '" + cSourceFile + "'"
+                                              + " AND JBoxUserSetting.cObjectName  = '" + cObjectName + "'"
+                                              + " AND JBoxUserSetting.cContext     = '" + cContext + "'"
+                                              + " AND JBoxUserSetting.cSettingName = '" + bJBoxUserSetting::cSettingName + "'",EXCLUSIVE-LOCK,NO-WAIT)
+                   NO-ERROR.
   
-          IF LOCKED JBoxUserSetting THEN DO:
+          IF hbJBoxUserSetting:LOCKED THEN DO:
             ocReturn = "Usersettings are locked for update" + PROGRAM-NAME(1).
             UNDO, LEAVE UpdateUserSettings.
           END.
-          ELSE IF NOT AVAIL JBoxUserSetting THEN DO:
-            CREATE JBoxUserSetting.
-            ASSIGN JBoxUserSetting.cJBoxUserId  = JBoxUser.cJBoxUserId
-                   JBoxUserSetting.dCreated     = TODAY
-                   JBoxUserSetting.cCreatedBy   = cSourceUser
-                   JBoxUserSetting.cSourceFile  = cSourceFile
-                   JBoxUserSetting.cObjectName  = cObjectName
-                   JBoxUserSetting.cContext     = cContext
-                   JBoxUserSetting.cSettingName = bJBoxUserSetting.cSettingName
+          ELSE IF NOT bFound THEN DO:
+            hbJBoxUserSetting:BUFFER-CREATE().
+            ASSIGN hbJBoxUserSetting::cJBoxUserId  = hbJBoxUser::cJBoxUserId
+                   hbJBoxUserSetting::dCreated     = TODAY
+                   hbJBoxUserSetting::cCreatedBy   = cSourceUser
+                   hbJBoxUserSetting::cSourceFile  = cSourceFile
+                   hbJBoxUserSetting::cObjectName  = cObjectName
+                   hbJBoxUserSetting::cContext     = cContext
+                   hbJBoxUserSetting::cSettingName = bJBoxUserSetting::cSettingName
                    .
           END.
           ELSE
-            ASSIGN JBoxUserSetting.dModified   = TODAY
-                   JBoxUserSetting.cModifiedBy = cSourceUser.
+            ASSIGN hbJBoxUserSetting::dModified   = TODAY
+                   hbJBoxUserSetting::cModifiedBy = cSourceUser.
 
-          JBoxUserSetting.cSetting = bJBoxUserSetting.cSetting. 
+          hbJBoxUserSetting::cSetting = bJBoxUserSetting::cSetting. 
         END.
       END.
     END.
   END.
   ELSE 
     DO ix = 1 TO NUM-ENTRIES(cRowIdList):
-      FIND FIRST JBoxUser NO-LOCK
-           WHERE ROWID(JBoxUser) = TO-ROWID(ENTRY(ix,cRowIdList))
-           NO-ERROR.
-      IF AVAIL JBoxUser AND JBoxUser.cJBoxUserId NE cSourceUser THEN
-        FOR EACH JBoxUserSetting EXCLUSIVE-LOCK
-            WHERE JBoxUserSetting.cJBoxUserId  = JBoxUser.cJBoxUserId
-              AND JBoxUserSetting.cSourceFile  = cSourceFile
-              AND JBoxUserSetting.cObjectName  = cObjectName
-              AND JBoxUserSetting.cContext     = cContext
-              AND CAN-DO(cSettingNameList,JBoxUserSetting.cSettingName)
-            :
-          DELETE JBoxUserSetting.
+      bFound = hbJBoxUser:FIND-FIRST("WHERE ROWID(JBoxUser) = TO-ROWID('" + ENTRY(ix,cRowIdList) + "')",NO-LOCK)
+                                     NO-ERROR.
+      IF bFound AND hbJBoxUser::cJBoxUserId NE cSourceUser THEN DO:
+        CREATE QUERY hqUserSetting.
+        hqUserSetting:SET-BUFFERS(bJBoxUserSetting).
+        hqUserSetting:QUERY-PREPARE("FOR EACH JBoxUserSetting EXCLUSIVE-LOCK"
+                                  + " WHERE JBoxUserSetting.cJBoxUserId = '" + hbJBoxUser::cJBoxUserId + "'"
+                                  + " AND JBoxUserSetting.cSourceFile   = '" + cSourceFile + "'"
+                                  + " AND JBoxUserSetting.cObjectName   = '" + cObjectName + "'"
+                                  + " AND JBoxUserSetting.cContext      = '" + cContext + "'"
+                                  + " AND CAN-DO('" + cSettingNameList + "',cSettingName)").
+        hqUserSetting:QUERY-OPEN ().
+        REPEAT WHILE hqUserSetting:GET-NEXT():
+          hbJBoxUserSetting:BUFFER-DELETE ().
         END.
+      END.  
     END.
 END.
 
-obOK = ocReturn = "".
+FINALLY:
+  DELETE OBJECT hqUserSetting     NO-ERROR.
+  DELETE OBJECT bJBoxUserSetting  NO-ERROR.
+  DELETE OBJECT hbJBoxUserSetting NO-ERROR.
+  DELETE OBJECT hbJBoxUser        NO-ERROR.
+  obOK = ocReturn = "".
+END.  

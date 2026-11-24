@@ -5,6 +5,7 @@
   DYNAMIC-FUNCTION("setSessionId","validsession").
   DYNAMIC-FUNCTION("setAttribute",SESSION,"userlevel","super").
 /*  DYNAMIC-FUNCTION("setCompanyId","1"). */                  
+  DYNAMIC-FUNCTION("setAppserviceHandle",SESSION).
   DYNAMIC-FUNCTION("setLanguageCode","EN").
   DYNAMIC-FUNCTION("setBehaviour",
                     "DefaultSortFont|6," +   
@@ -25,7 +26,7 @@
   DYNAMIC-FUNCTION("setAttribute",SESSION,"btnGroupEditDetails","new,edit,copy,undo,save,delete").
   DYNAMIC-FUNCTION("setAttribute",SESSION,"tbEditBrowse","new,copy,delete").
   DYNAMIC-FUNCTION("setAttribute",SESSION,"btnGroupNavBrowse","filter,browseconfig,excel").
-
+  DYNAMIC-FUNCTION("setAttribute",SESSION,"DbViewerCanUpdate","yes").
   DYNAMIC-FUNCTION("getSessionData").
 
   /* Reserved color name for shading browse rows: */

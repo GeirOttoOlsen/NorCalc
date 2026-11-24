@@ -79,6 +79,11 @@ iFontWingdings = DYNAMIC-FUNCTION("setAppFont","Wingdings, size=11 Script=symbol
 
 DEF VAR cNoMoveColumns       AS CHAR   NO-UNDO.
 
+DEF TEMP-TABLE ttSort NO-UNDO
+    FIELD cRowid   AS CHAR
+    FIELD iSeq     AS INT
+    .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -94,7 +99,7 @@ DEF VAR cNoMoveColumns       AS CHAR   NO-UNDO.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rectWinToolbar rectToolbar rectBrowse 
+&Scoped-Define ENABLED-OBJECTS rectToolbar rectBrowse 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -104,6 +109,13 @@ DEF VAR cNoMoveColumns       AS CHAR   NO-UNDO.
 
 
 /* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD moveFlds C-Win 
+FUNCTION moveFlds RETURNS LOGICAL
+  ( INPUT icUpDown AS CHARACTER )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setFieldColor C-Win 
 FUNCTION setFieldColor RETURNS INTEGER
@@ -134,15 +146,10 @@ DEFINE RECTANGLE rectToolbar
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 14.6 BY .91.
 
-DEFINE RECTANGLE rectWinToolbar
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 14.6 BY .91.
-
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     rectWinToolbar AT ROW 1.33 COL 45.6
      rectToolbar AT ROW 1.33 COL 2
      rectBrowse AT ROW 2.67 COL 1.8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
@@ -480,7 +487,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE rectWinToolbar rectToolbar rectBrowse 
+  ENABLE rectToolbar rectBrowse 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -519,11 +526,19 @@ PROCEDURE InitializeObject :
 DEF VAR hSubMenuSettings      AS HANDLE NO-UNDO.
 DEF VAR cCurrViewFields       AS CHAR   NO-UNDO.
 DEF VAR cDataType             AS CHAR   NO-UNDO.
+DEF VAR ix                    AS INT    NO-UNDO.
 DEF VAR iy                    AS INT    NO-UNDO.
 DEF VAR cKeepConfigOpen       AS CHAR   NO-UNDO.
 DEF VAR iNumViewRows          AS INT    NO-UNDO.
 DEF VAR bUserSettingInstalled AS LOG    NO-UNDO.
 DEF VAR bSuperUser            AS LOG    NO-UNDO.
+DEF VAR cCustomViewFields     AS CHAR   NO-UNDO.
+
+//SUBSCRIBE TO "ViewHideAllControls" ANYWHERE.
+
+DYNAMIC-FUNCTION("DoLockWindow",ihBrowse:WINDOW).
+DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","yes").
+DYNAMIC-FUNCTION("ResizeKeepsWindowLocked",ihBrowse:WINDOW).
 
 DO WITH FRAME {&FRAME-NAME}:
   ASSIGN cActivePinButton      = DYNAMIC-FUNCTION("getAttribute",SESSION,"ActivePinButton")
@@ -546,6 +561,7 @@ DO WITH FRAME {&FRAME-NAME}:
                              + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Flytt &opp" ELSE "Move &up")
                            + ",MoveDown;"
                              + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Flytt &ned" ELSE "Move &down")
+                           + ",Pin;;;pinWindow;" + cPassivePinButton  
                            + (IF bConfigEdit THEN
                               ",Color;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett bakgrunnsfarge for redigering" ELSE "Set backgroundcolor for edit")
                               ELSE "")
@@ -560,6 +576,8 @@ DO WITH FRAME {&FRAME-NAME}:
                              + ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Innstillinger" ELSE "Settings")
                               ELSE "")
                              ,"maxborder,enable").
+  
+  hPinButton     = DYNAMIC-FUNCTION("getEventWidget",hToolbar,"Pin","").
     
   hMenuItemAdvanced = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-itemAdvancedSetup")) NO-ERROR.
 
@@ -578,7 +596,7 @@ DO WITH FRAME {&FRAME-NAME}:
                            + ";+!ColumnName|CHARACTER" 
                            + ";+!DataType|CHARACTER" 
                            + ";+!Format|CHARACTER" 
-                           + ";+!Seq|INTEGER" 
+                           + ";+Seq|INTEGER" 
                            + ";+!OrgSeq|INTEGER" 
                            + ";+!MandField|LOGICAL" 
                            + ";+!hEditField|HANDLE"
@@ -604,6 +622,7 @@ DO WITH FRAME {&FRAME-NAME}:
          cAllViewFields                            = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"allviewfields")
          cMandFields                               = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"mandatoryfields")
          cNoMoveColumns                            = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"noMoveColumns")
+         cCustomViewFields                         = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"customViewFields")
          iNumLockedCols                            = ihBrowse:NUM-LOCKED-COLUM
          iViewNumLockedCols                        = iNumLockedCols
          .
@@ -612,7 +631,26 @@ DO WITH FRAME {&FRAME-NAME}:
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"select1strow","yes").
   DYNAMIC-FUNCTION("CreateObjectLink",hToolbar,hBrowse).
 
-  DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+  IF cCustomViewFields NE "" THEN DO ix = 1 TO NUM-ENTRIES(cAllViewFields):
+    iNumViewRows = iNumViewRows + 1.
+
+    cBrowseColumn = ENTRY(ix,cAllViewFields).
+    hBuffer:BUFFER-CREATE().
+    ASSIGN hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE  = cBrowseColumn
+           hBuffer:BUFFER-FIELD("hEditField"):BUFFER-VALUE  = DYNAMIC-FUNCTION("getLinkedObjectByInfo",ihBrowse,"browseoverlay",cBrowseColumn)
+           hBuffer:BUFFER-FIELD("ViewField"):BUFFER-VALUE   = CAN-DO(cCustomViewFields,cBrowseColumn) OR CAN-DO(cCurrViewFields,cBrowseColumn)
+           hBuffer:BUFFER-FIELD("EditField"):BUFFER-VALUE   = DYNAMIC-FUNCTION("getLinkedObjectByInfo",ihBrowse,"browseoverlay",cBrowseColumn) NE ?
+                                                              AND NOT CAN-DO(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"noeditfields"),cBrowseColumn)
+           hBuffer:BUFFER-FIELD("MandField"):BUFFER-VALUE   = CAN-DO(cMandFields,cBrowseColumn)
+           hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE    = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):DATA-TYPE
+           hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE      = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):FORMAT
+           hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE = DYNAMIC-FUNCTION("getBrowseColumnLabel",ihBrowse,cBrowseColumn)
+           hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE         = ix
+           hBuffer:BUFFER-FIELD("OrgSeq"):BUFFER-VALUE      = ix
+           .
+  END.  
+
+  ELSE DO ix = 1 TO ihBrowse:NUM-COLUMNS:
     IF CAN-DO("jbCountDistinct,jbAverage",ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN NEXT.
     IF NOT CAN-DO(cAllViewFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN NEXT.
 
@@ -632,13 +670,14 @@ DO WITH FRAME {&FRAME-NAME}:
            hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE      = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):FORMAT
            hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE = DYNAMIC-FUNCTION("getStrippedSortLabel",ihBrowse:GET-BROWSE-COLUMN(ix))
            .
+           
     IF CAN-DO(cCurrViewFields,cBrowseColumn) THEN
       hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE            = ix.
     ELSE hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE         = ix + 200.
 
     hBuffer:BUFFER-FIELD("OrgSeq"):BUFFER-VALUE           = ix.
   END.
-
+//run toexcelviafile.p(hbuffer,0).
   hViewFieldOverlay = DYNAMIC-FUNCTION("NewBrowseToggle",
                     hBrowse,                    
                     "ViewField",                   
@@ -678,14 +717,17 @@ DO WITH FRAME {&FRAME-NAME}:
   
     hMenuItemSaveSetting:CHECKED = NOT DYNAMIC-FUNCTION("getAttribute",ihBrowse,"savebrowseconfigsettings") = "no".
   END.
-
+/*
   hWinToolbar = DYNAMIC-FUNCTION("NewToolbar",
                              rectWinToolbar:HANDLE,
                              IF DYNAMIC-FUNCTION("Scandinavian") THEN "Fil" ELSE "File",
-                             "Close;E&xit;,Pin;;;pinWindow;" + cPassivePinButton,
-                             "right,enable").  
+                             "Pin;;;pinWindow;" + cPassivePinButton,
+                             "enable").
+/*                             "Close;E&xit;,Pin;;;pinWindow;" + cPassivePinButton,*/
+/*                             "right,enable").                                    */
 
   hPinButton     = DYNAMIC-FUNCTION("getEventWidget",hWinToolbar,"Pin","").
+  */
 END.
 
 DYNAMIC-FUNCTION("setMyEnableSaveSettingsMenu",NO) NO-ERROR.
@@ -697,6 +739,12 @@ APPLY "window-resized" TO {&WINDOW-NAME}.
 
 APPLY "value-changed" TO hBrowse.
 DYNAMIC-FUNCTION("InitTranslation",THIS-PROCEDURE:CURRENT-WINDOW).
+
+SESSION:SET-WAIT-STATE("").
+
+DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
+DYNAMIC-FUNCTION("ResizeKeepsWindowLocked",?).
+DYNAMIC-FUNCTION("DoLockWindow",?).
 
 END PROCEDURE.
 
@@ -718,21 +766,26 @@ IF NOT hBuffer:AVAIL THEN RETURN.
 
 IF CAN-DO(cNoMoveColumns,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN RETURN.
 
-ASSIGN rBuffer = hBuffer:ROWID
-       iSeq    = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE.
-
-IF hQuery:GET-NEXT() THEN DO:
-  ASSIGN iNextSeq = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE
-         hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
-         .
-  hQuery:GET-PREV().
-  hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iNextSeq.
-
-  hQuery:QUERY-OPEN().
-  hQuery:REPOSITION-TO-ROWID(rBuffer).
-  hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW).
-  APPLY "value-changed" TO hBrowse.
+IF hBrowse:NUM-SELECTED-ROWS > 1 THEN
+  moveFlds("down").
+ELSE DO:  
+  ASSIGN rBuffer = hBuffer:ROWID
+         iSeq    = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE.
+  
+  IF hQuery:GET-NEXT() THEN DO:
+    ASSIGN iNextSeq = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE
+           hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
+           .
+    hQuery:GET-PREV().
+    hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iNextSeq.
+  
+    hQuery:QUERY-OPEN().
+    hQuery:REPOSITION-TO-ROWID(rBuffer).
+    hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW).
+    APPLY "value-changed" TO hBrowse.
+  END.
 END.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -748,6 +801,7 @@ PROCEDURE MoveToTop :
 THIS-PROCEDURE:CURRENT-WINDOW:WINDOW-STATE = 3.
 THIS-PROCEDURE:CURRENT-WINDOW:MOVE-TO-TOP().
 APPLY "entry" TO hBrowse.
+
 
 END PROCEDURE.
 
@@ -767,25 +821,29 @@ DEF VAR iPrevSeq AS INT   NO-UNDO.
 
 IF NOT hBuffer:AVAIL THEN RETURN.
 
-ASSIGN rBuffer = hBuffer:ROWID
-       iSeq    = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE.
-
-IF hQuery:GET-PREV() THEN DO:
-  IF CAN-DO(cNoMoveColumns,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN DO:
+IF hBrowse:NUM-SELECTED-ROWS > 1 THEN
+  moveFlds("up").
+ELSE DO:
+  ASSIGN rBuffer = hBuffer:ROWID
+         iSeq    = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE.
+  
+  IF hQuery:GET-PREV() THEN DO:
+    IF CAN-DO(cNoMoveColumns,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN DO:
+      hQuery:GET-NEXT().
+      RETURN.      
+    END. 
+  
+    ASSIGN iPrevSeq = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE
+           hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
+           .
     hQuery:GET-NEXT().
-    RETURN.      
-  END. 
-
-  ASSIGN iPrevSeq = hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE
-         hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
-         .
-  hQuery:GET-NEXT().
-  hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iPrevSeq.
-
-  hQuery:QUERY-OPEN().
-  hQuery:REPOSITION-TO-ROWID(rBuffer).
-  hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW).
-  APPLY "value-changed" TO hBrowse.
+    hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iPrevSeq.
+  
+    hQuery:QUERY-OPEN().
+    hQuery:REPOSITION-TO-ROWID(rBuffer).
+    hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW).
+    APPLY "value-changed" TO hBrowse.
+  END.
 END.
 
 END PROCEDURE.
@@ -890,6 +948,27 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE RowEntry C-Win
+PROCEDURE RowEntry:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+/*DYNAMIC-FUNCTION("DoLockWindow",ihBrowse:WINDOW).                      */
+/*DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","yes").*/
+
+RUN SUPER.
+//DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
+//DYNAMIC-FUNCTION("DoLockWindow",?).
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SaveSettings C-Win 
 PROCEDURE SaveSettings :
@@ -1035,6 +1114,22 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewHideAllControls C-Win 
+PROCEDURE ViewHideAllControls :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM ihWindow AS HANDLE NO-UNDO.
+DEF INPUT PARAM ibRedraw AS LOG NO-UNDO.
+
+MESSAGE ihWindow:TITLE ibRedraw
+VIEW-AS ALERT-BOX.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewRecord C-Win 
 PROCEDURE ViewRecord :
 /*------------------------------------------------------------------------------
@@ -1055,6 +1150,114 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 /* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION moveFlds C-Win 
+FUNCTION moveFlds RETURNS LOGICAL
+  ( INPUT icUpDown AS CHARACTER ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+DEF VAR ix         AS INT  NO-UNDO.
+DEF VAR iSeq       AS INT  NO-UNDO.
+DEF VAR cSelList   AS CHAR NO-UNDO.
+
+DEF VAR bhBuffer   AS HANDLE NO-UNDO.
+DEF VAR qbhBuffer  AS HANDLE NO-UNDO.
+
+DYNAMIC-FUNCTION("DoLockWindow",ihBrowse:WINDOW).
+DYNAMIC-FUNCTION("DoLockWindow",hBrowse:WINDOW).
+DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","yes").
+
+CREATE BUFFER bhBuffer FOR TABLE hBuffer:TABLE-HANDLE.
+CREATE QUERY qbhBuffer.
+
+qbhBuffer:SET-BUFFERS (bhBuffer).
+
+
+DO WITH FRAME {&FRAME-NAME}:
+  EMPTY TEMP-TABLE ttSort.
+
+  DO ix = 1 TO hBrowse:NUM-SELECTED-ROWS:
+    IF hBrowse:FETCH-SELECTED-ROW(ix) THEN DO:
+      CREATE ttSort.
+      ASSIGN ttSort.iSeq     = hBuffer::Seq
+             ttSort.cRowid   = STRING(hBuffer:ROWID)
+             cSelList        = cSelList + (IF cSelList NE "" THEN "," ELSE "") + STRING(hBuffer::Seq)
+             .
+    END.
+  END.
+  IF icUpDown = "up" THEN DO:
+    FOR EACH ttSort BY iSeq:
+      hBuffer:FIND-FIRST("WHERE ROWID(" + hBuffer:NAME + ") = TO-ROWID('" + ttSort.cRowid + "')").
+      qbhBuffer:QUERY-PREPARE("FOR EACH " + bhBuffer:NAME + " WHERE Seq < " + STRING(ttSort.iSeq)
+                            + " AND NOT CAN-DO('" + cSelList + "',STRING(Seq))"
+                            + " BY Seq DESC").
+      qbhBuffer:QUERY-OPEN ().
+      qbhBuffer:GET-FIRST().
+      IF NOT bhBuffer:AVAIL THEN RETURN NO.
+      LEAVE.
+    END.
+    FOR EACH ttSort BY ttSort.iSeq DESC:
+      hBuffer:FIND-FIRST("WHERE ROWID(" + hBuffer:NAME + ") = TO-ROWID('" + ttSort.cRowid + "')").
+      qbhBuffer:QUERY-PREPARE("FOR EACH " + bhBuffer:NAME + " WHERE Seq < " + STRING(ttSort.iSeq)
+                            + " AND NOT CAN-DO('" + cSelList + "',STRING(Seq))"
+                            + " BY Seq DESC").
+      qbhBuffer:QUERY-OPEN ().
+      qbhBuffer:GET-FIRST().
+      IF bhBuffer:AVAIL THEN 
+        ASSIGN iSeq = bhBuffer::Seq
+               bhBuffer::Seq = hBuffer::Seq
+               hBuffer::Seq = iSeq.
+    END.
+  END.
+  ELSE DO:
+    FOR EACH ttSort BY ttSort.iSeq DESC:
+      hBuffer:FIND-FIRST("WHERE ROWID(" + hBuffer:NAME + ") = TO-ROWID('" + ttSort.cRowid + "')").
+      qbhBuffer:QUERY-PREPARE("FOR EACH " + bhBuffer:NAME + " WHERE Seq > " + STRING(ttSort.iSeq)
+                            + " AND NOT CAN-DO('" + cSelList + "',STRING(Seq))"
+                            + " BY Seq").
+      qbhBuffer:QUERY-OPEN ().
+      qbhBuffer:GET-FIRST().
+      IF NOT bhBuffer:AVAIL THEN RETURN NO.
+      LEAVE.
+    END.
+    FOR EACH ttSort BY ttSort.iSeq:
+      ix = ix + 1.
+      hBuffer:FIND-FIRST("WHERE ROWID(" + hBuffer:NAME + ") = TO-ROWID('" + ttSort.cRowid + "')").
+      qbhBuffer:QUERY-PREPARE("FOR EACH " + bhBuffer:NAME + " WHERE Seq > " + STRING(ttSort.iSeq)
+                            + " AND NOT CAN-DO('" + cSelList + "',STRING(Seq))"
+                            + " BY Seq").
+      qbhBuffer:QUERY-OPEN ().
+      qbhBuffer:GET-FIRST().
+      IF bhBuffer:AVAIL THEN 
+        ASSIGN iSeq = bhBuffer::Seq
+               bhBuffer::Seq = hBuffer::Seq
+               hBuffer::Seq = iSeq.
+    END.
+  END.
+
+  RUN InvokeMethod(hBrowse,"OpenQuery").
+  hBrowse:DESELECT-SELECTED-ROW (hBrowse:FOCUSED-ROW).
+  FOR EACH ttSort:
+    hBrowse:QUERY:REPOSITION-TO-ROWID(TO-ROWID(ttSort.cRowid)).
+    hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW).
+  END.
+
+END.
+
+RETURN YES.
+
+FINALLY:
+  DELETE OBJECT bhBuffer.
+  DELETE OBJECT qbhBuffer.
+  DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
+  DYNAMIC-FUNCTION("DoLockWindow",?).
+END FINALLY.  
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setFieldColor C-Win 
 FUNCTION setFieldColor RETURNS INTEGER

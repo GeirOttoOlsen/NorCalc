@@ -27,6 +27,9 @@ DEF VAR iMenuId            AS INT    NO-UNDO.
 DEF VAR cUserId            AS CHAR   NO-UNDO.
 DEF VAR iCompanyId         AS INT    NO-UNDO.
 DEF VAR hBuffMenu          AS HANDLE NO-UNDO.
+DEF VAR hBuffMenuQry       AS HANDLE NO-UNDO.
+DEF VAR hBuffMenuUserQry   AS HANDLE NO-UNDO.
+DEF VAR hBuffMenuUserGrQry AS HANDLE NO-UNDO.
 DEF VAR hBuffUserMenu      AS HANDLE NO-UNDO.
 DEF VAR hBuffUserGroupMem  AS HANDLE NO-UNDO.
 DEF VAR hBuffCompanyMenu   AS HANDLE NO-UNDO.
@@ -40,17 +43,26 @@ DEF VAR hLimitToCompAdm    AS HANDLE NO-UNDO.
 DEF VAR hLimitToSuperUser  AS HANDLE NO-UNDO.
 DEF VAR hDefault           AS HANDLE NO-UNDO.
 DEF VAR bRestUnlessAllowed AS LOG    NO-UNDO.
+DEF VAR hQueryMenu         AS HANDLE NO-UNDO.
+
+{incl/validatecaller.i}
 
 ASSIGN cUserId    = DYNAMIC-FUNCTION("getASuserId" IN SOURCE-PROCEDURE)
        iCompanyId = DYNAMIC-FUNCTION("getCompanyId" IN SOURCE-PROCEDURE)
        bRestUnlessAllowed = icParam = "yes"
        .
 
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenu",OUTPUT hBuffMenu) THEN RETURN.
+
 CREATE BUFFER hBuffCompanyMenu FOR TABLE "JBoxCompanyMenu" NO-ERROR.
-CREATE BUFFER hBuffMenu FOR TABLE "JBoxMenu".
+CREATE BUFFER hBuffMenuQry FOR TABLE "JBoxMenu" NO-ERROR.
+CREATE BUFFER hBuffMenuUserQry FOR TABLE "JBoxMenu" NO-ERROR.
+CREATE BUFFER hBuffMenuUserQry FOR TABLE "JBoxMenu" NO-ERROR.
+CREATE BUFFER hBuffMenuUserGrQry FOR TABLE "JboxMenu" NO-ERROR.
+
 hLimitToCompAdm   = hBuffMenu:BUFFER-FIELD("bLimitToCompanyAdmins") NO-ERROR.
 hLimitToSuperUser = hBuffMenu:BUFFER-FIELD("bLimitToCompanyAdmins") NO-ERROR.
-hDefault          = BUFFER JBoxMenu:BUFFER-FIELD("bDefault") NO-ERROR.
+hDefault          = hBUffMenu:BUFFER-FIELD("bDefault") NO-ERROR.
 
 FUNCTION CompanyAccess RETURNS LOGICAL (INPUT iiMenuId AS INT ): 
   IF bSuperUser THEN RETURN YES.
@@ -86,11 +98,14 @@ IF VALID-HANDLE(hBuffUser) THEN DO:
     bSuperUser = hBuffUser:BUFFER-FIELD("bSuperUser"):BUFFER-VALUE.
 END.
 
-FOR EACH JBoxMenu NO-LOCK
-    WHERE JBoxMenu.cMenuType = "menu"
-       BY JBoxMenu.iJBoxMenuId DESC:
+
+CREATE QUERY hQueryMenu.
+hQueryMenu:SET-BUFFERS (hBuffMenuQry).
+hQueryMenu:QUERY-PREPARE ("FOR EACH JBoxMenu WHERE JBoxMenu.cMenuType = 'menu' BY JBoxMenu.iJBoxMenuId DESC").
+hQueryMenu:QUERY-OPEN ().
+REPEAT WHILE hQueryMenu:GET-NEXT ().
   ASSIGN ix      = ix + 1
-         iMenuId = JBoxMenu.iJBoxMenuId
+         iMenuId = hBuffMenuQry::iJBoxMenuId
          .
 END.
 
@@ -117,7 +132,7 @@ IF VALID-HANDLE(hBuffCompanyUser) THEN DO:
 END.
 
 CREATE QUERY hQueryUser.
-hQueryUser:SET-BUFFERS(hBuffUserMenu,BUFFER JBoxMenu:HANDLE).
+hQueryUser:SET-BUFFERS(hBuffUserMenu,hBuffMenuUserQry).
 hQueryUser:QUERY-PREPARE("FOR EACH JBoxUserMenu NO-LOCK WHERE JBoxUserMenu.cJBoxUserId = '" + cUserId + "'"
                    + ",FIRST JBoxMenu OF JBoxUserMenu NO-LOCK WHERE JBoxMenu.cMenuType = 'menu'").
 hQueryUser:QUERY-OPEN().
@@ -129,7 +144,7 @@ ELSE DO:
   CREATE BUFFER hBuffUserGroupMem FOR TABLE "JBoxUserGroupMembers" NO-ERROR.
   IF VALID-HANDLE(hBuffUserGroupMem) THEN DO:
     CREATE QUERY hQueryGroup.
-    hQueryGroup:SET-BUFFERS(hBuffUserGroupMem,hBuffUserMenu,BUFFER JBoxMenu:HANDLE).
+    hQueryGroup:SET-BUFFERS(hBuffUserGroupMem,hBuffUserMenu,hBuffMenuUserGrQry).
     hQueryGroup:QUERY-PREPARE("FOR EACH JBoxUserGroupMembers NO-LOCK WHERE JBoxUserGroupMembers.cJBoxUserId = '" + cUserId  + "'"
                        + ",EACH JBoxUserMenu NO-LOCK WHERE JBoxUserMenu.iJboxUserGroupId = JBoxUserGroupMembers.iJboxUserGroupId"
                        + ",FIRST JBoxMenu OF JBoxUserMenu WHERE JBoxMenu.cMenuType = 'menu' NO-LOCK BY JBoxUserMenu.iJBoxMenuId").
@@ -146,39 +161,41 @@ ELSE DO:
   END.
 END.
 
-IF NOT obOk THEN
-  FOR EACH JBoxMenu NO-LOCK
-      WHERE JBoxMenu.cMenuType = "menu"
-         BY JBoxMenu.iJBoxMenuId
-        :
-
+IF NOT obOk THEN DO:
+  hQueryMenu:QUERY-OPEN ().
+  REPEAT WHILE hQueryMenu:GET-NEXT ():
     IF bRestUnlessAllowed THEN DO:
-      IF CompanyAccess(JBoxMenu.iJBoxMenuId) THEN DO:
-        ASSIGN ocReturn = STRING(JBoxMenu.iJBoxMenuId)
+      IF CompanyAccess(hBuffMenuQry::iJBoxMenuId) THEN DO:
+        ASSIGN ocReturn = STRING(hBuffMenuQry::iJBoxMenuId)
                obOk     = YES.
         LEAVE.
       END.
     END.
     ELSE DO:
       IF VALID-HANDLE(hBuffUserMenu) THEN DO:
-        hBuffUserMenu:FIND-FIRST("WHERE iJBoxMenuId = " + STRING(JBoxMenu.iJBoxMenuId)) NO-ERROR.  
-        IF hBuffUserMenu:AVAILABLE AND NOT CompanyAccess(JBoxMenu.iJBoxMenuId) THEN NEXT.
+        hBuffUserMenu:FIND-FIRST("WHERE iJBoxMenuId = " + STRING(hBuffMenuQry::iJBoxMenuId)) NO-ERROR.  
+        IF hBuffUserMenu:AVAILABLE AND NOT CompanyAccess(hBuffMenuQry::iJBoxMenuId) THEN NEXT.
       END.
-      IF CompanyAccess(JBoxMenu.iJBoxMenuId) THEN DO:
-        ASSIGN ocReturn = STRING(JBoxMenu.iJBoxMenuId)
+      IF CompanyAccess(hBuffMenuQry::iJBoxMenuId) THEN DO:
+        ASSIGN ocReturn = STRING(hBuffMenuQry::iJBoxMenuId)
                obOk     = YES.
         IF VALID-HANDLE(hDefault) AND hDefault:BUFFER-VALUE THEN LEAVE.
       END.
     END.
   END.
+END.  
 
-DELETE OBJECT hQueryUser NO-ERROR.
-DELETE OBJECT hQueryGroup NO-ERROR.
-DELETE OBJECT hBuffMenu NO-ERROR.
-DELETE OBJECT hBuffUserMenu NO-ERROR.
-DELETE OBJECT hBuffUserGroupMem NO-ERROR.
-DELETE OBJECT hBuffUser NO-ERROR.
-DELETE OBJECT hBuffCompanyMenu NO-ERROR.
-DELETE OBJECT hBuffCompanyUser NO-ERROR.
-
+FINALLY:
+  DELETE OBJECT hQueryUser NO-ERROR.
+  DELETE OBJECT hQueryGroup NO-ERROR.
+  DELETE OBJECT hQueryMenu NO-ERROR.
+  DELETE OBJECT hBuffMenu NO-ERROR.
+  DELETE OBJECT hBuffMenuQry NO-ERROR.
+  DELETE OBJECT hBuffUserMenu NO-ERROR.
+  DELETE OBJECT hBuffUserGroupMem NO-ERROR.
+  DELETE OBJECT hBuffUser NO-ERROR.
+  DELETE OBJECT hBuffCompanyMenu NO-ERROR.
+  DELETE OBJECT hBuffCompanyUser NO-ERROR.
+  DELETE OBJECT hBuffMenuUserGrQry NO-ERROR.
+END FINALLY.
 

@@ -7,6 +7,8 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 DEF VAR iCount      AS INT    NO-UNDO.
 DEF VAR cCountList  AS CHAR   NO-UNDO.
 
+{incl/validatecaller.i}
+
 DO ON ERROR UNDO, LEAVE:
   RUN ChildCount (INT(icParam)) NO-ERROR.
   IF ERROR-STATUS:ERROR THEN

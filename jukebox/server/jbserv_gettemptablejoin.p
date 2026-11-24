@@ -108,6 +108,7 @@
                   When traversing the query result set to enable sorting or accumulation only the 
                   calculated fields that are needed are processed. Other calculations are done when 
                   producing the result set
+                 08.feb.24: Adding FIELDS phrases 
 
     The algorithm can now be described as follows:
        - Create the result set table definition based on input list of buffers and fields
@@ -185,6 +186,7 @@ DEF VAR cTmpStatOutput        AS CHAR   NO-UNDO.
 DEF VAR cCalcFieldProcs       AS CHAR   NO-UNDO.
 DEF VAR hCalcFieldProcs       AS HANDLE NO-UNDO EXTENT 10.
 DEF VAR cSortPhrase           AS CHAR   NO-UNDO.
+DEF VAR bSepSortPhrase        AS LOG    NO-UNDO.
 DEF VAR cSortFields           AS CHAR   NO-UNDO.
 DEF VAR cCalcSortFields       AS CHAR   NO-UNDO.
 DEF VAR cCalcSortFldTypes     AS CHAR   NO-UNDO.
@@ -211,10 +213,11 @@ DEF VAR hAverageFillField     AS HANDLE NO-UNDO.
 DEF VAR cReturnOKmessage      AS CHAR   NO-UNDO.
 DEF VAR bReturnQueryInfo      AS LOG    NO-UNDO.
 DEF VAR cNotExistList         AS CHAR   NO-UNDO.
+DEF VAR cNotExistQueryString  AS CHAR   NO-UNDO.
 DEF VAR hNotCanDoTT           AS HANDLE NO-UNDO EXTENT 10.
 DEF VAR cSkipCalcFields       AS CHAR   NO-UNDO.
-DEF VAR cUniquBuffer          AS CHAR   NO-UNDO.
-DEF VAR hJbAPI                AS HANDLE NO-UNDO.
+DEF VAR cUniqueBuffer         AS CHAR   NO-UNDO.
+/* DEF VAR hJbAPI                AS HANDLE NO-UNDO. */
 DEF VAR cBufferAccessCheckList AS CHAR  NO-UNDO.  
 DEF VAR cBufferAccessExprList AS CHAR   NO-UNDO.
 DEF VAR hBufferAccessCheck    AS HANDLE NO-UNDO.
@@ -228,6 +231,33 @@ DEF VAR iOrgBufferNum         AS INT    NO-UNDO EXTENT 30. /* reference to origi
 DEF VAR cWeekDayList          AS CHAR   NO-UNDO INIT "Søn,Man,Tir,Ons,Tor,Fre,Lør".
 DEF VAR cQueryBeforeSort      AS CHAR   NO-UNDO.
 DEF VAR bMandCalcFldsExist    AS LOG    NO-UNDO.
+DEF VAR bLogSkipRow           AS LOG    NO-UNDO.
+DEF VAR cSqlDb                AS CHAR   NO-UNDO.
+DEF VAR oSqlHelper            AS oo.JBoxSqlQueryHelper NO-UNDO.
+DEF VAR cSqlGroupBy           AS CHAR   NO-UNDO.
+DEF VAR cSqlSumDbFields         AS CHAR   NO-UNDO.
+DEF VAR iSqlQueryCount        AS INT    NO-UNDO.
+DEF VAR cSqlCalcFldDef        AS CHAR   NO-UNDO.
+DEF VAR cSqlNotExistBuffers   AS CHAR   NO-UNDO. // Swap cNotExistList to here when sql
+DEF VAR hDsSqlData            AS HANDLE NO-UNDO. /* pass result buffer plus context data to jbserv_get_sql_data */
+DEF VAR cSqlCalcSortFlds      AS CHAR   NO-UNDO.
+DEF VAR cSqlCalcFldList       AS CHAR   NO-UNDO.      
+DEF VAR c1stBufferDbPrefix    AS CHAR   NO-UNDO.
+
+DEF VAR cCompanyTag              AS CHAR NO-UNDO.
+DEF VAR cCompanyQuery            AS CHAR NO-UNDO.
+DEF VAR cCompZeroQuery           AS CHAR NO-UNDO.
+DEF VAR cCodeMasterQuery         AS CHAR NO-UNDO.
+DEF VAR iStartTime               AS INT  NO-UNDO. iStartTime = MTIME.
+DEF VAR bCalcOperatorErrorLogged AS LOG NO-UNDO. // to make Goo aware of his mistakes..
+DEF VAR cCalcOperatorErrorMsg    AS CHAR NO-UNDO.
+DEF VAR cSqlSubquery             AS CHAR NO-UNDO. // extracted from prescanquery
+DEF VAR cLastQueryExec           AS CHAR NO-UNDO.
+DEF VAR cBufferFields            AS CHAR NO-UNDO EXTENT.   
+DEF VAR cPrescanBufferFields     AS CHAR NO-UNDO EXTENT.
+DEF VAR cPrescanBaseQuery        AS CHAR NO-UNDO. // this will be mandatory
+DEF VAR iPrevMtime               AS INT NO-UNDO.
+DEF VAR bCreateTT                AS LOG NO-UNDO.
 
 /* Tables qry defs. Used in ProcessPreScanJoins 
    to be able to append org. query string (instance 0) with prescan criteria */ 
@@ -241,17 +271,21 @@ DEF TEMP-TABLE ttQuery NO-UNDO
     FIELD bOuterJoin      AS LOG
     FIELD cQrySort        AS CHAR
     FIELD bPreScanOnly    AS LOG
+    FIELD bNotExist       AS LOG 
     .
 DEF BUFFER bttQuery FOR ttQuery.
 
 DEF TEMP-TABLE ttQueryBufferLists NO-UNDO
-    FIELD iQueryNum        AS INT
-    FIELD cQryBufferList   AS CHAR
-    FIELD iNumQryBuffs     AS INT
-    FIELD bPassExec        AS LOG
-    FIELD cFirstQueryComp  AS CHAR
-    FIELD cSecondQueryComp AS CHAR
-    FIELD bMandatory       AS LOG
+    FIELD iQueryNum          AS INT
+    FIELD cQryBufferList     AS CHAR
+    FIELD iNumQryBuffs       AS INT
+    FIELD bPassExec          AS LOG
+    FIELD cFirstQueryComp    AS CHAR
+    FIELD cSecondQueryComp   AS CHAR
+    FIELD bMandatory         AS LOG
+    FIELD cFirstDbAndBuffer  AS CHAR
+    FIELD cSecondDbAndBuffer AS CHAR
+    FIELD cQryDbBufferList   AS CHAR
     .
 DEF BUFFER bttQueryBufferLists FOR ttQueryBufferLists.
 
@@ -283,7 +317,9 @@ DEF TEMP-TABLE ttSpecFlds  NO-UNDO
     FIELD hCompareFields           AS HANDLE EXTENT 12   /* For dynamic field comparison (max, min) */
     FIELD iCntCompareFields        AS INT                /* For dynamic field comparison (max, min) */
     FIELD fCalcConstant            AS DEC          /* Used when field2 in spec of simple calculation is a constant and not a field name */
-    FIELD bMandatoryCalc           AS LOG          /* Always calc - force calculation of column for all rows */   
+    FIELD bMandatoryCalc           AS LOG          /* Always calc - force calculation of column for all rows */
+    FIELD cSourceTable             AS CHAR         /* For sql calc fields */
+    FIELD iGroupSeq                AS INT          /* To ensure that grouping is done acc to sorting seq */
     INDEX idxCallBuffer  IS PRIMARY UNIQUE  iCallBufferNum iFieldNum
     INDEX idxCallBuffPrescan  iCallBufferNum bCalcByPreScan bMandatoryCalc iFieldNum  
     .
@@ -355,6 +391,34 @@ DEF STREAM sLog.
 
 /* ************************  Function Prototypes ********************** */
 
+&IF DEFINED(EXCLUDE-addFieldList) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD addFieldList Procedure
+FUNCTION addFieldList RETURNS CHARACTER 
+  (INPUT icQuery AS CHAR,
+   INPUT icBufferName AS CHAR,
+   INPUT icFieldList  AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-addPrescanQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD addPrescanQuery Procedure
+FUNCTION addPrescanQuery RETURNS LOGICAL 
+  (INPUT icPreScanJoin AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-AddTTindex) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD AddTTindex Procedure 
@@ -388,6 +452,19 @@ FUNCTION AssignStringValue RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-BufferName) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD BufferName Procedure
+FUNCTION BufferName RETURNS CHARACTER 
+  (INPUT icDbBuffer AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-CalcValueOk) = 0 &THEN
 
@@ -440,6 +517,97 @@ FUNCTION CreateExtentCalcField RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getCalcFieldFilterOperator) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCalcFieldFilterOperator Procedure
+FUNCTION getCalcFieldFilterOperator RETURNS CHARACTER 
+  (INPUT icFieldName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getCalcFieldFilterValue) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCalcFieldFilterValue Procedure
+FUNCTION getCalcFieldFilterValue RETURNS CHARACTER 
+  (INPUT icFieldName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getCalcFieldParam) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCalcFieldParam Procedure
+FUNCTION getCalcFieldParam RETURNS CHARACTER 
+  (INPUT icFieldName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getQueryCriteria) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getQueryCriteria Procedure
+FUNCTION getQueryCriteria RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getAblJoin) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getAblJoin Procedure
+FUNCTION getAblJoin RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-RealTable) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD RealTable Procedure
+FUNCTION RealTable RETURNS CHARACTER 
+  (INPUT icTable AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-reCreateQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD reCreateQuery Procedure
+FUNCTION reCreateQuery RETURNS HANDLE 
+  (INPUT ihQuery AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setWeekdayList) = 0 &THEN
 
@@ -560,18 +728,6 @@ FUNCTION getActiveQueryBuffer RETURNS HANDLE
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getCalcProcHandle) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCalcProcHandle Procedure
@@ -583,41 +739,6 @@ FUNCTION getCalcProcHandle RETURNS HANDLE
 
 
 &ENDIF
-
-
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getPrimaryKeyFields) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getPrimaryKeyFields Procedure 
@@ -800,18 +921,6 @@ FUNCTION setReturnMessage RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-TooManyHits) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD TooManyHits Procedure 
@@ -878,6 +987,11 @@ FUNCTION UserRowAccess RETURNS LOGICAL
 {incl/validatesession.i}
 {incl/custom_calcfieldprocs.i}
 
+IF SEARCH("jbserv_init_jboxserverquery.r") NE ? OR SEARCH("jbserv_init_jboxserverquery.p") NE ? THEN DO:
+  RUN jbserv_init_jboxserverquery.p (icSessionId,THIS-PROCEDURE,OUTPUT ocReturn).
+  IF ocReturn NE "" THEN RETURN.  
+END.  
+
 IF icParam NE "" THEN DO ix = 1 TO NUM-ENTRIES(icParam):
   IF ENTRY(1,ENTRY(ix,icParam),";") = "logfile" THEN DO:
     ETIME(TRUE).
@@ -892,6 +1006,8 @@ IF icParam NE "" THEN DO ix = 1 TO NUM-ENTRIES(icParam):
     END.
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "indexonrowids" THEN
     bIndexOnRowids = ENTRY(2,ENTRY(ix,icParam),";") = "yes". 
+  ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "prescanbasequery" THEN
+    cPrescanBaseQuery = REPLACE(REPLACE(ENTRY(2,ENTRY(ix,icParam),";"),"OUTER-JOIN",""),"NO-LOCK","").
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "prescanquery" THEN
     cPreScanJoinQueries = REPLACE(REPLACE(ENTRY(2,ENTRY(ix,icParam),";"),"OUTER-JOIN",""),"NO-LOCK","").
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "calcfieldfilter" THEN
@@ -905,12 +1021,58 @@ IF icParam NE "" THEN DO ix = 1 TO NUM-ENTRIES(icParam):
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "skipcalcfields" THEN
     cSkipCalcFields = REPLACE(ENTRY(2,ENTRY(ix,icParam),";"),"¤",",").
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "uniqueBuffer" THEN
-    cUniquBuffer = ENTRY(2,ENTRY(ix,icParam),";").
+    cUniqueBuffer = ENTRY(2,ENTRY(ix,icParam),";").
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "orgBuffersAndFields" THEN
     cOrgBuffersAndFields = REPLACE(REPLACE(ENTRY(2,ENTRY(ix,icParam),";"),"¤",","),CHR(1),";").
   ELSE IF ENTRY(1,ENTRY(ix,icParam),";") = "queryStopAfter" THEN
     iMainQueryStopAfter = INT(ENTRY(2,ENTRY(ix,icParam),";")) NO-ERROR.
 END.
+
+IF cPrescanBaseQuery NE "" THEN
+  cPreScanJoinQueries = cPrescanBaseQuery + (IF cPreScanJoinQueries NE "" THEN CHR(28) ELSE "") + cPreScanJoinQueries.
+
+IF icBuffersAndFields BEGINS "sqldb" + CHR(3) THEN DO:
+  oSqlHelper = NEW oo.JBoxSqlQueryHelper().
+
+  LogThis("orgBuffersAndFields",icBuffersAndFields,1).
+  
+  oSqlHelper:SQLnotExistBuffers = cNotExistList.
+  cSqlNotExistBuffers = oSqlHelper:SQLnotExistBuffers.
+  cNotExistList = "".
+  
+  oSqlHelper:ABLqueryJoin = getAblJoin().
+     
+  IF CAN-DO("INNER,OUTER,JOIN",ENTRY(1,TRIM(ENTRY(3,icBuffersAndFields,CHR(3)))," ")) THEN
+    oSqlHelper:SQLjoin = ENTRY(3,icBuffersAndFields,CHR(3)).
+  ELSE IF ENTRY(3,icBuffersAndFields,CHR(3)) NE "" THEN       
+    oSqlHelper:SQLview = ENTRY(3,icBuffersAndFields,CHR(3)).
+  ELSE 
+    oSqlHelper:setSqlBuffersAndFields(ENTRY(4,icBuffersAndFields,CHR(3))).
+    
+  LogThis("sqlView",ENTRY(3,icBuffersAndFields,CHR(3)),1).
+  
+  ASSIGN cSqlDb                       = ENTRY(2,icBuffersAndFields,CHR(3))
+         oSqlHelper:SQLdb             = cSqlDb
+         oSqlHelper:hSourceProc       = THIS-PROCEDURE
+         oSqlHelper:SQLqueryDirection = icDirection
+         oSqlHelper:SQLstartRow       = iiStartRow
+         oSqlHelper:SQLrowsToBatch    = iiBatchSize
+         icBuffersAndFields           = ENTRY(4,icBuffersAndFields,CHR(3))
+         .
+         
+  ASSIGN icBuffersAndFields = REPLACE(icBuffersAndFields,";",";+")
+         icBuffersAndFields = REPLACE(icBuffersAndFields,";++",";+")
+         .
+  IF INDEX(cPreScanJoinQueries,"<sqlSub>") > 0 THEN DO:
+    ASSIGN cSqlSubquery = SUBSTR(cPreScanJoinQueries,INDEX(cPreScanJoinQueries,"<sqlSub>") + 8,R-INDEX(cPreScanJoinQueries,"<sqlSub>") - 9)
+           cPreScanJoinQueries = REPLACE(cPreScanJoinQueries,"<sqlSub>" + cSqlSubquery + "<sqlSub>","")
+           oSqlHelper:SQLsubQueries = REPLACE(cSqlSubquery,"¤",",")
+           .
+    LogThis("sqlSubQuery",cSqlSubquery,1).
+  END.  
+         
+  LogThis("modBuffersAndFields",icBuffersAndFields,1).
+END.         
 
 cPreScanJoinQueries = REPLACE(cPreScanJoinQueries,CHR(3),"|").
 
@@ -925,13 +1087,20 @@ IF cCalcFieldProcs NE "" AND NOT icQueryCriteria BEGINS "where false" THEN DO:
       ocReturn = "ERROR: " + ocReturn.
       RETURN.
     END.
-    ELSE RUN VALUE(ENTRY(ix,cCalcFieldProcs,";")) PERSIST SET hCalcFieldProcs[ix].
+    ELSE DO:
+      RUN VALUE(ENTRY(ix,cCalcFieldProcs,";")) PERSIST SET hCalcFieldProcs[ix].
+      LogThis("Started calc.proc",hCalcFieldProcs[ix]:FILE-NAME,0).
+    END.  
   END.
 END.
 ELSE cCalcFieldProcs = " ".
 hCalcFieldProcs[ix] = THIS-PROCEDURE.
 
-icQueryCriteria = REPLACE(TRIM(icQueryCriteria)," distinct "," ").
+LogThis("Main query",icQueryCriteria,1).
+IF icQueryCriteria MATCHES ("* distinct *") THEN DO:
+  icQueryCriteria = REPLACE(TRIM(icQueryCriteria)," distinct "," ").
+  LogThis("Main query (-distinct)",icQueryCriteria,1).
+END.  
 
 LogThis("Persistent CalcFieldProcs",cCalcFieldProcs,1).
 LogThis("CalcField Filter",cCalcFieldFilter,1).
@@ -939,7 +1108,6 @@ IF cPreScanJoinQueries NE "" THEN DO ix = 1 TO NUM-ENTRIES(cPreScanJoinQueries,C
   LogThis(IF ix = 1 THEN "Prescan queries" ELSE "",REPLACE(REPLACE(ENTRY(ix,cPreScanJoinQueries,CHR(28)),"¤",","),CHR(1),"|"),
           IF ix = NUM-ENTRIES(cPreScanJoinQueries,CHR(28)) THEN 1 ELSE 0).
 END.
-LogThis("Main query",icQueryCriteria,1).
 LogThis("BuffersAndFields",icBuffersAndFields,1).
 LogThis("orgBuffersAndFields",cOrgBuffersAndFields,1).
 LogThis("Batch size",STRING(iiBatchSize),0).
@@ -947,14 +1115,43 @@ LogThis("iiStartRow:",STRING(iiStartRow),0).
 LogThis("icDirection:",icDirection,0).
 LogThis("QueryStopAfter:",STRING(iMainQueryStopAfter),1).
 
-IF TRIM(cOrgBuffersAndFields) NE "" THEN
+IF icQueryCriteria MATCHES "*(*Company)" OR icQueryCriteria MATCHES "*(Codemaster)" THEN DO:
+  ASSIGN cCompanyTag     = SUBSTR(icQueryCriteria,R-INDEX(icQueryCriteria,"("))
+         icQueryCriteria = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,"(") - 1)
+         icQueryCriteria = TRIM(icQueryCriteria)
+         icQueryCriteria = SUBSTR(icQueryCriteria,INDEX(icQueryCriteria, " "))
+         .
+  IF cCompanyTag = "(+Company)" THEN
+    cCompanyQuery = "WHERE (iJBoxCompanyId = 0 OR iJBoxCompanyId = " + STRING(iCurrCompanyId) + ") AND".
+  ELSE
+    ASSIGN cCompanyQuery     = "WHERE iJBoxCompanyId = " + STRING(iCurrCompanyId) + " AND"
+           cCodeMasterQuery  = "WHERE iJBoxCompanyId = " + STRING(iCodeMaster) + " AND"
+           cCompZeroQuery    = "WHERE iJBoxCompanyId = 0 AND".
+
+  LogThis("CompanyQuery",cCompanyQuery,0).
+  LogThis("CodeMasterQuery",cCodeMasterQuery,0).
+  LogThis("CompanyZeroQuery",cCompZeroQuery,1).
+  LogThis("Main query (-comptag)",icQueryCriteria,1).
+END.
+
+IF NUM-ENTRIES(icQueryCriteria,CHR(3)) > 1 THEN 
+  ASSIGN cSortPhrase      = ENTRY(2,icQueryCriteria,CHR(3))
+         cQueryBeforeSort = ENTRY(1,icQueryCriteria,CHR(3))
+         icQueryCriteria  = REPLACE(icQueryCriteria,CHR(3),"")
+         bSepSortPhrase   = YES. 
+
+icQueryCriteria = REPLACE(icQueryCriteria,"datetime('TODAY')","DATETIME(STRING(TODAY,'99/99/9999'))").
+
+IF TRIM(cOrgBuffersAndFields) NE "" AND cSqlDb = "" THEN
   UnpackOrgBuffersAndFields().
 
 IF NOT icQueryCriteria BEGINS "where false" THEN DO:
-  IF INDEX(icQueryCriteria," BY ") > 0 THEN
-    cSortPhrase = SUBSTR(icQueryCriteria,INDEX(icQueryCriteria," BY ")).
-  ELSE IF icQueryCriteria BEGINS "BY " THEN
-    cSortPhrase = " " + icQueryCriteria.
+  IF NOT bSepSortPhrase THEN DO:
+    IF INDEX(icQueryCriteria," BY ") > 0 THEN
+      cSortPhrase = SUBSTR(icQueryCriteria,INDEX(icQueryCriteria," BY ")).
+    ELSE IF icQueryCriteria BEGINS "BY " THEN
+      cSortPhrase = " " + icQueryCriteria.
+  END.    
   IF cSortPhrase NE "" THEN DO:
     DO ix = 1 TO NUM-ENTRIES(cSortPhrase," "):
       IF NOT CAN-DO("' ',BY,DESC",ENTRY(ix,cSortPhrase," ")) THEN
@@ -963,16 +1160,27 @@ IF NOT icQueryCriteria BEGINS "where false" THEN DO:
                                      ELSE ENTRY(ix,cSortPhrase," ")) + ",".
     END.
     cSortFields = TRIM(cSortFields,",").
-    cQueryBeforeSort = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,cSortPhrase)).
+    IF NOT bSepSortPhrase THEN
+      cQueryBeforeSort = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,cSortPhrase)).
   END.
+  ELSE cQueryBeforeSort = icQueryCriteria.
 END.
 ELSE DO:
-  IF INDEX(icQueryCriteria," BY ") > 0 THEN   
-    icQueryCriteria = SUBSTR(icQueryCriteria,1,INDEX(icQueryCriteria," BY ")).
+  IF NOT bSepSortPhrase THEN DO:
+    IF INDEX(icQueryCriteria," BY ") > 0 THEN   
+      ASSIGN icQueryCriteria = SUBSTR(icQueryCriteria,1,INDEX(icQueryCriteria," BY "))
+             cQueryBeforeSort = icQueryCriteria.
+  END.    
+  ELSE icQueryCriteria = cQueryBeforeSort.
 END.
+  
+LogThis("Main query (-sortphrase)",cQueryBeforeSort,1).
 
 ASSIGN icStatFields = TRIM(icStatFields,",")
        iBufferCount = NUM-ENTRIES(icBuffersAndFields).
+
+EXTENT(cBufferFields) = iBufferCount.
+EXTENT(cPrescanBufferFields) = iBufferCount.
 
 IF cCalcFieldFilter NE "" AND icStatFields = "rowcount" THEN
   bCheckForSkipRow = YES.
@@ -984,23 +1192,288 @@ LogThis("bCheckForSkipRow:",STRING(bCheckForSkipRow),1).
 CREATE QUERY hQuery.
 IF icDirection = "" THEN
   hQuery:FORWARD-ONLY = YES.
-CREATE TEMP-TABLE ohTempTable.
+  
+IF NOT VALID-HANDLE(ohTempTable) THEN DO:  
+  CREATE TEMP-TABLE ohTempTable.
+  bCreateTT = YES.
+END.  
+ELSE bCreateTT = NO.
+  
 RUN CreateQuery (OUTPUT ocReturn).
 
-LogThis("Result buffer indexes",httBuffer:INDEX-INFORMATION(1),1).
-  
-FOR EACH ttSpecFlds
-    WHERE ttSpecFlds.cCallProc = "jb_calc":
-  IF NOT VALID-HANDLE(ttSpecFlds.hSourceField) OR NOT VALID-HANDLE(ttSpecFlds.hSourceField2) THEN
-    setJbCalcParams(ttSpecFlds.cCallProc,0).
+LogThis("Etime, create query: ", STRING(ETIME / 1000),2).
+
+IF ocReturn NE "" THEN RETURN.
+
+IF cCalcFieldFilter NE "" THEN DO:
+  ocReturn = setCalcFieldFilter().
+  IF ocReturn NE "" THEN DO:
+    LogThis("Error for calc.fld filter",ocReturn,1).
+    ocReturn = "ERROR: " + ocReturn.
+    RETURN.
+  END.  
 END.
+
+/* If a calc. procedure is named like it's source table make sure that it is calculated first. Also set the field-list: */ 
+FOR EACH ttSpecFlds:
+  IF LOOKUP(ttSpecFlds.cCallProc,cBufferList) = ttSpecFlds.iCallBufferNum AND NOT ttSpecFlds.bMandatoryCalc THEN
+    ttSpecFlds.bMandatoryCalc = ?.
+        
+  IF cBufferFields[ttSpecFlds.iCallBufferNum] NE "" THEN DO:
+    IF VALID-HANDLE(ttSpecFlds.hSourceField) AND LOOKUP(ttSpecFlds.hSourceField:NAME,cBufferFields[ttSpecFlds.iCallBufferNum]," ") = 0 THEN
+      cBufferFields[ttSpecFlds.iCallBufferNum] = cBufferFields[ttSpecFlds.iCallBufferNum] + " " + ttSpecFlds.hSourceField:NAME.
+    IF VALID-HANDLE(ttSpecFlds.hSourceField2) AND LOOKUP(ttSpecFlds.hSourceField2:NAME,cBufferFields[ttSpecFlds.iCallBufferNum]," ") = 0 THEN
+      cBufferFields[ttSpecFlds.iCallBufferNum] = cBufferFields[ttSpecFlds.iCallBufferNum] + " " + ttSpecFlds.hSourceField2:NAME.
+  END.
+     
+  IF NOT ttSpecFlds.b2phAcc AND
+     NOT CAN-DO("jbCountDistinct,jbAverage",ttSpecFlds.cFillField) AND 
+     (ttSpecFlds.bAccum 
+      OR ttSpecFlds.bDistinct 
+      OR ttSpecFlds.cFilterOperator NE "" 
+      OR ttSpecFlds.cCalcSortField NE "" 
+      OR ttSpecFlds.bGrandTotal
+      OR ttSpecFlds.iExtent > 0
+      OR ttSpecFlds.bMandatoryCalc)
+    THEN DO:
+    IF VALID-HANDLE(ttSpecFlds.hSourceField) AND LOOKUP(ttSpecFlds.hSourceField:NAME,cPrescanBufferFields[ttSpecFlds.iCallBufferNum]," ") = 0 THEN
+      cPrescanBufferFields[ttSpecFlds.iCallBufferNum] = cPrescanBufferFields[ttSpecFlds.iCallBufferNum] + " " + ttSpecFlds.hSourceField:NAME.
+    IF VALID-HANDLE(ttSpecFlds.hSourceField2) AND LOOKUP(ttSpecFlds.hSourceField2:NAME,cPrescanBufferFields[ttSpecFlds.iCallBufferNum]," ") = 0 THEN
+      cPrescanBufferFields[ttSpecFlds.iCallBufferNum] = cPrescanBufferFields[ttSpecFlds.iCallBufferNum] + " " + ttSpecFlds.hSourceField2:NAME.
+  END.   
+END.
+FOR EACH ttSpecFlds WHERE ttSpecFlds.cCallProc = "jb_total": // Here we cannot use field-list since it involves a sub-query
+  ASSIGN cBufferFields[ttSpecFlds.iCallBufferNum] = "*"
+         cPrescanBufferFields[ttSpecFlds.iCallBufferNum] = "*".
+END.
+
+IF cSqlDb NE "" THEN DO:
+  FOR EACH ttSpecFlds 
+      BY ttSpecFlds.iGroupSeq:
+    IF ttSpecFlds.cSourceTable = "" THEN ttSpecFlds.cSourceTable = ENTRY(1,cBufferList). // one table (db viewer)  
+    IF ttSpecFlds.cCallProcParam NE "" THEN DO:   
+      ttSpecFlds.hSourceField = httBuffer:BUFFER-FIELD(ENTRY(NUM-ENTRIES(ENTRY(1,ttSpecFlds.cCallProcParam," "),"."),ENTRY(1,ttSpecFlds.cCallProcParam," "),".")) NO-ERROR.
+      
+      ASSIGN cSqlCalcFldList = cSqlCalcFldList + (IF cSqlCalcFldList NE "" THEN "," ELSE "") + ttSpecFlds.cFillField 
+             cSqlCalcFldDef  = cSqlCalcFldDef + (IF cSqlCalcFldDef NE "" THEN "," ELSE "") 
+                             + ttSpecFlds.cFillField 
+                             + ";" + ttSpecFlds.cFillFieldType 
+                             + ";" + ttSpecFlds.cCallProc 
+                             + ";" + (IF NUM-ENTRIES(ttSpecFlds.cCallProcParam," ") = 1 THEN 
+                                        ttSpecFlds.cSourceTable + "." + ENTRY(NUM-ENTRIES(ENTRY(1,ttSpecFlds.cCallProcParam," "),"."),ENTRY(1,ttSpecFlds.cCallProcParam," "),".")
+                                      ELSE ttSpecFlds.cCallProcParam)  
+                             + ";" + REPLACE(ttSpecFlds.cFilterOperator,",","¤")  
+                             + ";" + ttSpecFlds.cFilterValue.
+      IF CAN-DO(cSortFields,ttSpecFlds.cFillField) THEN
+        cSqlCalcSortFlds = cSqlCalcSortFlds + (IF cSqlCalcSortFlds NE "" THEN "," ELSE "") + ttSpecFlds.cFillField.
+      IF ttSpecFlds.bAccum AND NUM-ENTRIES(ttSpecFlds.cCallProcParam," ") > 1 THEN
+        oSqlHelper:addAccumCalcExpr (ttSpecFlds.cFillField,ttSpecFlds.cCallProcParam).  
+        
+      oSqlHelper:addCalcFieldDef (ttSpecFlds.cFillField
+                                 ,ttSpecFlds.cSourceTable
+                                 ,ttSpecFlds.cFillFieldType
+                                 ,ttSpecFlds.cCallProc                              // jbox function (jb_calc..)  
+                                 ,IF INDEX(ttSpecFlds.cCallProcParam,"(") > 1 THEN  // sql function 
+                                    SUBSTR(ttSpecFlds.cCallProcParam,1,INDEX(ttSpecFlds.cCallProcParam,"(")) 
+                                  ELSE ""
+                                 ,IF INDEX(ttSpecFlds.cCallProcParam,"(") > 1 THEN  // expr or parameter to function  
+                                    SUBSTR(ttSpecFlds.cCallProcParam,INDEX(ttSpecFlds.cCallProcParam,"(") + 1) 
+                                  ELSE ttSpecFlds.cCallProcParam
+                                 ,ttSpecFlds.bAccum).   // to indicate that the field should be included if there is grouping
+      IF ttSpecFlds.cFilterOperator NE "" THEN  
+        DO ix = 1 TO NUM-ENTRIES(ttSpecFlds.cFilterOperator):
+          oSqlHelper:addCalcFieldFilter(ttSpecFlds.cFillField, 
+                                        ENTRY(ix,ttSpecFlds.cFilterOperator),
+                                        ENTRY(ix,ttSpecFlds.cFilterValue,"|")).
+        END.                              
+          
+    END.  
+    IF ttSpecFlds.bDistinct THEN                             
+      ASSIGN cSqlGroupBy = cSqlGroupBy + (IF cSqlGroupBy NE "" THEN "," ELSE "") 
+                         + (IF ttSpecFlds.cCallProcParam = "" THEN ttSpecFlds.cSourceTable + "." ELSE "") + ttSpecFlds.cFillField
+             .
+    ELSE IF ttSpecFlds.bAccum AND ttSpecFlds.cCallProc = "" THEN                             
+      ASSIGN ttSpecFlds.hSourceField = httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField)
+             cSqlSumDbFields = cSqlSumDbFields + (IF cSqlSumDbFields NE "" THEN "," ELSE "") + ttSpecFlds.cSourceTable + "." + ttSpecFlds.cFillField.
+    ELSE IF ttSpecFlds.cCallProc = "" AND NOT ttSpecFlds.bGrandTotal AND NOT ttSpecFlds.bAccum THEN
+      DELETE ttSpecFlds.    
+  END.
+  IF CAN-FIND(FIRST ttSpecFlds 
+              WHERE ttSpecFlds.cCallProcParam NE "" 
+                AND ttSpecFlds.bDistinct
+                AND NOT CAN-DO(oSqlHelper:JB_to_SQL_funclist,ttSpecFlds.cCallProc))
+    THEN cSqlGroupBy = "". /* cannot group sql if grouping on calc.fld other than sql functions */
+  
+  oSqlHelper:SQLcalcFieldDef = cSqlCalcFldDef. 
+  IF cSqlGroupBy NE "" THEN DO:
+    ASSIGN oSqlHelper:SQLstartRow = 0
+           oSqlHelper:SQLrowsToBatch = 100000
+           oSqlHelper:SQLgroupBy = cSqlGroupBy
+           oSqlHelper:SQLsumDbFields = cSqlSumDbFields
+           cSortPhrase = " BY " + ENTRY(NUM-ENTRIES(ENTRY(1,cSqlGroupBy),"."),ENTRY(1,cSqlGroupBy),".") 
+           .
+    DO ix = 2 TO NUM-ENTRIES(cSqlGroupBy): cSortPhrase = cSortPhrase + " BY " + ENTRY(NUM-ENTRIES(ENTRY(ix,cSqlGroupBy),"."),ENTRY(ix,cSqlGroupBy),"."). END.       
+  END.          
+  ELSE
+    oSqlHelper:ABLquerySort = cSortPhrase.
+    
+  ProcessPreScanJoins().  // not really but will split the query so it can be decomposed
+  DecomposeQuery(1, cQueryBeforeSort, oSqlHelper:SQLtableList).
+  
+  ix = 0.
+  FOR EACH ttQuery
+      WHERE ttQuery.cQryString NE "": 
+    ix = ix + 1.
+    IF ttQuery.bNotExist THEN
+      oSqlHelper:setNotExistQuery(ttQuery.cQryBuffer,ttQuery.cQryString).
+    ELSE  
+      oSqlHelper:ABLqueryWhere = oSqlHelper:ABLqueryWhere 
+                               + (IF oSqlHelper:ABLqueryWhere NE "" THEN " " ELSE "") 
+                               + (IF ix > 1 THEN "AND " + LEFT-TRIM(ttQuery.cQryString,"WHERE") ELSE ttQuery.cQryString)                                .
+  END.          
+  
+  oSqlHelper:SQLprimaryTable = hBuffer[1]:NAME.
+  IF oSqlHelper:SQLview = "" THEN 
+    ocReturn = oSqlHelper:setSqlView(hBuffer[1]).
+  ELSE
+    ocReturn = oSqlHelper:analyseSqlView(hBuffer[1]).
+  IF ocReturn NE "" THEN DO:
+    LogThis("SQL view error",ocReturn,1).
+    RETURN.    
+  END.
+    
+  cLastQueryExec = oSqlHelper:SQLview.  
+  LogThis("SqlView",oSqlHelper:SQLview,1).  
+  LogThis("SQLfields",oSqlHelper:SQLfields,0).
+  LogThis("SQLgroupBy",cSqlGroupBy,0).
+  LogThis("SQLcalcFields",cSqlCalcFldDef,0).
+  IF CAN-DO(icStatFields,"rowcount") AND cSqlGroupBy = "" 
+     AND NOT CAN-FIND(FIRST ttSpecFlds 
+                      WHERE ttSpecFlds.cCallProcParam NE "" 
+                       AND ttSpecFlds.cFilterValue NE ""
+                       AND NOT CAN-DO(oSqlHelper:JB_to_SQL_funclist,ttSpecFlds.cCallProc))
+     THEN DO:
+    ETIME(TRUE).
+    IF iMainQueryStopAfter NE 0 THEN 
+      DO STOP-AFTER iMainQueryStopAfter ON STOP UNDO, LEAVE:
+        iSqlQueryCount = oSqlHelper:getReadCount().
+        bMainQueryStopped = NO.
+      END.
+    ELSE  
+      iSqlQueryCount = oSqlHelper:getReadCount().
+    LogThis("Etime, sql query count: ", STRING(ETIME / 1000) + " Count: " + STRING(iSqlQueryCount),2).
+  END.  
+  ETIME(TRUE).
+  IF cSqlCalcFldDef NE "" AND cSqlGroupBy = ""  // <- go here to perform 4GL calculations while populating sql data
+     AND CAN-FIND(FIRST ttSpecFlds 
+                  WHERE ttSpecFlds.cCallProcParam NE "" 
+                    AND ttSpecFlds.cFilterValue NE ""
+                    AND NOT CAN-DO(oSqlHelper:JB_to_SQL_funclist,ttSpecFlds.cCallProc)) 
+     THEN DO:
+    LogThis("SQL with calc.flds:",cSqlCalcFldDef,1).
+    FOR EACH ttSpecFlds 
+        WHERE ttSpecFlds.cCallProcParam NE ""
+          AND ttSpecFlds.cSourceTable = ""
+        :
+      ttSpecFlds.cSourceTable = ENTRY(1,oSqlHelper:getTableField(ttSpecFlds.cCallProcParam),".").
+    END.   
+    CREATE DATASET hDsSqlData.
+    hDsSqlData:SET-BUFFERS (httBuffer,BUFFER ttSpecFlds:HANDLE,BUFFER ttRowSpecVal:HANDLE).
+    IF iMainQueryStopAfter NE 0 THEN 
+      DO STOP-AFTER iMainQueryStopAfter ON STOP UNDO, LEAVE:
+        RUN jbserv_get_sql_data.p (cSqlDb + "|" + oSqlHelper:SQLview + "||" + oSqlHelper:SQLfields 
+                                  + "|" + (IF cSqlCalcFldDef NE "" THEN
+                                             cCalcFieldProcs + CHR(1) + cSqlCalcFldDef 
+                                           + CHR(1) + cCalcFieldFilter + CHR(1) + icStatFields 
+                                           + CHR(1) + STRING(iiBatchSize) + CHR(1) + STRING(iiStartRow) + CHR(1) + cSqlCalcSortFlds 
+                                           ELSE "") 
+                                  ,hDsSqlData,icSessionId,OUTPUT ocReturn,OUTPUT bOk).
+        bMainQueryStopped = NO.
+      END.
+    ELSE  
+      RUN jbserv_get_sql_data.p (cSqlDb + "|" + oSqlHelper:SQLview + "||" + oSqlHelper:SQLfields 
+                                + "|" + (IF cSqlCalcFldDef NE "" THEN
+                                           cCalcFieldProcs + CHR(1) + cSqlCalcFldDef 
+                                         + CHR(1) + cCalcFieldFilter + CHR(1) + icStatFields 
+                                         + CHR(1) + STRING(iiBatchSize) + CHR(1) + STRING(iiStartRow) + CHR(1) + cSqlCalcSortFlds 
+                                         ELSE "") 
+                                ,hDsSqlData,icSessionId,OUTPUT ocReturn,OUTPUT bOk).
+    IF bOk THEN iSqlQueryCount = INT(ENTRY(1,ocReturn,"|")).                          
+
+    hDsSqlData:CLEAR().
+    DELETE OBJECT hDsSqlData.                          
+//    run toexcelviafile.p (httBuffer,-2).                          
+  END.
+  ELSE DO: 
+    LogThis("Simple SQL (no calc)",oSqlHelper:SQLfields,1).
+    IF iMainQueryStopAfter NE 0 THEN 
+      DO STOP-AFTER iMainQueryStopAfter + 1 ON STOP UNDO, LEAVE:
+        RUN jbserv_get_sql_data.p (cSqlDb + "|" + oSqlHelper:SQLview + "||" + oSqlHelper:SQLfields + "|" + oSqlHelper:getCalcFieldsInUse() + "|" + STRING(iMainQueryStopAfter) 
+                                  ,httBuffer,icSessionId,OUTPUT ocReturn,OUTPUT bOk).
+        bMainQueryStopped = NOT bOk.
+      END.
+    ELSE  
+      RUN jbserv_get_sql_data.p (cSqlDb + "|" + oSqlHelper:SQLview + "||" + oSqlHelper:SQLfields + "|" + oSqlHelper:getCalcFieldsInUse()
+                                ,httBuffer,icSessionId,OUTPUT ocReturn,OUTPUT bOk).
+    IF bOk AND iSqlQueryCount = 0 THEN iSqlQueryCount = INT(ENTRY(1,ocReturn,"|")).                          
+ //   run toexcelviafile.p (httBuffer,0).                          
+
+  END.                            
+  IF NOT bOk THEN DO:
+    LogThis("SQL query error",ocReturn,1).
+    RETURN.
+  END.  
+//  else run toexcelviafile.p (hbuffer[1],-2).
+  LogThis("Etime, sql query: ", STRING(ETIME / 1000) + " Count: " + STRING(iSqlQueryCount),2).
+  ocReturn = "".
+  ETIME(TRUE).
+  
+//  icQueryCriteria = cSortPhrase.
+
+  icQueryCriteria = "".
+  DO ix = 1 TO NUM-ENTRIES(cSortPhrase," "):
+    icQueryCriteria = icQueryCriteria + (IF icQueryCriteria NE "" THEN " " ELSE "")
+                    + (IF NUM-ENTRIES(ENTRY(ix,cSortPhrase," "),".") > 1 THEN httBuffer:NAME + "."  
+                         + ENTRY(NUM-ENTRIES(ENTRY(ix,cSortPhrase," "),"."),ENTRY(ix,cSortPhrase," "),".")
+                       ELSE ENTRY(ix,cSortPhrase," "))
+                    .   
+  END.       
+
+  iQueryCount = iSqlQueryCount.
+  LogThis("Mod ABL query: ", icQueryCriteria,2).
+END.  
+
+LogThis("Result buffer indexes",httBuffer:INDEX-INFORMATION(1),1).
+
+IF cSqlDb = "" THEN
+  FOR EACH ttSpecFlds
+      WHERE ttSpecFlds.cCallProc = "jb_calc":
+    IF NOT VALID-HANDLE(ttSpecFlds.hSourceField) OR NOT VALID-HANDLE(ttSpecFlds.hSourceField2) THEN
+      setJbCalcParams(ttSpecFlds.cCallProc,0).
+  END.
+
+/* added for sql: 
+FOR EACH ttSpecFlds
+    WHERE ttSpecFlds.cCallProcParam NE "" 
+      AND ttSpecFlds.hSourceField = ?:
+  ttSpecFlds.hSourceField = httBuffer:BUFFER-FIELD(ttSpecFlds.cCallProcParam) NO-ERROR.
+END.
+*/
+/* added for json output */
+IF bCreateTT THEN
+  FOR EACH ttSpecFlds 
+      WHERE ttSpecFlds.cCallProc = "ExtentFieldValue"
+      :
+    ohTempTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ttSpecFlds.cFillField):SERIALIZE-NAME = REPLACE(REPLACE(ttSpecFlds.cFillField,"[","_"),"]","_").     
+    ohTempTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD("jbextent_" + STRING(ttSpecFlds.iExtent) + "_" + SUBSTR(ttSpecFlds.cFillField,1,INDEX(ttSpecFlds.cFillField,"[") - 1)):SERIALIZE-HIDDEN = YES.     
+  END.
 
 DO ix = 1 TO 10:
   IF VALID-HANDLE(hCalcFieldProcs[ix]) AND CAN-DO(hCalcFieldProcs[ix]:INTERNAL-ENTRIES,"setResultSetBuffer") THEN
     DYNAMIC-FUNCTION("setResultSetBuffer" IN hCalcFieldProcs[ix],httBuffer).
 END.
 
-IF cNotExistList NE "" THEN DO:    
+IF cSqlDb = "" AND cNotExistList NE "" THEN DO:    
   AppendTTbuffers().  
   LogThis("Not exist buffers",cNotExistList,1).
   LogThis("Appended query",icQueryCriteria,1).
@@ -1010,6 +1483,11 @@ IF cLogFile NE "" THEN DO:
   LogThis("Duplicate fields:","",0).
   DO ix = 1 TO iBufferCount:
     LogThis(hBuffer[ix]:NAME + ":",cDuplicateFields[ix],0).
+  END.
+  LogThis("","",1). 
+  LogThis("Returned fields:","",0).
+  DO ix = 1 TO iBufferCount:
+    LogThis(hBuffer[ix]:NAME + ":",cBufferFields[ix],0).
   END.
   LogThis("","",1). 
   LogThis("Fields not returned:","",0).
@@ -1037,14 +1515,6 @@ IF cLogFile NE "" THEN DO:
   END.    
 END.
 
-IF cCalcFieldFilter NE "" THEN DO:
-  ocReturn = setCalcFieldFilter().
-  IF ocReturn NE "" THEN DO:
-    LogThis("Error for calc.fld filter",ocReturn,1).
-    ocReturn = "ERROR: " + ocReturn.
-    RETURN.
-  END.  
-END.
 
 /* Assign the specific handle to the calculated and/or distinct fields in the temp-table (for performance): */
 bOK = TRUE.
@@ -1071,7 +1541,7 @@ FOR EACH ttSpecFlds:
          + " Filter operator: " + ttSpecFlds.cFilterOperator
          + " Filter value: " + ttSpecFlds.cFilterValue
          + " Extent: " + STRING(ttSpecFlds.iExtent)
-         + " Mandatory: " + STRING(ttSpecFlds.bMandatoryCalc)
+         + " Mandatory: " + (IF ttSpecFlds.bMandatoryCalc NE ? THEN STRING(ttSpecFlds.bMandatoryCalc) ELSE "? - ie NO but 1st in process seq for buffer")
             ,0).
 END.
 IF NOT bOK THEN DO:
@@ -1099,6 +1569,10 @@ IF bReturnQueryInfo THEN
   CheckFieldLevelSecurity("exec").
 
 IF NOT icQueryCriteria BEGINS "WHERE false" THEN DO:
+  DO ix = 1 TO 10:
+    IF VALID-HANDLE(hCalcFieldProcs[ix]) AND CAN-DO(hCalcFieldProcs[ix]:INTERNAL-ENTRIES,"InitializeObject") THEN
+      RUN InitializeObject IN hCalcFieldProcs[ix].
+  END.
   IF iMainQueryStopAfter NE 0 THEN
     DO STOP-AFTER iMainQueryStopAfter ON STOP UNDO, LEAVE:
       RUN ProcessQuery (OUTPUT ocReturn).
@@ -1109,6 +1583,8 @@ IF NOT icQueryCriteria BEGINS "WHERE false" THEN DO:
     RUN ProcessQuery (OUTPUT ocReturn).
   END.
   
+  ocReturn = ocReturn + (IF cCalcOperatorErrorMsg NE "" THEN CHR(10) + cCalcOperatorErrorMsg ELSE ""). 
+  
   IF ocReturn NE "" THEN DO:
     LogThis("Error from ProcessQuery:",ocReturn,1).
     ocReturn = (IF NOT bReturnQueryInfo THEN "ERROR: " ELSE "") + ocReturn + (IF bReturnQueryInfo THEN "¤" + TRIM(cReturnOKmessage,",") ELSE "").
@@ -1117,16 +1593,23 @@ IF NOT icQueryCriteria BEGINS "WHERE false" THEN DO:
 END.
 ELSE LogThis("NO data, only table def",icQueryCriteria,1).
 
-
-RUN WrapUp.
-
-IF VALID-HANDLE(ohTempTable) THEN DELETE OBJECT ohTempTable.
-
-
 ocReturn = cReturnMessage + (IF bReturnQueryInfo THEN "¤" + TRIM(cReturnOKmessage,",") ELSE "").
 
 LogThis("Return param: ", ocReturn,1).
 LogThis("","",2).
+
+CATCH eAny AS Progress.Lang.Error :
+  ocReturn = eAny:GetMessage(1).
+  IF NOT CAN-DO("4glclient,webclient",SESSION:CLIENT-TYPE) THEN
+    MESSAGE ocReturn
+    VIEW-AS ALERT-BOX.  
+END CATCH.
+
+FINALLY:
+//  RUN toexcelviafile.p (ohTempTable,-2).
+  RUN WrapUp.
+  IF VALID-HANDLE(ohTempTable) THEN DELETE OBJECT ohTempTable.
+END FINALLY.  
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -1152,27 +1635,40 @@ DEF VAR cPrimBufDbFlds     AS CHAR   NO-UNDO.
 DEF VAR bOnlyCalcFieldsDef AS LOG    NO-UNDO.
 DEF VAR cOrgFldNumExt      AS CHAR   NO-UNDO.
 
-DO ix = 1 TO iBufferCount:
+DO ix = 1 TO iBufferCount ON ERROR UNDO, THROW:
   ASSIGN cBufferFieldList = ""
          ixf              = 0
          cBufDef       = ENTRY(ix,icBuffersAndFields)
          .
 
-  IF ENTRY(1,cBufDef,";") MATCHES "buf*_*" THEN DO:
-    CREATE BUFFER hBuffer[ix] FOR TABLE SUBSTR(ENTRY(1,cBufDef,";"),6)
-                  BUFFER-NAME ENTRY(1,cBufDef,";") NO-ERROR.
-    IF ERROR-STATUS:ERROR OR hBuffer[ix] = ? THEN DO:
-      ocReturn = "Table " + SUBSTR(ENTRY(1,cBufDef,";"),6) + " doesn't exist in database. Buffer definition: " + ENTRY(1,cBufDef,";").
-      LEAVE.
+  IF cSqlDb = "" THEN DO:
+    IF NUM-ENTRIES(ENTRY(1,cBufDef,";"),".") > 1 AND ENTRY(2,ENTRY(1,cBufDef,";"),".") MATCHES "buf*_*" THEN DO:
+      CREATE BUFFER hBuffer[ix] FOR TABLE ENTRY(1,ENTRY(1,cBufDef,";"),".") + "." + SUBSTR(ENTRY(2,ENTRY(1,cBufDef,";"),"."),6)
+                    BUFFER-NAME BufferName(ENTRY(1,cBufDef,";")) NO-ERROR.
+      IF ERROR-STATUS:ERROR OR hBuffer[ix] = ? THEN DO:
+        ocReturn = "Table " + SUBSTR(ENTRY(2,ENTRY(1,cBufDef,";"),"."),6) + " doesn't exist in database. Buffer definition: " + ENTRY(1,cBufDef,";").
+        LogThis("Table def ERROR",ocReturn,1).
+        RETURN.
+      END.
     END.
-  END.
-  ELSE DO:
-    CREATE BUFFER hBuffer[ix] FOR TABLE ENTRY(1,cBufDef,";") NO-ERROR.
-    IF ERROR-STATUS:ERROR OR hBuffer[ix] = ? THEN DO:
-      ocReturn = "Table " + ENTRY(1,cBufDef,";") + " doesn't exist in database".
-      LEAVE.
+    ELSE IF ENTRY(1,cBufDef,";") MATCHES "buf*_*" THEN DO:
+      CREATE BUFFER hBuffer[ix] FOR TABLE SUBSTR(ENTRY(1,cBufDef,";"),6)
+                    BUFFER-NAME ENTRY(1,cBufDef,";") NO-ERROR.
+      IF ERROR-STATUS:ERROR OR hBuffer[ix] = ? THEN DO:
+        ocReturn = "Table " + SUBSTR(ENTRY(1,cBufDef,";"),6) + " doesn't exist in database. Buffer definition: " + ENTRY(1,cBufDef,";").
+        LogThis("Table def ERROR",ocReturn,1).
+        RETURN.
+      END.
     END.
-  END.
+    ELSE DO:
+      CREATE BUFFER hBuffer[ix] FOR TABLE ENTRY(1,cBufDef,";") NO-ERROR.
+      IF ERROR-STATUS:ERROR OR hBuffer[ix] = ? THEN DO:
+        ocReturn = "Table " + ENTRY(1,cBufDef,";") + " doesn't exist in database".
+        LogThis("Table def ERROR",ocReturn,1).
+        RETURN.
+      END.
+    END.
+  END.  
 
   bOnlyCalcFieldsDef = OnlyCalcFldsInBufferDef(cBufDef).
   LogThis("Bufferdef " + STRING(ix) + ":",cBufDef,0).
@@ -1208,7 +1704,7 @@ DO ix = 1 TO iBufferCount:
             END.
             WHEN 2 THEN DO:
               IF bExt AND NOT cExtraField BEGINS "+" THEN 
-                cExtraLabel = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
+                cExtraLabel = REPLACE(ENTRY(iz,ENTRY(iy,cBufDef,";"),"|"),"%2C",",").
               ELSE                  
                 cExtraDataType = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
             END.
@@ -1218,7 +1714,7 @@ DO ix = 1 TO iBufferCount:
               ASSIGN cExtraInit  = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|")
                      cExtraParam = IF cExtraInit MATCHES "*(*" THEN SUBSTR(cExtraInit,INDEX(cExtraInit,"(") + 1,R-INDEX(cExtraInit,")") - INDEX(cExtraInit,"(") - 1) ELSE ""
                      cExtraInit  = IF cExtraInit MATCHES "*(*" THEN TRIM(SUBSTR(cExtraInit,1,INDEX(cExtraInit,"(") - 1)) ELSE cExtraInit
-                     bOk         = R-INDEX(cExtraInit,".p") > 0 OR TRIM(ENTRY(1,icQueryCriteria)) = "WHERE false"
+                     bOk         = R-INDEX(cExtraInit,".p") > 0 OR TRIM(ENTRY(1,icQueryCriteria)) = "WHERE false" OR (cExtraInit = "" AND NOT CAN-DO("jbCountDistinct,jbAverage",cExtraField)) /* for sql */
                      iq          = 0.
               IF NOT bOk THEN DO iq = 1 TO NUM-ENTRIES(cCalcFieldProcs,";"):
                 IF CAN-DO(hCalcFieldProcs[iq]:INTERNAL-ENTRIES,cExtraInit) THEN DO:
@@ -1241,18 +1737,35 @@ DO ix = 1 TO iBufferCount:
                        ttSpecFlds.b2phAcc         = cExtraField BEGINS "2ph_" 
                        ttSpecFlds.hCalcFieldProc  = IF iq > 0 THEN hCalcFieldProcs[iq] ELSE ?
                        .
+                IF bDistinct THEN ttSpecFlds.iGroupSeq = LOOKUP(cExtraField,cSortFields).       
+                IF cExtraInit = "jb_week" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_week_ww".      
+                ELSE IF cExtraInit = "jb_week_dt" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_week_dt_ww".      
+                ELSE IF cExtraInit = "jb_month" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_month_mm".      
+                ELSE IF cExtraInit = "jb_month_dt" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_month_dt_mm".      
+                ELSE IF cExtraInit = "jb_quarter" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_quarter_q".      
+                ELSE IF cExtraInit = "jb_quarter_dt" AND cExtraFormat NE "x(6)" THEN       
+                  ttSpecFlds.cCallProc = "jb_quarter_dt_q".      
                 /* If the param is a field grab handle: */
                 IF cExtraParam NE "" AND NOT cExtraParam BEGINS "ROWID" THEN DO:
                   IF CAN-DO("jb_calc,jb_can-find,jb_total,jb_max,jb_min,jb_random",ttSpecFlds.cCallProc) THEN DO:
-                    ocReturn = setJBCalcParams(ttSpecFlds.cCallProc,ix). IF ocReturn NE "" THEN LEAVE.
+                    ocReturn = setJBCalcParams(ttSpecFlds.cCallProc,ix). 
+                    IF ocReturn NE "" THEN DO:
+                      LogThis("Field def ERROR",ocReturn,1).
+                      RETURN.
+                    END.  
                   END.
-                  ELSE
-                    ttSpecFlds.hSourceField = hBuffer[ix]:BUFFER-FIELD(ENTRY(NUM-ENTRIES(cExtraParam,"."),cExtraParam,".")).
+                  ELSE /* no-error fixed parameter must come from (sql) output in the result-set. */
+                    ttSpecFlds.hSourceField = hBuffer[ix]:BUFFER-FIELD(ENTRY(NUM-ENTRIES(cExtraParam,"."),cExtraParam,".")) NO-ERROR.
                 END. 
 
                 /* If the calc. value is used for sorting go an extra round first (see under) and get the values 
                    Nov 19: Sorting on certain Built-in functions are mapped back to the parameter field for speed */
-                IF CAN-DO(cSortFields,cExtraField) AND NOT swapSortField(cExtraField,cExtraParam,cExtraInit) THEN
+                IF CAN-DO(cSortFields,cExtraField) AND NOT swapSortField(cExtraField,cExtraParam,cExtraInit) AND cSqlDb = "" THEN
                   ASSIGN ttSpecFlds.cCalcSortField = cExtraField
                          cCalcSortFields           = cCalcSortFields + cExtraField + ","
                          cCalcSortFldTypes         = cCalcSortFldTypes + cExtraDataType + ",".
@@ -1263,18 +1776,26 @@ DO ix = 1 TO iBufferCount:
               END.
               cExtraInit = "".
             END.
-            WHEN 5 THEN cExtraLabel    = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
-            WHEN 6 THEN IF bOk AND ENTRY(iz,ENTRY(iy,cBufDef,";"),"|") BEGINS "mand" THEN
-              ASSIGN ttSpecFlds.bMandatoryCalc = YES
-                     bMandCalcFldsExist = YES.
+            WHEN 5 THEN cExtraLabel    = REPLACE(ENTRY(iz,ENTRY(iy,cBufDef,";"),"|"),"%2C",",").
+            WHEN 6 THEN DO:
+              IF bOk AND cSqlDb NE "" THEN DO:
+                ttSpecFlds.cSourceTable = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
+                IF ttSpecFlds.cSourceTable BEGINS "NOT EXIST " THEN
+                  ttSpecFlds.cSourceTable = TRIM(SUBSTR(ttSpecFlds.cSourceTable,11)).
+              END.  
+              ELSE IF bOk AND ENTRY(iz,ENTRY(iy,cBufDef,";"),"|") BEGINS "mand" THEN
+                ASSIGN ttSpecFlds.bMandatoryCalc = YES
+                       bMandCalcFldsExist = YES.
+            END.           
           END CASE.
         END.
         iz = iz - 1.
         IF iz < 2 AND NOT bExt THEN DO:
           ocReturn = "Missing data type for extra field " + cExtraField.
-          NEXT.
+          LogThis("Field def ERROR",ocReturn,1).
+          RETURN.
         END.
-        IF NOT bExt THEN CASE iz:
+        IF NOT bExt AND bCreateTT THEN CASE iz:
           WHEN 2 THEN ohTempTable:ADD-NEW-FIELD(cExtraField,cExtraDataType).
           WHEN 3 THEN ohTempTable:ADD-NEW-FIELD(cExtraField,cExtraDataType,0,cExtraFormat).
           WHEN 4 THEN DO:
@@ -1291,12 +1812,15 @@ DO ix = 1 TO iBufferCount:
                                       cExtraLabel,
                                       IF cExtraLabel MATCHES "*" + CHR(10) + "*" THEN
                                         REPLACE(cExtraLabel,CHR(10),"!")
-                                      ELSE ?) NO-ERROR.
+                                      ELSE ?).
         END CASE.
-        ELSE DO:
+        ELSE IF bExt THEN DO:
           ixf = ixf + 1.
           ocReturn = CreateExtentCalcField(hBuffer[ix],ix,ixf,cExtraField,cExtraDataType,cExtraFormat,cExtraLabel,bDistinct,bAccum).  
-          IF ocReturn NE "" THEN RETURN.
+          IF ocReturn NE "" THEN DO:
+            LogThis("Field def ERROR",ocReturn,1).
+            RETURN.
+          END.  
         END. 
         cExtraInit = "".
         
@@ -1330,11 +1854,14 @@ DO ix = 1 TO iBufferCount:
         IF NOT VALID-HANDLE(hField) THEN DO:
           ocReturn = "Field " + ENTRY(1,ENTRY(iy,cBufDef,";"),"|") + CHR(10) + 
                      "doesn't exist in buffer " + hBuffer[ix]:NAME.
-          NEXT.
+          LogThis("Field def ERROR",ocReturn,1).
+          RETURN.
         END.
         ELSE IF bDistinct THEN
           ASSIGN ttSpecFlds.hSourceField = hField
                  ttSpecFlds.cFillFieldType = hField:DATA-TYPE.
+
+        cBufferFields[ix] = cBufferFields[ix] + (IF cBufferFields[ix] NE "" THEN " " ELSE "") + cField.
 
         cOrgFldNumExt = "".
         IF cOrgBuffersAndFields NE "" THEN DO:
@@ -1348,11 +1875,11 @@ DO ix = 1 TO iBufferCount:
 
         IF NOT CAN-DO(cAddedFields,hField:NAME + cOrgFldNumExt) THEN DO:
           /* Check for overrides of format and label: */
-          IF NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|") > 1 THEN DO:
+          IF NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|") > 1 AND bCreateTT THEN DO:
             DO iz = 2 TO NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|"):
               IF iz = 2 THEN DO:
                 IF ENTRY(iz,ENTRY(iy,cBufDef,";"),"|") NE "=" THEN 
-                  cOverrideLabel = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
+                  cOverrideLabel = REPLACE(ENTRY(iz,ENTRY(iy,cBufDef,";"),"|"),"%2C",",").
                 ELSE 
                   cOverrideLabel = hField:LABEL.
               END.
@@ -1365,7 +1892,7 @@ DO ix = 1 TO iBufferCount:
             ohTempTable:ADD-NEW-FIELD(hField:NAME + cOrgFldNumExt,hField:DATA-TYPE,0,cOverrideFormat,
                                      IF hField:DATA-TYPE = "CHARACTER" THEN ""
                                      ELSE IF hField:DATA-TYPE = "DATE" THEN "?"
-                                     ELSE IF hField:DATA-TYPE = "DATETIME" THEN ""
+                                     ELSE IF hField:DATA-TYPE BEGINS "DATETIME" THEN ""
                                      ELSE IF hField:DATA-TYPE = "LOGICAL" THEN "no"
                                      ELSE "0",
                                      cOverrideLabel,
@@ -1376,10 +1903,11 @@ DO ix = 1 TO iBufferCount:
             IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
               ocReturn = "Error in create of field " + ENTRY(1,ENTRY(iy,cBufDef,";"),"|") + CHR(10) + 
                          ERROR-STATUS:GET-MESSAGE(1).
-              NEXT.
+              LogThis("Field def ERROR",ocReturn,1).
+              RETURN.
             END.
           END.
-          ELSE ohTempTable:ADD-LIKE-FIELD(hField:NAME + cOrgFldNumExt,hField).
+          ELSE IF bCreateTT THEN ohTempTable:ADD-LIKE-FIELD(hField:NAME + cOrgFldNumExt,hField).
 
           ASSIGN cAddedFields     = cAddedFields + hField:NAME + cOrgFldNumExt + ","
                  cBufferFieldList = cBufferFieldList + hField:NAME + cOrgFldNumExt + ",".
@@ -1395,7 +1923,7 @@ DO ix = 1 TO iBufferCount:
               IF ENTRY(1,ENTRY(ia,icBuffersAndFields),";") MATCHES "buf*_*" THEN 
                 CREATE BUFFER hBuffer2 FOR TABLE SUBSTR(TRIM(ENTRY(1,ENTRY(ia,icBuffersAndFields)),";"),6)
                               BUFFER-NAME ENTRY(1,ENTRY(ia,icBuffersAndFields),";") NO-ERROR.
-              ELSE CREATE BUFFER hBuffer2 FOR TABLE TRIM(ENTRY(1,ENTRY(ia,icBuffersAndFields),";")) NO-ERROR.
+              ELSE CREATE BUFFER hBuffer2 FOR TABLE BufferName(TRIM(ENTRY(1,ENTRY(ia,icBuffersAndFields),";"))) NO-ERROR.
 
               hField2 = hBuffer2:BUFFER-FIELD(hField:NAME) NO-ERROR.
               IF VALID-HANDLE(hField2) THEN 
@@ -1420,7 +1948,7 @@ DO ix = 1 TO iBufferCount:
         /* The field name already exists in the temp-table buffer. Add a suffix to make it unique: */
         ELSE DO:
           /* Check for overrides of format and label also here: */
-          IF NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|") > 1 THEN DO:
+          IF NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|") > 1 AND bCreateTT THEN DO:
             DO iz = 2 TO NUM-ENTRIES(ENTRY(iy,cBufDef,";"),"|"):
               IF iz = 2 THEN DO:
                 IF ENTRY(iz,ENTRY(iy,cBufDef,";"),"|") NE "=" THEN 
@@ -1429,7 +1957,7 @@ DO ix = 1 TO iBufferCount:
                   cOverrideLabel = hField:LABEL.
               END.
               ELSE IF iz = 3 THEN
-                cOverrideFormat = ENTRY(iz,ENTRY(iy,cBufDef,";"),"|").
+                cOverrideFormat = REPLACE(ENTRY(iz,ENTRY(iy,cBufDef,";"),"|"),"<",",").
             END.
             IF iz = 3 THEN
               cOverrideFormat = hField:FORMAT. /* No override on format */
@@ -1437,6 +1965,7 @@ DO ix = 1 TO iBufferCount:
             ohTempTable:ADD-NEW-FIELD(hField:NAME + STRING(ix),hField:DATA-TYPE,0,cOverrideFormat,
                                      IF hField:DATA-TYPE = "CHARACTER" THEN ""
                                      ELSE IF hField:DATA-TYPE = "DATE" THEN "?"
+                                     ELSE IF hField:DATA-TYPE BEGINS "DATETIME" THEN ""
                                      ELSE IF hField:DATA-TYPE = "LOGICAL" THEN "no"
                                      ELSE "0",
                                      cOverrideLabel,
@@ -1444,7 +1973,7 @@ DO ix = 1 TO iBufferCount:
                                        REPLACE(cOverrideLabel,CHR(10),"!")
                                      ELSE ?).
           END.
-          ELSE ohTempTable:ADD-LIKE-FIELD(hField:NAME + STRING(ix),hField).
+          ELSE IF bCreateTT THEN ohTempTable:ADD-LIKE-FIELD(hField:NAME + STRING(ix),hField).
 
           cDuplicateFields[ix] = cDuplicateFields[ix] + hField:NAME + ",".
           icQueryCriteria = REPLACE(icQueryCriteria,hField:NAME + STRING(ix),hField:NAME).
@@ -1473,6 +2002,7 @@ DO ix = 1 TO iBufferCount:
         END. /* Duplicate field */
 
       END. /* DB buffer field */
+//      LogThis("Field " + STRING(iy) + ":",ENTRY(iy,cBufDef,";"),0).
     END.
     cBufferFieldList = TRIM(cBufferFieldList,",").
 
@@ -1482,11 +2012,12 @@ DO ix = 1 TO iBufferCount:
          NOT CAN-DO(cExceptionFields[ix],hBuffer[ix]:BUFFER-FIELD(iq):NAME) THEN
        cExceptionFields[ix] = cExceptionFields[ix] + hBuffer[ix]:BUFFER-FIELD(iq):NAME + ",".
     END.
+
   END. /* Field list for buffer */
 
   /* No field list is given and we grab all fields from the buffer and add to the temp-table
      Also builds the actual field list to be returned by cReturnOKmessage: */
-  IF ((ix = 1 OR bFieldSpec = NO) AND NUM-ENTRIES(cBufDef,";") = 1) OR (bOnlyCalcFieldsDef AND NOT bFieldSpec) THEN DO:
+  IF ((ix = 1 OR bFieldSpec = NO) AND NUM-ENTRIES(cBufDef,";") = 1) OR (bOnlyCalcFieldsDef AND NOT bFieldSpec AND cSqlDb = "") THEN DO:
     ASSIGN cRealFldSpc   = cBufDef + "|"
            cRealDbFldSpc = cBufDef + "|".
     DO iy = 1 TO hBuffer[ix]:NUM-FIELDS:
@@ -1504,13 +2035,13 @@ DO ix = 1 TO iBufferCount:
         cRealDbFldSpc = cRealDbFldSpc + cFieldName + "|".
   
         IF hField:EXTENT = 0 THEN DO:
-          IF NOT CAN-DO(cAddedFields,hField:NAME) THEN DO:
+          IF bCreateTT AND NOT CAN-DO(cAddedFields,hField:NAME) THEN DO:
             ohTempTable:ADD-LIKE-FIELD(hField:NAME,hField).
             ASSIGN cAddedFields   = cAddedFields + hField:NAME + ","
                    cRealFldSpc = cRealFldSpc + hField:NAME + "|".
           END.
           ELSE DO:
-            ohTempTable:ADD-LIKE-FIELD(hField:NAME + STRING(ix),hField).
+            IF bCreateTT THEN ohTempTable:ADD-LIKE-FIELD(hField:NAME + STRING(ix),hField).
             ASSIGN cDuplicateFields[ix] = cDuplicateFields[ix] + hField:NAME + ","
                    cRealFldSpc       = cRealFldSpc + hField:NAME + STRING(ix) + "|".
           END.
@@ -1531,7 +2062,10 @@ DO ix = 1 TO iBufferCount:
           ocReturn = CreateExtentCalcField(hBuffer[ix],ix,ixf,cFieldName,"",hField:FORMAT,
                                            hField:LABEL + "[" + STRING(iz) + "]",
                                            NO,NO).  
-          IF ocReturn NE "" THEN RETURN.
+          IF ocReturn NE "" THEN DO:
+            LogThis("Field def ERROR",ocReturn,1).
+            RETURN.
+          END.   
           cRealFldSpc = cRealFldSpc + cFieldName + "|".
           IF CAN-DO(icStatFields,cFieldName) THEN 
             cCalcStatFields = cCalcStatFields + cFieldName + ",".
@@ -1550,19 +2084,42 @@ DO ix = 1 TO iBufferCount:
   cDuplicateFields[ix] = TRIM(cDuplicateFields[ix],",").
 
   IF cOrgBufferList NE "" THEN DO:
-    ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(LOOKUP(hBuffer[ix]:NAME,cOrgBufferList)),"CHARACTER").
-    iOrgBufferNum[ix] = LOOKUP(hBuffer[ix]:NAME,cOrgBufferList).
+    IF LOOKUP(hBuffer[ix]:NAME,cOrgBufferList) > 0 THEN DO:
+      IF bCreateTT THEN ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(LOOKUP(hBuffer[ix]:NAME,cOrgBufferList)),"CHARACTER").
+      iOrgBufferNum[ix] = LOOKUP(hBuffer[ix]:NAME,cOrgBufferList).
+    END.  
+    ELSE DO:  
+      IF bCreateTT THEN ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(LOOKUP(hBuffer[ix]:DBNAME + "." + hBuffer[ix]:NAME,cOrgBufferList)),"CHARACTER").
+      iOrgBufferNum[ix] = LOOKUP(hBuffer[ix]:DBNAME + "." + hBuffer[ix]:NAME,cOrgBufferList).
+    END.
   END.
   ELSE DO:
-    ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(ix),"CHARACTER").
+    IF bCreateTT THEN ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(ix),"CHARACTER").
     iOrgBufferNum[ix] = ix.
   END.  
 
-  hQuery:ADD-BUFFER(hBuffer[ix]).
-  cBufferList = cBufferList + hBuffer[ix]:NAME + ",".
+  IF cSqlDb = "" THEN DO:
+    hQuery:ADD-BUFFER(hBuffer[ix]).
+    cBufferList = cBufferList + hBuffer[ix]:NAME + ",".
+  END.  
   IF ix = 1 THEN cPrimBufDbFlds = cAddedFields.
+
+  CATCH eAny AS Progress.Lang.Error :
+    ocReturn = eAny:GetMessage(1) + CHR(10) + "Error occured for buffer " + cBufDef
+                                  + CHR(10) + "Last calculated field: " + cExtraField
+                                  + CHR(10) + "Last buffer field: " + cField
+                                  .  
+    RETURN.
+  END CATCH.
 END.
-FinalizeCreateQuery(cPrimBufDbFlds).
+IF ocReturn = "" THEN DO:
+  ocReturn = FinalizeCreateQuery(cPrimBufDbFlds).
+  IF ocReturn = "" AND cSqlDb NE "" THEN DO:
+    hBuffer[1] = ohTempTable:DEFAULT-BUFFER-HANDLE.
+    hQuery:ADD-BUFFER(hBuffer[1]).
+    cBufferList = hBuffer[1]:NAME.
+  END.
+END.  
 
 END PROCEDURE.
 
@@ -2139,6 +2696,52 @@ END PROCEDURE.
 &ENDIF
 
 
+&IF DEFINED(EXCLUDE-JB_month_dt_mm) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_month_dt_mm Procedure
+PROCEDURE JB_month_dt_mm:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM idDate      AS DATETIME NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+ocValue = STRING(MONTH(idDate),"99").
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-jb_month_mm) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE jb_month_mm Procedure
+PROCEDURE jb_month_mm:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM idDate      AS DATE NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+ocValue = STRING(MONTH(idDate),"99").
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-JB_quarter) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_quarter Procedure 
@@ -2194,6 +2797,74 @@ ELSE IF iMonth < 10 THEN
   ocValue = STRING(YEAR(idDate)) + "Q3".
 ELSE 
   ocValue = STRING(YEAR(idDate)) + "Q4".
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-JB_quarter_dt_q) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_quarter_dt_q Procedure
+PROCEDURE JB_quarter_dt_q:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM idDate      AS DATETIME NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+DEF VAR iMonth AS INT NO-UNDO.
+
+iMonth = MONTH(idDate).
+IF iMonth < 4 THEN
+  ocValue = "1".
+ELSE IF iMonth < 7 THEN
+  ocValue = "2".
+ELSE IF iMonth < 10 THEN
+  ocValue = "3".
+ELSE 
+  ocValue = "4".
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-JB_quarter_q) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_quarter_q Procedure
+PROCEDURE JB_quarter_q:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM idDate      AS DATE NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+DEF VAR iMonth AS INT NO-UNDO.
+
+iMonth = MONTH(idDate).
+IF iMonth < 4 THEN
+  ocValue = "1".
+ELSE IF iMonth < 7 THEN
+  ocValue = "2".
+ELSE IF iMonth < 10 THEN
+  ocValue = "3".
+ELSE 
+  ocValue = "4".
+
 
 END PROCEDURE.
   
@@ -2382,6 +3053,85 @@ END PROCEDURE.
 &ENDIF
 
 
+&IF DEFINED(EXCLUDE-JB_weeknum_dt_ww) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_weeknum_dt_ww Procedure
+PROCEDURE JB_weeknum_dt_ww:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM inDate      AS DATETIME NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+RUN JB_weeknum_ww (DATE(inDate),icSessionId,OUTPUT ocValue).
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-JB_weeknum_ww) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_weeknum_ww Procedure
+PROCEDURE JB_weeknum_ww:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM inDate      AS DATE NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocValue     AS CHAR NO-UNDO.
+
+DEFINE VAR yyyyww   AS INT   NO-UNDO.   /* Output week, eg 9042     */
+
+DEFINE VARIABLE yr   AS INT  NO-UNDO.  /* Year of indate, eg 1990      */
+DEFINE VARIABLE d1   AS INT  NO-UNDO.  /* Weekday of 1/1 current year, eg 2  */
+                              /* (01/01/90 is a Monday)      */
+DEFINE VARIABLE dat1 AS DATE NO-UNDO. /* Starting date of week 1     */
+DEFINE VARIABLE wn   AS INT  NO-UNDO.  /* Week number , eg 45         */
+
+ASSIGN
+  yr   = YEAR(indate)
+  d1   = WEEKDAY(DATE( 1 , 1 , yr))
+  dat1 = (IF d1 LE 5 THEN DATE(1,  3, yr) - d1 ELSE
+                          DATE(1, 10, yr) - d1 )
+  wn   = TRUNCATE((indate - dat1 + 7) / 7 , 0)
+  yyyyww = yr * 100 + wn.
+
+IF wn < 1 THEN       /* Week 52 or 53 previous year ? */
+ASSIGN
+  yr     = yr - 1
+  d1     = WEEKDAY(DATE( 1 , 1 , yr))
+  dat1   = (IF d1 LE 5 THEN DATE(1,  3, yr) - d1 ELSE
+                            DATE(1, 10, yr) - d1 )
+  wn     = TRUNCATE((indate - dat1 + 7) / 7 , 0)
+  yyyyww = yr * 100 + wn.
+
+ELSE IF wn > 52 THEN  /* Week 53 this year or week 1 next year ? */
+ASSIGN
+  yr     = yr + 1
+  d1     = WEEKDAY(DATE( 1 , 1 , yr))
+  yyyyww = IF d1 EQ 6 OR d1 EQ 7 OR d1 EQ 1
+              THEN (yr - 1) * 100 + 53 ELSE yr * 100 + 1.
+
+ocValue = SUBSTR(STRING(yyyyww),5).
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-JB_year) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JB_year Procedure 
@@ -2448,13 +3198,18 @@ DEF VAR iNumDistFlds      AS INT    NO-UNDO.
 DEF VAR cDistVal          AS CHAR   NO-UNDO.
 DEF VAR hPreScanDistCol   AS HANDLE NO-UNDO.
 DEF VAR hPreScanAddDistRowids AS HANDLE NO-UNDO EXTENT 20.
-DEF VAR iUniquBuffer          AS INT    NO-UNDO.
+DEF VAR iUniqueBuffer     AS INT    NO-UNDO.
+DEF VAR bDeleteSqlSource  AS LOG    NO-UNDO.
 
-DEF VAR iCntCalcFld    AS INT NO-UNDO.
-DEF VAR bSimplePreScan AS LOG NO-UNDO.
+DEF VAR iCntCalcFld       AS INT  NO-UNDO.
+DEF VAR bSimplePreScan    AS LOG  NO-UNDO.
+DEF VAR cOrgQueryString   AS CHAR NO-UNDO.
+DEF VAR cOrgBufferFields  AS CHAR NO-UNDO EXTENT. 
+
+EXTENT(cOrgBufferFields) = iBufferCount.
 
 bDistinctRows = CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bDistinct).
-iUniquBuffer = LOOKUP(cUniquBuffer,cBufferList).
+iUniqueBuffer = LOOKUP(cUniqueBuffer,cBufferList).
 
 CREATE TEMP-TABLE httPreScan.
 
@@ -2510,6 +3265,24 @@ END.
 IF INDEX(cQueryString," BY ") > 0 THEN
   cQueryString = SUBSTR(cQueryString,1,INDEX(cQueryString," BY ")).
 
+
+ASSIGN cOrgQueryString = cQueryString
+       cOrgBufferFields = cBufferFields
+       cBufferFields    = cPrescanBufferFields. 
+
+/* Re-build the query inserting field-lists containing only fields relevant for the prescan */
+IF cQueryString BEGINS "FOR EACH ttPreScanJoin" THEN
+  cQueryString = REPLACE("FOR EACH ttPreScanJoin,EACH " + ENTRY(1,cBufferList) 
+               + (IF cPrescanBufferFields[1] NE "*" THEN " FIELDS(" + cPrescanBufferFields[1] + ")" ELSE "")
+               + " WHERE ROWID(" + ENTRY(1,cBufferList) + ") = ttPreScanJoin.rPreScanJoin "
+               +  ComposeQuery(0),CHR(1),",").
+ELSE DO:
+  cQueryString = "FOR EACH " + ENTRY(1,cBufferList) + " " + REPLACE(ComposeQuery(-2),CHR(1),",").
+  cQueryString = cQueryString + cNotExistQueryString.
+END.
+
+
+
 LogThis("QueryString, all rows: ",cQueryString,1).
 
 ocReturn = QueryOpen().
@@ -2517,6 +3290,9 @@ IF ocReturn NE "" THEN DO:
   obOk = FALSE.
   RETURN.
 END.
+
+ASSIGN cQueryString = cOrgQueryString
+       cBufferFields = cOrgBufferFields.
 
 /* Gather the handles to the database buffer-fields for distinct columns: */
 FOR EACH ttSpecFlds
@@ -2528,11 +3304,13 @@ END.
 /* Mark special fields and values calculated here as calculated by prescan */
 FOR EACH ttSpecFlds
     WHERE NOT ttSpecFlds.b2phAcc
-      and (ttSpecFlds.bDistinct OR ttSpecFlds.cCalcSortField NE "" OR ttSpecFlds.bGrandTotal 
-           OR ttSpecFlds.cFilterOperator NE "" OR CAN-DO("jbCountDistinct,InitializeColumns",ttSpecFlds.cFillField) OR bDistinctRows 
+      AND (ttSpecFlds.bDistinct OR ttSpecFlds.cCalcSortField NE "" OR ttSpecFlds.bGrandTotal 
+           OR ttSpecFlds.cFilterOperator NE "" 
+           OR CAN-DO("jbCountDistinct,InitializeColumns",ttSpecFlds.cFillField) 
+           OR bDistinctRows 
            OR bCheckForSkipRow /* 13.nov.14 */
            OR ttSpecFlds.bMandatoryCalc) /* 13.nov.19 */
-    ,first ttRowSpecVal of ttSpecFlds
+    ,FIRST ttRowSpecVal OF ttSpecFlds
     :
   ASSIGN ttSpecFlds.bCalcByPreScan    = YES 
          ttRowSpecVal.bCalcByPreScan = YES 
@@ -2540,7 +3318,7 @@ FOR EACH ttSpecFlds
          
   IF ttSpecFlds.cFillField NE "jbCountDistinct" THEN 
     iCntCalcFld = iCntCalcFld + 1. 
-end.   
+END.   
 
 IF cLogFile NE "" AND CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bCalcByPreScan) THEN DO:
   LogThis("Calculations done during prescan:","",0).
@@ -2550,6 +3328,7 @@ IF cLogFile NE "" AND CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bCalcByPreScan)
           ttSpecFlds.cCallProc + "(" 
         + ttSpecFlds.cCallProcParam + ")" 
         + " Distinct: " + STRING(ttSpecFlds.bDistinct)
+        + " Accum: " + STRING(ttSpecFlds.bAccum)
         + " CalcSortField NE '': " + STRING(ttSpecFlds.cCalcSortField NE "")
         + " GrandTotal: " + STRING(ttSpecFlds.bGrandTotal)
         + " cFilterOperator: " + ttSpecFlds.cFilterOperator
@@ -2574,7 +3353,6 @@ IF iCntCalcFld = 1 AND NOT bDistinctRows THEN DO:
   LogThis("Simple prescan: ",ttSpecFlds.cFillField,1).
 END.       
 /* 10.10.11 ************/       
-
 
 hQuery:GET-FIRST().
 
@@ -2626,6 +3404,8 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
         END.
         ELSE IF ttSpecFlds.bDistinct AND ttRowSpecVal.cCurrCallOutput NE ? THEN
           cDistVal = cDistVal + ttRowSpecVal.cCurrCallOutput.
+        ELSE IF ttSpecFlds.bDistinct AND ttRowSpecVal.cCurrCallOutput = ? THEN
+          cDistVal = cDistVal + "?".
         ELSE IF ttSpecFlds.bGrandTotal THEN DO: /* That includes also the accum fields */
           ttRowSpecVal.fRowValue = DEC(ttRowSpecVal.cCurrCallOutput) NO-ERROR.
           IF ERROR-STATU:ERROR THEN DO:
@@ -2637,7 +3417,7 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
       /* Or accum or GrandTotal fields from the database buffer: */
       ELSE IF ttSpecFlds.bGrandTotal THEN DO:
         ttRowSpecVal.fRowValue = DEC(ttSpecFlds.hSourceField:BUFFER-VALUE) NO-ERROR.
-        IF ERROR-STATU:ERROR THEN DO:
+        IF ERROR-STATUS:ERROR THEN DO:
           ocReturn = "Accumulation of field " + ttSpecFlds.cFillField + " on assignment due to a mismatch in datatype (only numbers can be accumulated)".
           RETURN.
         END.
@@ -2663,9 +3443,10 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
                :
   
           FIND FIRST ttRowSpecVal OF ttSpecFlds.
-          ttRowSpecVal.fRowValue = 0.
+          ASSIGN ttRowSpecVal.fRowValue = 0
+                 ttRowSpecVal.cCurrCallOutput = "".
 
-          IF ttSpecFlds.bGrandTotal AND iy NE iUniquBuffer THEN DO:
+          IF iUniqueBuffer > 0 AND ttSpecFlds.bGrandTotal AND iy NE iUniqueBuffer THEN DO:
             FIND FIRST ttAccumProcessed 
                  WHERE ttAccumProcessed.iCallBufferNum = iy
                    AND ttAccumProcessed.iFieldNum = ttSpecFlds.iFieldNum
@@ -2723,6 +3504,8 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
             END.
             ELSE IF ttSpecFlds.bDistinct AND ttRowSpecVal.cCurrCallOutput NE ? THEN
               cDistVal = cDistVal + ttRowSpecVal.cCurrCallOutput.
+            ELSE IF ttSpecFlds.bDistinct AND ttRowSpecVal.cCurrCallOutput = ? THEN
+              ttRowSpecVal.cCurrCallOutput = "?".
             ELSE IF ttSpecFlds.bGrandTotal THEN DO: /* That includes also the accum fields */
               ttRowSpecVal.fRowValue = DEC(ttRowSpecVal.cCurrCallOutput) NO-ERROR.
               IF ERROR-STATU:ERROR THEN DO:
@@ -2741,10 +3524,17 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
           END.
         END.
       
-      ELSE 
+      ELSE DO:
         FOR EACH ttRowSpecVal WHERE ttRowSpecVal.iCallBufferNum = iy:
           ttRowSpecVal.fRowValue = 0.
         END.
+        FOR EACH ttSpecFlds
+            WHERE ttSpecFlds.iCallBufferNum = iy
+              AND ttSpecFlds.bDistinct
+           ,FIRST ttRowSpecVal OF ttSpecFlds:
+          ttRowSpecVal.cCurrCallOutput = "?".
+        END.  
+      END.  
     END.    
   END. 
   
@@ -2754,8 +3544,12 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
       IF hDistFlds[ix]:BUFFER-VALUE NE ? THEN
         cDistVal = cDistVal + STRING(hDistFlds[ix]:BUFFER-VALUE).
     END.
+    FOR EACH ttRowSpecVal WHERE ttRowSpecVal.cCurrCallOutput = "null":
+      cDistVal = cDistVal + "?".
+    END.
     IF cDistVal = ? THEN DO:
       ocReturn = "Warning: A distinct column has unknown value. Values for the row were not added to totals".
+      IF cSqlDb NE "" AND hBuffer[1]:TABLE-HANDLE:TYPE = "TEMP-TABLE" THEN hBuffer[1]:BUFFER-DELETE().
       hQuery:GET-NEXT().
       NEXT PRESCANLOOP.
     END.
@@ -2764,15 +3558,19 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   END.
   IF NOT bOK THEN DO:   /* If distinct value doesn't exist or there is no check on distinct */
     hBuffPreScan:BUFFER-CREATE().
-    ASSIGN hPreScanRowIdCol:BUFFER-VALUE      = hBuffer[1]:ROWID
+    ASSIGN hPreScanRowIdCol:BUFFER-VALUE  = hBuffer[1]:ROWID
            hPreScanDistCol:BUFFER-VALUE   = cDistVal
            hPreScanCountDistinct:BUFFER-VALUE = 1
-           iCntDist                     = iCntDist + 1.
+           iCntDist                     = iCntDist + 1
+           bDeleteSqlSource             = NO
+           .
     DO ix = 2 TO iBufferCount:
       IF hBuffer[ix]:AVAIL THEN
         ASSIGN hPreScanAddDistRowids[ix]:BUFFER-VALUE = hBuffer[ix]:ROWID.
     END.
   END.
+  ELSE IF bDistinctRows AND cSqlDb NE "" AND hBuffer[1]:TABLE-HANDLE:TYPE = "TEMP-TABLE" THEN
+    bDeleteSqlSource = YES. 
 
   /******/
   /* Now we are sure that the row should be included and we can move the corresponding values: */
@@ -2800,6 +3598,9 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   end.
   /*******/
 
+  IF bDeleteSqlSource THEN hBuffer[1]:BUFFER-DELETE(). 
+  ELSE IF cSqlDb NE "" THEN
+    hBuffer[1]::RowCount = iCntDist. 
   
   iCount = iCount + 1.  
   IF iCount > 10000000 THEN LEAVE.
@@ -2816,12 +3617,14 @@ DO ix = 1 TO iBufferCount:
     hQuery:ADD-BUFFER(hBuffer[ix]).
   ELSE LEAVE.
 END.
-cQueryString = "FOR EACH ttPreScan,EACH " + ENTRY(1,ENTRY(1,icBuffersAndFields),";") + " NO-LOCK " 
-              + "WHERE ROWID(" + ENTRY(1,ENTRY(1,icBuffersAndFields),";") + ") = ttPreScan.rRelPreScan".
+cQueryString = "FOR EACH ttPreScan,EACH " + ENTRY(1,ENTRY(1,icBuffersAndFields),";") 
+             + (IF cBufferFields[1] NE "*" THEN " FIELDS(" + cBufferFields[1] + ")" ELSE "") + " NO-LOCK " 
+             + "WHERE ROWID(" + ENTRY(1,ENTRY(1,icBuffersAndFields),";") + ") = ttPreScan.rRelPreScan".
 
 DO ix = 2 TO iBufferCount:
   cQueryString = cQueryString + ",EACH " 
-                 + ENTRY(ix,cBufferList) + " NO-LOCK " 
+                 + ENTRY(ix,cBufferList) 
+                 + (IF cBufferFields[ix] NE "*" THEN " FIELDS(" + cBufferFields[ix] + ")" ELSE "") + " NO-LOCK " 
                  + "WHERE ROWID(" + ENTRY(ix,cBufferList) + ") = ttPreScan.rRelPreScan" + STRING(ix)
                  + (IF CAN-FIND(FIRST ttQuery WHERE ttQuery.iQueryNum = 0 AND ttQuery.iQryBuffer = ix AND ttQuery.bOuterJoin) THEN
                      " OUTER-JOIN" 
@@ -2869,35 +3672,14 @@ DEF VAR bPreScanDidAllCalc AS LOG NO-UNDO.
 DEF VAR b2phAcc            AS LOG NO-UNDO.
 DEF VAR bPreScanAll        AS LOG NO-UNDO.
 
-DEF VAR cCompanyTag        AS CHAR NO-UNDO.
-DEF VAR cCompanyQuery      AS CHAR NO-UNDO.
-DEF VAR cCompZeroQuery     AS CHAR NO-UNDO.
-DEF VAR cCodeMasterQuery   AS CHAR NO-UNDO.
-
-IF icQueryCriteria MATCHES "*(*Company)" OR icQueryCriteria MATCHES "*(Codemaster)" THEN DO:
-  ASSIGN cCompanyTag     = SUBSTR(icQueryCriteria,R-INDEX(icQueryCriteria,"("))
-         icQueryCriteria = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,"(") - 1)
-         icQueryCriteria = TRIM(icQueryCriteria)
-         icQueryCriteria = SUBSTR(icQueryCriteria,INDEX(icQueryCriteria, " "))
-         .
-  IF cCompanyTag = "(+Company)" THEN
-    cCompanyQuery = "WHERE (iJBoxCompanyId = 0 OR iJBoxCompanyId = " + STRING(iCurrCompanyId) + ") AND".
-  ELSE
-    ASSIGN cCompanyQuery     = "WHERE iJBoxCompanyId = " + STRING(iCurrCompanyId) + " AND"
-           cCodeMasterQuery  = "WHERE iJBoxCompanyId = " + STRING(iCodeMaster) + " AND"
-           cCompZeroQuery    = "WHERE iJBoxCompanyId = 0 AND".
-
-  LogThis("CompanyQuery",cCompanyQuery,0).
-  LogThis("CodeMasterQuery",cCodeMasterQuery,0).
-  LogThis("CompanyZeroQuery",cCompZeroQuery,1).
-END.
-
 IF icQueryCriteria BEGINS "WHERE false" THEN
   icQueryCriteria = GetQueryFalseCrit() + SUBSTR(icQueryCriteria,12).
 /* ELSE IF SEARCH("jbserv_getbuffer_rowaccess_list.p") NE ? OR SEARCH("jbserv_getbuffer_rowaccess_list.r") NE ? THEN                                      */
 /*   RUN jbserv_getbuffer_rowaccess_list.p(cBufferList,cCurrUserId,OUTPUT cBufferAccessCheckList,OUTPUT cBufferAccessExprList,OUTPUT hBufferAccessCheck). */
 
-IF cPreScanJoinQueries NE "" THEN DO:
+IF cSqlDb NE "" THEN
+  cQueryString = "FOR EACH " + httBuffer:NAME + " " + icQueryCriteria.
+ELSE IF cPreScanJoinQueries NE "" THEN DO:
   IF cCompanyTag NE "" THEN DO:
     ocReturn = "Automatic filtering on company not supported for pre-scan query types".
     RETURN.
@@ -2907,12 +3689,12 @@ IF cPreScanJoinQueries NE "" THEN DO:
   IF ocReturn NE "" THEN RETURN.
 END.
 ELSE
-  cQueryString = "FOR EACH " + ENTRY(1,cBufferList) + " NO-LOCK " + cCompanyQuery + icQueryCriteria.
+  cQueryString = "FOR EACH " + c1stBufferDbPrefix + ENTRY(1,cBufferList) + " NO-LOCK " + cCompanyQuery + icQueryCriteria.
 
 /* Now - if the query is sorted on calculated fields or has distinct columns 
-   we must perfor an extra step
+   we must perform an extra step
    where we run throug the whole set first: */
-IF CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bDistinct OR ttSpecFlds.cCalcSortField NE "") THEN DO:
+IF CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bDistinct OR ttSpecFlds.cCalcSortField NE "") AND cSqlGroupBy = "" THEN DO:
   IF cCompanyTag NE "" THEN DO:
     ocReturn = "Automatic filtering on company not supported for accumulation or sorting on calculated fields".
     RETURN.
@@ -2920,19 +3702,35 @@ IF CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.bDistinct OR ttSpecFlds.cCalcSortF
 
   IF cPreScanJoinQueries = "" THEN DecomposeQuery(0,icQueryCriteria,cBufferList).
   RUN PreScanAllRows (OUTPUT ocReturn,OUTPUT bOk).
-  IF NOT bOK THEN RETURN.  
+  IF NOT bOK THEN DO:
+    LogThis("Error from PrescanAllRows: ",ocReturn,1).
+    RETURN.
+  END.    
   bPreScanAll = yes.
   IF CAN-FIND(FIRST ttSpecFlds WHERE ttSpecFlds.b2phAcc) THEN
     b2phAcc = YES.
   IF NOT CAN-FIND(FIRST ttSpecFlds WHERE NOT ttSpecFlds.bCalcByPreScan) THEN
     bPreScanDidAllCalc = YES.
 END. 
-ELSE  /* When no prescan the target for calculated field values are in the output temp-table: */
+ELSE DO:  /* When no prescan the target for calculated field values are in the output temp-table: */
   FOR EACH ttSpecFlds,
       FIRST ttRowSpecVal OF ttSpecFlds:
     IF ttSpecFlds.bGrandTotal THEN NEXT.
     ttRowSpecVal.hFillField = httBuffer:BUFFER-FIELD(ttRowSpecVal.cFillField).
   END.
+  bPreScanDidAllCalc = cSqlGroupBy NE "".
+  
+  // add fields() expr to query since we're flushing through the whole resultset
+  IF (icStatFields NE "" OR bMandCalcFldsExist) AND NOT bPreScanDidAllCalc THEN DO:
+    IF NOT cQueryString BEGINS "FOR EACH ttPreScanJoin" THEN DO:
+      DecomposeQuery(0,icQueryCriteria,cBufferList).
+      cQueryString = "FOR EACH " + ENTRY(1,cBufferList) + " " + REPLACE(ComposeQuery(-1),CHR(1),",").
+    END.  
+    IF cSqlDb = "" AND NOT cQueryString MATCHES "*" + cSortPhrase THEN
+      cQueryString = cQueryString + cNotExistQueryString + cSortPhrase.
+  END.
+    
+END.  
 
 LogThis("cQueryString",cQueryString,1).
 IF icStatFields NE "" THEN 
@@ -2942,11 +3740,18 @@ ocReturn = QueryOpen().
 IF ocReturn NE "" THEN RETURN.
 
 iCount = 1.
-IF icDirection = "" THEN
-  hQuery:GET-FIRST().
-ELSE 
-  hQuery:GET-LAST().
 
+IF icDirection = "" THEN
+  hQuery:GET-FIRST() NO-ERROR.
+ELSE 
+  hQuery:GET-LAST() NO-ERROR.
+IF ERROR-STATUS:GET-NUMBER (1) = 2879 THEN DO:
+  hQuery = reCreateQuery(hQuery).
+  IF icDirection = "" THEN
+    hQuery:GET-FIRST().
+  ELSE 
+    hQuery:GET-LAST().
+END.
 
 IF NOT hQuery:GET-BUFFER-HANDLE(1):AVAIL AND cCompanyTag = "(Codemaster)" AND iCodeMaster NE iCurrCompanyId THEN DO:
   cQueryString = "FOR EACH " + ENTRY(1,cBufferList) + " NO-LOCK " + cCodeMasterQuery + icQueryCriteria.
@@ -2968,19 +3773,52 @@ IF NOT hQuery:GET-BUFFER-HANDLE(1):AVAIL AND (cCompanyTag = "(Company)" OR cComp
     hQuery:GET-LAST().
 END.
 
+IF cLastQueryExec = "" THEN cLastQueryExec = cQueryString. 
+
 IF iiBatchSize = 0 THEN iiBatchSize = 100000.
-ELSE IF bDistinctRows AND iiBatchSize < 3000 AND iQueryCount < 3000 THEN 
+ELSE IF (bDistinctRows AND iiBatchSize < 3000 AND iQueryCount < 3000)  OR (cSqlGroupBy NE "" AND iiBatchSize < 3000) THEN 
   iiBatchSize = 3000.
 
 IF icStatFields NE "" AND NOT icStatFields BEGINS "rowcount" THEN
   icStatFields = "rowcount," + icStatFields.
 
+def var hfld as handle no-undo.
+hfld = httbuffer:buffer-field("price_calc") no-error.
+
 QUERYLOOP:
-REPEAT WHILE NOT hQuery:QUERY-OFF-END:
+REPEAT WHILE NOT hQuery:QUERY-OFF-END ON ERROR UNDO, THROW:
 
   IF iCount GT iiStartRow AND iCount - iiStartRow LE iiBatchSize THEN DO:
-    httBuffer:BUFFER-CREATE.
-    IF NOT bPreScanDidAllCalc THEN DO iy = 1 TO iBufferCount:
+    IF cSqlDb = "" THEN httBuffer:BUFFER-CREATE. 
+    ELSE DO:
+      httBuffer::RowCount = iCount.
+      IF cSqlGroupBy NE "" THEN DO:
+        httBuffer::RowIdent1 = STRING(iCount).
+        FOR EACH ttSpecFlds
+            WHERE CAN-DO("jb_weeknum,jb_weeknum_dt",ttSpecFlds.cCallProc):
+          IF LENGTH(httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE) < 6 THEN 
+            httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE = SUBSTR(httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE,1,4) 
+                                                                       + "0"    
+                                                                       + SUBSTR(httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE,5)
+                                                                       .
+        END.      
+        IF iQueryCount < iiBatchSize THEN DO:
+          FOR EACH ttSpecFlds
+              WHERE ttSpecFlds.bAccum AND ttSpecFlds.cCallProc = ""
+             ,FIRST ttRowSpecVal OF ttSpecFlds:                             
+            IF ttSpecFlds.hSourceField:BUFFER-VALUE NE ? THEN
+              ttRowSpecVal.fGrandTotal = ttRowSpecVal.fGrandTotal + ttSpecFlds.hSourceField:BUFFER-VALUE.
+          END.  
+          FOR EACH ttSpecFlds
+              WHERE ttSpecFlds.bAccum AND ttSpecFlds.cCallProc = "jb_calc"
+             ,FIRST ttRowSpecVal OF ttSpecFlds:                             
+            IF httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE NE ? THEN
+              ttRowSpecVal.fGrandTotal = ttRowSpecVal.fGrandTotal + httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE.
+          END.  
+        END.  
+      END.  
+    END.  
+    IF NOT bPreScanDidAllCalc AND cSqlGroupBy = "" THEN DO iy = 1 TO iBufferCount:
 /*     IF NOT bPreScanDidAllCalc OR b2phAcc THEN DO iy = 1 TO iBufferCount: */
       IF hBuffer[iy]:AVAIL THEN DO:
         IF cBufferAccessCheckList NE "" AND NOT UserRowAccess(hBuffer[iy]) THEN DO:
@@ -3006,8 +3844,10 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
               IF ttSpecFlds.iExtent > 0 THEN
                 RUN VALUE(ttSpecFlds.cCallProc) IN ttSpecFlds.hCalcFieldProc
                    (ttSpecFlds.hSourceField,ttSpecFlds.iExtent, OUTPUT ttRowSpecVal.cCurrCallOutput) NO-ERROR.
-              ELSE IF ttSpecFlds.cCallProc = "jb_calc" THEN 
+              ELSE IF ttSpecFlds.cCallProc = "jb_calc" AND cSqlDb = "" THEN 
                 RUN JB_calc (ttSpecFlds.hSourceField,ttSpecFlds.hSourceField2,ttSpecFlds.cCallProcParam,ttSpecFlds.fCalcConstant,OUTPUT ttRowSpecVal.cCurrCallOutput) NO-ERROR.
+              ELSE IF ttSpecFlds.cCallProc = "jb_calc" THEN
+                ttRowSpecVal.cCurrCallOutput = STRING(httBuffer:BUFFER-FIELD(ttSpecFlds.cFillField):BUFFER-VALUE). // < use the sql calculation  
               ELSE IF ttSpecFlds.cCallProc = "jb_can-find" THEN 
                 RUN JB_can-find (ttSpecFlds.iCallBufferNum,OUTPUT ttRowSpecVal.cCurrCallOutput) NO-ERROR.
               ELSE IF ttSpecFlds.cCallProc = "jb_total" THEN 
@@ -3040,7 +3880,7 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
 
             IF ttRowSpecVal.cCurrCallOutput = "skiprow" OR (bCalcFieldFilter AND NOT CalcValueOk(ttRowSpecVal.cCurrCallOutput)) THEN DO:
               /* If any accumulations were done by prescan they need to be adjusted since the row should not be included: */
-              IF ttRowSpecVal.cCurrCallOutput = "skiprow" THEN LogThis("SKIPROW " + ttSpecFlds.cCallProc,STRING(hBuffer[ttSpecFlds.iCallBufferNum]:ROWID),0).
+              IF bLogSkipRow AND ttRowSpecVal.cCurrCallOutput = "skiprow" THEN LogThis("SKIPROW " + ttSpecFlds.cCallProc,STRING(hBuffer[ttSpecFlds.iCallBufferNum]:ROWID),0).
               FOR EACH ttRowSpecVal where ttRowSpecVal.bCalcByPreScan
                   AND ttRowSpecVal.bAccum:
                 ttRowSpecVal.fGrandTotal = ttRowSpecVal.fGrandTotal - ttRowSpecVal.fRowValue.
@@ -3072,32 +3912,52 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
           END.
         END.
       END.
-      ELSE FOR EACH ttRowSpecVal WHERE ttRowSpecVal.iCallBufferNum = iy:
-        ASSIGN ttRowSpecVal.fRowValue = 0
-               ttRowSpecVal.cCurrCallOutput = "".
-      END.
+      ELSE DO: // buffer not avail
+        FOR EACH ttRowSpecVal WHERE ttRowSpecVal.iCallBufferNum = iy:
+          ASSIGN ttRowSpecVal.fRowValue = 0
+                 ttRowSpecVal.cCurrCallOutput = "".
+        END.
+        IF bCalcFieldFilter THEN
+          FOR EACH ttSpecFlds
+              WHERE ttSpecFlds.iCallBufferNum = iy
+                AND NOT ttSpecFlds.bCalcByPreScan
+                AND ttSpecFlds.cCallProc NE ""
+                :
+            IF NOT CalcValueOk(?) THEN DO:
+              httBuffer:BUFFER-DELETE.
+              IF icDirection = "" THEN
+                hQuery:GET-NEXT().
+              ELSE 
+                hQuery:GET-PREV().
+              NEXT QUERYLOOP.
+            END.        
+          END.        
+      END.  
     END.
 
-    httBuffer:BUFFER-FIELD("RowCount"):BUFFER-VALUE = iCount.
-    DO iy = 1 TO iBufferCount:
-      IF hBuffer[iy]:AVAIL THEN DO:
-        IF cFieldPairsList[iy] NE "" THEN
-          httBuffer:BUFFER-COPY(hBuffer[iy],cExceptionFields[iy],cFieldPairsList[iy]).
-        ELSE DO:
-          httBuffer:BUFFER-COPY(hBuffer[iy],cExceptionFields[iy]).
-          DO iz = 1 TO NUM-ENTRIES(cDuplicateFields[iy]):
-            httBuffer:BUFFER-FIELD(ENTRY(iz,cDuplicateFields[iy]) + STRING(iy)):BUFFER-VALUE = hBuffer[iy]:BUFFER-FIELD(ENTRY(iz,cDuplicateFields[iy])):BUFFER-VALUE.
-          END.
-        END.  
-        httBuffer:BUFFER-FIELD("RowIdent" + STRING(iOrgBufferNum[iy])):BUFFER-VALUE = STRING(hBuffer[iy]:ROWID).
+    IF cSqlDb = "" THEN DO:
+      httBuffer:BUFFER-FIELD("RowCount"):BUFFER-VALUE = iCount.
+      DO iy = 1 TO iBufferCount:
+        IF hBuffer[iy]:AVAIL THEN DO:
+          IF cFieldPairsList[iy] NE "" THEN
+            httBuffer:BUFFER-COPY(hBuffer[iy],cExceptionFields[iy],cFieldPairsList[iy]).
+          ELSE DO:
+            httBuffer:BUFFER-COPY(hBuffer[iy],cExceptionFields[iy]).
+            DO iz = 1 TO NUM-ENTRIES(cDuplicateFields[iy]):
+              httBuffer:BUFFER-FIELD(ENTRY(iz,cDuplicateFields[iy]) + STRING(iy)):BUFFER-VALUE = hBuffer[iy]:BUFFER-FIELD(ENTRY(iz,cDuplicateFields[iy])):BUFFER-VALUE.
+            END.
+          END.  
+          httBuffer:BUFFER-FIELD("RowIdent" + STRING(iOrgBufferNum[iy])):BUFFER-VALUE = STRING(hBuffer[iy]:ROWID).
+        END.
       END.
-    END.
+    END.  
 
     /* Now we are sure that the row should be included and we can move the corresponding values: */
-/*     IF NOT bPreScanDidAllCalc THEN */
+    IF cSqlGroupBy = "" /* NOT bPreScanDidAllCalc */ THEN
       FOR EACH ttRowSpecVal WHERE not ttRowSpecVal.bCalcByPreScan:
         IF ttRowSpecVal.cCallProc NE "" THEN
           AssignStringValue(ttRowSpecVal.hFillField,ttRowSpecVal.cCurrCallOutput).
+          
         IF ttRowSpecVal.fRowValue NE ? THEN
           ttRowSpecVal.fGrandTotal = ttRowSpecVal.fGrandTotal + ttRowSpecVal.fRowValue.
       END.
@@ -3175,7 +4035,7 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
               END.
   
               IF ttRowSpecVal.cCurrCallOutput = "skiprow" OR (bCalcFieldFilter AND NOT CalcValueOk(ttRowSpecVal.cCurrCallOutput)) THEN DO:
-                IF ttRowSpecVal.cCurrCallOutput = "skiprow" THEN LogThis("SKIPROW (count) " + ttSpecFlds.cCallProc,STRING(hBuffer[ttSpecFlds.iCallBufferNum]:ROWID),0).
+                IF bLogSkipRow AND ttRowSpecVal.cCurrCallOutput = "skiprow" THEN LogThis("SKIPROW (count) " + ttSpecFlds.cCallProc,STRING(hBuffer[ttSpecFlds.iCallBufferNum]:ROWID),0).
                 /* If any accumulations were done by prescan they need to be adjusted since the row should not be included: */
                 FOR EACH ttRowSpecVal where ttRowSpecVal.bCalcByPreScan
                     AND ttRowSpecVal.bAccum:
@@ -3206,13 +4066,29 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
             END.
           END.
         END.
-        ELSE 
+        ELSE DO:
           FOR EACH ttRowSpecVal 
               WHERE ttRowSpecVal.iCallBufferNum = iy
                 AND NOT ttRowSpecVal.bCalcByPreScan:
             ASSIGN ttRowSpecVal.fRowValue = 0
                    ttRowSpecVal.cCurrCallOutput = "".
           END.
+          IF bCalcFieldFilter THEN
+            FOR EACH ttSpecFlds
+                WHERE ttSpecFlds.iCallBufferNum = iy
+                  AND NOT ttSpecFlds.bCalcByPreScan
+                  AND ttSpecFlds.cCallProc NE ""
+                  :
+              IF NOT CalcValueOk(?) THEN DO:
+                httBuffer:BUFFER-DELETE.
+                IF icDirection = "" THEN
+                  hQuery:GET-NEXT().
+                ELSE 
+                  hQuery:GET-PREV().
+                NEXT QUERYLOOP.
+              END.        
+            END.        
+        END.  
       END.
   
       /* Add up grand totals: */
@@ -3222,8 +4098,11 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
         ttRowSpecVal.fGrandTotal = ttRowSpecVal.fGrandTotal + ttRowSpecVal.fRowValue.
       END.
     END.
+    IF cSqlDb NE "" THEN 
+      httBuffer:BUFFER-DELETE.
   END. /* adding up query totals for rows not returned to the client */
-
+  ELSE IF cSqlDb NE "" THEN
+    httBuffer:BUFFER-DELETE.
   ELSE IF iSelected = iiBatchSize THEN 
     LEAVE.
 
@@ -3233,6 +4112,11 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
     hQuery:GET-NEXT().
   ELSE 
     hQuery:GET-PREV().
+    
+  CATCH eAny AS Progress.Lang.Error:
+    ocReturn = eAny:GetMessage(1).  
+    RETURN.
+  END CATCH.  
 END.
 
 IF iQueryCount = 0 THEN iQueryCount = iCount - 1.
@@ -3268,7 +4152,7 @@ IF VALID-HANDLE(httPreScan) THEN DELETE OBJECT httPreScan.
 IF VALID-HANDLE(hBufferAccessCheck) THEN DELETE OBJECT hBufferAccessCheck.
 
 IF icStatFields NE "" THEN DO:
-  ocStatFieldsAndValues = "rowcount|" + STRING(iQueryCount) + ";".
+  ocStatFieldsAndValues = "rowcount|" + STRING(iQueryCount) + ";elapseTime|" + STRING((MTIME - iStartTime) / 1000) + ";".
   FOR EACH ttSpecFlds
       WHERE ttSpecFlds.bGrandTotal
      ,FIRST ttRowSpecVal OF ttSpecFlds:
@@ -3276,10 +4160,19 @@ IF icStatFields NE "" THEN DO:
   END.
   ocStatFieldsAndValues = TRIM(ocStatFieldsAndValues,";").
 END.
+ELSE ocStatFieldsAndValues = "rowcount|" + STRING(iQueryCount).
 
 IF bMainQueryStopped THEN 
   ocStatFieldsAndValues = "rowcount|0;querystop|" + STRING(iMainQueryStopAfter).
 
+DO ON ERROR UNDO, THROW:
+  IF LENGTH(ocStatFieldsAndValues) + LENGTH(cLastQueryExec) > 3000 THEN cLastQueryExec = SUBSTR(cLastQueryExec,1,3000 - LENGTH(ocStatFieldsAndValues)) + "...".
+  ocStatFieldsAndValues = ocStatFieldsAndValues + ";lastQuery|" + cLastQueryExec. 
+  CATCH eErr AS Progress.Lang.Error :
+    MESSAGE ix eErr:GetMessage(1) SKIP LENGTH(ocStatFieldsAndValues)
+    VIEW-AS ALERT-BOX.  
+  END CATCH.
+END.
 FOR EACH ttSpecFlds:
   IF VALID-HANDLE(ttSpecFlds.hTargetBuff) THEN
     DELETE OBJECT ttSpecFlds.hTargetBuff NO-ERROR.
@@ -3287,11 +4180,12 @@ FOR EACH ttSpecFlds:
     DELETE OBJECT ttSpecFlds.hTargetQuery.
 END.
 
-DO ix = 1 TO iBufferCount:
-  IF VALID-HANDLE(hBuffer[ix]) THEN
-    DELETE OBJECT hBuffer[ix].
-  ELSE LEAVE.
-END.
+IF cSqlDb = "" THEN
+  DO ix = 1 TO iBufferCount:
+    IF VALID-HANDLE(hBuffer[ix]) THEN
+      DELETE OBJECT hBuffer[ix].
+    ELSE LEAVE.
+  END.
 IF VALID-HANDLE(hBuffer2) THEN DELETE OBJECT hBuffer2.
 
 LogThis("icStatFields: ", icStatFields,1).
@@ -3303,10 +4197,12 @@ IF VALID-HANDLE(httPreScan) THEN
 IF VALID-HANDLE(httPreScanJoin) THEN
   DELETE OBJECT httPreScanJoin.
 
-DELETE OBJECT hQuery.
+DELETE OBJECT hQuery NO-ERROR.
 
-IF VALID-HANDLE(hJbAPI) THEN DELETE PROCEDURE hJbAPI.
+IF VALID-HANDLE(hJbAPI) THEN 
+  DYNAMIC-FUNCTION("setPreTransBuffer" IN hJbAPI,?).
 
+DELETE OBJECT hbJBoxUserSetting NO-ERROR.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3315,6 +4211,69 @@ END PROCEDURE.
 &ENDIF
 
 /* ************************  Function Implementations ***************** */
+
+&IF DEFINED(EXCLUDE-addFieldList) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION addFieldList Procedure
+FUNCTION addFieldList RETURNS CHARACTER 
+  (INPUT icQuery AS CHAR,
+   INPUT icBufferName AS CHAR,
+   INPUT icFieldList  AS CHAR  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR ix        AS INT  NO-UNDO.
+DEF VAR cModQuery AS CHAR NO-UNDO.
+DEF VAR cEntry    AS CHAR NO-UNDO.
+DEF VAR bMod      AS LOG  NO-UNDO.
+
+IF cSqlDb = "" AND icFieldList NE "*" THEN DO:
+  REPEAT WHILE INDEX(icQuery,"  ") > 0:
+    icQuery = REPLACE(icQuery,"  "," ").
+  END.  
+  DO ix = 1 TO NUM-ENTRIES(icQuery," "):
+    cEntry = ENTRY(ix,icQuery," ").
+    IF NOT bMod AND ENTRY(NUM-ENTRIES(cEntry,"."),cEntry,".") = icBufferName THEN
+      ASSIGN cModQuery = cModQuery + " " + cEntry + " FIELDS(" + icFieldList + ") "
+             bMod = YES.
+    ELSE cModQuery = cModQuery + " " + cEntry.
+  END.
+END.
+ELSE cModQuery = icQuery.
+  
+RETURN TRIM(cModQuery).       
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-addPrescanQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION addPrescanQuery Procedure
+FUNCTION addPrescanQuery RETURNS LOGICAL 
+  ( INPUT icPreScanJoin AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:   Must be called before query starts (ie first thing in container for calc.flds) 
+------------------------------------------------------------------------------*/
+cPreScanJoinQueries = cPreScanJoinQueries + (IF cPreScanJoinQueries NE "" THEN CHR(28) ELSE "") + icPreScanJoin. 
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-AddTTindex) = 0 &THEN
 
@@ -3405,8 +4364,12 @@ DO ix = 1 TO NUM-ENTRIES(cNotExistList):
   hNotCanDoTT[ix]:ADD-NEW-FIELD("iDummyTTfield" + STRING(ix),"INTEGER").
   hNotCanDoTT[ix]:TEMP-TABLE-PREPARE("ttNotExist" + STRING(ix)).
   hNotCanDoTT[ix]:DEFAULT-BUFFER-HANDLE:BUFFER-CREATE().
+//  hNotCanDoTT[ix]:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD("iDummyTTfield" + STRING(ix)):BUFFER-VALUE = ix.
   hQuery:ADD-BUFFER(hNotCanDoTT[ix]:DEFAULT-BUFFER-HANDLE).
-  cNewQueryString = cNewQueryString + ",FIRST ttNotExist" + STRING(ix) + " WHERE NOT AVAIL " + ENTRY(ix,cNotExistList). 
+  cNewQueryString = cNewQueryString + ",FIRST ttNotExist" + STRING(ix) + " WHERE NOT AVAIL " + ENTRY(ix,cNotExistList).
+  cBufferList = cBufferList + "," + "ttNotExist" + STRING(ix). 
+  cNotExistQueryString = cNotExistQueryString  
+                       + ",FIRST ttNotExist" + STRING(ix) + " WHERE NOT AVAIL " + ENTRY(ix,cNotExistList).
 END.
 
 icQueryCriteria = cNewQueryString + cSortString.
@@ -3434,6 +4397,10 @@ CASE ihField:DATA-TYPE:
     ihField:BUFFER-VALUE = icUpdateValue NO-ERROR.
   WHEN "date" THEN
     ihField:BUFFER-VALUE = DATE(icUpdateValue) NO-ERROR.
+  WHEN "datetime" THEN
+    ihField:BUFFER-VALUE = DATETIME(icUpdateValue) NO-ERROR.
+  WHEN "datetime-tz" THEN
+    ihField:BUFFER-VALUE = DATETIME-TZ(icUpdateValue) NO-ERROR.
   WHEN "decimal" THEN
     ihField:BUFFER-VALUE = DEC(icUpdateValue) NO-ERROR.
   WHEN "integer" THEN
@@ -3458,6 +4425,30 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-BufferName) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION BufferName Procedure
+FUNCTION BufferName RETURNS CHARACTER 
+  ( INPUT icDbBuffer AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  
+  IF NUM-ENTRIES(icDbBuffer,".") > 1 THEN
+    RETURN ENTRY(NUM-ENTRIES(icDbBuffer,"."),icDbBuffer,".").
+
+  RETURN icDbBuffer.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-CalcValueOk) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION CalcValueOk Procedure 
@@ -3479,10 +4470,10 @@ DO ix = 1 TO NUM-ENTRIES(ttSpecFlds.cFilterOperator):
          cCurrFilter = ENTRY(ix,ttSpecFlds.cFilterValue,"|").
 
   CASE ttSpecFlds.cFillFieldType:
-    WHEN "CHARACTER" THEN
+    WHEN "CHARACTER" THEN 
       CASE cOperator:
         WHEN "=" OR WHEN "EQ" THEN 
-          bPass = cCalcValue = cCurrFilter.
+          bPass = cCalcValue = cCurrFilter OR cCalcValue = ? AND cCurrFilter = "?".
         WHEN "<>" OR WHEN "NE" THEN 
           bPass = cCalcValue NE cCurrFilter.
         WHEN ">" OR WHEN "GT" THEN 
@@ -3507,20 +4498,50 @@ DO ix = 1 TO NUM-ENTRIES(ttSpecFlds.cFilterOperator):
           FOR EACH ttCalcContains: DELETE ttCalcContains. END.
         END.
       END CASE.
-    WHEN "DATE" THEN
+    WHEN "DATE" THEN 
       CASE cOperator:
         WHEN "=" OR WHEN "EQ" THEN 
           bPass = DATE(cCalcValue) = DATE(cCurrFilter).
         WHEN "<>" OR WHEN "NE" THEN 
           bPass = DATE(cCalcValue) NE DATE(cCurrFilter).
         WHEN ">" OR WHEN "GT" THEN 
-          bPass = DATE(cCalcValue) GT DATE(cCurrFilter).
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATE(cCalcValue) GT DATE(cCurrFilter).
         WHEN "<" OR WHEN "LT" THEN
-          bPass = DATE(cCalcValue) LT DATE(cCurrFilter).
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATE(cCalcValue) LT DATE(cCurrFilter).
         WHEN ">=" OR WHEN "GE" THEN 
-          bPass = DATE(cCalcValue) GE DATE(cCurrFilter).
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATE(cCalcValue) GE DATE(cCurrFilter).
         WHEN "<=" OR WHEN "LE" THEN 
-          bPass = DATE(cCalcValue) LE DATE(cCurrFilter).
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATE(cCalcValue) LE DATE(cCurrFilter).
+      END CASE.
+    WHEN "DATETIME" THEN
+      CASE cOperator:
+        WHEN "=" OR WHEN "EQ" THEN 
+          bPass = DATETIME(cCalcValue) = DATETIME(cCurrFilter).
+        WHEN "<>" OR WHEN "NE" THEN 
+          bPass = DATETIME(cCalcValue) NE DATETIME(cCurrFilter).
+        WHEN ">" OR WHEN "GT" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME(cCalcValue) GT DATETIME(cCurrFilter).
+        WHEN "<" OR WHEN "LT" THEN
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME(cCalcValue) LT DATETIME(cCurrFilter).
+        WHEN ">=" OR WHEN "GE" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME(cCalcValue) GE DATETIME(cCurrFilter).
+        WHEN "<=" OR WHEN "LE" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME(cCalcValue) LE DATETIME(cCurrFilter).
+      END CASE.
+    WHEN "DATETIME-TZ" THEN
+      CASE cOperator:
+        WHEN "=" OR WHEN "EQ" THEN 
+          bPass = DATETIME-TZ(cCalcValue) = DATETIME-TZ(cCurrFilter).
+        WHEN "<>" OR WHEN "NE" THEN 
+          bPass = DATETIME-TZ(cCalcValue) NE DATETIME-TZ(cCurrFilter).
+        WHEN ">" OR WHEN "GT" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME-TZ(cCalcValue) GT DATETIME-TZ(cCurrFilter).
+        WHEN "<" OR WHEN "LT" THEN
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME-TZ(cCalcValue) LT DATETIME-TZ(cCurrFilter).
+        WHEN ">=" OR WHEN "GE" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME-TZ(cCalcValue) GE DATETIME-TZ(cCurrFilter).
+        WHEN "<=" OR WHEN "LE" THEN 
+          bPass = cCalcValue NE "" AND cCalcValue NE ? AND DATETIME-TZ(cCalcValue) LE DATETIME-TZ(cCurrFilter).
       END CASE.
     WHEN "DECIMAL" THEN
       CASE cOperator:
@@ -3552,6 +4573,21 @@ DO ix = 1 TO NUM-ENTRIES(ttSpecFlds.cFilterOperator):
         WHEN "<=" OR WHEN "LE" THEN 
           bPass = INTEGER(cCalcValue) LE INTEGER(cCurrFilter).
       END CASE.
+    WHEN "INT64" THEN
+      CASE cOperator:
+        WHEN "=" OR WHEN "EQ" THEN 
+          bPass = INT64(cCalcValue) = INT64(cCurrFilter).
+        WHEN "<>" OR WHEN "NE" THEN 
+          bPass = INT64(cCalcValue) NE INT64(cCurrFilter).
+        WHEN ">" OR WHEN "GT" THEN 
+          bPass = INT64(cCalcValue) GT INT64(cCurrFilter).
+        WHEN "<" OR WHEN "LT" THEN
+          bPass = INT64(cCalcValue) LT INT64(cCurrFilter).
+        WHEN ">=" OR WHEN "GE" THEN 
+          bPass = INT64(cCalcValue) GE INT64(cCurrFilter).
+        WHEN "<=" OR WHEN "LE" THEN 
+          bPass = INT64(cCalcValue) LE INT64(cCurrFilter).
+      END CASE.
     WHEN "LOGICAL" THEN DO:
       IF cCalcValue = "" THEN cCalcValue = "no".
       CASE cOperator:
@@ -3563,11 +4599,18 @@ DO ix = 1 TO NUM-ENTRIES(ttSpecFlds.cFilterOperator):
                   (NOT CAN-DO("no,false",cCurrFilter) AND NOT CAN-DO("no,false",cCalcValue)).
       END CASE.
     END.  
+    OTHERWISE DO:
+      IF NOT bCalcOperatorErrorLogged THEN DO:
+        cCalcOperatorErrorMsg = "Invalid operator for calc.fld: " + ttSpecFlds.cFillFieldType.
+        LogThis("Error",cCalcOperatorErrorMsg,1).
+        bCalcOperatorErrorLogged = YES.
+      END.  
+    END.    
   END CASE.
   IF NOT bPass THEN LEAVE.
 END.
 
-RETURN bPass.
+RETURN bPass = YES.
 
 END FUNCTION.
 
@@ -3662,9 +4705,14 @@ DEF VAR bOutJoin       AS LOG  NO-UNDO.
 DEF VAR bNoPrescanExec AS LOG  NO-UNDO.
 DEF VAR ix             AS INT  NO-UNDO.
 DEF VAR cRevQuery      AS CHAR NO-UNDO.
+DEF VAR bNoSort        AS LOG  NO-UNDO.
 
 IF iiQueryNum = -1 THEN
   ASSIGN bNoPrescanExec = YES
+         iiQueryNum     = 0.
+ELSE IF iiQueryNum = -2 THEN
+  ASSIGN bNoPrescanExec = YES
+         bNoSort        = YES
          iiQueryNum     = 0.
 
 IF iiQueryNum = 0 THEN FOR EACH ttQuery 
@@ -3673,9 +4721,13 @@ IF iiQueryNum = 0 THEN FOR EACH ttQuery
 
   IF FIRST-OF(ttQuery.iQueryNum) THEN DO:
     ASSIGN bOutJoin     = ttQuery.bOuterJoin
-           cQueryString = cQueryString + IF NOT bNoPrescanExec AND ttQuery.cQryString BEGINS "WHERE " THEN 
-                                           "AND" + SUBSTR(ttQuery.cQryString,6) 
-                                         ELSE ttQuery.cQryString.
+           cQueryString = cQueryString 
+                        + (IF cSqlDb = "" AND bNoPrescanExec AND cBufferFields[ttQuery.iQryBufferNum] NE "*" THEN " FIELDS(" + cBufferFields[ttQuery.iQryBufferNum] + ") " ELSE "") 
+                        + (IF NOT bNoPrescanExec AND ttQuery.cQryString BEGINS "WHERE " THEN 
+                            "AND" + SUBSTR(ttQuery.cQryString,6) 
+                           ELSE ttQuery.cQryString)
+                        .
+                          
     IF ttQuery.iQryBufferNum = 1 AND cQueryString MATCHES "*USE-INDEX*" THEN DO:
       DO ix = 2 TO NUM-ENTRIES(cQueryString," "):
         IF ENTRY(ix,cQueryString," ") = "USE-INDEX" OR ENTRY(ix - 1,cQueryString," ") = "USE-INDEX" THEN NEXT.
@@ -3685,16 +4737,21 @@ IF iiQueryNum = 0 THEN FOR EACH ttQuery
     END.
   END.
   ELSE
-    cQueryString = cQueryString + FixQueryJoin(ttQuery.cQryJoinString + " " + ttQuery.cQryString).
+    cQueryString = cQueryString
+                 + FixQueryJoin(addFieldList(ttQuery.cQryJoinString,
+                                             hBuffer[ttQuery.iQryBufferNum]:NAME,
+                                             cBufferFields[ttQuery.iQryBufferNum])
+                                + " " + ttQuery.cQryString).
 
   IF LAST-OF(ttQuery.iQryBufferNum) THEN DO:
     IF LOOKUP("NO-LOCK",ttQuery.cQryString," ") = 0 THEN
       cQueryString = cQueryString + " NO-LOCK".
-    IF ttQuery.bOuterJoin THEN
+    IF ttQuery.bOuterJoin OR ttQuery.bNotExist THEN
       cQueryString = cQueryString + " OUTER-JOIN".
   END.
   IF LAST-OF(ttQuery.iQueryNum) THEN
-    cQueryString = cQueryString + " " + ttQuery.cQrySort.
+    cQueryString = cQueryString + " " + (IF bNoSort THEN "" ELSE ttQuery.cQrySort).
+    
 END.
   
 ELSE FOR EACH ttQuery 
@@ -3703,9 +4760,14 @@ ELSE FOR EACH ttQuery
 
   IF FIRST-OF(ttQuery.iQueryNum) THEN
     ASSIGN bOutJoin     = ttQuery.bOuterJoin
-           cQueryString = cQueryString + ttQuery.cQryString.
+           cQueryString = cQueryString
+                        + (IF cSqlDb = "" THEN " FIELDS() " ELSE "") 
+                        + ttQuery.cQryString.
   ELSE
-    cQueryString = cQueryString + FixQueryJoin(ttQuery.cQryJoinString + " " + ttQuery.cQryString).
+    cQueryString = cQueryString + FixQueryJoin(addFieldList(ttQuery.cQryJoinString,
+                                               hBuffer[ttQuery.iQryBufferNum]:NAME,
+                                               "")
+                                              + " " + ttQuery.cQryString).
 
   IF LAST-OF(ttQuery.iQryBufferNum) AND LOOKUP("NO-LOCK",ttQuery.cQryString," ") = 0 THEN
     cQueryString = cQueryString + " NO-LOCK".
@@ -3766,20 +4828,25 @@ IF NOT icFieldName BEGINS "+" THEN DO:
   IF icFormat = "" THEN icFormat = hField:FORMAT.
   IF icLabel  = "" THEN icLabel  = hField:LABEL + "[" + STRING(iExtent) + "]".
   
-  ohTempTable:ADD-NEW-FIELD(icFieldName,
-                            hField:DATA-TYPE,0,
-                            icFormat,
-                            "",
-                            icLabel,
-                            IF cExtraLabel MATCHES "*" + CHR(10) + "*" THEN
-                              REPLACE(cExtraLabel,CHR(10),"!")
-                            ELSE ?) NO-ERROR.
-
-  IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN RETURN "Error when creating output tt field for extent field: " + icFieldName + CHR(10) + ERROR-STATUS:GET-MESSAGE(1).
+  cBufferFields[ix] = cBufferFields[iiBufferNum] + (IF cBufferFields[iiBufferNum] NE "" THEN " " ELSE "") + icFieldName.
   
-  ohTempTable:ADD-NEW-FIELD("jbextent_" + STRING(iExtent) + "_" + hField:NAME,hField:DATA-TYPE).
+  IF bCreateTT THEN DO:  
+    ohTempTable:ADD-NEW-FIELD(icFieldName,
+                              hField:DATA-TYPE,0,
+                              icFormat,
+                              "",
+                              icLabel,
+                              IF cExtraLabel MATCHES "*" + CHR(10) + "*" THEN
+                                REPLACE(cExtraLabel,CHR(10),"!")
+                              ELSE ?) NO-ERROR.
+  
+    IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN RETURN "Error when creating output tt field for extent field: " + icFieldName + CHR(10) + ERROR-STATUS:GET-MESSAGE(1).
+    
+    ohTempTable:ADD-NEW-FIELD("jbextent_" + STRING(iExtent) + "_" + hField:NAME,hField:DATA-TYPE).
+  END.  
 END.
 ELSE DO:
+
   icFieldName = SUBSTR(icFieldName,2,INDEX(icFieldName,"[") - 2).
 
   CREATE ttSpecFlds.
@@ -3797,17 +4864,19 @@ ELSE DO:
          ttSpecFlds.iExtent         = iExtent
          .
 
-  ohTempTable:ADD-NEW-FIELD(icFieldName,
-                            icDataType,iExtent,
-                            icFormat,
-                            "",
-                            icLabel,
-                            IF cExtraLabel MATCHES "*" + CHR(10) + "*" THEN
-                              REPLACE(cExtraLabel,CHR(10),"!")
-                            ELSE ?) NO-ERROR.
-
-
-  IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN RETURN "Error when creating output tt field for extent field: " + icFieldName + CHR(10) + ERROR-STATUS:GET-MESSAGE(1).
+  IF bCreateTT THEN DO:
+    ohTempTable:ADD-NEW-FIELD(icFieldName,
+                              icDataType,iExtent,
+                              icFormat,
+                              "",
+                              icLabel,
+                              IF cExtraLabel MATCHES "*" + CHR(10) + "*" THEN
+                                REPLACE(cExtraLabel,CHR(10),"!")
+                              ELSE ?) NO-ERROR.
+  
+  
+    IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN RETURN "Error when creating output tt field for extent field: " + icFieldName + CHR(10) + ERROR-STATUS:GET-MESSAGE(1).
+  END.  
   
 /*   ohTempTable:ADD-NEW-FIELD("jbextent_" + STRING(iExtent) + "_" + icFieldName,icDataType).  */
 END.
@@ -3820,6 +4889,211 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getCalcFieldFilterOperator) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCalcFieldFilterOperator Procedure
+FUNCTION getCalcFieldFilterOperator RETURNS CHARACTER 
+  ( INPUT icFieldName AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEFINE VARIABLE cOper AS CHARACTER NO-UNDO.
+
+FIND FIRST ttSpecFlds 
+     WHERE ttSpecFlds.cFillField = icFieldName
+     NO-ERROR.
+IF AVAIL ttSpecFlds THEN
+  cOper = ttSpecFlds.cFilterOperator.     
+
+RETURN cOper.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getCalcFieldFilterValue) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCalcFieldFilterValue Procedure
+FUNCTION getCalcFieldFilterValue RETURNS CHARACTER 
+  ( INPUT icFieldName AS CHAR  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEFINE VARIABLE cValue AS CHARACTER NO-UNDO.
+
+FIND FIRST ttSpecFlds 
+     WHERE ttSpecFlds.cFillField = icFieldName
+     NO-ERROR.
+IF AVAIL ttSpecFlds THEN
+  cValue = ttSpecFlds.cFilterValue.     
+
+RETURN cValue.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getCalcFieldParam) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCalcFieldParam Procedure
+FUNCTION getCalcFieldParam RETURNS CHARACTER 
+  ( INPUT icFieldName AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEFINE VARIABLE cParam AS CHARACTER NO-UNDO.
+
+FIND FIRST ttSpecFlds 
+     WHERE ttSpecFlds.cFillField = icFieldName
+     NO-ERROR.
+IF AVAIL ttSpecFlds THEN
+  cParam = ttSpecFlds.cCallProcParam.     
+
+RETURN cParam.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getQueryCriteria) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getQueryCriteria Procedure
+FUNCTION getQueryCriteria RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+ 
+RETURN cQueryBeforeSort.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getAblJoin) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getAblJoin Procedure
+FUNCTION getAblJoin RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cQuery AS CHAR NO-UNDO.
+DEF VAR cJoin  AS CHAR NO-UNDO.
+DEF VAR cEntry AS CHAR NO-UNDO.
+DEF VAR ix     AS INT  NO-UNDO.
+
+  IF NUM-ENTRIES(icQueryCriteria,CHR(1)) > 1 THEN DO:
+    LogThis("Org query",REPLACE(icQueryCriteria,CHR(1),""),1).
+    cJoin = ENTRY(1,ENTRY(2,icQueryCriteria,CHR(1)),CHR(3)).
+    icQueryCriteria = ENTRY(1,icQueryCriteria,CHR(1)) 
+                    + (IF NUM-ENTRIES(icQueryCriteria,CHR(3)) > 1 THEN CHR(3) + ENTRY(2,icQueryCriteria,CHR(3)) ELSE "")
+                    .
+  END.
+  ELSE IF NUM-ENTRIES(icQueryCriteria) > 1 THEN DO: 
+    cQuery = ENTRY(1,icQueryCriteria,CHR(3)).
+    DO ix = 1 TO NUM-ENTRIES(cQuery):
+      cEntry = TRIM(ENTRY(ix,cQuery)).
+      IF cEntry BEGINS "FIRST " OR cEntry BEGINS "EACH " OR cEntry BEGINS "LAST " THEN
+        cJoin = cJoin + "," + cEntry.
+    END.      
+  END.  
+
+RETURN cJoin.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-RealTable) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION RealTable Procedure
+FUNCTION RealTable RETURNS CHARACTER 
+  ( INPUT icTable AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cRealTable AS CHAR NO-UNDO.
+
+IF LENGTH(icTable) > 5 AND icTable MATCHES "buf*_*" AND CAN-DO("1_,2_,3_,4_,5_,6_,7_,8_,9_",SUBSTR(icTable,4,2)) THEN 
+  cRealTable = SUBSTR(icTable,INDEX(icTable,"_") + 1).
+ELSE
+  cRealTable = icTable.
+
+RETURN cRealTable.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-reCreateQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION reCreateQuery Procedure
+FUNCTION reCreateQuery RETURNS HANDLE 
+  ( INPUT ihQuery AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose: re-create the query as scrolling (forward-only = no)
+ Notes:
+------------------------------------------------------------------------------*/
+  DEFINE VARIABLE ohQuery AS HANDLE NO-UNDO.
+  DEF VAR ix AS INT NO-UNDO.
+
+  CREATE QUERY ohQuery.
+  DO ix = 1 TO ihQuery:NUM-BUFFERS:
+    ohQuery:ADD-BUFFER (ihQuery:GET-BUFFER-HANDLE (ix)).
+  END.  
+  ohQuery:QUERY-PREPARE(ihQuery:PREPARE-STRING).
+  ohQuery:QUERY-OPEN ().
+  
+  DELETE OBJECT ihQuery.
+  
+  RETURN ohQuery.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setWeekdayList) = 0 &THEN
 
@@ -4015,6 +5289,9 @@ DEF VAR cSubEntry   AS CHAR NO-UNDO.
 DEF VAR ix          AS INT  NO-UNDO.
 DEF VAR iy          AS INT  NO-UNDO.
 DEF VAR iLastBuff   AS INT  NO-UNDO INIT 100.
+DEF VAR iz          AS INT  NO-UNDO.
+
+IF iiQueryNum = 0 AND CAN-FIND(FIRST ttQuery WHERE ttQuery.iQueryNum = iiQueryNum) THEN RETURN NO.
 
 ASSIGN icQueryString = TRIM(icQueryString)
        icQueryString = REPLACE(icQueryString,",   FIRST",",FIRST")
@@ -4037,6 +5314,10 @@ ASSIGN icQueryString = TRIM(icQueryString)
 
 DO ix = 1 TO MIN(NUM-ENTRIES(icBufferList),NUM-ENTRIES(icQueryString) - NUM-ENTRIES(cNotExistList)):
   cMainEntry = TRIM(ENTRY(ix,icQueryString)). 
+  IF INDEX(cMainEntry,"DECIMAL(") > 0 AND INDEX(cMainEntry,CHR(1)) > INDEX(cMainEntry,"DECIMAL(") 
+     AND INDEX(cMainEntry,")",INDEX(cMainEntry,CHR(1))) > INDEX(cMainEntry,CHR(1)) 
+     AND INDEX(cMainEntry,")",INDEX(cMainEntry,CHR(1))) < INDEX(cMainEntry,CHR(1)) + 5 THEN
+    cMainEntry = REPLACE(cMainEntry,CHR(1),",").
 
   IF iiQueryNum = 0 AND ix = 1 THEN 
     cFirstMainQueryEntry = cMainEntry.
@@ -4048,7 +5329,6 @@ DO ix = 1 TO MIN(NUM-ENTRIES(icBufferList),NUM-ENTRIES(icQueryString) - NUM-ENTR
     CREATE ttQuery.
     ASSIGN iQryBuffNum            = iQryBuffNum + 1
            iLastBuff              = iLastBuff - 1
-           cMainEntry             = cMainEntry
            ttQuery.iQueryNum      = iiQueryNum
            ttQuery.cQryBuffer     = ENTRY(iQryBuffNum,icBufferList)
            ttQuery.iQryBufferNum  = IF LOOKUP(ttQuery.cQryBuffer,cBufferList) = 0 THEN iLastBuff ELSE LOOKUP(ttQuery.cQryBuffer,cBufferList)
@@ -4056,10 +5336,17 @@ DO ix = 1 TO MIN(NUM-ENTRIES(icBufferList),NUM-ENTRIES(icQueryString) - NUM-ENTR
            ttQuery.bContainsWHERE = (cMainEntry MATCHES "* where *" OR cMainEntry BEGINS "where ") AND NOT ttQuery.bPreScanOnly
            ttQuery.bOuterJoin     = cMainEntry MATCHES "* OUTER-JOIN*"
            .
-    IF iQryBuffNum > 1 THEN
+    IF iQryBuffNum > 1 THEN 
       ttQuery.cQryJoinString = "," + cMainEntry.
     ELSE
       ttQuery.cQryString = cMainEntry.
+
+    IF CAN-DO(cSqlNotExistBuffers,ttQuery.cQryBuffer) THEN 
+      ttQuery.bNotExist = YES.
+    DO iy = 1 TO NUM-ENTRIES(cNotExistList):
+      IF ENTRY(NUM-ENTRIES(ENTRY(iy,cNotExistList),"."),ENTRY(iy,cNotExistList),".") = ttQuery.cQryBuffer THEN
+        ttQuery.bNotExist = YES.
+    END.      
 
     IF ttQuery.cQryString BEGINS "BY " THEN 
       ASSIGN ttQuery.cQrySort   = ttQuery.cQryString
@@ -4080,6 +5367,9 @@ DO ix = 1 TO MIN(NUM-ENTRIES(icBufferList),NUM-ENTRIES(icQueryString) - NUM-ENTR
            ttQuery.cQryString     = FixQuery(ttQuery.cQryString)
            ttQuery.cQryJoinString = FixQuery(ttQuery.cQryJoinString)
            .
+/*    MESSAGE 111 cMainEntry skip ttQuery.cQryString skip ttQuery.cQryJoinString skip*/
+/*            ttQuery.bOuterJoin                                                     */
+/*    VIEW-AS ALERT-BOX.                                                             */
   END.
 
 END.
@@ -4105,7 +5395,13 @@ FUNCTION FinalizeCreateQuery RETURNS CHARACTER
 DEF VAR ocReturn AS CHAR NO-UNDO.
 DEF VAR cTTname  AS CHAR NO-UNDO.
 
-ohTempTable:ADD-NEW-FIELD("RowCount","INTEGER").
+IF cSqlDb NE "" AND bCreateTT THEN
+  DO ix = 2 TO NUM-ENTRIES(oSqlHelper:SQLtableList):
+    ohTempTable:ADD-NEW-FIELD("RowIdent" + STRING(ix),"CHARACTER").
+  END.
+
+IF bCreateTT THEN
+  ohTempTable:ADD-NEW-FIELD("RowCount","INTEGER").
 
 CREATE ttSpecFlds.
 ASSIGN ttSpecFlds.iCallBufferNum  = 1
@@ -4115,12 +5411,15 @@ ASSIGN ttSpecFlds.iCallBufferNum  = 1
        ttSpecFlds.hSourceField    = ?
        ttSpecFlds.bGrandTotal     = NO
        ttSpecFlds.bAccum          = YES.
-ohTempTable:ADD-NEW-FIELD("jbCountDistinct","INTEGER",0,">>>,>>>,>>9",1).
-
-ohTempTable:ADD-NEW-FIELD("jbAverage","DECIMAL",0,"->>>,>>>,>>9.99",0).
-
-/* Done when the browse or query is defined to speed up duplicate-check on client: */
-IF bIndexOnRowids THEN AddTTindex(icPrimBufferDbFlds). 
+       
+IF bCreateTT THEN DO:       
+  ohTempTable:ADD-NEW-FIELD("jbCountDistinct","INTEGER",0,">>>,>>>,>>9",1).
+  
+  ohTempTable:ADD-NEW-FIELD("jbAverage","DECIMAL",0,"->>>,>>>,>>9.99",0).
+  
+  /* Done when the browse or query is defined to speed up duplicate-check on client: */
+  IF bIndexOnRowids THEN AddTTindex(icPrimBufferDbFlds). 
+END.
 
 ASSIGN cCalcStatFields   = TRIM(cCalcStatFields,",")
        cCalcSortFields   = TRIM(cCalcSortFields,",")
@@ -4130,15 +5429,18 @@ ASSIGN cCalcStatFields   = TRIM(cCalcStatFields,",")
        cBufferList       = TRIM(cBufferList,",").
 
 IF INDEX(ENTRY(1,ENTRY(1,icBuffersAndFields),";"),".") > 0 THEN
-  cTTname = ENTRY(2,ENTRY(1,ENTRY(1,icBuffersAndFields),";"),".").
+  ASSIGN cTTname = ENTRY(2,ENTRY(1,ENTRY(1,icBuffersAndFields),";"),".")
+         c1stBufferDbPrefix = ENTRY(1,ENTRY(1,ENTRY(1,icBuffersAndFields),";"),".") + ".".
 ELSE
   cTTname = ENTRY(1,ENTRY(1,icBuffersAndFields),";").
 
-ohTempTable:TEMP-TABLE-PREPARE(cTTname) NO-ERROR.
-IF ERROR-STATUS:ERROR OR ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
-  ocReturn = ERROR-STATUS:GET-MESSAGE(1).
-  RETURN ocReturn.
-END.
+IF bCreateTT THEN DO:
+  ohTempTable:TEMP-TABLE-PREPARE(cTTname) NO-ERROR.
+  IF ERROR-STATUS:ERROR OR ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
+    ocReturn = "Error: " + ERROR-STATUS:GET-MESSAGE(1).
+    RETURN ocReturn.
+  END.
+END.  
 
 ASSIGN httBuffer         = ohTempTable:DEFAULT-BUFFER-HANDLE
        hAverageFillField = httBuffer:BUFFER-FIELD("jbAverage").
@@ -4285,26 +5587,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN cCurrUserId.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getCalcProcHandle) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCalcProcHandle Procedure
@@ -4332,65 +5614,6 @@ END FUNCTION.
 
 
 &ENDIF
-
-
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCodeMaster.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCurrCompanyId. 
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN cCurrLanguage.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-getPrimaryKeyFields) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getPrimaryKeyFields Procedure 
@@ -4548,7 +5771,8 @@ FUNCTION LogThis RETURNS LOGICAL
 ------------------------------------------------------------------------------*/
 IF cLogFile NE "" AND NOT CAN-DO("_file,_field",ENTRY(1,ENTRY(1,icBuffersAndFields),";")) THEN DO:
   OUTPUT STREAM sLog TO VALUE(cLogFile) APPEND.
-  PUT STREAM sLog UNFORMATTED icLogEntry icLogText AT 30.
+  PUT STREAM sLog UNFORMATTED MTIME - iPrevMtime icLogEntry AT 10 icLogText AT 40.
+  iPrevMtime = MTIME.
   CASE iiSkipLines:
     WHEN 0 THEN PUT STREAM sLog SKIP.
     WHEN 1 THEN PUT STREAM sLog SKIP(1).
@@ -4612,12 +5836,12 @@ DEF VAR ix                   AS INT  NO-UNDO.
 
 FOR EACH ttQuery NO-LOCK
     WHERE ttQuery.iQueryNum = 0:
-  cMainQueryBufferList = cMainQueryBufferList + ttQuery.cQryBuffer + ",".
+  cMainQueryBufferList = cMainQueryBufferList + BufferName(ttQuery.cQryBuffer) + ",".
 END.
 cMainQueryBufferList = TRIM(cMainQueryBufferList,",").
 
 DO ix = 1 TO NUM-ENTRIES(icPreScanBufferList):
-  IF NOT CAN-DO(cMainQueryBufferList,ENTRY(ix,icPreScanBufferList)) THEN RETURN NO.
+  IF NOT CAN-DO(cMainQueryBufferList,BufferName(ENTRY(ix,icPreScanBufferList))) THEN RETURN NO.
 END.
 
 RETURN YES.
@@ -4656,7 +5880,7 @@ IF AVAIL ttQuery THEN DO:
     CREATE BUFFER hPreScanBuffer FOR TABLE SUBSTR(ttQuery.cQryBuffer,6)
                   BUFFER-NAME ttQuery.cQryBuffer NO-ERROR.
   ELSE
-    CREATE BUFFER hPreScanBuffer FOR TABLE ttQuery.cQryBuffer NO-ERROR.
+    CREATE BUFFER hPreScanBuffer FOR TABLE BufferName(ttQuery.cQryBuffer) NO-ERROR.
   IF ERROR-STATUS:ERROR THEN DO:
     LogThis("Error in Primary buffer speed check. Invalid buffer name:",ttQuery.cQryBuffer,0).
     RETURN YES.
@@ -4664,9 +5888,9 @@ IF AVAIL ttQuery THEN DO:
 
   hPreScanQuery:ADD-BUFFER(hPreScanBuffer).
 
-  LogThis("Primary buffer speed check:","FOR EACH " + ttQuery.cQryBuffer + " NO-LOCK " + ttQuery.cQryString,0).
+  LogThis("Primary buffer speed check:","FOR EACH " + ttQuery.cQryBuffer + " FIELDS() NO-LOCK " + ttQuery.cQryString,0).
 
-  bOk = hPreScanQuery:QUERY-PREPARE("FOR EACH " + ttQuery.cQryBuffer + " NO-LOCK " + ttQuery.cQryString) NO-ERROR.
+  bOk = hPreScanQuery:QUERY-PREPARE("FOR EACH " + ttQuery.cQryBuffer + " FIELDS() NO-LOCK " + ttQuery.cQryString) NO-ERROR.
   IF NOT bOk THEN DO:
     DELETE OBJECT httPreScanJoin.
     DELETE OBJECT hPreScanQuery.
@@ -4680,7 +5904,7 @@ IF AVAIL ttQuery THEN DO:
     CREATE QUERY hRecordCountQuery.
     hRecordCountQuery:FORWARD-ONLY = YES.
     hRecordCountQuery:ADD-BUFFER(hPreScanBuffer).
-    bOk = hRecordCountQuery:QUERY-PREPARE("FOR EACH " + ttQuery.cQryBuffer + " NO-LOCK") NO-ERROR.
+    bOk = hRecordCountQuery:QUERY-PREPARE("FOR EACH " + ttQuery.cQryBuffer + " FIELDS() NO-LOCK") NO-ERROR.
     IF bOk THEN DO:
       hRecordCountQuery:QUERY-OPEN().
       hRecordCountQuery:GET-FIRST().
@@ -4755,6 +5979,10 @@ DEF VAR cSecondComp      AS CHAR   NO-UNDO.
 DEF VAR bSameQuery       AS LOG    NO-UNDO.
 DEF VAR bSkipPrescan     AS LOG    NO-UNDO.
 DEF VAR iStartTime       AS INT    NO-UNDO.
+DEF VAR cLastPrescanBuff AS CHAR   NO-UNDO.
+DEF VAR cEntry           AS CHAR   NO-UNDO.
+DEF VAR cDbBufferList    AS CHAR   NO-UNDO.
+DEF VAR bBaseQuery       AS LOG    NO-UNDO.
 
 iStartTime = TIME.
 
@@ -4776,8 +6004,10 @@ ASSIGN hBuffPreScanJoin = httPreScanJoin:DEFAULT-BUFFER-HANDLE
 DO ix = 1 TO iNumQueries:
   IF TRIM(ENTRY(ix,cPreScanJoinQueries,CHR(28))) = "" THEN NEXT.
 
-  ASSIGN cPreScanQuery   = ENTRY(ix,cPreScanJoinQueries,CHR(28))
-         bPassExecution = NO.
+  ASSIGN cPreScanQuery  = ENTRY(ix,cPreScanJoinQueries,CHR(28))
+         bPassExecution = NO
+         bBaseQuery     = cPreScanQuery = cPrescanBaseQuery
+         .
 
   DO iy = 1 TO 5:
     cPreScanQuery = REPLACE(cPreScanQuery,",  ",", ").
@@ -4792,7 +6022,8 @@ DO ix = 1 TO iNumQueries:
          cPreScanQuery   = TRIM(cPreScanQuery) 
          cFirstComp      = ENTRY(1,cPreScanQuery)
          cSecondComp     = IF NUM-ENTRIES(cPreScanQuery) > 1 THEN ENTRY(2,cPreScanQuery) ELSE ""
-         cPreScanBuffLst = ENTRY(1,cPreScanQuery," ")
+         cDbBufferList   = ENTRY(1,cPreScanQuery," ")
+         cPreScanBuffLst = BufferName(cDbBufferList)
          .
 
   IF cPreScanQuery BEGINS "for each " THEN 
@@ -4801,16 +6032,22 @@ DO ix = 1 TO iNumQueries:
            cPreScanBuffLst = ENTRY(1,cPreScanQuery," ")
            .
 
-/*   IF cPreScanBuffLst = ENTRY(1,cBufferList) THEN DO:    */
-/*     LogThis("Prescan doesn't apply:",cPreScanQuery,0).  */
-/* /*     NEXT.  */                                        */
-/*   END.                                                  */
-
-  DO iy = 2 TO NUM-ENTRIES(cPreScanQuery):
-    cPreScanBuffLst = cPreScanBuffLst + "," + ENTRY(2,ENTRY(iy,cPreScanQuery)," ").
+  cPreScanQuery = TRIM(cPreScanQuery,"|").
+  REPEAT WHILE INDEX(cFirstComp,"  ") > 0:
+    cFirstComp = REPLACE(cFirstComp,"  "," ").
   END.
 
-  IF ENTRY(NUM-ENTRIES(cPreScanBuffLst),cPreScanBuffLst) NE ENTRY(1,cBufferList) THEN DO:
+  DO iy = 2 TO NUM-ENTRIES(cPreScanQuery):
+    ASSIGN cEntry = ENTRY(2,ENTRY(iy,cPreScanQuery)," ")
+           cDbBufferList = cDbBufferList + "," + cEntry
+           cPreScanBuffLst = cPreScanBuffLst + "," + BufferName(cEntry).
+  END.
+
+  cLastPrescanBuff = BufferName(ENTRY(NUM-ENTRIES(cPreScanBuffLst),cPreScanBuffLst)).
+  IF cLastPrescanBuff NE ENTRY(1,cBufferList) THEN DO:
+    REPEAT WHILE INDEX(cLastPrescanBuff,"  ") > 0:
+      cLastPrescanBuff = REPLACE(cLastPrescanBuff,"  "," ").
+    END.
     bSameQuery = YES.
     DO iy = 2 TO NUM-ENTRIES(cFirstComp," "):
       IF ENTRY(iy - 1,cFirstMainQueryEntry," ") NE ENTRY(iy,cFirstComp," ") THEN DO:
@@ -4825,240 +6062,258 @@ DO ix = 1 TO iNumQueries:
   END.
 
   CREATE ttQueryBufferLists.
-  ASSIGN ttQueryBufferLists.iQueryNum        = ix
-         ttQueryBufferLists.cQryBufferList   = cPreScanBuffLst
-         ttQueryBufferLists.iNumQryBuffs     = NUM-ENTRIES(cPreScanBuffLst)
-         ttQueryBufferLists.bPassExec        = bPassExecution OR bSkipPrescan
-         ttQueryBufferLists.cFirstQueryComp  = REPLACE(cFirstComp,CHR(1),",")
-         ttQueryBufferLists.cSecondQueryComp = REPLACE(cSecondComp,CHR(1),",")
+  ASSIGN ttQueryBufferLists.iQueryNum          = ix
+         ttQueryBufferLists.cQryBufferList     = cPreScanBuffLst
+         ttQueryBufferLists.iNumQryBuffs       = NUM-ENTRIES(cPreScanBuffLst)
+         ttQueryBufferLists.bPassExec          = bPassExecution OR bSkipPrescan
+         ttQueryBufferLists.cFirstQueryComp    = REPLACE(cFirstComp,CHR(1),",")
+         ttQueryBufferLists.cSecondQueryComp   = REPLACE(cSecondComp,CHR(1),",")
+         ttQueryBufferLists.cFirstDbAndBuffer  = ENTRY(1,TRIM(ttQueryBufferLists.cFirstQueryComp)," ")    
+         ttQueryBufferLists.cSecondDbAndBuffer = ENTRY(2,TRIM(ttQueryBufferLists.cSecondQueryComp)," ")
+         ttQueryBufferLists.cQryDbBufferList   = cDbBufferList    
          .
+         
+  IF NUM-ENTRIES(ttQueryBufferLists.cFirstDbAndBuffer,".") > 1 THEN
+    ttQueryBufferLists.cFirstDbAndBuffer = ENTRY(1,ttQueryBufferLists.cFirstDbAndBuffer,".") + "." + RealTable(ENTRY(2,ttQueryBufferLists.cFirstDbAndBuffer,".")).
+  ELSE
+    ttQueryBufferLists.cFirstDbAndBuffer = RealTable(ttQueryBufferLists.cFirstDbAndBuffer).
+       
+  IF NUM-ENTRIES(ttQueryBufferLists.cSecondDbAndBuffer,".") > 1 THEN
+    ttQueryBufferLists.cSecondDbAndBuffer = ENTRY(1,ttQueryBufferLists.cSecondDbAndBuffer,".") + "." + RealTable(ENTRY(2,ttQueryBufferLists.cSecondDbAndBuffer,".")).
+  ELSE
+    ttQueryBufferLists.cSecondDbAndBuffer = RealTable(ttQueryBufferLists.cSecondDbAndBuffer).
+         
   DecomposeQuery(ix,SUBSTR(cPreScanQuery,INDEX(cPreScanQuery," ")),cPreScanBuffLst).
   
-  IF NOT PrescanIncludedInMain(cPreScanBuffLst) THEN 
+  IF bBaseQuery OR NOT PrescanIncludedInMain(cPreScanBuffLst) THEN 
     ttQueryBufferLists.bMandatory = YES.
 
   LogThis("Prescan query def:",cPreScanQuery,0).
   LogThis("Prescan qry buffs:",cPreScanBuffLst,IF ttQueryBufferLists.bPassExec THEN 0 ELSE 1).
-  IF ttQueryBufferLists.bPassExec AND NOT bSkipPrescan AND NOT ttQueryBufferLists.bMandatory THEN DO:
-    LogThis("        NOTE:","Last buffer in prescan query not equal to query base table. Query will not be executed.",0).
-    LogThis("","This is a valid situation if the buffer sequence has been modified",1).
-  END.
-  ELSE IF NOT ttQueryBufferLists.bMandatory AND bSkipPrescan THEN 
-    LogThis("Prescan skipped:","Prescan skipped since primary buffer query is sufficiently fast and all prescan buffers are included in main query",0).
-  ELSE IF ttQueryBufferLists.bMandatory AND NOT bPassExecution THEN
-    LogThis("Prescan mandatory:","Prescan is mandatory even if primary buffer query is sufficiently fast since not all prescan buffers are included in main query",0).
-  ELSE IF ttQueryBufferLists.bMandatory AND bPassExecution THEN DO:
-    LogThis("INVALID PRESCAN:","Prescan is defined on buffer(s) not included in main query with altered buffer sequence",0).
-    RETURN "Prescan is defined on buffer(s) not included in main query with altered buffer sequence" + CHR(10) + cPreScanQuery.
-  END.
 
+  IF cSqlDb = "" AND cNotExistList = "" THEN DO:  // irrelevant..
+    IF ttQueryBufferLists.bPassExec AND NOT bSkipPrescan AND NOT ttQueryBufferLists.bMandatory THEN DO:
+      LogThis("        NOTE:","Last buffer in prescan query not equal to query base table. Query will not be executed.",0).
+      LogThis("","This is a valid situation if the buffer sequence has been modified",1).
+    END.
+    ELSE IF NOT ttQueryBufferLists.bMandatory AND bSkipPrescan THEN 
+      LogThis("Prescan skipped:","Prescan skipped since primary buffer query is sufficiently fast and all prescan buffers are included in main query",0).
+    ELSE IF ttQueryBufferLists.bMandatory AND NOT bPassExecution THEN
+      LogThis("Prescan mandatory:","Prescan is mandatory even if primary buffer query is sufficiently fast since not all prescan buffers are included in main query",0).
+    ELSE IF ttQueryBufferLists.bMandatory AND bPassExecution THEN DO:
+      LogThis("INVALID PRESCAN:","Prescan is defined on buffer(s) not included in main query with altered buffer sequence",0).
+      RETURN "Prescan is defined on buffer(s) not included in main query with altered buffer sequence" + CHR(10) + cPreScanQuery.
+    END.
+  END.
 END.
 
 ReduceQueries(1).
 
-/* Check only first query component first: */
-FOR EACH ttQueryBufferLists 
-    WHERE NOT ttQueryBufferLists.bPassExec
-      AND NOT ttQueryBufferLists.bMandatory
-    :
-  ASSIGN cPreScanQuery  = "FOR EACH " + REPLACE(REPLACE(ttQueryBufferLists.cFirstQueryComp,"¤",","),CHR(3),"|")
-         bPassExecution = NO.
-
-  CREATE QUERY hPreScanQuery.
-  hPreScanQuery:FORWARD-ONLY = YES.
-
-  IF ENTRY(1,ttQueryBufferLists.cQryBufferList) MATCHES "buf*_*" THEN 
-    CREATE BUFFER hPreScanBuff[1] FOR TABLE SUBSTR(ENTRY(1,ttQueryBufferLists.cQryBufferList),6)
-                  BUFFER-NAME ENTRY(1,ttQueryBufferLists.cQryBufferList).
-  ELSE
-    CREATE BUFFER hPreScanBuff[1] FOR TABLE ENTRY(1,ttQueryBufferLists.cQryBufferList).
-
-/*   CREATE BUFFER hPreScanBuff[1] FOR TABLE ENTRY(1,ttQueryBufferLists.cQryBufferList). */
-  hPreScanQuery:ADD-BUFFER(hPreScanBuff[1]).
-
-  LogThis("Prescan first buffer:",cPreScanQuery,0).
-
-  bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
-  IF NOT bOk THEN DO:
-    DELETE OBJECT httPreScanJoin.
-    DELETE OBJECT hPreScanQuery.
-    RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Buffer: " + ENTRY(1,ttQueryBufferLists.cQryBufferList). 
-  END.
+IF cSqlDb = "" AND cNotExistList = "" THEN DO:
+  /* Check only first query component first: */
+  FOR EACH ttQueryBufferLists 
+      WHERE NOT ttQueryBufferLists.bPassExec
+        AND NOT ttQueryBufferLists.bMandatory
+      :
+    ASSIGN cPreScanQuery  = "FOR EACH " + addFieldList(REPLACE(REPLACE(ttQueryBufferLists.cFirstQueryComp,"¤",","),CHR(3),"|"),
+                                                       ENTRY(1,ttQueryBufferLists.cQryBufferList),"")
+           bPassExecution = NO.
   
-  LogThis("Prescan one buffer index",hPreScanQuery:INDEX-INFORMATION(1),0).
+    CREATE QUERY hPreScanQuery.
+    hPreScanQuery:FORWARD-ONLY = YES.
+  
+    CREATE BUFFER hPreScanBuff[1] FOR TABLE ttQueryBufferLists.cFirstDbAndBuffer
+           BUFFER-NAME BufferName(ENTRY(1,ttQueryBufferLists.cQryBufferList)).
+  
+    hPreScanQuery:ADD-BUFFER(hPreScanBuff[1]).
 
-  FIND FIRST ttQuery
-       WHERE ttQuery.iQueryNum     = 0
-         AND ttQuery.iQryBufferNum = LOOKUP(ENTRY(1,ttQueryBufferLists.cQryBufferList),cBufferList)
-       NO-ERROR.
-  IF AVAIL ttQuery AND ttQuery.cQryJoinString BEGINS ",EACH " THEN DO:
-    IF hPreScanQuery:INDEX-INFORMATION(1) BEGINS "whole-index" THEN DO:
-      ttQueryBufferLists.bPassExec = YES.
-      LogThis("Prescan excecution","skipped due do no index match",1).
+    LogThis("Prescan first buffer:",cPreScanQuery,0).
+    
+    bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
+    
+    IF NOT bOk THEN DO:
+      DELETE OBJECT httPreScanJoin.
+      DELETE OBJECT hPreScanQuery.
+      RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Buffer: " + ttQueryBufferLists.cFirstDbAndBuffer
+           + (IF NOT VALID-HANDLE(hPreScanBuff[1]) THEN " Invalid buffer handle" ELSE "")
+           . 
     END.
-    ELSE 
-      ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
-  END.
-  ELSE ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
-
-/*   ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery). */
-
-  DELETE OBJECT hPreScanBuff[1].
-  DELETE OBJECT hPreScanQuery.
-END.
-
-/* If more than two components, check the first two: */
-FOR EACH ttQueryBufferLists 
-    WHERE NOT ttQueryBufferLists.bPassExec
-      AND ttQueryBufferLists.iNumQryBuffs > 2
-      AND NOT ttQueryBufferLists.bMandatory
-    :
-  ASSIGN cPreScanQuery  = REPLACE("FOR EACH " + REPLACE(ttQueryBufferLists.cFirstQueryComp,"¤",",") + "," + REPLACE(ttQueryBufferLists.cSecondQueryComp,"¤",","),CHR(3),"|")
-         bPassExecution = NO.
-
-  CREATE QUERY hPreScanQuery.
-  hPreScanQuery:FORWARD-ONLY = YES.
-
-  DO iy = 1 TO 2:
-    IF ENTRY(iy,ttQueryBufferLists.cQryBufferList) MATCHES "buf*_*" THEN 
-      CREATE BUFFER hPreScanBuff[iy] FOR TABLE SUBSTR(ENTRY(iy,ttQueryBufferLists.cQryBufferList),6)
-                    BUFFER-NAME ENTRY(iy,ttQueryBufferLists.cQryBufferList).
-    ELSE
-      CREATE BUFFER hPreScanBuff[iy] FOR TABLE ENTRY(iy,ttQueryBufferLists.cQryBufferList).
-    hPreScanQuery:ADD-BUFFER(hPreScanBuff[iy]).
-  END.
-  hPreScanQuery:SET-BUFFERS(hPreScanBuff[1],hPreScanBuff[2]).
-
-  LogThis("Prescan first two buffers:",cPreScanQuery,1).
-
-  bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
-  IF NOT bOk THEN DO:
-    DELETE OBJECT httPreScanJoin.
-    DELETE OBJECT hPreScanQuery.
-    RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Buffer: " + ENTRY(1,ttQueryBufferLists.cQryBufferList). 
-  END.
+    
+    LogThis("Prescan one buffer index",hPreScanQuery:INDEX-INFORMATION(1),0).
   
-  LogThis("Prescan two buffers index",hPreScanQuery:INDEX-INFORMATION(1),0).
-  LogThis("",hPreScanQuery:INDEX-INFORMATION(2),1).
-
-  IF ttQueryBufferLists.cSecondQueryComp BEGINS "EACH " AND hPreScanQuery:INDEX-INFORMATION(2) BEGINS "whole-index" THEN DO:
-    ttQueryBufferLists.bPassExec = YES.
-    LogThis("Prescan excecution","skipped due do no index match",1).
-  END.
-  ELSE       
-    ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
-
-  DELETE OBJECT hPreScanBuff[1].
-  DELETE OBJECT hPreScanBuff[2].
-  DELETE OBJECT hPreScanQuery.
-END.
-
-/* Check prescan for whole queries */
-FOR EACH ttQueryBufferLists WHERE NOT ttQueryBufferLists.bPassExec OR ttQueryBufferLists.bMandatory:
-  
-  ASSIGN cPreScanQuery  = FixQuery(ComposeQuery(ttQueryBufferLists.iQueryNum))
-         bPassExecution = NO.
-
-  CREATE QUERY hPreScanQuery.
-  hPreScanQuery:FORWARD-ONLY = YES.
-  DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
-    IF ENTRY(iy,ttQueryBufferLists.cQryBufferList) MATCHES "buf*_*" THEN 
-      CREATE BUFFER hPreScanBuff[iy] FOR TABLE SUBSTR(ENTRY(iy,ttQueryBufferLists.cQryBufferList),6)
-                    BUFFER-NAME ENTRY(iy,ttQueryBufferLists.cQryBufferList).
-    ELSE
-      CREATE BUFFER hPreScanBuff[iy] FOR TABLE ENTRY(iy,ttQueryBufferLists.cQryBufferList).
-    hPreScanQuery:ADD-BUFFER(hPreScanBuff[iy]).
-  END.
-
-  FIND FIRST ttQuery
-       WHERE ttQuery.iQueryNum = 0
-         AND ttQuery.iQryBufferNum = 1. 
-  cPreScanQuery = REPLACE(REPLACE("FOR EACH " + hPreScanBuff[1]:NAME + " " + cPreScanQuery,CHR(1),","),CHR(3),"|").
-
-  LogThis("Prescan query exec:",cPreScanQuery,0).
-
-  bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
-  IF NOT bOk THEN DO:
-    DELETE OBJECT httPreScanJoin.
-    DELETE OBJECT hPreScanQuery.
-    DO iy = 2 TO iCountPrescan:
-      DELETE OBJECT httAddPreScan[iy] NO-ERROR.
-    END.
-    RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Bufferlist: " + ttQueryBufferLists.cQryBufferList. 
-  END.
-  
-  DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
-    LogThis("Prescan index usage",hPreScanQuery:INDEX-INFORMATION(iy),0).
-  END.
-
-  IF NOT ttQueryBufferLists.bMandatory /* AND ttQueryBufferLists.iNumQryBuffs > 2 */ THEN DO:
     FIND FIRST ttQuery
          WHERE ttQuery.iQueryNum     = 0
            AND ttQuery.iQryBufferNum = LOOKUP(ENTRY(1,ttQueryBufferLists.cQryBufferList),cBufferList)
          NO-ERROR.
     IF AVAIL ttQuery AND ttQuery.cQryJoinString BEGINS ",EACH " THEN DO:
       IF hPreScanQuery:INDEX-INFORMATION(1) BEGINS "whole-index" THEN DO:
-        bPassExecution = YES.
+        ttQueryBufferLists.bPassExec = YES.
         LogThis("Prescan excecution","skipped due do no index match",1).
       END.
       ELSE 
-        bPassExecution = TooManyHits(hPreScanQuery).
+        ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
     END.
-    ELSE bPassExecution = TooManyHits(hPreScanQuery).
+    ELSE ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
+  
+  /*   ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery). */
+  
+    DELETE OBJECT hPreScanBuff[1].
+    DELETE OBJECT hPreScanQuery.
   END.
-  ELSE bPassExecution = NO.
-
-  IF NOT bPassExecution THEN DO:
-    bPreScanExec  = YES.
-
-    bOk = hPreScanQuery:QUERY-OPEN() NO-ERROR.
+  
+    /* If more than two components, check the first two: */
+  FOR EACH ttQueryBufferLists 
+      WHERE NOT ttQueryBufferLists.bPassExec
+        AND ttQueryBufferLists.iNumQryBuffs > 2
+        AND NOT ttQueryBufferLists.bMandatory
+      :
+    ASSIGN cPreScanQuery  = REPLACE("FOR EACH " 
+                          + addFieldList(REPLACE(ttQueryBufferLists.cFirstQueryComp,"¤",","),ENTRY(1,ttQueryBufferLists.cQryBufferList),"") 
+                          + "," 
+                          + addFieldList(REPLACE(ttQueryBufferLists.cSecondQueryComp,"¤",","),ENTRY(2,ttQueryBufferLists.cQryBufferList),"")
+                          ,CHR(3),"|")
+           bPassExecution = NO.
+  
+    CREATE QUERY hPreScanQuery.
+    hPreScanQuery:FORWARD-ONLY = YES.
+  
+    DO iy = 1 TO 2:
+      CREATE BUFFER hPreScanBuff[iy] FOR TABLE (IF iy = 1 THEN ttQueryBufferLists.cFirstDbAndBuffer ELSE ttQueryBufferLists.cSecondDbAndBuffer)
+             BUFFER-NAME BufferName(ENTRY(iy,ttQueryBufferLists.cQryBufferList)).
+     
+      hPreScanQuery:ADD-BUFFER(hPreScanBuff[iy]).
+    END.
+    hPreScanQuery:SET-BUFFERS(hPreScanBuff[1],hPreScanBuff[2]).
+  
+    LogThis("Prescan first two buffers:",cPreScanQuery,1).
+  
+    bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
+    IF NOT bOk THEN DO:
+      DELETE OBJECT httPreScanJoin.
+      DELETE OBJECT hPreScanQuery.
+      RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Buffer: " + ENTRY(1,ttQueryBufferLists.cQryBufferList). 
+    END.
+    
+    LogThis("Prescan two buffers index",hPreScanQuery:INDEX-INFORMATION(1),0).
+    LogThis("",hPreScanQuery:INDEX-INFORMATION(2),1).
+  
+    IF ttQueryBufferLists.cSecondQueryComp BEGINS "EACH " AND hPreScanQuery:INDEX-INFORMATION(2) BEGINS "whole-index" THEN DO:
+      ttQueryBufferLists.bPassExec = YES.
+      LogThis("Prescan excecution","skipped due do no index match",1).
+    END.
+    ELSE       
+      ttQueryBufferLists.bPassExec = TooManyHits(hPreScanQuery).
+  
+    DELETE OBJECT hPreScanBuff[1].
+    DELETE OBJECT hPreScanBuff[2].
+    DELETE OBJECT hPreScanQuery.
+  END.
+  
+  /* Check prescan for whole queries */
+  FOR EACH ttQueryBufferLists WHERE NOT ttQueryBufferLists.bPassExec OR ttQueryBufferLists.bMandatory:
+    
+    ASSIGN cPreScanQuery  = FixQuery(ComposeQuery(ttQueryBufferLists.iQueryNum))
+           bPassExecution = NO.
+  
+    CREATE QUERY hPreScanQuery.
+    hPreScanQuery:FORWARD-ONLY = YES.
+    DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
+      CREATE BUFFER hPreScanBuff[iy] FOR TABLE RealTable(ENTRY(iy,ttQueryBufferLists.cQryDbBufferList))
+                    BUFFER-NAME ENTRY(iy,ttQueryBufferLists.cQryBufferList).
+      
+      hPreScanQuery:ADD-BUFFER(hPreScanBuff[iy]).
+    END.
+  
+    FIND FIRST ttQuery
+         WHERE ttQuery.iQueryNum = 0
+           AND ttQuery.iQryBufferNum = 1. 
+    cPreScanQuery = REPLACE(REPLACE("FOR EACH " + hPreScanBuff[1]:NAME + " " + cPreScanQuery,CHR(1),","),CHR(3),"|").
+  
+    LogThis("Prescan query exec:",cPreScanQuery,0).
+  
+    bOk = hPreScanQuery:QUERY-PREPARE(cPreScanQuery) NO-ERROR.
     IF NOT bOk THEN DO:
       DELETE OBJECT httPreScanJoin.
       DELETE OBJECT hPreScanQuery.
       DO iy = 2 TO iCountPrescan:
         DELETE OBJECT httAddPreScan[iy] NO-ERROR.
       END.
-      RETURN "Error in prescan query definition: Invalid querystring: " + CHR(10) + cPreScanQuery + CHR(10) + " Bufferlist: " + ttQueryBufferLists.cQryBufferList. 
+      RETURN "Error in prescan query definition: Invalid querystring: " + cPreScanQuery + CHR(10) + "Bufferlist: " + ttQueryBufferLists.cQryBufferList. 
     END.
-    iCountPrescan = iCountPrescan + 1.
-
-    IF iCountPrescan > 1 THEN DO:
-      CREATE TEMP-TABLE httAddPreScan[iCountPrescan].
-      httAddPreScan[iCountPrescan]:ADD-NEW-FIELD("cPreScanJoin","CHARACTER").
-      httAddPreScan[iCountPrescan]:ADD-NEW-INDEX("idxRowid",YES,YES).
-      httAddPreScan[iCountPrescan]:ADD-INDEX-FIELD("idxRowid","cPreScanJoin").
-      httAddPreScan[iCountPrescan]:TEMP-TABLE-PREPARE("ttPreScanJoin" + STRING(iCountPrescan)) NO-ERROR.
-      ASSIGN hAddPreScanBuff[iCountPrescan]   = httAddPreScan[iCountPrescan]:DEFAULT-BUFFER-HANDLE
-             hAddPreScanRowid[iCountPrescan]  = hAddPreScanBuff[iCountPrescan]:BUFFER-FIELD("cPreScanJoin").
+    
+    DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
+      LogThis("Prescan index usage",hPreScanQuery:INDEX-INFORMATION(iy),0).
     END.
-
-    hCurrRowIdBuff = hPreScanBuff[ttQueryBufferLists.iNumQryBuffs].
-    hPreScanQuery:GET-FIRST().
-    REPEAT WHILE NOT hPreScanQuery:QUERY-OFF-END:
-      bOk = hBuffPreScanJoin:FIND-FIRST("WHERE cPreScanJoin = '" + STRING(hCurrRowIdBuff:ROWID) + "'") NO-ERROR.
-      IF NOT bOk AND iCountPrescan = 1 THEN DO:
-        hBuffPreScanJoin:BUFFER-CREATE().
-        ASSIGN hRowid:BUFFER-VALUE = hCurrRowIdBuff:ROWID
-               hcRowid:BUFFER-VALUE = STRING(hCurrRowIdBuff:ROWID) NO-ERROR.
-        IF NOT ERROR-STATUS:ERROR THEN 
-          iPreScanCount = iPreScanCount + 1.
-      END.
-      ELSE IF iCountPrescan > 1 THEN DO:
-        bOk = hAddPreScanBuff[iCountPrescan]:FIND-FIRST("WHERE cPreScanJoin = '" + STRING(hCurrRowIdBuff:ROWID) + "'") NO-ERROR.
-        IF NOT bOk THEN DO:
-          hAddPreScanBuff[iCountPrescan]:BUFFER-CREATE().
-          hAddPreScanRowid[iCountPrescan]:BUFFER-VALUE = hcRowid:BUFFER-VALUE NO-ERROR.
+  
+    IF NOT ttQueryBufferLists.bMandatory /* AND ttQueryBufferLists.iNumQryBuffs > 2 */ THEN DO:
+      FIND FIRST ttQuery
+           WHERE ttQuery.iQueryNum     = 0
+             AND ttQuery.iQryBufferNum = LOOKUP(ENTRY(1,ttQueryBufferLists.cQryBufferList),cBufferList)
+           NO-ERROR.
+      IF AVAIL ttQuery AND ttQuery.cQryJoinString BEGINS ",EACH " THEN DO:
+        IF hPreScanQuery:INDEX-INFORMATION(1) BEGINS "whole-index" THEN DO:
+          bPassExecution = YES.
+          LogThis("Prescan excecution","skipped due do no index match",1).
         END.
+        ELSE 
+          bPassExecution = TooManyHits(hPreScanQuery).
       END.
-      hPreScanQuery:GET-NEXT().
-      IF iPreScanCount > 10000000 THEN LEAVE.
+      ELSE bPassExecution = TooManyHits(hPreScanQuery).
     END.
+    ELSE bPassExecution = NO.
+  
+    IF NOT bPassExecution THEN DO:
+      bPreScanExec  = YES.
+  
+      bOk = hPreScanQuery:QUERY-OPEN() NO-ERROR.
+      IF NOT bOk THEN DO:
+        DELETE OBJECT httPreScanJoin.
+        DELETE OBJECT hPreScanQuery.
+        DO iy = 2 TO iCountPrescan:
+          DELETE OBJECT httAddPreScan[iy] NO-ERROR.
+        END.
+        RETURN "Error in prescan query definition: Invalid querystring: " + CHR(10) + cPreScanQuery + CHR(10) + " Bufferlist: " + ttQueryBufferLists.cQryBufferList. 
+      END.
+      iCountPrescan = iCountPrescan + 1.
+  
+      IF iCountPrescan > 1 THEN DO:
+        CREATE TEMP-TABLE httAddPreScan[iCountPrescan].
+        httAddPreScan[iCountPrescan]:ADD-NEW-FIELD("cPreScanJoin","CHARACTER").
+        httAddPreScan[iCountPrescan]:ADD-NEW-INDEX("idxRowid",YES,YES).
+        httAddPreScan[iCountPrescan]:ADD-INDEX-FIELD("idxRowid","cPreScanJoin").
+        httAddPreScan[iCountPrescan]:TEMP-TABLE-PREPARE("ttPreScanJoin" + STRING(iCountPrescan)) NO-ERROR.
+        ASSIGN hAddPreScanBuff[iCountPrescan]   = httAddPreScan[iCountPrescan]:DEFAULT-BUFFER-HANDLE
+               hAddPreScanRowid[iCountPrescan]  = hAddPreScanBuff[iCountPrescan]:BUFFER-FIELD("cPreScanJoin").
+      END.
+  
+      hCurrRowIdBuff = hPreScanBuff[ttQueryBufferLists.iNumQryBuffs].
+      hPreScanQuery:GET-FIRST().
+      REPEAT WHILE NOT hPreScanQuery:QUERY-OFF-END:
+        bOk = hBuffPreScanJoin:FIND-FIRST("WHERE cPreScanJoin = '" + STRING(hCurrRowIdBuff:ROWID) + "'") NO-ERROR.
+        IF NOT bOk AND iCountPrescan = 1 THEN DO:
+          hBuffPreScanJoin:BUFFER-CREATE().
+          ASSIGN hRowid:BUFFER-VALUE = hCurrRowIdBuff:ROWID
+                 hcRowid:BUFFER-VALUE = STRING(hCurrRowIdBuff:ROWID) NO-ERROR.
+          IF NOT ERROR-STATUS:ERROR THEN 
+            iPreScanCount = iPreScanCount + 1.
+        END.
+        ELSE IF iCountPrescan > 1 THEN DO:
+          bOk = hAddPreScanBuff[iCountPrescan]:FIND-FIRST("WHERE cPreScanJoin = '" + STRING(hCurrRowIdBuff:ROWID) + "'") NO-ERROR.
+          IF NOT bOk THEN DO:
+            hAddPreScanBuff[iCountPrescan]:BUFFER-CREATE().
+            hAddPreScanRowid[iCountPrescan]:BUFFER-VALUE = hcRowid:BUFFER-VALUE NO-ERROR.
+          END.
+        END.
+        hPreScanQuery:GET-NEXT().
+        IF iPreScanCount > 10000000 THEN LEAVE.
+      END.
+    END.
+    DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
+      DELETE OBJECT hPreScanBuff[iy].
+    END.
+    DELETE OBJECT hPreScanQuery.
   END.
-  DO iy = 1 TO ttQueryBufferLists.iNumQryBuffs:
-    DELETE OBJECT hPreScanBuff[iy].
-  END.
-  DELETE OBJECT hPreScanQuery.
-END.
+END.  
 
 IF bPreScanExec THEN DO:
   IF iCountPrescan > 1 THEN DO:
@@ -5107,13 +6362,13 @@ ASSIGN ttQueryBufferLists.iQueryNum      = 0
 ReduceQueries(0).
 
 IF bPreScanExec THEN
-  cQueryString = REPLACE("FOR EACH ttPreScanJoin,EACH " + ENTRY(1,cBufferList)
+  cQueryString = REPLACE("FOR EACH ttPreScanJoin,EACH " + ENTRY(1,cBufferList) + " FIELDS(" + cBufferFields[1] + ")"
                + " WHERE ROWID(" + ENTRY(1,cBufferList) + ") = ttPreScanJoin.rPreScanJoin "
                +  ComposeQuery(0),CHR(1),",").
 ELSE DO:
   cQueryString = "FOR EACH " + ENTRY(1,cBufferList) + " " + REPLACE(ComposeQuery(-1),CHR(1),",").
-  IF NOT cQueryString MATCHES "*" + cSortPhrase THEN
-    cQueryString = cQueryString + cSortPhrase.
+  IF cSqlDb = "" AND NOT cQueryString MATCHES "*" + cSortPhrase THEN
+    cQueryString = cQueryString + cNotExistQueryString + cSortPhrase.
 END.
 
 LogThis("Prescan query count:",STRING(iPreScanCount),1).
@@ -5121,6 +6376,11 @@ LogThis("Prescan query count:",STRING(iPreScanCount),1).
 LogThis("Tot sec, prescan queries: ", STRING(TIME - iStartTime),2).
 
 RETURN "".
+
+CATCH eAny AS Progress.Lang.Error :
+  RETURN "Prescan error: " + eAny:GetMessage(1).  
+END CATCH.
+
 
 END FUNCTION.
 
@@ -5139,19 +6399,23 @@ FUNCTION QueryOpen RETURNS CHARACTER
     Notes:  
 ------------------------------------------------------------------------------*/
 DEF VAR cNoAccessFields AS CHAR NO-UNDO.
+DEF VAR cQueryError     AS CHAR NO-UNDO.
 
 bOk = hQuery:QUERY-PREPARE(cQueryString) NO-ERROR.
 IF NOT bOk THEN DO:
   cQueryString = FixQueryOperators(cQueryString).
   bOk = hQuery:QUERY-PREPARE(cQueryString) NO-ERROR.
   IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
+    cQueryError = ERROR-STATUS:GET-MESSAGE(1).
     LogThis("Query error",ERROR-STATUS:GET-MESSAGE(1),1).
     IF ERROR-STATUS:GET-NUMBER(1) = 7328 AND
        ENTRY(1,TRIM(ERROR-STATUS:GET-MESSAGE(1))," ") = ENTRY(NUM-ENTRIES(cQueryString," "),cQueryString," ")
+       AND INDEX(cQueryString," BY ") > 1
        THEN DO:
       cQueryString = SUBSTR(cQueryString,1,INDEX(cQueryString," BY ")).           
       LogThis("Removed sort phrase",cQueryString,1).
       bOk = hQuery:QUERY-PREPARE(cQueryString) NO-ERROR.
+      cQueryError = cQueryError + " " + ERROR-STATUS:GET-MESSAGE(1).
     END.
   END.
 END.
@@ -5165,6 +6429,7 @@ IF NOT bOk THEN DO:
       END.
     END.
     bOk = hQuery:QUERY-PREPARE(cQueryString) NO-ERROR.
+    cQueryError = cQueryError + " " + ERROR-STATUS:GET-MESSAGE(1).
     LogThis("Corrected query string",cQueryString,1).
     IF ERROR-STATUS:GET-NUMBER(1) = 233 THEN 
       RETURN REPLACE(ERROR-STATUS:GET-MESSAGE(1),"Insufficient access","Insufficient read access").           .
@@ -5172,11 +6437,9 @@ IF NOT bOk THEN DO:
   ELSE IF ERROR-STATUS:GET-NUMBER(1) = 234 THEN
     RETURN REPLACE(ERROR-STATUS:GET-MESSAGE(1),"Insufficient access","Insufficient read access").
   ELSE 
-    RETURN 
-/*            icBuffersAndFields + CHR(10) + CHR(10) + */
-           "Bufferlist:  " + cBufferList + CHR(10) + CHR(10) + 
-           "Querystring:" + CHR(10) + cQueryString + CHR(10) + CHR(10) +
-           ERROR-STATUS:GET-MESSAGE(1)
+    RETURN cQueryError + 
+           ". Bufferlist:  " + cBufferList +  
+           ". Querystring: " + cQueryString 
            .
 END.
 
@@ -5232,6 +6495,7 @@ FUNCTION ReduceQueries RETURNS LOGICAL
     Notes:  
 ------------------------------------------------------------------------------*/
 DEF VAR bIncluded   AS LOG  NO-UNDO.
+
 FOR EACH ttQueryBufferLists 
     WHERE ttQueryBufferLists.iQueryNum GE iiMinQueryNum
     BY ttQueryBufferLists.iNumQryBuffs DESC:
@@ -5252,7 +6516,7 @@ FOR EACH ttQueryBufferLists
       FIND FIRST ttQuery
            WHERE ttQuery.iQueryNum     = ttQueryBufferLists.iQueryNum
              AND ttQuery.cQryBuffer    = bttQuery.cQryBuffer
-/*              AND ttQuery.iQryBufferNum = bttQuery.iQryBufferNum */
+/*             AND ttQuery.iQryBufferNum = bttQuery.iQryBufferNum */ 
            NO-ERROR.
       
       IF AVAIL ttQuery THEN DO:
@@ -5260,7 +6524,7 @@ FOR EACH ttQueryBufferLists
           ttQuery.cQryString = REPLACE(ttQuery.cQryString + ") AND (" + bttQuery.cQryString + ")"," WHERE "," WHERE (").
         ELSE IF ttQuery.cQryJoinString MATCHES "* WHERE *" THEN DO:
           IF bttQuery.cQryString BEGINS "WHERE " THEN
-            ttQuery.cQryString = " AND (" + SUBSTR(bttQuery.cQryString,6) + ")".
+            ttQuery.cQryString = ttQuery.cQryString + " AND (" + SUBSTR(bttQuery.cQryString,6) + ")". /* fix 19.10.21 */
           ELSE
             ttQuery.cQryString = REPLACE(ttQuery.cQryString + " AND (" + bttQuery.cQryString + ")"," WHERE "," ").
         END.
@@ -5506,22 +6770,24 @@ CASE icCalcProc:
     END.
     ELSE DO:
       IF NOT VALID-HANDLE(ttSpecFlds.hSourceField) THEN DO:
-        IF NUM-ENTRIES(cFld1,".") > 1 THEN 
+        IF NUM-ENTRIES(cFld1,".") > 1 AND cSqlDb = "" THEN 
           ttSpecFlds.hSourceField = hBuffer[LOOKUP(ENTRY(1,cFld1,"."),cBufferList)]:BUFFER-FIELD(ENTRY(2,cFld1,".")).   
         ELSE DO:
-          ttSpecFlds.hSourceField = httBuffer:BUFFER-FIELD(cFld1).
-          FIND FIRST bttSpecFlds
-               WHERE bttSpecFlds.cFillField = cFld1
-               NO-ERROR.
-          bttSpecFlds.bDirectAssign  = YES.                /* <- Calc.field must be assigned directly after calculation */  
+          ttSpecFlds.hSourceField = httBuffer:BUFFER-FIELD(ENTRY(NUM-ENTRIES(cFld1,"."),cFld1,".")).
+          IF cSqlDb = "" THEN DO:
+            FIND FIRST bttSpecFlds
+                 WHERE bttSpecFlds.cFillField = cFld1
+                 NO-ERROR.
+            bttSpecFlds.bDirectAssign  = YES.                /* <- Calc.field must be assigned directly after calculation */
+          END.  
         END.
       END.
 
       IF cFld2 NE "" AND NOT VALID-HANDLE(ttSpecFlds.hSourceField2) THEN DO:
-        IF NUM-ENTRIES(cFld2,".") > 1 THEN 
+        IF NUM-ENTRIES(cFld2,".") > 1 AND cSqlDb = "" THEN 
           ttSpecFlds.hSourceField2 = hBuffer[LOOKUP(ENTRY(1,cFld2,"."),cBufferList)]:BUFFER-FIELD(ENTRY(2,cFld2,".")).   
         ELSE DO:
-          ttSpecFlds.hSourceField2 = httBuffer:BUFFER-FIELD(cFld2) NO-ERROR.
+          ttSpecFlds.hSourceField2 = httBuffer:BUFFER-FIELD(ENTRY(NUM-ENTRIES(cFld2,"."),cFld2,".")) NO-ERROR.
           IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO: 
             ttSpecFlds.fCalcConstant = DEC(cFld2) NO-ERROR.
             IF ERROR-STATUS:ERROR THEN DO:
@@ -5529,10 +6795,12 @@ CASE icCalcProc:
               RETURN "".
             END.
           END.  
-          FIND FIRST bttSpecFlds
-               WHERE bttSpecFlds.cFillField = cFld2
-               NO-ERROR.
-          bttSpecFlds.bDirectAssign  = YES.                /* <- Calc.field must be assigned directly after calculation */  
+          IF cSqlDb = "" THEN DO:
+            FIND FIRST bttSpecFlds
+                 WHERE bttSpecFlds.cFillField = cFld2
+                 NO-ERROR.
+            bttSpecFlds.bDirectAssign  = YES.                /* <- Calc.field must be assigned directly after calculation */
+          END.    
         END.
       END.
 
@@ -5601,18 +6869,19 @@ CASE icCalcProc:
             ASSIGN cFunction = "STRING"
                    cElement = TRIM(SUBSTR(cElement,8),")").
           IF NUM-ENTRIES(cElement,".") > 1 THEN cElement = ENTRY(2,cElement,".").
-          hFld = ttSpecFlds.hTargetBuff:BUFFER-FIELD(cElement) NO-ERROR.
-          IF VALID-HANDLE(hFld) AND NOT CAN-DO(cTargetFields,cElement) THEN
-            ASSIGN cQueryExp   = cQueryExp + ENTRY(ix,cParam," ")
-                   cTargetFields = cTargetFields + (IF cTargetFields NE "" THEN "," ELSE "") + cElement.
+          
+          hFld = hBuffer[iiBufferNum]:BUFFER-FIELD(cElement) NO-ERROR.
+          IF VALID-HANDLE(hFld) THEN
+            cQueryExp = cQueryExp 
+                        + (IF hBuffer[iiBufferNum]:BUFFER-FIELD(cElement):DATA-TYPE = "CHARACTER" OR cFunction = "STRING" THEN "'" ELSE "")
+                        + "¤" + cElement + "¤"
+                        + (IF hBuffer[iiBufferNum]:BUFFER-FIELD(cElement):DATA-TYPE = "CHARACTER" OR cFunction = "STRING" THEN "'" ELSE "")
+                        .
           ELSE DO:
-            hFld = hBuffer[iiBufferNum]:BUFFER-FIELD(cElement) NO-ERROR.
-            IF VALID-HANDLE(hFld) THEN
-              cQueryExp = cQueryExp 
-                          + (IF hBuffer[iiBufferNum]:BUFFER-FIELD(cElement):DATA-TYPE = "CHARACTER" OR cFunction = "STRING" THEN "'" ELSE "")
-                          + "¤" + cElement + "¤"
-                          + (IF hBuffer[iiBufferNum]:BUFFER-FIELD(cElement):DATA-TYPE = "CHARACTER" OR cFunction = "STRING" THEN "'" ELSE "")
-                          .
+            hFld = ttSpecFlds.hTargetBuff:BUFFER-FIELD(cElement) NO-ERROR.
+            IF VALID-HANDLE(hFld) AND NOT CAN-DO(cTargetFields,cElement) THEN
+              ASSIGN cQueryExp   = cQueryExp + ENTRY(ix,cParam," ")
+                     cTargetFields = cTargetFields + (IF cTargetFields NE "" THEN "," ELSE "") + cElement.
             ELSE cQueryExp = cQueryExp + " " + cElement.
           END.
         END.
@@ -5772,29 +7041,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-IF NOT VALID-HANDLE(hJbAPI) THEN
-  RUN jbserv_api_for_server.p PERSIST SET hJbAPI (icSessionId).
-SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hJbAPI).
-
-RETURN YES.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
 &IF DEFINED(EXCLUDE-TooManyHits) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION TooManyHits Procedure 

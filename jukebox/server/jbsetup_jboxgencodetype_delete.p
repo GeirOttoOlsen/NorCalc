@@ -13,6 +13,8 @@ DEF INPUT  PARAM icRowid             AS CHAR NO-UNDO.
 DEF INPUT  PARAM icSessionId         AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.  
 
+{incl/validatecaller.i}
+
 FIND JBoxGenCodeType WHERE ROWID(JBoxGenCodeType) = TO-ROWID(icRowId) EXCLUSIVE-LOCK NO-ERROR.
 IF AVAIL JBoxGenCodeType THEN DO:
   FOR EACH JBoxGenCode EXCLUSIVE-LOCK 

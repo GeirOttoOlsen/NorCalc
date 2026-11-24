@@ -88,7 +88,7 @@ DEF TEMP-TABLE Person
     FIELD RowCount AS INTEGER
     INDEX idxRowids  RowIdent1
     .
-DEFINE BUFFER v_Person FOR Person.
+DEFINE BUFFER v_Person FOR temp-table Person.
 
 FUNCTION getTableHandleQryPerson RETURNS HANDLE().
   RETURN BUFFER Person:HANDLE:TABLE-HANDLE.
@@ -211,9 +211,10 @@ PersonGruppe.GruppeNavn
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS AddPersonGruppe_tbPerson new_tbPerson ~
-undo_tbPerson save_tbPerson delete_tbPerson iPersonId cInitialer bAktiv ~
-cNavn cStilling cMob cEpost BrwPersonGruppe lblGruppe tbPerson 
+&Scoped-Define ENABLED-OBJECTS edit_tbPerson AddPersonGruppe_tbPerson ~
+new_tbPerson undo_tbPerson save_tbPerson delete_tbPerson iPersonId ~
+cInitialer bAktiv cNavn cStilling cMob cEpost BrwPersonGruppe lblGruppe ~
+tbPerson 
 &Scoped-Define DISPLAYED-OBJECTS iPersonId cInitialer bAktiv cNavn ~
 cStilling cMob cEpost lblGruppe 
 
@@ -228,32 +229,37 @@ cStilling cMob cEpost lblGruppe
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON AddPersonGruppe_tbPerson 
      LABEL "Gruppe" 
-     SIZE 10.6 BY 1.52 TOOLTIP "Vedlikehold gruppetilhørighet".
+     SIZE 10.63 BY 1.53 TOOLTIP "Vedlikehold gruppetilhørighet".
 
 DEFINE BUTTON delete_tbPerson 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Delete" 
-     SIZE 6 BY 1.52 TOOLTIP "Delete (CTRL-D)".
+     SIZE 6 BY 1.53 TOOLTIP "Delete (CTRL-D)".
+
+DEFINE BUTTON edit_tbPerson 
+     IMAGE-UP FILE "bmp/edit16e.bmp":U
+     LABEL "Edit" 
+     SIZE 6 BY 1.53 TOOLTIP "Edit (CTRL-E)".
 
 DEFINE BUTTON new_tbPerson 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "New" 
-     SIZE 6 BY 1.52 TOOLTIP "New (CTRL-N)".
+     SIZE 6 BY 1.53 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON save_tbPerson 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Save" 
-     SIZE 6 BY 1.52 TOOLTIP "Save (CTRL-S)".
+     SIZE 6 BY 1.53 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbPerson 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Undo" 
-     SIZE 6 BY 1.52 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 6 BY 1.53 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE cEpost AS CHARACTER FORMAT "x(50)" 
      LABEL "Epost" 
@@ -263,12 +269,12 @@ DEFINE VARIABLE cEpost AS CHARACTER FORMAT "x(50)"
 DEFINE VARIABLE cInitialer AS CHARACTER FORMAT "x(4)" 
      LABEL "Initialer" 
      VIEW-AS FILL-IN 
-     SIZE 9.6 BY 1 NO-UNDO.
+     SIZE 9.63 BY 1 NO-UNDO.
 
 DEFINE VARIABLE cMob AS CHARACTER FORMAT "x(12)" 
      LABEL "Mob" 
      VIEW-AS FILL-IN 
-     SIZE 17.6 BY 1.
+     SIZE 17.63 BY 1.
 
 DEFINE VARIABLE cNavn AS CHARACTER FORMAT "x(40)" 
      LABEL "Navn" 
@@ -287,16 +293,16 @@ DEFINE VARIABLE iPersonId AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0
 
 DEFINE VARIABLE lblGruppe AS CHARACTER FORMAT "X(256)":U INITIAL "Gruppe tilhørighet:" 
       VIEW-AS TEXT 
-     SIZE 17.6 BY .62 NO-UNDO.
+     SIZE 17.63 BY .63 NO-UNDO.
 
 DEFINE RECTANGLE tbPerson
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 76.8 BY 1.71.
+     SIZE 76.75 BY 1.72.
 
 DEFINE VARIABLE bAktiv AS LOGICAL INITIAL no 
      LABEL "Aktiv" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -315,32 +321,43 @@ DEFINE BROWSE BrwPersonGruppe
       PersonGruppe.cCreatedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       PersonGruppe.cModifiedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       PersonGruppe.dCreated COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
+            WIDTH 11.63
       PersonGruppe.dModified COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
+            WIDTH 11.63
       PersonGruppe.iGruppeId COLUMN-LABEL "Gruppe id" FORMAT ">>>>>>>9":U
+            WIDTH 9.63
       PersonGruppe.iJBoxCompanyId COLUMN-LABEL "CompanyId" FORMAT "->,>>>,>>9":U
+            WIDTH 10.63
       PersonGruppe.iPersonGruppeId COLUMN-LABEL "Id" FORMAT ">>>>>>>>9":U
+            WIDTH 10.75
       PersonGruppe.iPersonId COLUMN-LABEL "Person id" FORMAT "->,>>>,>>9":U
+            WIDTH 10.25
       PersonGruppe.cCreatedBy2 COLUMN-LABEL "Av" FORMAT "x(8)":U
       PersonGruppe.cModifiedBy2 COLUMN-LABEL "Av" FORMAT "x(8)":U
       PersonGruppe.dCreated2 COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
+            WIDTH 11.63
       PersonGruppe.dModified2 COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
+            WIDTH 11.63
       PersonGruppe.iGruppeId2 COLUMN-LABEL "Gruppe id" FORMAT ">>>>>>>9":U
+            WIDTH 9.63
       PersonGruppe.iJBoxCompanyId2 COLUMN-LABEL "CompanyId" FORMAT "->,>>>,>>9":U
+            WIDTH 10.63
   ENABLE
       PersonGruppe.GruppeNavn
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 52 BY 5.24 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 52 BY 5.25 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     AddPersonGruppe_tbPerson AT ROW 1.1 COL 25.4 WIDGET-ID 34
-     new_tbPerson AT ROW 1.1 COL 1.2 WIDGET-ID 16
-     undo_tbPerson AT ROW 1.1 COL 7.4 WIDGET-ID 18
-     save_tbPerson AT ROW 1.1 COL 13.4 WIDGET-ID 20
-     delete_tbPerson AT ROW 1.1 COL 19.4 WIDGET-ID 24
+     edit_tbPerson AT ROW 1.09 COL 13.38 WIDGET-ID 36
+     AddPersonGruppe_tbPerson AT ROW 1.09 COL 31.38 WIDGET-ID 34
+     new_tbPerson AT ROW 1.09 COL 1.25 WIDGET-ID 16
+     undo_tbPerson AT ROW 1.09 COL 7.38 WIDGET-ID 18
+     save_tbPerson AT ROW 1.09 COL 19.38 WIDGET-ID 20
+     delete_tbPerson AT ROW 1.09 COL 25.38 WIDGET-ID 24
      iPersonId AT ROW 3 COL 10 COLON-ALIGNED
      cInitialer AT ROW 2.91 COL 35 COLON-ALIGNED
      bAktiv AT ROW 2.91 COL 50 WIDGET-ID 12
@@ -348,13 +365,13 @@ DEFINE FRAME DEFAULT-FRAME
      cStilling AT ROW 5 COL 10 COLON-ALIGNED
      cMob AT ROW 6 COL 10 COLON-ALIGNED
      cEpost AT ROW 7 COL 10 COLON-ALIGNED
-     BrwPersonGruppe AT ROW 9.1 COL 12 WIDGET-ID 200
+     BrwPersonGruppe AT ROW 9.09 COL 12 WIDGET-ID 200
      lblGruppe AT ROW 8.38 COL 10 COLON-ALIGNED NO-LABEL
      tbPerson AT ROW 1 COL 1 WIDGET-ID 14
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 76.8 BY 13.52 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SCROLLABLE SIZE 76.75 BY 13.53 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -373,12 +390,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 13.52
-         WIDTH              = 76.8
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 118.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 118.2
+         HEIGHT             = 13.53
+         WIDTH              = 76.75
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 118.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 118.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -438,7 +455,7 @@ ASSIGN
 
 ASSIGN 
        tbPerson:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
-                "new;New,undo;Undo,save;Save,delete;Delete,AddPersonGruppe;Legg til gruppemaxborder".
+                "new;New,undo;Undo,edit;Edit,save;Save,delete;Delete,AddPersonGruppe;Gruppemaxborder".
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -460,29 +477,29 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[3]   > "_<CALC>"
 "PersonGruppe.cModifiedBy" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
-"PersonGruppe.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > "_<CALC>"
-"PersonGruppe.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[6]   > "_<CALC>"
-"PersonGruppe.iGruppeId" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iGruppeId" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[7]   > "_<CALC>"
-"PersonGruppe.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[8]   > "_<CALC>"
-"PersonGruppe.iPersonGruppeId" "Id" ">>>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "10.8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iPersonGruppeId" "Id" ">>>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "10.75" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[9]   > "_<CALC>"
-"PersonGruppe.iPersonId" "Person id" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.2" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iPersonId" "Person id" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.25" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[10]   > "_<CALC>"
 "PersonGruppe.cCreatedBy2" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[11]   > "_<CALC>"
 "PersonGruppe.cModifiedBy2" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[12]   > "_<CALC>"
-"PersonGruppe.dCreated2" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.dCreated2" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[13]   > "_<CALC>"
-"PersonGruppe.dModified2" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.dModified2" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[14]   > "_<CALC>"
-"PersonGruppe.iGruppeId2" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iGruppeId2" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[15]   > "_<CALC>"
-"PersonGruppe.iJBoxCompanyId2" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"PersonGruppe.iJBoxCompanyId2" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwPersonGruppe */
 &ANALYZE-RESUME
@@ -654,9 +671,9 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY iPersonId cInitialer bAktiv cNavn cStilling cMob cEpost lblGruppe 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE AddPersonGruppe_tbPerson new_tbPerson undo_tbPerson save_tbPerson 
-         delete_tbPerson iPersonId cInitialer bAktiv cNavn cStilling cMob 
-         cEpost BrwPersonGruppe lblGruppe tbPerson 
+  ENABLE edit_tbPerson AddPersonGruppe_tbPerson new_tbPerson undo_tbPerson 
+         save_tbPerson delete_tbPerson iPersonId cInitialer bAktiv cNavn 
+         cStilling cMob cEpost BrwPersonGruppe lblGruppe tbPerson 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -702,7 +719,7 @@ DO WITH FRAME {&FRAME-NAME}:
 END.
 oQryPerson:OpenQuery().
 
-oContainer:initResize(300,500).
+oContainer:initResize(400,500).
 
 END PROCEDURE.
 

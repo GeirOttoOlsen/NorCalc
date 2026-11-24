@@ -20,31 +20,48 @@ DEF VAR cPKvalList AS CHAR   NO-UNDO.
 DEF VAR bOk        AS LOG    NO-UNDO.
 DEF VAR cCharField AS CHAR   NO-UNDO.
 
+{incl/validatecaller.i}
 
 ASSIGN cTable     = ENTRY(1,icParam,"¤")
        cPKvalList = ENTRY(2,icParam,"¤")
        .
 
-FIND FIRST _File NO-LOCK
-     WHERE _File._File-Name = cTable
-     NO-ERROR.
-IF AVAIL _File THEN DO:
-  FOR EACH _Index NO-LOCK OF _File
-      WHERE _Index._Unique
-        AND _Index._Active
-     ,EACH _Index-Field NO-LOCK OF _Index
-     ,FIRST _Field NO-LOCK OF _Index-Field
-     BREAK BY _Index._Index-Name
-     :
+DEF VAR hb_file        AS HANDLE NO-UNDO.
+DEF VAR hb_index       AS HANDLE NO-UNDO.
+DEF VAR hb_index-field AS HANDLE NO-UNDO.
+DEF VAR hb_field       AS HANDLE NO-UNDO.
+DEF VAR hqIdxFld       AS HANDLE NO-UNDO.
+DEF VAR hqFld          AS HANDLE NO-UNDO.
+DEF VAR bFound         AS LOG    NO-UNDO.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("_file",OUTPUT hb_file) THEN RETURN.
+       
+CREATE BUFFER hb_index       FOR TABLE "_index".       
+CREATE BUFFER hb_index-field FOR TABLE "_index-field".       
+CREATE BUFFER hb_field       FOR TABLE "_field".       
+
+bFound = hb_file:FIND-FIRST("WHERE _File._File-Name = '" + cTable + "'",NO-LOCK) NO-ERROR.
+     
+IF bFound THEN DO:
+  CREATE QUERY hqIdxFld.
+  hqIdxFld:SET-BUFFERS (hb_index,hb_index-field,hb_field).
+  hqIdxFld:QUERY-PREPARE("FOR EACH _Index NO-LOCK WHERE _index._file-recid = " + STRING(hb_file:RECID)
+                       + " AND _Index._Unique"
+                       + " AND _Index._Active"
+                       + ",EACH _Index-Field NO-LOCK OF _Index"
+                       + ",FIRST _Field NO-LOCK OF _Index-Field"
+                       + " BREAK BY _Index._Index-Name").
+  hqIdxFld:QUERY-OPEN ().
+  REPEAT WHILE hqIdxFld:GET-NEXT():                     
     ASSIGN ix      = ix + 1
            cPkFlds = cPkFlds + (IF cPkFlds NE "" THEN "," ELSE "") 
-                   + _Field._Field-Name
+                   + hb_Field::_Field-Name
            .
     IF ix > 10 THEN DO:
       cPkFlds = "".
       LEAVE.
     END.
-    IF LAST-OF(_Index._Index-Name) THEN DO:
+    IF hqIdxFld:LAST-OF(1) THEN DO:
       IF ix = NUM-ENTRIES(cPKvalList,"|") THEN 
         LEAVE.
       ASSIGN ix      = 0
@@ -71,41 +88,54 @@ IF AVAIL _File THEN DO:
     bOk = hBuffer:FIND-UNIQUE(cWhere,NO-LOCK) NO-ERROR.
   
     IF bOk THEN DO:
-      FIND FIRST _Field NO-LOCK OF _File   
-           WHERE _Field._Data-Type = "CHARACTER"
-             AND (_Field._Field-Name MATCHES "*navn*" OR _Field._Field-Name MATCHES "*name*")
-           NO-ERROR.
-      IF NOT AVAIL _Field THEN
-        FIND FIRST _Field NO-LOCK OF _File   
-             WHERE _Field._Data-Type = "CHARACTER"
-               AND (_Field._Field-Name MATCHES "*besk*" OR _Field._Field-Name MATCHES "*desc*")
-             NO-ERROR.
-      IF NOT AVAIL _Field THEN
-        FIND FIRST _Field NO-LOCK OF _File   
-             WHERE _Field._Data-Type = "CHARACTER"
-               AND (_Field._Field-Name MATCHES "*tekst*" OR _Field._Field-Name MATCHES "*text*")
-             NO-ERROR.
-      IF NOT AVAIL _Field THEN
-        FIND FIRST _Field NO-LOCK OF _File   
-             WHERE _Field._Data-Type = "CHARACTER"
-               AND _Field._Field-Name MATCHES "*" + _File._File-Name + "*"
-             NO-ERROR.
-      IF NOT AVAIL _Field THEN
-        FOR EACH _Field NO-LOCK OF _File
-            WHERE _Field._Data-Type = "CHARACTER"
-            BY _Field._Order:
-          cCharField = _Field._Field-Name.
+      bFound = hb_Field:FIND-FIRST("WHERE _field._file-recid = " + STRING(hb_file:RECID)
+                                 + " AND _Field._Data-Type = 'CHARACTER'"
+                                 + " AND (_Field._Field-Name MATCHES '*navn*' OR _Field._Field-Name MATCHES '*name*')",NO-LOCK)
+               NO-ERROR.
+      IF NOT bFound THEN
+        bFound = hb_Field:FIND-FIRST("WHERE _field._file-recid = " + STRING(hb_file:RECID)
+                                   + " AND _Field._Data-Type = 'CHARACTER'"
+                                   + " AND (_Field._Field-Name MATCHES '*besk*' OR _Field._Field-Name MATCHES '*desc*')",NO-LOCK)
+                 NO-ERROR.
+      IF NOT bFound THEN
+        bFound = hb_Field:FIND-FIRST("WHERE _field._file-recid = " + STRING(hb_file:RECID)
+                                   + " AND _Field._Data-Type = 'CHARACTER'"
+                                   + " AND (_Field._Field-Name MATCHES '*tekst*' OR _Field._Field-Name MATCHES '*text*')",NO-LOCK)
+                 NO-ERROR.
+      IF NOT bFound THEN
+        bFound = hb_Field:FIND-FIRST("WHERE _field._file-recid = " + STRING(hb_file:RECID)
+                                   + " AND _Field._Data-Type = 'CHARACTER'"
+                                   + " AND (_Field._Field-Name MATCHES '*" + cTable + "*'",NO-LOCK)
+                 NO-ERROR.
+      IF NOT bFound THEN DO:
+        CREATE QUERY hqFld.
+        hqFld:SET-BUFFERS(hb_field).
+        hqFld:QUERY-PREPARE ("FOR EACH _field NO-LOCK WHERE _field._file-recid = " + STRING(hb_file:RECID)
+                           + " AND _Field._Data-Type = 'CHARACTER'"
+                           + " BY _field._order").
+        hqFld:QUERY-OPEN().
+        REPEAT WHILE hqFld:GET-NEXT().
+          cCharField = hb_Field::_Field-Name.
           LEAVE.
         END.
-      ELSE cCharField = _Field._Field-Name.
+      END.  
+      ELSE cCharField = hb_Field::_Field-Name.
 
       IF cCharField NE "" THEN
-        ocReturn = (IF _File._File-Label NE ? THEN _File._File-Label ELSE _File._File-Name) + ", " 
+        ocReturn = (IF hb_File::_File-Label NE ? THEN hb_File::_File-Label ELSE hb_File::_File-Name) + ", " 
                  + hBuffer:BUFFER-FIELD(cCharField):LABEL + ": "
                  + hBuffer:BUFFER-FIELD(cCharField):BUFFER-VALUE.
     END.
   END.
 END.
-DELETE OBJECT hBuffer NO-ERROR.
 
-obOk = ocReturn NE "".
+FINALLY:
+  DELETE OBJECT hBuffer  NO-ERROR.
+  DELETE OBJECT hqIdxFld NO-ERROR.
+  DELETE OBJECT hqFld    NO-ERROR.
+  DELETE OBJECT hb_file  NO-ERROR.
+  DELETE OBJECT hb_index NO-ERROR.
+  DELETE OBJECT hb_index-field NO-ERROR.
+
+  obOk = ocReturn NE "".
+END FINALLY.

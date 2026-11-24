@@ -72,7 +72,7 @@ DEFINE VAR i AS INTEGER.
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME NYTT-SYSTEM
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
@@ -127,45 +127,45 @@ NPSHSYST.shunt_dimmensjon
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
      LABEL "&Cancel":L 
-     SIZE 11.2 BY 1
+     SIZE 11.25 BY 1
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_Help 
      LABEL "&Help":L 
-     SIZE 11.2 BY 1
+     SIZE 11.25 BY 1
      BGCOLOR 8 .
 
 DEFINE BUTTON Btn_OK AUTO-GO 
      LABEL "&OK":L 
-     SIZE 11.2 BY 1
+     SIZE 11.25 BY 1
      BGCOLOR 8 .
 
 DEFINE BUTTON BUTTON-reset 
      LABEL "&Reset" 
-     SIZE 9.8 BY 1.
+     SIZE 9.75 BY 1.
 
 DEFINE VARIABLE COMBO-BOX-VENTILTYPE AS CHARACTER FORMAT "X(256)":U 
      LABEL "MS-Ventiltype" 
      VIEW-AS COMBO-BOX INNER-LINES 5
      DROP-DOWN-LIST
-     SIZE 29.4 BY 1.05
+     SIZE 29.38 BY 1
      FONT 2 NO-UNDO.
 
 DEFINE IMAGE SHUNTTEGNING
      FILENAME "bmp\kobling1":U
-     SIZE 29.6 BY 9.62.
+     SIZE 29.63 BY 9.63.
 
 DEFINE RECTANGLE RECT-19
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 56.2 BY 8.67.
+     SIZE 56.25 BY 8.66.
 
 DEFINE RECTANGLE RECT-21
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 30.8 BY 10.14.
+     SIZE 30.75 BY 10.13.
 
 DEFINE RECTANGLE RECT-29
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 123.8 BY 3.91.
+     SIZE 123.75 BY 3.91.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -176,12 +176,12 @@ DEFINE QUERY NYTT-SYSTEM FOR
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME NYTT-SYSTEM
-     NPSHSYST.systembetegnelse AT ROW 1.43 COL 15 COLON-ALIGNED
+     NPSHSYST.systembetegnelse AT ROW 1.44 COL 15 COLON-ALIGNED
           LABEL "Syst.bet."
           VIEW-AS FILL-IN 
-          SIZE 49.6 BY 1
+          SIZE 49.63 BY 1
           FONT 2
-     NPSHSYST.koblings_alternativ AT ROW 1.38 COL 77.4 COLON-ALIGNED
+     NPSHSYST.koblings_alternativ AT ROW 1.38 COL 77.38 COLON-ALIGNED
           LABEL "Kobl.alt."
           VIEW-AS COMBO-BOX INNER-LINES 8
           LIST-ITEMS "1","2","3","4","5","6","7","7A" 
@@ -190,67 +190,67 @@ DEFINE FRAME NYTT-SYSTEM
           FONT 2
      NPSHKOBL.betegnelse AT ROW 1.38 COL 87 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
-          SIZE 36.6 BY 1
+          SIZE 36.63 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHKOBL.anvendelse AT ROW 3.48 COL 17 COLON-ALIGNED
+     NPSHKOBL.anvendelse AT ROW 3.47 COL 17 COLON-ALIGNED
           LABEL "Anvendelse"
           VIEW-AS FILL-IN 
-          SIZE 22.6 BY 1
+          SIZE 22.63 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHKOBL.sek_konst_var AT ROW 3.48 COL 99.8 COLON-ALIGNED
+     NPSHKOBL.sek_konst_var AT ROW 3.47 COL 99.75 COLON-ALIGNED
           LABEL "Sekundærside"
           VIEW-AS FILL-IN 
-          SIZE 22.6 BY 1
+          SIZE 22.63 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHKOBL.prim_konst_var AT ROW 3.52 COL 56 COLON-ALIGNED
+     NPSHKOBL.prim_konst_var AT ROW 3.53 COL 56 COLON-ALIGNED
           LABEL "Primærside"
           VIEW-AS FILL-IN 
-          SIZE 22.6 BY 1
+          SIZE 22.63 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHKOBL.reguleringsventil AT ROW 5 COL 92.6 COLON-ALIGNED
+     NPSHKOBL.reguleringsventil AT ROW 5 COL 92.63 COLON-ALIGNED
           LABEL "Reguleringsventil i"
           VIEW-AS FILL-IN 
-          SIZE 29.6 BY 1
+          SIZE 29.63 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHKOBL.ventil_type AT ROW 5.05 COL 17 COLON-ALIGNED
+     NPSHKOBL.ventil_type AT ROW 5.06 COL 17 COLON-ALIGNED
           LABEL "Ventiltype"
           VIEW-AS FILL-IN 
-          SIZE 19.8 BY 1
+          SIZE 19.75 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHSYST.prim_effekt AT ROW 9.24 COL 16 COLON-ALIGNED
+     NPSHSYST.prim_effekt AT ROW 9.25 COL 16 COLON-ALIGNED
           VIEW-AS FILL-IN 
-          SIZE 12.8 BY 1
+          SIZE 12.75 BY 1
           FONT 2
-     NPSHSYST.prim_temp_inn AT ROW 10.62 COL 16 COLON-ALIGNED
+     NPSHSYST.prim_temp_inn AT ROW 10.63 COL 16 COLON-ALIGNED
           VIEW-AS FILL-IN 
-          SIZE 11.2 BY 1
+          SIZE 11.25 BY 1
           FONT 2
-     NPSHSYST.prim_temp_ut AT ROW 11.95 COL 16 COLON-ALIGNED
+     NPSHSYST.prim_temp_ut AT ROW 11.94 COL 16 COLON-ALIGNED
           VIEW-AS FILL-IN 
-          SIZE 11.2 BY 1
+          SIZE 11.25 BY 1
           FONT 2
-     NPSHSYST.prim_kapasitet AT ROW 13.29 COL 16 COLON-ALIGNED
+     NPSHSYST.prim_kapasitet AT ROW 13.28 COL 16 COLON-ALIGNED
           VIEW-AS FILL-IN 
           SIZE 14 BY 1
           FONT 2
-     NPSHSYST.sek_effekt AT ROW 9.24 COL 31.4 COLON-ALIGNED NO-LABEL
+     NPSHSYST.sek_effekt AT ROW 9.25 COL 31.38 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
-          SIZE 12.8 BY 1
+          SIZE 12.75 BY 1
           FONT 2
-     NPSHSYST.sek_temp_inn AT ROW 10.62 COL 31.4 COLON-ALIGNED NO-LABEL
+     NPSHSYST.sek_temp_inn AT ROW 10.63 COL 31.38 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
-          SIZE 11.2 BY 1
+          SIZE 11.25 BY 1
           FONT 2
-     NPSHSYST.sek_temp_ut AT ROW 11.95 COL 31.4 COLON-ALIGNED NO-LABEL
+     NPSHSYST.sek_temp_ut AT ROW 11.94 COL 31.38 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
-          SIZE 11.2 BY 1
+          SIZE 11.25 BY 1
           FONT 2
-     NPSHSYST.sek_kapasitet AT ROW 13.29 COL 31.4 COLON-ALIGNED NO-LABEL
+     NPSHSYST.sek_kapasitet AT ROW 13.28 COL 31.38 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
-          SIZE 12.8 BY 1
+          SIZE 12.75 BY 1
           FONT 2
-     BUTTON-reset AT ROW 15 COL 27.8
-     NPSHSYST.beregnet_anvendelse AT ROW 7.62 COL 61 NO-LABEL
+     BUTTON-reset AT ROW 14.81 COL 47
+     NPSHSYST.beregnet_anvendelse AT ROW 7.63 COL 61 NO-LABEL
           VIEW-AS RADIO-SET VERTICAL
           RADIO-BUTTONS 
                     "Varme", "Varme":U,
@@ -259,52 +259,52 @@ DEFINE FRAME NYTT-SYSTEM
 "Kjøle", "Kjøle":U,
 "Fryse", "Fryse":U,
 "Varmegjenvinning", "Varmegjenvinning":U
-          SIZE 33.6 BY 6.38
-     NPSHSYST.type AT ROW 16.67 COL 28 NO-LABEL
+          SIZE 33.63 BY 6.38
+     NPSHSYST.type AT ROW 16.66 COL 28 NO-LABEL
           VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "FM", "FM":U,
 "MS", "MS":U
-          SIZE 28.6 BY 1.24
+          SIZE 28.63 BY 1.25
           BGCOLOR 8 FGCOLOR 0 
-     COMBO-BOX-VENTILTYPE AT ROW 17.95 COL 25.6 COLON-ALIGNED
     WITH VIEW-AS DIALOG-BOX 
          SIDE-LABELS THREE-D  SCROLLABLE 
          FONT 2.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME NYTT-SYSTEM
-     NPSHSYST.ms_shuntventil_i_leveranse AT ROW 18.1 COL 58.2
+     COMBO-BOX-VENTILTYPE AT ROW 17.94 COL 25.63 COLON-ALIGNED
+     NPSHSYST.ms_shuntventil_i_leveranse AT ROW 18.09 COL 58.25
           LABEL "MS - Shuntventil med i leveranse"
           VIEW-AS TOGGLE-BOX
-          SIZE 47.8 BY .95
-     Btn_OK AT ROW 19.91 COL 86.8
-     Btn_Cancel AT ROW 19.91 COL 100.2
-     Btn_Help AT ROW 19.91 COL 113.6
-     NPSHSYST.shunt_dimmensjon AT ROW 16.81 COL 81.4 COLON-ALIGNED
+          SIZE 47.75 BY .94
+     Btn_OK AT ROW 19.91 COL 86.75
+     Btn_Cancel AT ROW 19.91 COL 100.25
+     Btn_Help AT ROW 19.91 COL 113.63
+     NPSHSYST.shunt_dimmensjon AT ROW 16.81 COL 81.38 COLON-ALIGNED
           LABEL "Shuntdimmensjon"
            VIEW-AS TEXT 
-          SIZE 10.6 BY .86
+          SIZE 10.63 BY .88
           BGCOLOR 8 FGCOLOR 1 FONT 2
      " Primær" VIEW-AS TEXT
-          SIZE 11.2 BY .81 AT ROW 8.24 COL 18
+          SIZE 11.25 BY .81 AT ROW 8.25 COL 18
      " Sekundær" VIEW-AS TEXT
-          SIZE 14.2 BY .81 AT ROW 8.24 COL 33.2
+          SIZE 14.25 BY .81 AT ROW 8.25 COL 33.25
      "W" VIEW-AS TEXT
-          SIZE 4 BY .81 AT ROW 9.38 COL 47.6
+          SIZE 4 BY .81 AT ROW 9.38 COL 47.63
      "°C" VIEW-AS TEXT
-          SIZE 3.6 BY .81 AT ROW 10.86 COL 47.6
+          SIZE 3.63 BY .81 AT ROW 10.88 COL 47.63
      "°C" VIEW-AS TEXT
-          SIZE 3.6 BY .81 AT ROW 12.19 COL 47.6
+          SIZE 3.63 BY .81 AT ROW 12.19 COL 47.63
      "l/s" VIEW-AS TEXT
-          SIZE 4.2 BY .76 AT ROW 13.62 COL 47.6
+          SIZE 4.25 BY .75 AT ROW 13.63 COL 47.63
      "Ventil:" VIEW-AS TEXT
-          SIZE 10 BY .76 AT ROW 16.95 COL 16
-     RECT-19 AT ROW 7.62 COL 2.4
-     RECT-21 AT ROW 7.1 COL 95
-     RECT-29 AT ROW 2.95 COL 2.2
-     SHUNTTEGNING AT ROW 7.29 COL 96
-     SPACE(1.99) SKIP(4.27)
+          SIZE 10 BY .75 AT ROW 16.94 COL 16
+     RECT-19 AT ROW 7.63 COL 2.38
+     RECT-21 AT ROW 7.09 COL 95
+     RECT-29 AT ROW 2.94 COL 2.25
+     SHUNTTEGNING AT ROW 7.28 COL 96
+     SPACE(1.96) SKIP(4.27)
     WITH VIEW-AS DIALOG-BOX 
          SIDE-LABELS THREE-D  SCROLLABLE 
          FONT 2
@@ -326,7 +326,7 @@ DEFINE FRAME NYTT-SYSTEM
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX NYTT-SYSTEM
-   NOT-VISIBLE UNDERLINE Custom                                         */
+   NOT-VISIBLE FRAME-NAME UNDERLINE Custom                              */
 ASSIGN 
        FRAME NYTT-SYSTEM:SCROLLABLE       = FALSE.
 
@@ -706,8 +706,6 @@ IF  NPSHSYST.tillegg_kapsling <> "Kapsling, Ingen" THEN
              NPSHSYST.tillegg_pumpetype = 'Tørrløper'
              NPSHSYST.tillegg_pumpe_fabrikat = 'Kolmeks (Flygt)'.
      END CASE.
-  MESSAGE NPSHSYST.anleggsnr skip NPSHSYST.systemnr NPSHSYST.prod_nr
-  VIEW-AS ALERT-BOX.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1101,7 +1099,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL NPSHSYST.type NYTT-SYSTEM
 ON LEAVE OF NPSHSYST.type IN FRAME NYTT-SYSTEM /* Type */
 DO:
-  run onLeaveOf_type.
+    run onLeaveOf_type.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1112,17 +1110,22 @@ END.
 ON VALUE-CHANGED OF NPSHSYST.type IN FRAME NYTT-SYSTEM /* Type */
 DO:
     /* Dersom MS-Ventil er valgt, skal MS-Ventiltype enables, hvis ikke skal det som ligger i felt slettes */
-    IF SELF:SCREEN-VALUE = 'MS' THEN
+    IF SELF:SCREEN-VALUE = 'MS' or self:screen-value = 'MSE' THEN
         DO WITH FRAME NYTT-SYSTEM:
-            ENABLE COMBO-BOX-VENTILTYPE.            
-            ENABLE NPSHSYST.ms_shuntventil_i_leveranse.
+          assign 
+            COMBO-BOX-VENTILTYPE:sensitive = true.            
+            NPSHSYST.ms_shuntventil_i_leveranse:sensitive = true.
+            COMBO-BOX-VENTILTYPE:MOVE-AFTER-TAB-ITEM (npshsyst.type:HANDLE).
+            NPSHSYST.ms_shuntventil_i_leveranse:MOVE-AFTER-TAB-ITEM (COMBO-BOX-VENTILTYPE:HANDLE).
        END.
     ELSE
         DO WITH FRAME  NYTT-SYSTEM:            
-            DISABLE COMBO-BOX-VENTILTYPE.
-            NPSHSYST.ms_ventiltype = "".
-            NPSHSYST.ms_shuntventil_i_leveranse = FALSE.
-            DISABLE NPSHSYST.ms_shuntventil_i_leveranse.
+            assign 
+              COMBO-BOX-VENTILTYPE:sensitive                = false            
+              NPSHSYST.ms_shuntventil_i_leveranse:sensitive = false
+              NPSHSYST.ms_shuntventil_i_leveranse           = FALSE
+              NPSHSYST.ms_ventiltype                        = ""
+              .                       
        END.
   
 END.
@@ -1413,7 +1416,8 @@ DO TRANSACTION:
         NPSHSYST.prim_effekt 
         NPSHSYST.prim_temp_inn 
         NPSHSYST.prim_temp_ut 
-        NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet
+        NPSHSYST.sek_kapasitet 
+        NPSHSYST.prim_kapasitet
         NPSHSYST.beregnet_anvendelse                 
         NPSHSYST.type 
         Btn_OK Btn_Cancel Btn_Help 
@@ -1456,17 +1460,21 @@ DO WITH FRAME {&FRAME-NAME}:
                 c_grunnlag = 'Primærkrets'.
             END.
     END CASE.
-
     CASE  NPSHSYST.type:SCREEN-VALUE:
         WHEN  'FM' THEN
            RUN VELGFMDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).                       
-        WHEN  'MS' THEN
+        WHEN  'MS' /*or when 'MSE'*/ THEN
            RUN VELGMSDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).                       
+        WHEN  'MSE' THEN
+           RUN VELGMSEDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
     END CASE.
-    IF type:SCREEN-VALUE = 'MS' THEN APPLY 'VALUE-CHANGED' TO COMBO-BOX-VENTILTYPE.
-    ASSIGN NPSHSYST.shunt_dimmensjon = dimm_verdi.
+
+    ASSIGN
+      NPSHSYST.shunt_dimmensjon = dimm_verdi.
     DISPLAY NPSHSYST.shunt_dimmensjon WITH FRAME NYTT-SYSTEM.
-    npshsyst.type:modified = true.
+      npshsyst.type:modified = true.
+       
+      
 END.
 
 END PROCEDURE.

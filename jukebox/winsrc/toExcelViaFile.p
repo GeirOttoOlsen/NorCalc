@@ -25,10 +25,20 @@ DEF VAR cTmpFileName    AS CHAR NO-UNDO.
 DEF VAR bUseExcel       AS LOG  NO-UNDO INIT YES.
 DEF VAR cNumSep         AS CHAR NO-UNDO.
 DEF VAR cNumDec         AS CHAR NO-UNDO.
+DEF VAR bOpenFile       AS LOG  NO-UNDO INIT YES.
+DEF VAR cDelimiter      AS CHAR NO-UNDO INIT "~t".
+DEF VAR bIncludeRowid   AS LOG NO-UNDO.
 
-
+IF NOT VALID-HANDLE(ihObject) THEN RETURN.
+IF ihObject:TYPE = "TEMP-TABLE" THEN ihObject = ihObject:DEFAULT-BUFFER-HANDLE.
 
 IF iiMaxCount = -2 THEN bUseExcel = NO.
+ELSE IF iiMaxCount = -3 THEN bOpenFile = NO.
+ELSE IF iiMaxCount = -4 THEN
+  ASSIGN bOpenFile = NO
+         cDelimiter = "|".
+ELSE IF iiMaxCount = -5 THEN
+  bIncludeRowid = YES.         
 
 ASSIGN cCurrDateFormat = SESSION:DATE-FORMAT
        cCurrNumFormat  = SESSION:NUMERIC-FORMAT
@@ -36,8 +46,15 @@ ASSIGN cCurrDateFormat = SESSION:DATE-FORMAT
        cNumDec         = SESSION:NUMERIC-DECIMAL-POINT
        cFileName       = SESSION:TEMP-DIR 
                        + (IF ihObject:TYPE = "buffer" AND ihObject:NAME NE ? THEN ihObject:NAME + "_" ELSE "")
-                       + STRING(YEAR(TODAY)) + STRING(MONTH(TODAY),"99") + STRING(DAY(TODAY)) + STRING(TIME) + ".xls"
+                       + STRING(YEAR(TODAY)) + STRING(MONTH(TODAY),"99") + STRING(DAY(TODAY)) + STRING(TIME) 
+                       + (IF cDelimiter = "~t" THEN ".xls" ELSE ".data")
        .
+
+IF CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"getFileOutputCat") THEN
+  cFileName = TRIM(DYNAMIC-FUNCTION("getFileOutputCat" IN SOURCE-PROCEDURE),"\/") + "/" 
+            + (IF ihObject:TYPE = "buffer" AND ihObject:NAME NE ? THEN ihObject:NAME ELSE STRING(YEAR(TODAY)) + STRING(MONTH(TODAY),"99") + STRING(DAY(TODAY)) + STRING(TIME)) 
+            + (IF cDelimiter = "~t" THEN ".xls" ELSE ".data")
+            .
 
 SESSION:SET-NUMERIC-FORMAT(CultureInfo:CurrentCulture:NumberFormat:NumberGroupSeparator,  /* -numsep / SESSION:NUMERIC-SEPARATOR */
                            CultureInfo:CurrentCulture:NumberFormat:NumberDecimalSeparator /* -numdec / SESSION:NUMERIC-DECIMAL-POINT */ ).
@@ -46,9 +63,11 @@ IF CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"getExportFileName") THEN DO:
   cTmpFileName = DYNAMIC-FUNCTION("getExportFileName" IN SOURCE-PROCEDURE).
   IF cTmpFileName NE "" THEN cFileName = cTmpFileName.
 END.
+IF CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"getExportDelimiter") THEN DO:
+  cDelimiter = DYNAMIC-FUNCTION("getExportDelimiter" IN SOURCE-PROCEDURE).
+  IF cDelimiter = "" THEN cDelimiter = "|".
+END.
 
-IF NOT VALID-HANDLE(ihObject) THEN RETURN.
-IF ihObject:TYPE = "TEMP-TABLE" THEN ihObject = ihObject:DEFAULT-BUFFER-HANDLE.
 
 OUTPUT TO VALUE(cFileName) NO-CONVERT.
 
@@ -59,8 +78,8 @@ IF ihObject:TYPE = "BROWSE" THEN DO:
     ASSIGN hColumn = ihObject:GET-BROWSE-COLUMN(iColumn)
            NO-ERROR.
     IF VALID-HANDLE(hColumn) AND hColumn:VISIBLE THEN
-      cOutput = cOutput + REPLACE(hColumn:LABEL,"!"," ") + (IF iiMaxCount = -1 THEN " " + hColumn:NAME ELSE "") + "~t".
-/*       cOutput = cOutput + REPLACE(DYNAMIC-FUNCTIO("getStrippedSortLabel",hColumn),"!"," ") + "~t". */
+      cOutput = cOutput + REPLACE(hColumn:LABEL,"!"," ") + (IF iiMaxCount = -1 THEN " " + hColumn:NAME ELSE "") + cDelimiter.
+/*       cOutput = cOutput + REPLACE(DYNAMIC-FUNCTIO("getStrippedSortLabel",hColumn),"!"," ") + cDelimiter. */
   END.
   IF iiMaxCount < 0 THEN iiMaxCount = 0.
 
@@ -81,12 +100,16 @@ IF ihObject:TYPE = "BROWSE" THEN DO:
         IF VALID-HANDLE(hColumn) AND hColumn:VISIBLE THEN DO:
           IF hField:DATA-TYPE = "integer" OR hField:DATA-TYPE = "decimal" THEN DO:
             fDec = hField:BUFFER-VALUE.
-            cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + "~t".
+            cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + cDelimiter.
           END.
-          ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
-            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + "~t".
-          ELSE 
-            cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE,CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + "~t".
+          ELSE IF hField:DATA-TYPE = "DATE" THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN string(hField:BUFFER-VALUE,'99/99/9999') ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" or hField:data-type = 'DATETIME-TZ' THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE  ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "LOGICAL" THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
+          ELSE
+            cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE,CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
         END.
       END.
       PUT UNFORMATTED cOutput SKIP.
@@ -106,12 +129,16 @@ IF ihObject:TYPE = "BROWSE" THEN DO:
         IF VALID-HANDLE(hColumn) AND hColumn:VISIBLE THEN DO:
           IF hField:DATA-TYPE = "integer" OR hField:DATA-TYPE = "decimal" THEN DO:
             fDec = hField:BUFFER-VALUE.
-            cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + "~t".
+            cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + cDelimiter.
           END.
-          ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
-            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + "~t".
-          ELSE 
-            cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE,CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + "~t".
+          ELSE IF hField:DATA-TYPE = "DATE" THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN string(hField:buffer-value,'99/99/9999') ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" or hField:data-type = 'DATETIME-TZ' THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE  ELSE "") + cDelimiter.
+          else if hField:DATA-TYPE = "LOGICAL" THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
+          ELSE
+            cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE,CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
         END.
       END.
       PUT UNFORMATTED cOutput SKIP.
@@ -134,9 +161,12 @@ ELSE DO: /* <-- buffer */
            NO-ERROR.
     DO ix = 0 TO hColumn:EXTENT:
       IF hColumn:EXTENT > 0 AND ix = 0 THEN NEXT.
-      cOutput = cOutput + hColumn:LABEL + (IF ix > 0 THEN "[" + STRING(ix) + "]" ELSE IF iiMaxCount = -1 THEN " " + hColumn:NAME ELSE "") + "~t".
+      cOutput = cOutput + hColumn:LABEL + (IF ix > 0 THEN "[" + STRING(ix) + "]" ELSE IF iiMaxCount = -1 THEN " " + hColumn:NAME ELSE "") + cDelimiter.
     END.
   END.
+  IF bIncludeRowid THEN
+    cOutput = cOutput + "ROWID".
+  
   IF iiMaxCount < 0 THEN iiMaxCount = 0.
   PUT UNFORMATTED cOutput SKIP.
   cOutput = "". 
@@ -157,17 +187,27 @@ ELSE DO: /* <-- buffer */
 
       DO ix = 0 TO hField:EXTENT:
         IF hField:EXTENT > 0 AND ix = 0 THEN NEXT.
+        IF hField:BUFFER-VALUE[ix] = ? THEN DO:
+          cOutput = cOutput + cDelimiter.
+          NEXT.
+        END.
 
         IF hField:DATA-TYPE = "integer" OR hField:DATA-TYPE = "decimal" THEN DO:
           fDec = hField:BUFFER-VALUE[ix].
-          cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + "~t".
+          cOutput = cOutput + (IF fDec NE ? THEN STRING(fDec) ELSE "0") + cDelimiter.
         END.
-        ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
-          cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + "~t".
+        ELSE IF hField:DATA-TYPE = "DATE" THEN 
+          cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN string(hField:BUFFER-VALUE[ix],'99/99/9999') ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" or hField:data-type = 'DATETIME-TZ' THEN
+            cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix]  ELSE "") + cDelimiter.
+        ELSE IF CAN-DO("LOGICAL,ROWID",hField:DATA-TYPE) THEN 
+          cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + cDelimiter.
         ELSE 
-          cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE[ix],CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + "~t".
+          cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE[ix],CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
       END.
     END.
+    IF bIncludeRowid THEN
+      cOutput = cOutput + STRING(hBuffer:ROWID).
     PUT UNFORMATTED cOutput SKIP.
     cOutput = "". 
     iCount = iCount + 1.
@@ -181,27 +221,43 @@ OUTPUT CLOSE.
 
 bOK = SESSION:SET-WAIT-STATE("").
 
-IF bUseExcel THEN DO:
-  CREATE "Excel.Application" chExcelApplication NO-ERROR.
-  IF NOT ERROR-STATUS:ERROR THEN DO:
+IF bOpenFile THEN DO:
+
+  IF bUseExcel THEN DO:
+    CREATE "Excel.Application" chExcelApplication NO-ERROR.
+    IF NOT ERROR-STATUS:ERROR THEN DO:
+        
+      ASSIGN chExcelApplication:VISIBLE = TRUE.
+       
+      chExcelApplication:Workbooks:OpenText(cFileName,2,,,,,TRUE).
+       
+      ASSIGN chWorkbook = chExcelApplication:WorkBooks:ITEM(1)
+             chWorkSheet = chExcelApplication:Sheets:ITEM(1).
+        
+      ASSIGN chWorkSheet:NAME  = TRIM(SUBSTR(PROGRAM-NAME(2),INDEX(PROGRAM-NAME(2)," ") + 1,LENGTH(PROGRAM-NAME(2)) - 2),SESSION:TEMP-DIR) NO-ERROR.
+        
+      ASSIGN chWorkSheet:Rows(1):FONT:Bold = TRUE.
       
-    ASSIGN chExcelApplication:VISIBLE = TRUE.
-     
-    chExcelApplication:Workbooks:OpenText(cFileName,2,,,,,TRUE).
-     
-    ASSIGN chWorkbook = chExcelApplication:WorkBooks:ITEM(1)
-           chWorkSheet = chExcelApplication:Sheets:ITEM(1).
-      
-    ASSIGN chWorkSheet:NAME  = TRIM(SUBSTR(PROGRAM-NAME(2),INDEX(PROGRAM-NAME(2)," ") + 1,LENGTH(PROGRAM-NAME(2)) - 2),SESSION:TEMP-DIR) NO-ERROR.
-      
-    ASSIGN chWorkSheet:Rows(1):FONT:Bold = TRUE.
+      PUBLISH "ExcelSheetParams" (chExcelApplication,chWorkbook,chWorksheet,iCount - 1).
+    END.
     
-    PUBLISH "ExcelSheetParams" (chExcelApplication,chWorkbook,chWorksheet,iCount - 1).
+    ELSE DO ON ERROR UNDO, THROW:  
+      System.Diagnostics.Process:Start("notepad.exe",cFileName).
+      CATCH eOS AS Progress.Lang.Error :
+         MESSAGE eOS:GetMessage(1) VIEW-AS ALERT-BOX.
+      END CATCH.
+    END.
+     
+//    OS-COMMAND NO-WAIT VALUE("notepad " + cFileName).
+  END.  
+  ELSE DO ON ERROR UNDO, THROW:  
+    System.Diagnostics.Process:Start("notepad.exe",cFileName).
+    CATCH eOS AS Progress.Lang.Error :
+       MESSAGE eOS:GetMessage(1) VIEW-AS ALERT-BOX.
+    END CATCH.
   END.
-  
-  ELSE OS-COMMAND NO-WAIT VALUE("notepad " + cFileName).
-END.  
-ELSE OS-COMMAND NO-WAIT VALUE("notepad " + cFileName). 
+//    OS-COMMAND NO-WAIT VALUE("notepad " + cFileName).
+END.   
 
 CATCH eAny AS Progress.Lang.Error :
    OS-COMMAND NO-WAIT VALUE("notepad " + cFileName).

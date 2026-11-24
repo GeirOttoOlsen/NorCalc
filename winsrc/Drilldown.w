@@ -286,13 +286,13 @@ PROCEDURE InitializeObject :
 /*hBrowse = DYNAMIC-FUNCTION("getBrowseHandle" IN hDataBrwWin). /* Placeholder */                     */
 /*                                                                                                    */
 /*DYNAMIC-FUNCTION("setAttribute",hBrowse,"userSettingContext",THIS-PROCEDURE:FILE-NAME).             */
-/*DYNAMIC-FUNCTION("setEnableSaveQuery" IN hDataBrwWin,YES).                                          */
+DYNAMIC-FUNCTION("setEnableSaveQuery" IN hDataBrwWin,YES).
 /*DYNAMIC-FUNCTION("setAttribute",hBrowse,"calcfieldproc","brwcalc_drillkon.p,eiendomrapp_brwcalc.p").*/
 /*DYNAMIC-FUNCTION("setTotalFields" IN hDataBrwWin,"fSaldo,avgift-pr-ar").                            */
 
 oDynDataBrowse:EnableSaveQuery = YES.
 //oDynDataBrowse:TotalFields = "fSaldo,avgift-pr-ar".
-//oDynDataBrowse:BROWSE-OBJECT:userSettingContext = THIS-PROCEDURE:FILE-NAME.
+oDynDataBrowse:BROWSE-OBJECT:userSettingContext = THIS-PROCEDURE:FILE-NAME.
 //oDynDataBrowse:BROWSE-OBJECT:calcFieldProc = "brwcalc_drillkon.p,eiendomrapp_brwcalc.p".
 oDynDataBrowse:InitializeQuery("npshtilbud"
               + ";!anleggsnr"
@@ -300,7 +300,7 @@ oDynDataBrowse:InitializeQuery("npshtilbud"
               + ";tilbudsdato|Tilbudt gitt"
               + ';+tilbudsdato_month|CHARACTER|x(6)|jb_month(tilbudsdato)|Mnd(tilbudsdato)'
               + ';+tilbudsdato_q|CHARACTER|x(6)|jb_quarter(tilbudsdato)|Kvt(tilbudsdato)'
-              + ';+tilbudsdato_year|CHARACTER|x(4)|jb_year(tilbudsdato)|År(tilbudsdato)'
+              + ';+tilbudsdato_year|CHARACTER|x(4)|jb_year(tilbudsdato)|ï¿½r(tilbudsdato)'
               + ";!id"
               + ";rabatt%"
               + ";pris"
@@ -364,7 +364,7 @@ oDynDataBrowse:InitializeQuery("npshtilbud"
 /*      + ";Avgift-pr-ar"                                                                                                        */
 /*      + ";FakturaMetode"                                                                                                       */
 /*      + ";KPIregulering|KPIregulering|Ja/Nei"                                                                                  */
-/*      + ";KPIregulering_lov|KPIregulering lovpålagt|Ja/Nei"                                                                    */
+/*      + ";KPIregulering_lov|KPIregulering lovpï¿½lagt|Ja/Nei"                                                                    */
 /*      + ";Festeareal"                                                                                                          */
 /*      + ";Antall-forfall"                                                                                                      */
 /*      + ";Forfall-dato|Neste forfall"                                                                                          */

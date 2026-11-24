@@ -723,7 +723,7 @@ IF hBuffer:AVAIL THEN
 DO ix = 1 TO NUM-ENTRIES(icFileNames,";"):
   FILE-INFO:FILE-NAME = ENTRY(ix,icFileNames,";").
  
-  IF FILE-INFO:FILE-TYPE BEGINS "DR" THEN DO:
+//  IF FILE-INFO:FILE-TYPE BEGINS "DR" THEN DO:
     bOk = hBuffer:FIND-FIRST("WHERE FileName = '" + FILE-INFO:FULL-PATHNAME + "'") NO-ERROR.
     IF NOT bOK THEN DO:
       hBuffer:BUFFER-CREATE().
@@ -735,7 +735,7 @@ DO ix = 1 TO NUM-ENTRIES(icFileNames,";"):
              .
     END.
     cCompList = cCompList + STRING(hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE) + ",".
-  END.
+//  END.
 END.
 
 DYNAMIC-FUNCTION("setCurrentObject",hQuery).

@@ -67,6 +67,7 @@ DEF VAR bErr              AS LOG    NO-UNDO.
 DEF VAR ix                AS INT    NO-UNDO.
 DEF VAR hPwdChange        AS HANDLE NO-UNDO.
 DEF VAR bPasswordChanged  AS LOG    NO-UNDO.
+DEF VAR bFirst            AS LOG NO-UNDO INIT YES.
 
 DEF VAR hSourceProcedure AS HANDLE NO-UNDO.
 DEFINE VARIABLE timer1 AS System.Windows.Forms.Timer NO-UNDO.
@@ -309,17 +310,22 @@ FUNCTION SetStartupProgress RETURNS LOGICAL (INPUT  iNum AS INT,input ipcText as
     DEF VAR Y AS INT NO-UNDO.
     DEF VAR iValue AS INT NO-UNDO. 
     
-    ultraProgressBar1:VISIBLE = TRUE. 
-    label1:Show().
-    label1:Enabled   = TRUE.
+    IF bFirst THEN DO:
+      ultraProgressBar1:VISIBLE = TRUE. 
+      label1:Show().
+      label1:Enabled   = TRUE.
+      hABLWindow:HIDDEN = false. 
+      PAUSE 0 NO-MESSAGE IN WINDOW hABLWindow. 
+    END.
+    bFirst = NO.  
     label1:text = FILL(" ",50) + ipcText.
     label1:Update().
 
-    hABLWindow:HIDDEN = false. 
-    PAUSE 0 NO-MESSAGE IN WINDOW hABLWindow. 
+/*    hABLWindow:HIDDEN = false.              */
+/*    PAUSE 0 NO-MESSAGE IN WINDOW hABLWindow.*/
     DO iValue = ultraProgressBar1:VALUE TO iNum WHILE ultraProgressBar1:VALUE LE 100:
         /*ultraProgressBar1:VALUE = iValue. */
-        PAUSE 0.01 NO-MESSAGE IN WINDOW hABLWindow. 
+        PAUSE 0.01 NO-MESSAGE. // IN WINDOW hABLWindow. 
         ultraProgressBar1:performstep(). 
     END.
         

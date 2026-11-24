@@ -1,0 +1,1542 @@
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8'>
+<title>Port type: EfakturaNetsSubmitterPortType</title>
+<link rel='stylesheet' href='prowsdldoc.css' type='text/css'/>
+<script type='text/javascript'>
+function expandDiv(divID)
+{ document.getElementById(divID).style.display = 'inline'; }
+
+function collapseDiv(divID)
+{ document.getElementById(divID).style.display = 'none'; }
+</script>
+</head>
+<body>
+<a name='Top'></a><p class='linkMenu'><a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+<h1>Port type (persistent procedure)</h1>
+
+<h2>EfakturaNetsSubmitterPortType</h2>
+
+<dl>
+  <dd>
+    <p><i>No documentation found in WSDL.</i></p>
+  </dd>
+</dl>
+<h2>Summary</h2>
+
+<dl>
+  <dd>
+    <h3>Connection information</h3>
+
+    <p>The following connection parameters must be specified to use the operations described below. See the <a href='#ConnectionDetails'>Connection Details</a> topic below.</p>
+
+    <div class='boxedText'>
+      <pre>-WSDL 'ikoWSDL.xml'
+-nohostverify
+</pre>
+    </div>
+
+    <h3>Operations (internal procedures)</h3>
+
+    <table border='1' cellpadding='3' cellspacing='0'>
+      <tbody>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#addInvoices'>addInvoices</a>:
+  DEFINE INPUT PARAMETER DATASET FOR AddInvoicesDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR AddInvoicesResponseDset.
+END PROCEDURE.</pre>
+        </td>
+        <td> Creates an invoice that is to be displayed in the online bank 5003 - One of efakturaReference,efakturaIdentifier or socialSecurityNumber is required </td>
+      </tr>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#cancelInvoice'>cancelInvoice</a>:
+  DEFINE INPUT PARAMETER DATASET FOR CancelInvoiceDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR CancelInvoiceResponseDset.
+END PROCEDURE.</pre>
+        </td>
+        <td>Cancel an invoice by an unique id </td>
+      </tr>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#getCancellableInvoice'>getCancellableInvoice</a>:
+  DEFINE INPUT PARAMETER DATASET FOR CancellableInvoiceSearchCritDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR CancellableInvoiceResponseDset.
+END PROCEDURE.</pre>
+        </td>
+        <td>Find cancellable invoice using mandatory and optional parameters </td>
+      </tr>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#getConsignmentStatus'>getConsignmentStatus</a>:
+  DEFINE INPUT PARAMETER DATASET FOR GetConsignmentStatusDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetConsignmentStatusResponseDset.
+END PROCEDURE.</pre>
+        </td>
+        <td>Get status on consignment</td>
+      </tr>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#getEfakturaIdentifiers'>getEfakturaIdentifiers</a>:
+  DEFINE INPUT PARAMETER DATASET FOR GetEfakturaIdentifiersDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetEfakturaIdentifiersResponDset.
+END PROCEDURE.</pre>
+        </td>
+        <td>Returns efakturaIdentifier and auto accept agreement if the receiver is found by efaktura identifier, personalnumber, organization number, phone, email, name, or address. </td>
+      </tr>
+      <tr>
+        <td>
+          <pre>PROCEDURE <a href='#getInvoiceStatus'>getInvoiceStatus</a>:
+  DEFINE INPUT PARAMETER DATASET FOR GetInvoiceStatusDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetInvoiceStatusResponseDset.
+END PROCEDURE.</pre>
+        </td>
+        <td>Gets an already created invoice </td>
+      </tr>
+      </tbody>
+    </table>
+  </dd>
+</dl>
+<h2><a name='ConnectionDetails'></a>Connection details</h2>
+
+<dl>
+  <dd>
+    <h3>Connection parameters</h3>
+
+    <div class='boxedText'>
+      <pre>-WSDL 'ikoWSDL.xml'
+<span class='bnf-markup'>[</span> -WSDLUserId <span class='exampleName'>user-id</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -WSDLPassword <span class='exampleName'>password</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span>
+  -Service EfakturaNetsSubmitterService
+  <span class='bnf-markup'>[</span> -ServiceNamespace https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -Port EfakturaNetsSubmittertPort<span class='bnf-markup'> ]</span>
+<span class='bnf-markup'>[</span> -SOAPEndpointUserId <span class='exampleName'>user-id</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -SOAPEndpointPassword <span class='exampleName'>password</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -TargetNamespace https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -MaxConnections <span class='exampleName'>max-connections</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -pf <span class='exampleName'>filename</span> <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -nohostverify <span class='bnf-markup'>]</span>
+<span class='bnf-markup'>[</span> -nosessionreuse <span class='bnf-markup'>]</span></pre>
+    </div>
+    <h4>-Service and -Port descriptions</h4>
+    <p>The following service name may be used for the -Service connection parameter.</p>
+    <table border='1' cellpadding='3' cellspacing='0'>
+      <thead><tr><th style='text-align: left'>Service</th><th style='text-align: left'>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><tt>EfakturaNetsSubmitterService</tt></td>
+          <td>
+            <p><i>No documentation found in WSDL.</i></p>
+            <p>The following port name may be used for the -Port connection parameter, when using the <tt>EfakturaNetsSubmitterService</tt> service.</p>
+                <table border='1' cellpadding='3' cellspacing='0'>
+                  <thead><tr><th>Port</th><th>Description</th></tr></thead>
+                  <tbody>
+                    <tr>
+                    <td><tt>EfakturaNetsSubmittertPort</tt></td>
+                    <td><i>No documentation found in WSDL.</i></td>
+                    </tr>
+                  </tbody>
+                </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Example</h3>
+
+    <p>This example shows the steps needed to prepare for calling one of the operations described below.</p>
+    <div class='boxedText'>
+      <pre>DEFINE VARIABLE hWebService AS HANDLE NO-UNDO.
+DEFINE VARIABLE hEfakturaNetsSubmitterPortType AS HANDLE NO-UNDO.
+
+
+CREATE SERVER hWebService.
+
+
+hWebService:CONNECT("-WSDL 'ikoWSDL.xml'
+                     -nohostverify").
+
+RUN EfakturaNetsSubmitterPortType SET hEfakturaNetsSubmitterPortType ON hWebService.</pre>
+    </div>
+  </dd>
+</dl>
+<h2>Operation (internal procedure) detail</h2>
+
+<dl>
+  <dd>
+<a name='addInvoices'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>addInvoices</h3>
+        <dl>
+          <dd>
+            <p> Creates an invoice that is to be displayed in the online bank 5003 - One of efakturaReference,efakturaIdentifier or socialSecurityNumber is required </p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE addInvoices:
+  DEFINE INPUT PARAMETER DATASET FOR AddInvoicesDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR AddInvoicesResponseDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE AddInvoices NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD serviceProvider AS CHARACTER 
+	FIELD consignmentId AS CHARACTER .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD AddInvoices_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoices NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD efhXml AS RAW 
+		EXTENT 1000 
+	FIELD AddInvoices_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoice NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD invoiceNumber AS CHARACTER 
+	FIELD efakturaIdentifier AS CHARACTER 
+	FIELD socialSecurityNumber AS CHARACTER 
+	FIELD efakturaReference AS CHARACTER 
+	FIELD issuer AS CHARACTER 
+	FIELD receiverEmail AS CHARACTER 
+	FIELD receiverPhone AS CHARACTER 
+	FIELD kid AS CHARACTER 
+	FIELD dueDate AS DATE 
+	FIELD amount AS DECIMAL 
+	FIELD minimumAmount AS DECIMAL 
+	FIELD accountNumber AS CHARACTER 
+	FIELD documentType AS CHARACTER 
+	FIELD invoiceDocumentType AS CHARACTER 
+	FIELD pdf AS RAW 
+	FIELD invoices_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE receiverName NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD firstName AS CHARACTER 
+	FIELD lastName AS CHARACTER 
+	FIELD invoice_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE receiverAddress NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD addressLine1 AS CHARACTER 
+	FIELD addressLine2 AS CHARACTER 
+	FIELD postalCode AS CHARACTER 
+	FIELD city AS CHARACTER 
+	FIELD countryCode AS CHARACTER 
+	FIELD invoice_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoiceSpecification NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD invoiceDate AS DATE 
+	FIELD paymentTerms AS CHARACTER 
+	FIELD invoiceDescription AS CHARACTER 
+	FIELD invoice_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE senderName NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD firstName AS CHARACTER 
+	FIELD lastName AS CHARACTER 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE senderAddress NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD addressLine1 AS CHARACTER 
+	FIELD addressLine2 AS CHARACTER 
+	FIELD postalCode AS CHARACTER 
+	FIELD city AS CHARACTER 
+	FIELD countryCode AS CHARACTER 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE customValues NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD key AS CHARACTER 
+	FIELD value1 AS CHARACTER 
+		XML-NODE-NAME "value" 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoiceTaxTotals NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD taxAmount AS DECIMAL 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE taxAmountPerCategory NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD taxPercent AS DECIMAL 
+	FIELD taxableAmount AS DECIMAL 
+	FIELD taxAmount AS DECIMAL 
+	FIELD invoiceTaxTotals_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoiceLines NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD invoiceSpecification_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoiceLine NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD itemName AS CHARACTER 
+	FIELD itemDescription AS CHARACTER 
+	FIELD invoicedQuantity AS DECIMAL 
+	FIELD lineAmount AS DECIMAL 
+	FIELD taxPercent AS DECIMAL 
+	FIELD taxAmount AS DECIMAL 
+	FIELD itemIdentification AS CHARACTER 
+	FIELD itemPrice AS DECIMAL 
+	FIELD invoiceLines_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET AddInvoicesDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR AddInvoices, auditInformation, invoices, invoice, receiverName, receiverAddress, invoiceSpecification, senderName, senderAddress, customValues, invoiceTaxTotals, taxAmountPerCategory, invoiceLines, invoiceLine
+	PARENT-ID-RELATION RELATION1 FOR AddInvoices, auditInformation
+		PARENT-ID-FIELD AddInvoices_id
+		PARENT-FIELDS-AFTER (serviceProvider,consignmentId)
+	PARENT-ID-RELATION RELATION2 FOR invoice, receiverName
+		PARENT-ID-FIELD invoice_id
+		PARENT-FIELDS-BEFORE (invoiceNumber,efakturaIdentifier,socialSecurityNumber,efakturaReference,issuer)
+	PARENT-ID-RELATION RELATION3 FOR invoice, receiverAddress
+		PARENT-ID-FIELD invoice_id
+		PARENT-FIELDS-AFTER (receiverEmail,receiverPhone,kid,dueDate,amount,minimumAmount,accountNumber,documentType,invoiceDocumentType,pdf)
+	PARENT-ID-RELATION RELATION4 FOR invoiceSpecification, receiverName
+		PARENT-ID-FIELD invoiceSpecification_id
+	PARENT-ID-RELATION RELATION5 FOR invoiceSpecification, receiverAddress
+		PARENT-ID-FIELD invoiceSpecification_id
+	PARENT-ID-RELATION RELATION6 FOR invoiceSpecification, senderName
+		PARENT-ID-FIELD invoiceSpecification_id
+	PARENT-ID-RELATION RELATION7 FOR invoiceSpecification, senderAddress
+		PARENT-ID-FIELD invoiceSpecification_id
+		PARENT-FIELDS-AFTER (invoiceDate,paymentTerms)
+	PARENT-ID-RELATION RELATION8 FOR invoiceSpecification, customValues
+		PARENT-ID-FIELD invoiceSpecification_id
+	PARENT-ID-RELATION RELATION9 FOR invoiceTaxTotals, taxAmountPerCategory
+		PARENT-ID-FIELD invoiceTaxTotals_id
+	PARENT-ID-RELATION RELATION10 FOR invoiceSpecification, invoiceTaxTotals
+		PARENT-ID-FIELD invoiceSpecification_id
+		PARENT-FIELDS-AFTER (invoiceDescription)
+	PARENT-ID-RELATION RELATION11 FOR invoiceLines, invoiceLine
+		PARENT-ID-FIELD invoiceLines_id
+	PARENT-ID-RELATION RELATION12 FOR invoiceSpecification, invoiceLines
+		PARENT-ID-FIELD invoiceSpecification_id
+	PARENT-ID-RELATION RELATION13 FOR invoice, invoiceSpecification
+		PARENT-ID-FIELD invoice_id
+	PARENT-ID-RELATION RELATION14 FOR invoices, invoice
+		PARENT-ID-FIELD invoices_id
+		PARENT-FIELDS-AFTER (efhXml)
+	PARENT-ID-RELATION RELATION15 FOR AddInvoices, invoices
+		PARENT-ID-FIELD AddInvoices_id.
+
+DEFINE TEMP-TABLE AddInvoicesResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD noOfInvoices AS INTEGER .
+
+DEFINE DATASET AddInvoicesResponseDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR AddInvoicesResponse.
+
+
+RUN addInvoices IN hEfakturaNetsSubmitterPortType(INPUT DATASET AddInvoicesDset, OUTPUT DATASET AddInvoicesResponseDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>AddInvoicesDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AAddInvoices_element'>AddInvoices</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_0")'>View example</a>.</p>
+          <div id='example_0' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_0")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:AddInvoices xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;serviceProvider><span class='exampleName'>string-value</span>&lt;/serviceProvider>
+  &lt;consignmentId><span class='exampleName'>string-value</span>&lt;/consignmentId>
+  &lt;invoices>
+    &lt;!-- <span class='xmlComment'>Only one of the following elements may be used.</span> -->
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;invoice>
+      &lt;invoiceNumber><span class='exampleName'>string-value</span>&lt;/invoiceNumber>
+      &lt;!-- <span class='xmlComment'>Only one of the following elements may be used.</span> -->
+      &lt;efakturaIdentifier><span class='exampleName'>string-value</span>&lt;/efakturaIdentifier>
+      &lt;socialSecurityNumber><span class='exampleName'>string-value</span>&lt;/socialSecurityNumber>
+      &lt;efakturaReference><span class='exampleName'>string-value</span>&lt;/efakturaReference>
+      &lt;issuer><span class='exampleName'>string-value</span>&lt;/issuer>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;receiverName>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;firstName><span class='exampleName'>string-value</span>&lt;/firstName>
+        &lt;lastName><span class='exampleName'>string-value</span>&lt;/lastName>
+      &lt;/receiverName>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;receiverAddress>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;addressLine1><span class='exampleName'>string-value</span>&lt;/addressLine1>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;addressLine2><span class='exampleName'>string-value</span>&lt;/addressLine2>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;postalCode><span class='exampleName'>string-value</span>&lt;/postalCode>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;city><span class='exampleName'>string-value</span>&lt;/city>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;countryCode><span class='exampleName'>string-value</span>&lt;/countryCode>
+      &lt;/receiverAddress>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;receiverEmail><span class='exampleName'>string-value</span>&lt;/receiverEmail>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;receiverPhone><span class='exampleName'>string-value</span>&lt;/receiverPhone>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;kid><span class='exampleName'>string-value</span>&lt;/kid>
+      &lt;dueDate><span class='exampleName'>date-value</span>&lt;/dueDate>
+      &lt;amount><span class='exampleName'>decimal-value</span>&lt;/amount>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;minimumAmount><span class='exampleName'>decimal-value</span>&lt;/minimumAmount>
+      &lt;accountNumber><span class='exampleName'>string-value</span>&lt;/accountNumber>
+      &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+          EFAKTURA
+          AVTALEGIRO</span> -->
+      &lt;documentType><span class='exampleName'>string-value</span>&lt;/documentType>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+          INVOICE
+          REMINDER
+          CREDIT_NOTE
+          COLLECTION_NOTICE
+          DUNNING
+          PAYMENT_REQUEST
+          ENFORCEMENT_WARNING</span> -->
+      &lt;invoiceDocumentType><span class='exampleName'>string-value</span>&lt;/invoiceDocumentType>
+      &lt;!-- <span class='xmlComment'>Only one of the following elements may be used.</span> -->
+      &lt;pdf><span class='exampleName'>base64Binary-value</span>&lt;/pdf>
+      &lt;invoiceSpecification>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;receiverName>
+          &lt;!-- <span class='xmlComment'>This element appears earlier in this example. See the previous appearance
+               of this element for the example of its contents.</span> -->
+        &lt;/receiverName>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;receiverAddress>
+          &lt;!-- <span class='xmlComment'>This element appears earlier in this example. See the previous appearance
+               of this element for the example of its contents.</span> -->
+        &lt;/receiverAddress>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;senderName>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;firstName><span class='exampleName'>string-value</span>&lt;/firstName>
+          &lt;lastName><span class='exampleName'>string-value</span>&lt;/lastName>
+        &lt;/senderName>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;senderAddress>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;addressLine1><span class='exampleName'>string-value</span>&lt;/addressLine1>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;addressLine2><span class='exampleName'>string-value</span>&lt;/addressLine2>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;postalCode><span class='exampleName'>string-value</span>&lt;/postalCode>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;city><span class='exampleName'>string-value</span>&lt;/city>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;countryCode><span class='exampleName'>string-value</span>&lt;/countryCode>
+        &lt;/senderAddress>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;invoiceDate><span class='exampleName'>date-value</span>&lt;/invoiceDate>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;paymentTerms><span class='exampleName'>string-value</span>&lt;/paymentTerms>
+        &lt;!--<span class='xmlComment'> The following element may occur 0 to 5 times. </span>-->
+        &lt;customValues>
+          &lt;key><span class='exampleName'>string-value</span>&lt;/key>
+          &lt;value><span class='exampleName'>string-value</span>&lt;/value>
+        &lt;/customValues>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;invoiceTaxTotals>
+          &lt;taxAmount><span class='exampleName'>decimal-value</span>&lt;/taxAmount>
+          &lt;!--<span class='xmlComment'> The following element may occur 1 or more times. </span>-->
+          &lt;taxAmountPerCategory>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;taxPercent><span class='exampleName'>decimal-value</span>&lt;/taxPercent>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;taxableAmount><span class='exampleName'>decimal-value</span>&lt;/taxableAmount>
+            &lt;taxAmount><span class='exampleName'>decimal-value</span>&lt;/taxAmount>
+          &lt;/taxAmountPerCategory>
+        &lt;/invoiceTaxTotals>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;invoiceDescription><span class='exampleName'>string-value</span>&lt;/invoiceDescription>
+        &lt;invoiceLines>
+          &lt;!--<span class='xmlComment'> The following element may occur 1 to 100 times. </span>-->
+          &lt;invoiceLine>
+            &lt;itemName><span class='exampleName'>string-value</span>&lt;/itemName>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;itemDescription><span class='exampleName'>string-value</span>&lt;/itemDescription>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;invoicedQuantity><span class='exampleName'>decimal-value</span>&lt;/invoicedQuantity>
+            &lt;lineAmount><span class='exampleName'>decimal-value</span>&lt;/lineAmount>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;taxPercent><span class='exampleName'>decimal-value</span>&lt;/taxPercent>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;taxAmount><span class='exampleName'>decimal-value</span>&lt;/taxAmount>
+            &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+            &lt;itemIdentification><span class='exampleName'>string-value</span>&lt;/itemIdentification>
+            &lt;itemPrice><span class='exampleName'>decimal-value</span>&lt;/itemPrice>
+          &lt;/invoiceLine>
+        &lt;/invoiceLines>
+      &lt;/invoiceSpecification>
+    &lt;/invoice>
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;efhXml><span class='exampleName'>base64Binary-value</span>&lt;/efhXml>
+  &lt;/invoices>
+&lt;/ns0:AddInvoices>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>AddInvoicesResponseDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AAddInvoicesResponse_element'>AddInvoicesResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_1")'>View example</a>.</p>
+          <div id='example_1' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_1")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:AddInvoicesResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;noOfInvoices><span class='exampleName'>int-value</span>&lt;/noOfInvoices>
+&lt;/ns0:AddInvoicesResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+<br /><hr />
+<dl>
+  <dd>
+<a name='cancelInvoice'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>cancelInvoice</h3>
+        <dl>
+          <dd>
+            <p>Cancel an invoice by an unique id </p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE cancelInvoice:
+  DEFINE INPUT PARAMETER DATASET FOR CancelInvoiceDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR CancelInvoiceResponseDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE CancelInvoice NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD invoiceId AS INT64 .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD CancelInvoice_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET CancelInvoiceDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR CancelInvoice, auditInformation
+	PARENT-ID-RELATION RELATION1 FOR CancelInvoice, auditInformation
+		PARENT-ID-FIELD CancelInvoice_id
+		PARENT-FIELDS-AFTER (invoiceId).
+
+DEFINE TEMP-TABLE CancelInvoiceResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD invoiceId AS INT64 .
+
+DEFINE DATASET CancelInvoiceResponseDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR CancelInvoiceResponse.
+
+
+RUN cancelInvoice IN hEfakturaNetsSubmitterPortType(INPUT DATASET CancelInvoiceDset, OUTPUT DATASET CancelInvoiceResponseDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>CancelInvoiceDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3ACancelInvoice_element'>CancelInvoice</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_2")'>View example</a>.</p>
+          <div id='example_2' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_2")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:CancelInvoice xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;invoiceId><span class='exampleName'>long-value</span>&lt;/invoiceId>
+&lt;/ns0:CancelInvoice>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>CancelInvoiceResponseDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3ACancelInvoiceResponse_element'>CancelInvoiceResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_3")'>View example</a>.</p>
+          <div id='example_3' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_3")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:CancelInvoiceResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;invoiceId><span class='exampleName'>long-value</span>&lt;/invoiceId>
+&lt;/ns0:CancelInvoiceResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+<br /><hr />
+<dl>
+  <dd>
+<a name='getCancellableInvoice'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>getCancellableInvoice</h3>
+        <dl>
+          <dd>
+            <p>Find cancellable invoice using mandatory and optional parameters </p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE getCancellableInvoice:
+  DEFINE INPUT PARAMETER DATASET FOR CancellableInvoiceSearchCritDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR CancellableInvoiceResponseDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE CancellableInvoiceSearchCriteria NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD issuer AS CHARACTER 
+	FIELD kid AS CHARACTER 
+	FIELD dueDate AS DATE 
+	FIELD amount AS DECIMAL 
+	FIELD minimumAmount AS DECIMAL 
+	FIELD accountNumber AS CHARACTER 
+	FIELD documentType AS CHARACTER .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD CancellableInvoiceSearchCrite_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET CancellableInvoiceSearchCritDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR CancellableInvoiceSearchCriteria, auditInformation
+	PARENT-ID-RELATION RELATION1 FOR CancellableInvoiceSearchCriteria, auditInformation
+		PARENT-ID-FIELD CancellableInvoiceSearchCrite_id
+		PARENT-FIELDS-AFTER (issuer,kid,dueDate,amount,minimumAmount,accountNumber,documentType).
+
+DEFINE TEMP-TABLE CancellableInvoiceResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD invoiceId AS INT64 .
+
+DEFINE DATASET CancellableInvoiceResponseDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR CancellableInvoiceResponse.
+
+
+RUN getCancellableInvoice IN hEfakturaNetsSubmitterPortType(INPUT DATASET CancellableInvoiceSearchCritDset, OUTPUT DATASET CancellableInvoiceResponseDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>CancellableInvoiceSearchCritDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3ACancellableInvoiceSearchCriteria_element'>CancellableInvoiceSearchCriteria</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_4")'>View example</a>.</p>
+          <div id='example_4' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_4")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:CancellableInvoiceSearchCriteria xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;issuer><span class='exampleName'>string-value</span>&lt;/issuer>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;kid><span class='exampleName'>string-value</span>&lt;/kid>
+  &lt;dueDate><span class='exampleName'>date-value</span>&lt;/dueDate>
+  &lt;amount><span class='exampleName'>decimal-value</span>&lt;/amount>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;minimumAmount><span class='exampleName'>decimal-value</span>&lt;/minimumAmount>
+  &lt;accountNumber><span class='exampleName'>string-value</span>&lt;/accountNumber>
+  &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+      EFAKTURA
+      AVTALEGIRO</span> -->
+  &lt;documentType><span class='exampleName'>string-value</span>&lt;/documentType>
+&lt;/ns0:CancellableInvoiceSearchCriteria>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>CancellableInvoiceResponseDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3ACancellableInvoiceResponse_element'>CancellableInvoiceResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_5")'>View example</a>.</p>
+          <div id='example_5' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_5")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:CancellableInvoiceResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;invoiceId><span class='exampleName'>long-value</span>&lt;/invoiceId>
+&lt;/ns0:CancellableInvoiceResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+<br /><hr />
+<dl>
+  <dd>
+<a name='getConsignmentStatus'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>getConsignmentStatus</h3>
+        <dl>
+          <dd>
+            <p>Get status on consignment</p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE getConsignmentStatus:
+  DEFINE INPUT PARAMETER DATASET FOR GetConsignmentStatusDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetConsignmentStatusResponseDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE GetConsignmentStatus NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD serviceProvider AS CHARACTER 
+	FIELD consignmentId AS CHARACTER .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD GetConsignmentStatus_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetConsignmentStatusDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetConsignmentStatus, auditInformation
+	PARENT-ID-RELATION RELATION1 FOR GetConsignmentStatus, auditInformation
+		PARENT-ID-FIELD GetConsignmentStatus_id
+		PARENT-FIELDS-AFTER (serviceProvider,consignmentId).
+
+DEFINE TEMP-TABLE GetConsignmentStatusResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD status1 AS CHARACTER 
+		XML-NODE-NAME "status" 
+	FIELD rejectedReason AS CHARACTER 
+	FIELD acceptedInvoiceCount AS INT64 
+	FIELD rejectedInvoiceCount AS INT64 .
+
+DEFINE TEMP-TABLE rejectedInvoices NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD GetConsignmentStatusResponse_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE rejectedInvoice NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD invoiceNumber AS CHARACTER 
+	FIELD rejectedReason AS CHARACTER 
+	FIELD rejectedInvoices_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetConsignmentStatusResponseDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetConsignmentStatusResponse, rejectedInvoices, rejectedInvoice
+	PARENT-ID-RELATION RELATION1 FOR rejectedInvoices, rejectedInvoice
+		PARENT-ID-FIELD rejectedInvoices_id
+	PARENT-ID-RELATION RELATION2 FOR GetConsignmentStatusResponse, rejectedInvoices
+		PARENT-ID-FIELD GetConsignmentStatusResponse_id.
+
+
+RUN getConsignmentStatus IN hEfakturaNetsSubmitterPortType(INPUT DATASET GetConsignmentStatusDset, OUTPUT DATASET GetConsignmentStatusResponseDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>GetConsignmentStatusDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetConsignmentStatus_element'>GetConsignmentStatus</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_6")'>View example</a>.</p>
+          <div id='example_6' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_6")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetConsignmentStatus xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;serviceProvider><span class='exampleName'>string-value</span>&lt;/serviceProvider>
+  &lt;consignmentId><span class='exampleName'>string-value</span>&lt;/consignmentId>
+&lt;/ns0:GetConsignmentStatus>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>GetConsignmentStatusResponseDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetConsignmentStatusResponse_element'>GetConsignmentStatusResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_7")'>View example</a>.</p>
+          <div id='example_7' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_7")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetConsignmentStatusResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+      IN_PROGRESS
+      PROCESSED
+      REJECTED
+      STOPPED</span> -->
+  &lt;status><span class='exampleName'>string-value</span>&lt;/status>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;rejectedReason><span class='exampleName'>string-value</span>&lt;/rejectedReason>
+  &lt;acceptedInvoiceCount><span class='exampleName'>long-value</span>&lt;/acceptedInvoiceCount>
+  &lt;rejectedInvoiceCount><span class='exampleName'>long-value</span>&lt;/rejectedInvoiceCount>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;rejectedInvoices>
+    &lt;!--<span class='xmlComment'> The following element may occur 0 to 1000 times. </span>-->
+    &lt;rejectedInvoice>
+      &lt;invoiceNumber><span class='exampleName'>string-value</span>&lt;/invoiceNumber>
+      &lt;rejectedReason><span class='exampleName'>string-value</span>&lt;/rejectedReason>
+    &lt;/rejectedInvoice>
+  &lt;/rejectedInvoices>
+&lt;/ns0:GetConsignmentStatusResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+<br /><hr />
+<dl>
+  <dd>
+<a name='getEfakturaIdentifiers'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>getEfakturaIdentifiers</h3>
+        <dl>
+          <dd>
+            <p>Returns efakturaIdentifier and auto accept agreement if the receiver is found by efaktura identifier, personalnumber, organization number, phone, email, name, or address. </p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE getEfakturaIdentifiers:
+  DEFINE INPUT PARAMETER DATASET FOR GetEfakturaIdentifiersDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetEfakturaIdentifiersResponDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE GetEfakturaIdentifiers NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD returnOnlyMatchingKeyParams AS LOGICAL .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD GetEfakturaIdentifiers_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE getEfakturaIdentifiersKey NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD GetEfakturaIdentifiers_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE efakturaIdentifierKey NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD id AS INT64 
+	FIELD efakturaIdentifier AS CHARACTER 
+	FIELD socialSecurityNumber AS CHARACTER 
+	FIELD organizationNumber AS CHARACTER 
+	FIELD telephoneAlias AS CHARACTER 
+	FIELD emailAlias AS CHARACTER 
+	FIELD invoiceIssuer AS CHARACTER 
+	FIELD dateOfBirth AS DATE 
+	FIELD getEfakturaIdentifiersKey_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE name NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD firstName AS CHARACTER 
+	FIELD lastName AS CHARACTER 
+	FIELD efakturaIdentifierKey_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE address NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD addressLine1 AS CHARACTER 
+	FIELD addressLine2 AS CHARACTER 
+	FIELD postalCode AS CHARACTER 
+	FIELD city AS CHARACTER 
+	FIELD countryCode AS CHARACTER 
+	FIELD efakturaIdentifierKey_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE eFakturaReferenceAndContentProvi NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "eFakturaReferenceAndContentProvider" 
+	FIELD eFakturaReference AS CHARACTER 
+	FIELD contentProviderId AS CHARACTER 
+	FIELD efakturaIdentifierKey_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetEfakturaIdentifiersDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetEfakturaIdentifiers, auditInformation, getEfakturaIdentifiersKey, efakturaIdentifierKey, name, address, eFakturaReferenceAndContentProvi
+	PARENT-ID-RELATION RELATION1 FOR efakturaIdentifierKey, name
+		PARENT-ID-FIELD efakturaIdentifierKey_id
+		PARENT-FIELDS-BEFORE (id,efakturaIdentifier,socialSecurityNumber,organizationNumber,telephoneAlias,emailAlias)
+	PARENT-ID-RELATION RELATION2 FOR efakturaIdentifierKey, address
+		PARENT-ID-FIELD efakturaIdentifierKey_id
+		PARENT-FIELDS-AFTER (invoiceIssuer,dateOfBirth)
+	PARENT-ID-RELATION RELATION3 FOR efakturaIdentifierKey, eFakturaReferenceAndContentProvi
+		PARENT-ID-FIELD efakturaIdentifierKey_id
+	PARENT-ID-RELATION RELATION4 FOR getEfakturaIdentifiersKey, efakturaIdentifierKey
+		PARENT-ID-FIELD getEfakturaIdentifiersKey_id
+	PARENT-ID-RELATION RELATION5 FOR GetEfakturaIdentifiers, auditInformation
+		PARENT-ID-FIELD GetEfakturaIdentifiers_id
+	PARENT-ID-RELATION RELATION6 FOR GetEfakturaIdentifiers, getEfakturaIdentifiersKey
+		PARENT-ID-FIELD GetEfakturaIdentifiers_id
+		PARENT-FIELDS-AFTER (returnOnlyMatchingKeyParams).
+
+DEFINE TEMP-TABLE GetEfakturaIdentifiersResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER .
+
+DEFINE TEMP-TABLE getEfakturaIdentifiersResponse2 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "getEfakturaIdentifiersResponse" 
+	FIELD GetEfakturaIdentifiersRespons_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE efakturaIdentifierResponse NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD responseResult AS CHARACTER 
+	FIELD hasAutoAcceptAgreements AS LOGICAL 
+	FIELD efakturaIdentifier AS CHARACTER 
+	FIELD getEfakturaIdentifiersRespons_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE efakturaIdentifierKey1 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "efakturaIdentifierKey" 
+	FIELD id AS INT64 
+	FIELD efakturaIdentifier AS CHARACTER 
+	FIELD socialSecurityNumber AS CHARACTER 
+	FIELD organizationNumber AS CHARACTER 
+	FIELD telephoneAlias AS CHARACTER 
+	FIELD emailAlias AS CHARACTER 
+	FIELD invoiceIssuer AS CHARACTER 
+	FIELD dateOfBirth AS DATE 
+	FIELD efakturaIdentifierResponse_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE name1 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "name" 
+	FIELD firstName AS CHARACTER 
+	FIELD lastName AS CHARACTER 
+	FIELD efakturaIdentifierKey1_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE address1 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "address" 
+	FIELD addressLine1 AS CHARACTER 
+	FIELD addressLine2 AS CHARACTER 
+	FIELD postalCode AS CHARACTER 
+	FIELD city AS CHARACTER 
+	FIELD countryCode AS CHARACTER 
+	FIELD efakturaIdentifierKey1_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE eFakturaReferenceAndContentProv1 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "eFakturaReferenceAndContentProvider" 
+	FIELD eFakturaReference AS CHARACTER 
+	FIELD contentProviderId AS CHARACTER 
+	FIELD efakturaIdentifierKey1_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE issuerResponse NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD blockedByReceiver AS LOGICAL 
+	FIELD hasEfakturaAgreement AS LOGICAL 
+	FIELD efakturaIdentifierResponse_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE efakturaReferences NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD efakturaReferences_Text AS CHARACTER 
+		XML-NODE-TYPE "TEXT" 
+	FIELD issuerResponse_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetEfakturaIdentifiersResponDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetEfakturaIdentifiersResponse, getEfakturaIdentifiersResponse2, efakturaIdentifierResponse, efakturaIdentifierKey1, name1, address1, eFakturaReferenceAndContentProv1, issuerResponse, efakturaReferences
+	PARENT-ID-RELATION RELATION1 FOR efakturaIdentifierKey1, name1
+		PARENT-ID-FIELD efakturaIdentifierKey1_id
+		PARENT-FIELDS-BEFORE (id,efakturaIdentifier,socialSecurityNumber,organizationNumber,telephoneAlias,emailAlias)
+	PARENT-ID-RELATION RELATION2 FOR efakturaIdentifierKey1, address1
+		PARENT-ID-FIELD efakturaIdentifierKey1_id
+		PARENT-FIELDS-AFTER (invoiceIssuer,dateOfBirth)
+	PARENT-ID-RELATION RELATION3 FOR efakturaIdentifierKey1, eFakturaReferenceAndContentProv1
+		PARENT-ID-FIELD efakturaIdentifierKey1_id
+	PARENT-ID-RELATION RELATION4 FOR efakturaIdentifierResponse, efakturaIdentifierKey1
+		PARENT-ID-FIELD efakturaIdentifierResponse_id
+	PARENT-ID-RELATION RELATION5 FOR issuerResponse, efakturaReferences
+		PARENT-ID-FIELD issuerResponse_id
+	PARENT-ID-RELATION RELATION6 FOR efakturaIdentifierResponse, issuerResponse
+		PARENT-ID-FIELD efakturaIdentifierResponse_id
+	PARENT-ID-RELATION RELATION7 FOR getEfakturaIdentifiersResponse2, efakturaIdentifierResponse
+		PARENT-ID-FIELD getEfakturaIdentifiersRespons_id
+	PARENT-ID-RELATION RELATION8 FOR GetEfakturaIdentifiersResponse, getEfakturaIdentifiersResponse2
+		PARENT-ID-FIELD GetEfakturaIdentifiersRespons_id.
+
+
+RUN getEfakturaIdentifiers IN hEfakturaNetsSubmitterPortType(INPUT DATASET GetEfakturaIdentifiersDset, OUTPUT DATASET GetEfakturaIdentifiersResponDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>GetEfakturaIdentifiersDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetEfakturaIdentifiers_element'>GetEfakturaIdentifiers</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_8")'>View example</a>.</p>
+          <div id='example_8' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_8")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetEfakturaIdentifiers xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;getEfakturaIdentifiersKey>
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;efakturaIdentifierKey>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;id><span class='exampleName'>long-value</span>&lt;/id>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;efakturaIdentifier><span class='exampleName'>string-value</span>&lt;/efakturaIdentifier>
+      &lt;!--<span class='xmlComment'> The following section is optional. </span>-->
+        &lt;!-- <span class='xmlComment'>Only one of the following elements may be used.</span> -->
+        &lt;socialSecurityNumber><span class='exampleName'>string-value</span>&lt;/socialSecurityNumber>
+        &lt;organizationNumber><span class='exampleName'>string-value</span>&lt;/organizationNumber>
+      &lt;!-- <span class='xmlComment'>End of optional section.</span> -->
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;telephoneAlias><span class='exampleName'>string-value</span>&lt;/telephoneAlias>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;emailAlias><span class='exampleName'>string-value</span>&lt;/emailAlias>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;name>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;firstName><span class='exampleName'>string-value</span>&lt;/firstName>
+        &lt;lastName><span class='exampleName'>string-value</span>&lt;/lastName>
+      &lt;/name>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;address>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;addressLine1><span class='exampleName'>string-value</span>&lt;/addressLine1>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;addressLine2><span class='exampleName'>string-value</span>&lt;/addressLine2>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;postalCode><span class='exampleName'>string-value</span>&lt;/postalCode>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;city><span class='exampleName'>string-value</span>&lt;/city>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;countryCode><span class='exampleName'>string-value</span>&lt;/countryCode>
+      &lt;/address>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;invoiceIssuer><span class='exampleName'>string-value</span>&lt;/invoiceIssuer>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;dateOfBirth><span class='exampleName'>date-value</span>&lt;/dateOfBirth>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;eFakturaReferenceAndContentProvider>
+        &lt;eFakturaReference><span class='exampleName'>string-value</span>&lt;/eFakturaReference>
+        &lt;contentProviderId><span class='exampleName'>string-value</span>&lt;/contentProviderId>
+      &lt;/eFakturaReferenceAndContentProvider>
+    &lt;/efakturaIdentifierKey>
+  &lt;/getEfakturaIdentifiersKey>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;returnOnlyMatchingKeyParams><span class='exampleName'>boolean-value</span>&lt;/returnOnlyMatchingKeyParams>
+&lt;/ns0:GetEfakturaIdentifiers>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>GetEfakturaIdentifiersResponDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetEfakturaIdentifiersResponse_element'>GetEfakturaIdentifiersResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_9")'>View example</a>.</p>
+          <div id='example_9' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_9")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetEfakturaIdentifiersResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;getEfakturaIdentifiersResponse>
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;efakturaIdentifierResponse>
+      &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+          UNIQUE_RECEIVER_FOUND
+          RECEIVER_NOT_FOUND
+          LOOKUP_KEY_MISSING_DATA
+          MULTIPLE_RECEIVERS</span> -->
+      &lt;responseResult><span class='exampleName'>string-value</span>&lt;/responseResult>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;hasAutoAcceptAgreements><span class='exampleName'>boolean-value</span>&lt;/hasAutoAcceptAgreements>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;efakturaIdentifier><span class='exampleName'>string-value</span>&lt;/efakturaIdentifier>
+      &lt;efakturaIdentifierKey>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;id><span class='exampleName'>long-value</span>&lt;/id>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;efakturaIdentifier><span class='exampleName'>string-value</span>&lt;/efakturaIdentifier>
+        &lt;!--<span class='xmlComment'> The following section is optional. </span>-->
+          &lt;!-- <span class='xmlComment'>Only one of the following elements may be used.</span> -->
+          &lt;socialSecurityNumber><span class='exampleName'>string-value</span>&lt;/socialSecurityNumber>
+          &lt;organizationNumber><span class='exampleName'>string-value</span>&lt;/organizationNumber>
+        &lt;!-- <span class='xmlComment'>End of optional section.</span> -->
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;telephoneAlias><span class='exampleName'>string-value</span>&lt;/telephoneAlias>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;emailAlias><span class='exampleName'>string-value</span>&lt;/emailAlias>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;name>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;firstName><span class='exampleName'>string-value</span>&lt;/firstName>
+          &lt;lastName><span class='exampleName'>string-value</span>&lt;/lastName>
+        &lt;/name>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;address>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;addressLine1><span class='exampleName'>string-value</span>&lt;/addressLine1>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;addressLine2><span class='exampleName'>string-value</span>&lt;/addressLine2>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;postalCode><span class='exampleName'>string-value</span>&lt;/postalCode>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;city><span class='exampleName'>string-value</span>&lt;/city>
+          &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+          &lt;countryCode><span class='exampleName'>string-value</span>&lt;/countryCode>
+        &lt;/address>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;invoiceIssuer><span class='exampleName'>string-value</span>&lt;/invoiceIssuer>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;dateOfBirth><span class='exampleName'>date-value</span>&lt;/dateOfBirth>
+        &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+        &lt;eFakturaReferenceAndContentProvider>
+          &lt;eFakturaReference><span class='exampleName'>string-value</span>&lt;/eFakturaReference>
+          &lt;contentProviderId><span class='exampleName'>string-value</span>&lt;/contentProviderId>
+        &lt;/eFakturaReferenceAndContentProvider>
+      &lt;/efakturaIdentifierKey>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;issuerResponse>
+        &lt;blockedByReceiver><span class='exampleName'>boolean-value</span>&lt;/blockedByReceiver>
+        &lt;hasEfakturaAgreement><span class='exampleName'>boolean-value</span>&lt;/hasEfakturaAgreement>
+        &lt;!--<span class='xmlComment'> The following element may occur 0 or more times. </span>-->
+        &lt;efakturaReferences><span class='exampleName'>string-value</span>&lt;/efakturaReferences>
+      &lt;/issuerResponse>
+    &lt;/efakturaIdentifierResponse>
+  &lt;/getEfakturaIdentifiersResponse>
+&lt;/ns0:GetEfakturaIdentifiersResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+<br /><hr />
+<dl>
+  <dd>
+<a name='getInvoiceStatus'></a><p class='linkMenu'><a href='#top'>Top</a> | <a href='service_https___efaktura_services_nets_no_invoicing_nets_submitter_v1__EfakturaNetsSubmitterService.html'>Service</a> | <a href='DataTypes.html'>Data types</a> | <a href='OperationIndex.html'>Operation index</a></p>
+        <h3>getInvoiceStatus</h3>
+        <dl>
+          <dd>
+            <p>Gets an already created invoice </p>
+            <h4>Procedure prototype</h4>
+            <div class='boxedText'>
+          <pre>PROCEDURE getInvoiceStatus:
+  DEFINE INPUT PARAMETER DATASET FOR GetInvoiceStatusDset.
+  DEFINE OUTPUT PARAMETER DATASET FOR GetInvoiceStatusResponseDset.
+END PROCEDURE.</pre>
+          </div>
+        <h4>Example</h4>
+        <div class='boxedText'>
+          <pre>
+DEFINE TEMP-TABLE GetInvoiceStatus NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD serviceProvider AS CHARACTER .
+
+DEFINE TEMP-TABLE auditInformation NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD messageIdentifier AS CHARACTER 
+	FIELD GetInvoiceStatus_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE getInvoiceStatuses NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD showDistributed AS LOGICAL 
+	FIELD GetInvoiceStatus_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE getInvoiceStatus2 NO-UNDO
+	NAMESPACE-URI "" 
+	XML-NODE-NAME "getInvoiceStatus" 
+	FIELD issuer AS CHARACTER 
+	FIELD invoiceNumber AS CHARACTER 
+	FIELD getInvoiceStatuses_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetInvoiceStatusDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetInvoiceStatus, auditInformation, getInvoiceStatuses, getInvoiceStatus2
+	PARENT-ID-RELATION RELATION1 FOR GetInvoiceStatus, auditInformation
+		PARENT-ID-FIELD GetInvoiceStatus_id
+		PARENT-FIELDS-AFTER (serviceProvider)
+	PARENT-ID-RELATION RELATION2 FOR getInvoiceStatuses, getInvoiceStatus2
+		PARENT-ID-FIELD getInvoiceStatuses_id
+	PARENT-ID-RELATION RELATION3 FOR GetInvoiceStatus, getInvoiceStatuses
+		PARENT-ID-FIELD GetInvoiceStatus_id.
+
+DEFINE TEMP-TABLE GetInvoiceStatusResponse NO-UNDO
+	NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	FIELD messageIdentifier AS CHARACTER .
+
+DEFINE TEMP-TABLE invoiceStatusResponses NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD GetInvoiceStatusResponse_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE invoiceStatusResponse NO-UNDO
+	NAMESPACE-URI "" 
+	FIELD issuer AS CHARACTER 
+	FIELD invoiceNumber AS CHARACTER 
+	FIELD status1 AS CHARACTER 
+		XML-NODE-NAME "status" 
+	FIELD rejectReason AS CHARACTER 
+	FIELD distributed AS CHARACTER 
+	FIELD invoiceStatusResponses_id AS RECID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET GetInvoiceStatusResponseDset NAMESPACE-URI "https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" 
+	XML-NODE-TYPE "HIDDEN" 
+	FOR GetInvoiceStatusResponse, invoiceStatusResponses, invoiceStatusResponse
+	PARENT-ID-RELATION RELATION1 FOR invoiceStatusResponses, invoiceStatusResponse
+		PARENT-ID-FIELD invoiceStatusResponses_id
+	PARENT-ID-RELATION RELATION2 FOR GetInvoiceStatusResponse, invoiceStatusResponses
+		PARENT-ID-FIELD GetInvoiceStatusResponse_id.
+
+
+RUN getInvoiceStatus IN hEfakturaNetsSubmitterPortType(INPUT DATASET GetInvoiceStatusDset, OUTPUT DATASET GetInvoiceStatusResponseDset).
+</pre>
+        </div>
+        <h4>Parameters</h4>
+        <dl>
+          <dt><p><tt>GetInvoiceStatusDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetInvoiceStatus_element'>GetInvoiceStatus</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_10")'>View example</a>.</p>
+          <div id='example_10' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_10")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetInvoiceStatus xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;auditInformation>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/auditInformation>
+  &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+  &lt;serviceProvider><span class='exampleName'>string-value</span>&lt;/serviceProvider>
+  &lt;getInvoiceStatuses>
+    &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+    &lt;showDistributed><span class='exampleName'>boolean-value</span>&lt;/showDistributed>
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;getInvoiceStatus>
+      &lt;issuer><span class='exampleName'>string-value</span>&lt;/issuer>
+      &lt;invoiceNumber><span class='exampleName'>string-value</span>&lt;/invoiceNumber>
+    &lt;/getInvoiceStatus>
+  &lt;/getInvoiceStatuses>
+&lt;/ns0:GetInvoiceStatus>
+          </pre>
+        </div>
+          </div>
+        </dd>
+          <dt><p><tt>GetInvoiceStatusResponseDset</tt></p></dt>
+          <dd>
+<p>This value is defined as a DATASET.</p>
+          <p>This value can also be expressed as a <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AGetInvoiceStatusResponse_element'>GetInvoiceStatusResponse</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace. <a href='javascript:expandDiv("example_11")'>View example</a>.</p>
+          <div id='example_11' style='display: none;'>
+        <h4>Example <span style='font-weight: normal'>(<a href='javascript:collapseDiv("example_11")'>hide</a>)</span></h4>
+        <div class='boxedText'>
+          <pre>
+&lt;ns0:GetInvoiceStatusResponse xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+  &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;invoiceStatusResponses>
+    &lt;!--<span class='xmlComment'> The following element may occur 1 to 1000 times. </span>-->
+    &lt;invoiceStatusResponse>
+      &lt;issuer><span class='exampleName'>string-value</span>&lt;/issuer>
+      &lt;invoiceNumber><span class='exampleName'>string-value</span>&lt;/invoiceNumber>
+      &lt;!-- <span class='xmlComment'>This element must contain one of the following values:
+          PROCESSED
+          REJECTED
+          IN_PROGRESS
+          DUPLICATE
+          NOT_FOUND
+          CANCELLED</span> -->
+      &lt;status><span class='exampleName'>string-value</span>&lt;/status>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;rejectReason><span class='exampleName'>string-value</span>&lt;/rejectReason>
+      &lt;!--<span class='xmlComment'> The following element is optional. </span>-->
+      &lt;distributed><span class='exampleName'>string-value</span>&lt;/distributed>
+    &lt;/invoiceStatusResponse>
+  &lt;/invoiceStatusResponses>
+&lt;/ns0:GetInvoiceStatusResponse>
+          </pre>
+        </div>
+          </div>
+        </dd>
+        </dl>
+        <h4>Fault details</h4>
+        <p>The following XML fragments may be sent or received in the SOAP fault detail element. These fragments are accessible through the SOAP Fault handle.</p>
+        <ul>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AValidationFault_element'>ValidationFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ValidationFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;errorCode><span class='exampleName'>int-value</span>&lt;/errorCode>
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ValidationFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+            <li>
+                <p>A fault defined as an <a href='DataTypes.html#https%3A%2F%2Fefaktura-services.nets.no%2Finvoicing-nets-submitter%2Fv1%2F%3AServerFault_element'>ServerFault</a> element in the https://efaktura-services.nets.no/invoicing-nets-submitter/v1/ namespace.</p>
+        <h4>Example</h4>
+        <p>Construct the value as shown in the following example.</p>        <br />
+        <div class='boxedText'>
+          <pre>
+&lt;soap:detail xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+  &lt;ns0:ServerFault xmlns:ns0="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+    &lt;messageIdentifier><span class='exampleName'>string-value</span>&lt;/messageIdentifier>
+  &lt;/ns0:ServerFault>
+&lt;/soap:detail>
+          </pre>
+        </div>
+        </ul>
+  </dd>
+</dl>
+  </dd>
+</dl>
+</body>
+</html>

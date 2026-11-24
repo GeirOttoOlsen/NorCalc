@@ -10,24 +10,42 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 DEF VAR iNext AS INT NO-UNDO.
 DEF VAR hBuffUserMenu AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
+DEF VAR hbJBoxMenu           AS HANDLE NO-UNDO.
+DEF VAR hbJBoxMenuToMenu     AS HANDLE NO-UNDO.
+DEF VAR bFound               AS LOG    NO-UNDO.
+DEF VAR hqMenuToMenu         AS HANDLE NO-UNDO.
+DEF VAR iSeqDbNum            AS INT NO-UNDO.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenu",OUTPUT hbJBoxMenu) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenuToMenu",OUTPUT hbJBoxMenuToMenu) THEN RETURN.
+
+iSeqDbNum = JBoxServerSide:Instance:getSequenceDbNum("seqJboxMenuId").
+IF iSeqDbNum = 0 THEN RETURN.
+
 CREATE BUFFER hBuffUserMenu FOR TABLE "JBoxUserMenu" NO-ERROR.
 
-FIND LAST JBoxMenu NO-LOCK NO-ERROR.
-IF AVAIL JBoxMenu THEN DO:
-  IF JBoxMenu.iJBoxMenuId > CURRENT-VALUE(seqJBoxMenuId) THEN
-    CURRENT-VALUE(seqJBoxMenuId) = JBoxMenu.iJBoxMenuId.
+bFound = hbJBoxMenu:FIND-LAST ("WHERE iJBoxMenuId > -1",NO-LOCK) NO-ERROR.
+IF bFound THEN DO:
+  IF hbJBoxMenu::iJBoxMenuId > DYNAMIC-CURRENT-VALUE("seqJBoxMenuId",LDBNAME(iSeqDbNum)) THEN
+    DYNAMIC-CURRENT-VALUE("seqJBoxMenuId",LDBNAME(iSeqDbNum)) = hbJBoxMenu::iJBoxMenuId.
 
-  FIND FIRST JBoxMenu WHERE JBoxMenu.iJBoxMenuId = 0 NO-ERROR.
-  IF AVAIL JBoxMenu THEN DO:
-    iNext = NEXT-VALUE(seqJboxMenuId).
-    JBoxMenu.iJBoxMenuId = iNext.
-    FOR EACH JBoxMenuToMenu
-        WHERE JBoxMenuToMenu.iFromMenuId = 0:
-      JBoxMenuToMenu.iFromMenuId = iNext.
+  bFound = hbJBoxMenu:FIND-FIRST("WHERE JBoxMenu.iJBoxMenuId = 0",NO-LOCK) NO-ERROR.
+  IF bFound THEN DO:
+    iNext = DYNAMIC-NEXT-VALUE("seqJboxMenuId",LDBNAME(iSeqDbNum)).
+    hbJBoxMenu::iJBoxMenuId = iNext.
+    CREATE QUERY hqMenuToMenu.
+    hqMenuToMenu:SET-BUFFERS (hbJBoxMenuToMenu).
+    hqMenuToMenu:QUERY-PREPARE("FOR EACH JBoxMenuToMenu EXCLUSIVE-LOCK WHERE JBoxMenuToMenu.iFromMenuId = 0").
+    hqMenuToMenu:QUERY-OPEN ().
+    REPEAT WHILE hqMenuToMenu:GET-NEXT ():
+      hbJBoxMenuToMenu::iFromMenuId = iNext.
     END.
-    FOR EACH JBoxMenuToMenu
-        WHERE JBoxMenuToMenu.iToMenuId = 0:
-      JBoxMenuToMenu.iToMenuId = iNext.
+    hqMenuToMenu:QUERY-PREPARE("FOR EACH JBoxMenuToMenu EXCLUSIVE-LOCK WHERE JBoxMenuToMenu.iToMenuId = 0").
+    hqMenuToMenu:QUERY-OPEN ().
+    REPEAT WHILE hqMenuToMenu:GET-NEXT ():
+      hbJBoxMenuToMenu::iToMenuId = iNext.
     END.
   END.
 END.

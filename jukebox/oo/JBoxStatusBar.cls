@@ -19,13 +19,13 @@ USING Progress.Lang.*.
 
 CLASS JBoxStatusBar:
   DEF VAR hSourceProc AS HANDLE NO-UNDO.
-  DEF VAR hHelpText          AS HANDLE NO-UNDO.
-  DEF VAR hRecordCountText   AS HANDLE NO-UNDO.
-  DEF VAR hRecordSelectText  AS HANDLE NO-UNDO.
-  DEF VAR hStatusText2       AS HANDLE NO-UNDO.
-  DEF VAR hStatusText3       AS HANDLE NO-UNDO.
-  DEF VAR hStatusText4       AS HANDLE NO-UNDO.
-  DEF VAR hStatusText5       AS HANDLE NO-UNDO.
+  DEF PUBLIC PROPERTY hHelpText          AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hRecordCountText   AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hRecordSelectText  AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hStatusText2       AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hStatusText3       AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hStatusText4       AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY hStatusText5       AS HANDLE NO-UNDO GET. PROTECTED SET.
   
   DEF PUBLIC PROPERTY HelpText  AS CHAR 
       GET(): RETURN hHelpText:SCREEN-VALUE. 
@@ -91,7 +91,7 @@ CLASS JBoxStatusBar:
       END SET.
 
   CONSTRUCTOR PUBLIC JBoxStatusBar ():
-      SUPER ().
+    SUPER ().
 
     IF PROVERSION < "11" THEN hSourceProc = DYNAMIC-FUNCTION ("getProcedureHandle",PROGRAM-NAME(2)).
     ELSE hSourceProc = SOURCE-PROCEDURE.
@@ -101,7 +101,7 @@ CLASS JBoxStatusBar:
   END CONSTRUCTOR.
 
   CONSTRUCTOR PUBLIC JBoxStatusBar (ihSourceProc AS HANDLE):
-      SUPER ().
+    SUPER ().
 
     hSourceProc = ihSourceProc.
     
@@ -133,7 +133,6 @@ CLASS JBoxStatusBar:
                                          ,iiNumFields      AS INTEGER
                                          ,ibTopLine        AS LOGICAL
                                          ,iiFont           AS INT):
-           
     DYNAMIC-FUNCTION("CreateStatusBar",hSourceProc:CURRENT-WINDOW,icFieldPixelList,iiNumFields,ibTopLine,iiFont).
     
     hHelpText = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hSourceProc:CURRENT-WINDOW,"HelpTextWidget")).
@@ -143,7 +142,7 @@ CLASS JBoxStatusBar:
     hStatusText3 = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hSourceProc:CURRENT-WINDOW,"statusBarTextFillIn3")) NO-ERROR.
     hStatusText4 = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hSourceProc:CURRENT-WINDOW,"statusBarTextFillIn4")) NO-ERROR.
     hStatusText5 = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hSourceProc:CURRENT-WINDOW,"statusBarTextFillIn5")) NO-ERROR.
-    
+
   END METHOD.                                       
 
 END CLASS.

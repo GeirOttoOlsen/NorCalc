@@ -52,6 +52,7 @@ DEF VAR bUserMenuInst      AS LOG    NO-UNDO.
 DEF VAR hPrintPreview      AS HANDLE NO-UNDO.
 DEF VAR bWriteAccessComp   AS LOG    NO-UNDO.
 DEF VAR bWriteAccessUser   AS LOG    NO-UNDO.
+DEF VAR oContainer         AS JBoxContainer NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -271,7 +272,7 @@ DEFINE VARIABLE cMenuType AS CHARACTER FORMAT "x(12)"
      VIEW-AS FILL-IN 
      SIZE 14.6 BY 1.
 
-DEFINE VARIABLE cParameter AS CHARACTER FORMAT "x(60)" 
+DEFINE VARIABLE cParameter AS CHARACTER FORMAT "x(256)" 
      LABEL "Parameter" 
      VIEW-AS FILL-IN 
      SIZE 56 BY 1.
@@ -286,22 +287,22 @@ DEFINE VARIABLE cStateImage AS CHARACTER FORMAT "x(30)"
      VIEW-AS FILL-IN 
      SIZE 32 BY 1 DROP-TARGET.
 
-DEFINE VARIABLE fiCompanyLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Company links:" 
+DEFINE VARIABLE fiCompanyLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Limit to companies:" 
       VIEW-AS TEXT 
-     SIZE 14.8 BY .62 NO-UNDO.
+     SIZE 19 BY .62 NO-UNDO.
 
-DEFINE VARIABLE fiModuleLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Module links:" 
+DEFINE VARIABLE fiModuleLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Limit to modules:" 
       VIEW-AS TEXT 
-     SIZE 13 BY .62 NO-UNDO.
+     SIZE 19 BY .62 NO-UNDO.
 
 DEFINE VARIABLE fiNodeIndex AS CHARACTER FORMAT "X(256)":U 
      LABEL "Idx" 
      VIEW-AS FILL-IN 
      SIZE 8 BY 1 NO-UNDO.
 
-DEFINE VARIABLE fiUserLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Group/User links:" 
+DEFINE VARIABLE fiUserLinksLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Limit to Groups/Users:" 
       VIEW-AS TEXT 
-     SIZE 16.8 BY .62 NO-UNDO.
+     SIZE 21 BY .62 NO-UNDO.
 
 DEFINE VARIABLE iImageSize AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
      LABEL "Size" 
@@ -482,16 +483,22 @@ ASSIGN
        CompanyLinks:RESIZABLE IN FRAME DEFAULT-FRAME        = TRUE.
 
 ASSIGN 
-       fiCompanyLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+       fiCompanyLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE
+       fiCompanyLinksLabel:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
+                "Limit to companies:".
 
 ASSIGN 
-       fiModuleLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+       fiModuleLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE
+       fiModuleLinksLabel:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
+                "Limit to modules:".
 
 ASSIGN 
        fiNodeIndex:READ-ONLY IN FRAME DEFAULT-FRAME        = TRUE.
 
 ASSIGN 
-       fiUserLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE.
+       fiUserLinksLabel:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE
+       fiUserLinksLabel:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
+                "Limit to Groups/Users:".
 
 ASSIGN 
        ModuleLinks:HIDDEN IN FRAME DEFAULT-FRAME           = TRUE
@@ -1092,6 +1099,8 @@ DEF VAR hLogExec        AS HANDLE NO-UNDO.
 
 RUN enable_UI.
 
+oContainer = NEW JBoxContainer().
+
 DO WITH FRAME {&FRAME-NAME}:
 
   DYNAMIC-FUNCTION("NewObject",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE,"procedure").
@@ -1171,7 +1180,7 @@ DO WITH FRAME {&FRAME-NAME}:
   hToolbar = DYNAMIC-FUNCTION("NewToolbar",
                              tbMenu:HANDLE,
                              "",
-                             "delete,undo,save"
+                             "edit,delete,undo,save"
                            + (IF DYNAMIC-FUNCTION("getAttribute",SESSION,"RestrictedUnlessAllowed") = "yes" THEN
                                (IF bUserMenuInst THEN ",MenuGroupAccess;Allow for user groups" ELSE "")
                              + (IF bUserMenuInst THEN ",MenuUserAccess;Allow for users" ELSE "")
@@ -1190,6 +1199,7 @@ DO WITH FRAME {&FRAME-NAME}:
   DYNAMIC-FUNCTION("CreateObjectLink",hToolbar,hQuery).
   DYNAMIC-FUNCTION("CreateObjectLink",hToolbar,hFieldMap).
 
+  oContainer:initResize().
 END.
 END PROCEDURE.
 
@@ -1776,14 +1786,14 @@ DO ix = 1 TO NUM-ENTRIES(cMenuWidgetList):
       hWidget:SENSITIVE = NO.
     IF CAN-DO("cParameter,bMultiple,bLogExec",hWidget:NAME) THEN 
       hWidget:HIDDEN = NO.
-    IF hWidget:NAME = "bConfigurable" THEN
+    IF CAN-DO("bConfigurable,cLaunch",hWidget:NAME) THEN
       ASSIGN hWidget:HIDDEN = NO
              hWidget:SENSITIVE = YES.
   END.
 
 END.
 
-IF NOT cLaunch:SENSITIVE IN FRAME {&FRAME-NAME} THEN cLaunch:SCREEN-VALUE = ?.
+IF NOT cLaunch:SENSITIVE IN FRAME {&FRAME-NAME} THEN cLaunch:SCREEN-VALUE = "".
 IF NOT iTvNavBarStyle:SENSITIVE IN FRAME {&FRAME-NAME} THEN iTvNavBarStyle:SCREEN-VALUE = ?.
 
 DO WITH FRAME {&FRAME-NAME}:
@@ -1929,7 +1939,7 @@ FUNCTION ValidateProgram RETURNS LOGICAL
 ------------------------------------------------------------------------------*/
 IF icFileName = "" THEN RETURN NO.
 
-IF icFileName MATCHES "*.w" OR icFileName MATCHES "*.p"  THEN DO WITH FRAME {&FRAME-NAME}:
+IF icFileName MATCHES "*.w" OR icFileName MATCHES "*.p" OR icFileName MATCHES "*.r" THEN DO WITH FRAME {&FRAME-NAME}:
   ihTargetField:SCREEN-VALUE = ENTRY(NUM-ENTRIES(icFileName,"\"),icFileName,"\").
   IF SEARCH(ihTargetField:SCREEN-VALUE) = ? THEN DO ix = 1 TO 4:
     ihTargetField:SCREEN-VALUE = ENTRY(NUM-ENTRIES(icFileName,"\") - ix,icFileName,"\") + "\" + ihTargetField:SCREEN-VALUE.

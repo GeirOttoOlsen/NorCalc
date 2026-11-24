@@ -80,6 +80,8 @@ DEF TEMP-TABLE ttSelected
     FIELD cSelected AS CHAR
     .
 
+DEF VAR oBrowse                AS JBoxBrowse NO-UNDO.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -95,8 +97,7 @@ DEF TEMP-TABLE ttSelected
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rectBrowse rectSearchField tbUseLocal Btn_OK ~
-Btn_Cancel 
+&Scoped-Define ENABLED-OBJECTS rectBrowse tbUseLocal Btn_OK Btn_Cancel 
 &Scoped-Define DISPLAYED-OBJECTS tbUseLocal 
 
 /* Custom List Definitions                                              */
@@ -140,11 +141,7 @@ DEFINE BUTTON Btn_OK AUTO-GO
 
 DEFINE RECTANGLE rectBrowse
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 90 BY 15.05.
-
-DEFINE RECTANGLE rectSearchField
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 21 BY .95.
+     SIZE 90 BY 16.24.
 
 DEFINE VARIABLE tbUseLocal AS LOGICAL INITIAL no 
      LABEL "Behold utvalg ved sortering" 
@@ -158,9 +155,8 @@ DEFINE FRAME Dialog-Frame
      tbUseLocal AT ROW 1.33 COL 58
      Btn_OK AT ROW 17.76 COL 61
      Btn_Cancel AT ROW 17.76 COL 77
-     rectBrowse AT ROW 2.43 COL 2
-     rectSearchField AT ROW 1.24 COL 2.4
-     SPACE(69.79) SKIP(16.90)
+     rectBrowse AT ROW 1.24 COL 2
+     SPACE(1.19) SKIP(1.61)
     WITH VIEW-AS DIALOG-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          TITLE "Velg verdi"
@@ -269,6 +265,8 @@ DO:
     END.
   END.
   ELSE IF bMultiSelect THEN DO:
+    IF VALID-HANDLE(hParent) AND CAN-DO(hParent:INTERNAL-ENTRIES,"getLookupTarget") THEN
+      hTargetObject = DYNAMIC-FUNCTION("getLookupTarget" IN hParent).
     IF bSortedSelect THEN DO:
       EMPTY TEMP-TABLE ttSelected.
       DO idx = 1 TO hBrowse:NUM-SELECTED-ROWS:
@@ -359,7 +357,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
 
-  ENABLE rectBrowse rectSearchField Btn_OK Btn_Cancel 
+  ENABLE rectBrowse Btn_OK Btn_Cancel 
          WITH FRAME Dialog-Frame.
   IF CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"getCurrentSourceProc") THEN 
     hParent = DYNAMIC-FUNCTION("getCurrentSourceProc" IN SOURCE-PROCEDURE).  
@@ -465,7 +463,7 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY tbUseLocal 
       WITH FRAME Dialog-Frame.
-  ENABLE rectBrowse rectSearchField tbUseLocal Btn_OK Btn_Cancel 
+  ENABLE rectBrowse tbUseLocal Btn_OK Btn_Cancel 
       WITH FRAME Dialog-Frame.
   {&OPEN-BROWSERS-IN-QUERY-Dialog-Frame}
 END PROCEDURE.
@@ -536,8 +534,21 @@ PROCEDURE InitWindow :
 DEF VAR cBuffsAndFlds    AS CHAR NO-UNDO.
 DEF VAR iy               AS INT NO-UNDO.
 
-DEF VAR cViewFlds1stBuff AS CHAR NO-UNDO.
-DEF VAR cQueryString     AS CHAR NO-UNDO.
+DEF VAR cViewFlds1stBuff       AS CHAR NO-UNDO.
+DEF VAR cQueryString           AS CHAR NO-UNDO.
+DEF VAR cEntry1Query           AS CHAR NO-UNDO.
+DEF VAR cLookupFilterFields    AS CHAR NO-UNDO.
+DEF VAR cLookupFilterOperList  AS CHAR NO-UNDO.
+DEF VAR cLookupFilterValueList AS CHAR NO-UNDO.
+DEF VAR hLookupFrom            AS HANDLE NO-UNDO.
+DEF VAR hLookupQueryObject     AS HANDLE NO-UNDO.
+DEF VAR cSqlDb                 AS CHAR NO-UNDO.
+
+hLookupFrom = DYNAMIC-FUNCTION("getCurrentObject").
+IF VALID-HANDLE(hLookupFrom) AND hLookupFrom:TYPE = "fill-in" THEN DO:
+  hLookupQueryObject = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hLookupFrom,"queryObject")) NO-ERROR.
+  cSqlDb = DYNAMIC-FUNCTION("getAttribute",hLookupQueryObject,"sqlDbname").
+END.
 
 DEF VAR cDefaultFrameFont  AS CHAR   NO-UNDO.
 
@@ -610,30 +621,68 @@ DO WITH FRAME {&FRAME-NAME}:
                        ELSE "WHERE ") +
                      " iJBoxCompanyId = " + STRING(DYNAMIC-FUNCTION("getCompanyId"))).
 
-  hBrowse = DYNAMIC-FUNCTION("NewBrowse",       
-                    rectBrowse:HANDLE,          
-                    300,                        
-                    IF bMultiSelect THEN "MULTIPLE" ELSE "",                         
-                    cBuffsAndFlds,  
-                    cQueryString,
-                    IF cSortString NE "" THEN "SORT|" + cSortString ELSE ""
-                    ).    
+  ASSIGN cEntry1Query = ENTRY(1,cQueryString)
+         ENTRY(1,cQueryString) = "where false".
 
-  bSwapLocal = DYNAMIC-FUNCTION("getAttribute",hBrowse,"lastrowid") NE "" OR TRIM(cQueryString) BEGINS "where false".
+  PUBLISH "getLookupFilter" (cReturnField, OUTPUT cLookupFilterFields,OUTPUT cLookupFilterOperList,OUTPUT cLookupFilterValueList).
 
-  IF bMultiSelect THEN DYNAMIC-FUNCTION("setAttribute",hBrowse,"windowsbrowse","yes").
+  IF cSqlDb NE "" THEN DO:
+    oBrowse = NEW JBoxBrowse (rectBrowse:HANDLE,bMultiSelect,"",cSqlDb).
+    oBrowse:buffersAndFields = cBuffsAndFlds.
+    IF NUM-ENTRIES(cQueryString) > 1 THEN
+      oBrowse:queryJoin = SUBSTR(cQueryString,INDEX(cQueryString,",") + 1).
+    oBrowse:setQuerySort(cSortString).
+    oBrowse:baseQuery = icQueryString.
+    IF cLookupFilterFields NE "" THEN
+      oBrowse:setFilter(cLookupFilterFields,cLookupFilterOperList,cLookupFilterValueList).
+    hBrowse = oBrowse:BROWSE-HANDLE.
+    hBuffer = oBrowse:BUFFER-HANDLE.
+    JBoxLookupDef:Instance:assignFilterLookup(oBrowse).
+    oBrowse:createGridFilter("").
+    oBrowse:openQuery().
+  END.                    
+  ELSE DO:                       
+    hBrowse = DYNAMIC-FUNCTION("NewBrowse",       
+                      rectBrowse:HANDLE,          
+                      300,                        
+                      IF bMultiSelect THEN "MULTIPLE" ELSE "",                         
+                      cBuffsAndFlds,  
+                      cQueryString,
+                      IF cSortString NE "" THEN "SORT|" + cSortString ELSE ""
+                      ).
+    IF cLookupFilterFields NE "" THEN
+      DYNAMIC-FUNCTION("InitDynFilter",hBrowse,cLookupFilterFields,cLookupFilterOperList,cLookupFilterValueList,"staticnoexec").
+      
+    ENTRY(1,cQueryString) = cEntry1Query.
+    
+    dynamic-function('setAttribute',hBrowse,'basequery',cEntry1Query).
 
-  IF cQueryString BEGINS "WHERE false" THEN
-    DYNAMIC-FUNCTION("setAttribute",hBrowse,"basequery","").
+    oBrowse = NEW JBoxBrowse(rectBrowse:HANDLE,THIS-PROCEDURE,YES).
+    oBrowse:setBrowseHandle(hBrowse).
+    JBoxLookupDef:Instance:assignFilterLookup(oBrowse).
+    
+    oBrowse:createGridFilter("").
+      
+    RUN InvokeMethod (hBrowse,"OpenQuery").    
+  
+    bSwapLocal = DYNAMIC-FUNCTION("getAttribute",hBrowse,"lastrowid") NE "" OR TRIM(cQueryString) BEGINS "where false".
+  
+    IF bMultiSelect THEN DYNAMIC-FUNCTION("setAttribute",hBrowse,"windowsbrowse","yes").
+  
+    IF cQueryString BEGINS "WHERE false" THEN
+      DYNAMIC-FUNCTION("setAttribute",hBrowse,"basequery","").
 
-  hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",rectSearchField:HANDLE,hBrowse,1).
+    JBoxServerAPI:Instance:fillLookupTableFromLookup(hBrowse).  
+    hBuffer = hBrowse:QUERY:GET-BUFFER-HANDLE(1) NO-ERROR.
 
-  DYNAMIC-FUNCTION("CreateObjectLink",hSearchField,hBrowse).
-
-  hBuffer = hBrowse:QUERY:GET-BUFFER-HANDLE(1) NO-ERROR.
-
-  JBoxServerAPI:Instance:fillLookupTableFromLookup(hBrowse).  
-
+    RUN InvokeMethod (hBrowse,"OpenQuery").    
+  
+  END.
+  
+/*  hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",rectSearchField:HANDLE,hBrowse,1).*/
+/*                                                                                           */
+/*  DYNAMIC-FUNCTION("CreateObjectLink",hSearchField,hBrowse).                               */
+  
   IF cQueryString MATCHES "*WHERE false*" THEN
     APPLY "entry" TO hSearchField.
   ELSE DO:
@@ -645,6 +694,21 @@ END.
 
 LocalTranslation().
 DYNAMIC-FUNCTION("InitTranslation",FRAME {&FRAME-NAME}:HANDLE).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ScrollHorizontalBrowse Dialog-Frame 
+PROCEDURE ScrollHorizontalBrowse :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+
+DYNAMIC-FUNCTION("reDrawGridFilter",hBrowse).
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

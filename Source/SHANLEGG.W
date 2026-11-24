@@ -106,11 +106,11 @@ NPSHANLG.kundedistriktNr
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Anleggs-Browse 
 &Scoped-define QUERY-STRING-Anleggs-Browse FOR EACH NPSHANLG ~
       WHERE NPSHANLG.prosjektid = prosjektIdParam  NO-LOCK, ~
-      EACH NPKUNDE OF NPSHANLG NO-LOCK ~
+      EACH NPKUNDE OF NPSHANLG OUTER-JOIN NO-LOCK ~
     BY NPSHANLG.anleggsnr DESCENDING
 &Scoped-define OPEN-QUERY-Anleggs-Browse OPEN QUERY Anleggs-Browse FOR EACH NPSHANLG ~
       WHERE NPSHANLG.prosjektid = prosjektIdParam  NO-LOCK, ~
-      EACH NPKUNDE OF NPSHANLG NO-LOCK ~
+      EACH NPKUNDE OF NPSHANLG OUTER-JOIN NO-LOCK ~
     BY NPSHANLG.anleggsnr DESCENDING.
 &Scoped-define TABLES-IN-QUERY-Anleggs-Browse NPSHANLG NPKUNDE
 &Scoped-define FIRST-TABLE-IN-QUERY-Anleggs-Browse NPSHANLG
@@ -158,7 +158,7 @@ FUNCTION setCurrentRec RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR ANLEGGSBROWSER AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE ANLEGGSBROWSER AS WIDGET-HANDLE NO-UNDO.
 
 /* Menu Definitions                                                     */
 DEFINE SUB-MENU m_Anlegg 
@@ -214,7 +214,7 @@ DEFINE BROWSE Anleggs-Browse
       NPSHANLG.kundedistriktNr FORMAT ">>9":U
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH SEPARATORS SIZE 125.4 BY 4.86
+    WITH SEPARATORS SIZE 125.38 BY 4.84
          FONT 2.
 
 
@@ -222,40 +222,40 @@ DEFINE BROWSE Anleggs-Browse
 
 DEFINE FRAME Anlegg-Frame
      Anleggs-Browse AT ROW 1 COL 1
-     NPSHANLG.anleggsnr AT ROW 6.24 COL 20 COLON-ALIGNED
+     NPSHANLG.anleggsnr AT ROW 6.22 COL 20 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
           SIZE 8 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.dato AT ROW 6.24 COL 39 COLON-ALIGNED
+     NPSHANLG.dato AT ROW 6.22 COL 39 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
           SIZE 14 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.sikker AT ROW 6.24 COL 115 COLON-ALIGNED
+     NPSHANLG.sikker AT ROW 6.22 COL 115 COLON-ALIGNED
           LABEL "Sikker?"
           VIEW-AS FILL-IN NATIVE 
-          SIZE 7.4 BY 1
+          SIZE 7.38 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.aktivt AT ROW 6.48 COL 58
+     NPSHANLG.aktivt AT ROW 6.47 COL 58
           VIEW-AS TOGGLE-BOX
-          SIZE 11 BY .76
+          SIZE 11 BY .78
           BGCOLOR 8 FGCOLOR 0 
-     NPSHANLG.endrings_laas AT ROW 6.48 COL 72
+     NPSHANLG.endrings_laas AT ROW 6.47 COL 72
           LABEL "Låst for endringer"
           VIEW-AS TOGGLE-BOX
-          SIZE 28.6 BY .76
+          SIZE 28.63 BY .78
           BGCOLOR 8 FGCOLOR 12 
-     NPSHANLG.anlegg AT ROW 7.43 COL 20 COLON-ALIGNED
+     NPSHANLG.anlegg AT ROW 7.41 COL 20 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
-          SIZE 53.8 BY 1
+          SIZE 53.88 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPKUNDE.kundenavn AT ROW 8.62 COL 20 COLON-ALIGNED
+     NPKUNDE.kundenavn AT ROW 8.63 COL 20 COLON-ALIGNED
           LABEL "Konsulent"
           VIEW-AS FILL-IN NATIVE 
-          SIZE 31.4 BY 1
+          SIZE 31.38 BY 1
           BGCOLOR 8 FGCOLOR 1 
-     NPSHANLG.konsulentens_saksbeh AT ROW 8.62 COL 62.2 COLON-ALIGNED
+     NPSHANLG.konsulentens_saksbeh AT ROW 8.63 COL 62.13 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
-          SIZE 26.4 BY 1
+          SIZE 26.38 BY 1
           BGCOLOR 8 FGCOLOR 1 
      NPSHANLG.selger AT ROW 9.81 COL 78 COLON-ALIGNED
           VIEW-AS COMBO-BOX 
@@ -268,14 +268,14 @@ DEFINE FRAME Anlegg-Frame
           DROP-DOWN-LIST
           SIZE 36 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.kundedistriktNr AT ROW 9.86 COL 20 COLON-ALIGNED
+     NPSHANLG.kundedistriktNr AT ROW 9.84 COL 20 COLON-ALIGNED
           LABEL "Salgsdistrikt"
           VIEW-AS COMBO-BOX INNER-LINES 8
           LIST-ITEM-PAIRS "         ",1
           DROP-DOWN-LIST
-          SIZE 40.2 BY 1
+          SIZE 40.13 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.beskrevet AT ROW 11.14 COL 78 COLON-ALIGNED
+     NPSHANLG.beskrevet AT ROW 11.16 COL 78 COLON-ALIGNED
           VIEW-AS COMBO-BOX 
           LIST-ITEM-PAIRS "","",
                      "FM","FM",
@@ -290,7 +290,7 @@ DEFINE FRAME Anlegg-Frame
           DROP-DOWN-LIST
           SIZE 36 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.saksbehandler AT ROW 11.24 COL 20 COLON-ALIGNED
+     NPSHANLG.saksbehandler AT ROW 11.22 COL 20 COLON-ALIGNED
           LABEL "Saksbeh."
           VIEW-AS COMBO-BOX 
           LIST-ITEM-PAIRS "Arne Svensson","Arne Svensson",
@@ -301,45 +301,45 @@ DEFINE FRAME Anlegg-Frame
                      "Arne Kristian Svensson","Arne Kristian Svensson",
                      "Kjetil Sørensen","Kjetil Sørensen"
           DROP-DOWN-LIST
-          SIZE 24.2 BY 1
+          SIZE 24.13 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SIZE 125.8 BY 18.29
          FONT 2.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Anlegg-Frame
-     NPSHANLG.entreprise AT ROW 12.43 COL 11.4
+     NPSHANLG.entreprise AT ROW 12.41 COL 11.38
           VIEW-AS COMBO-BOX INNER-LINES 8
           DROP-DOWN-LIST
           SIZE 26 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.oppf_uke AT ROW 12.43 COL 64 COLON-ALIGNED
+     NPSHANLG.oppf_uke AT ROW 12.41 COL 64 COLON-ALIGNED
           LABEL "Oppfølgingsuke"
           VIEW-AS FILL-IN NATIVE 
-          SIZE 4.8 BY 1
+          SIZE 4.88 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.anbudsfrist AT ROW 12.67 COL 87 COLON-ALIGNED
+     NPSHANLG.anbudsfrist AT ROW 12.66 COL 87 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
           SIZE 14 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.byggestart AT ROW 13.62 COL 20 COLON-ALIGNED
+     NPSHANLG.byggestart AT ROW 13.63 COL 20 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
           SIZE 14 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.leveringstid AT ROW 13.86 COL 87 COLON-ALIGNED
+     NPSHANLG.leveringstid AT ROW 13.84 COL 87 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
-          SIZE 16.2 BY 1
+          SIZE 16.13 BY 1
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHANLG.opplysninger AT ROW 15.05 COL 17.8 NO-LABEL
+     NPSHANLG.opplysninger AT ROW 15.03 COL 17.88 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL LARGE
-          SIZE 106 BY 3.57
+          SIZE 106 BY 3.59
           BGCOLOR 8 FGCOLOR 1 FONT 2
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SIZE 125.8 BY 18.29
          FONT 2.
 
@@ -359,14 +359,14 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW ANLEGGSBROWSER ASSIGN
          HIDDEN             = YES
          TITLE              = "Shuntanlegg"
-         COLUMN             = 3
-         ROW                = 1.48
-         HEIGHT             = 18.29
-         WIDTH              = 125.8
+         COLUMN             = 2.25
+         ROW                = 1.31
+         HEIGHT             = 18.31
+         WIDTH              = 125.88
          MAX-HEIGHT         = 20
-         MAX-WIDTH          = 126.6
+         MAX-WIDTH          = 126.63
          VIRTUAL-HEIGHT     = 20
-         VIRTUAL-WIDTH      = 126.6
+         VIRTUAL-WIDTH      = 126.63
          RESIZE             = yes
          SCROLL-BARS        = yes
          STATUS-AREA        = yes
@@ -456,6 +456,7 @@ THEN ANLEGGSBROWSER:HIDDEN = yes.
 /* Query rebuild information for BROWSE Anleggs-Browse
      _TblList          = "norcalc.NPSHANLG,norcalc.NPKUNDE OF norcalc.NPSHANLG"
      _Options          = "NO-LOCK"
+     _TblOptList       = ", OUTER"
      _OrdList          = "norcalc.NPSHANLG.anleggsnr|no"
      _Where[1]         = "NPSHANLG.prosjektid = prosjektIdParam "
      _FldNameList[1]   = norcalc.NPSHANLG.anlegg
@@ -1261,7 +1262,8 @@ PROCEDURE kopiere_anlegg_fra_temp :
    run neste_id.p (input 'NPSHANLG', output ip_neste_id).
    icurAnleggsnr = NPSHANLG.anleggsnr.
     /* Ny record med kopierte verdier */
-
+   MESSAGE 'ip_neste_id:' ip_neste_id skip 'icurAnleggsnr:' icurAnleggsnr
+   VIEW-AS ALERT-BOX.
    create npshanlg.
    Current-Rec = ROWID(NPSHANLG).
    ASSIGN 

@@ -30,6 +30,7 @@ DEF NEW SHARED TEMP-TABLE tt_field
     FIELD Field-Can-Write  AS CHAR
     INDEX idxFileField Table-Name Field-Name
     INDEX idxField Field-Name
+    INDEX idxDbTableField Db-name Table-name Field-Name
     .
 
 DEF VAR htt_field AS HANDLE NO-UNDO.

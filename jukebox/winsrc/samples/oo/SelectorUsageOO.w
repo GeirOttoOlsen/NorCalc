@@ -42,6 +42,11 @@ CREATE WIDGET-POOL.
 
 DEF VAR hSelectorPanel    AS HANDLE NO-UNDO.
 
+DEFINE TEMP-TABLE ttSelector
+  FIELD Id    AS INT  FORMAT ">>>9" LABEL "Id"
+  FIELD Name  AS CHAR FORMAT "x(30)" 
+  .
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -57,7 +62,8 @@ DEF VAR hSelectorPanel    AS HANDLE NO-UNDO.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS btnSelectSalesreps btnSelectDepartments 
+&Scoped-Define ENABLED-OBJECTS btnSelectSalesreps btnSelectDepartments ~
+btnSelectValues 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -81,16 +87,21 @@ DEFINE BUTTON btnSelectSalesreps
      LABEL "Select Salesreps (some are pre-selected)" 
      SIZE 62 BY 2.38.
 
+DEFINE BUTTON btnSelectValues 
+     LABEL "Select values from temp-table" 
+     SIZE 62 BY 2.38.
+
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
      btnSelectSalesreps AT ROW 1.71 COL 12
-     btnSelectDepartments AT ROW 4.76 COL 12
+     btnSelectDepartments AT ROW 4.38 COL 12
+     btnSelectValues AT ROW 7.14 COL 12 WIDGET-ID 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
-         SIZE 82.2 BY 6.95.
+         SIZE 82.2 BY 8.76.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -109,7 +120,7 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<insert window title>"
-         HEIGHT             = 6.95
+         HEIGHT             = 8.76
          WIDTH              = 82.8
          MAX-HEIGHT         = 16
          MAX-WIDTH          = 96.4
@@ -230,6 +241,23 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btnSelectValues
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnSelectValues C-Win
+ON CHOOSE OF btnSelectValues IN FRAME DEFAULT-FRAME /* Select values from temp-table */
+DO:  
+  
+JBoxServerAPI:Instance:Selector(BUFFER ttSelector:HANDLE,"Id"). /* Get list of selected values */
+
+IF JBoxServerAPI:Instance:SelectorOk THEN 
+  MESSAGE JBoxServerAPI:Instance:SelectorReturnValueList 
+  VIEW-AS ALERT-BOX. 
+//  JBoxServerAPI:Instance:CallServerProc("domythingontheserver.p","<someID,f.ex> + ";" + JBoxServerAPI:Instance:SelectorReturnValueList).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK C-Win 
@@ -297,7 +325,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE btnSelectSalesreps btnSelectDepartments 
+  ENABLE btnSelectSalesreps btnSelectDepartments btnSelectValues 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
   VIEW C-Win.
@@ -353,37 +381,39 @@ PROCEDURE mySelectorObject :
 ------------------------------------------------------------------------------*/
 DEF INPUT PARAM ioSelector   AS JBoxDynSelector NO-UNDO.
 
+DEF VAR ix            AS INT NO-UNDO.
+DEF VAR cSelectedRows AS CHAR NO-UNDO.
+
 IF ioSelector:NAME = "Department" THEN
   ioSelector:LoadPanel("DepartmentSelectPanel.w").
-ELSE
+ELSE DO:
   ioSelector:ExpandSelectorDialogX(300).
-
-
-/*
-DEF VAR hSelector     AS HANDLE NO-UNDO.
-DEF VAR hSelectorWin  AS HANDLE NO-UNDO.
-DEF VAR hPanelFrame   AS HANDLE NO-UNDO.
-
-hSelector = SOURCE-PROCEDURE.
-
-IF ihSourceBrw:QUERY:GET-BUFFER-HANDLE(1):NAME = "Department" THEN DO:
-  RUN LoadPanel IN hSelector ("DepartmentSelectPanel.w",OUTPUT hSelectorPanel).
-  IF VALID-HANDLE(hSelectorPanel) THEN DO:
+  IF ioSelector:NAME = "ttSelector" THEN DO: 
+    /* Fill temp-table: */
+    DO ix = 1 TO 10:
+      
+      ioSelector:SOURCE-BROWSE-OBJECT:BUFFER-HANDLE:BUFFER-CREATE().
+      ASSIGN ioSelector:SOURCE-BROWSE-OBJECT:BUFFER-HANDLE::Id = ix
+             ioSelector:SOURCE-BROWSE-OBJECT:BUFFER-HANDLE::Name = CHR(64 + ix)
+             ioSelector:SOURCE-BROWSE-OBJECT:BUFFER-HANDLE::RowIdent1 = "rowid" + STRING(ix)
+             .
     
-    /* Make room for and position the panel frame: */
-
-    ASSIGN hPanelFrame                = DYNAMIC-FUNCTION("getFrameHandle" IN hSelectorPanel)
-           hSelectorWin               = ihSourceBrw:WINDOW
-           hSelectorWin:HEIGHT-PIXELS = hSelectorWin:HEIGHT-PIXELS + hPanelFrame:HEIGHT-PIXELS
-           .
-    APPLY "window-resized" TO hSelectorWin.
-    DYNAMIC-FUNCTION("adjustBrowseHeight" IN hSelector,hPanelFrame:HEIGHT-PIXELS * -1).
-    hPanelFrame:Y = ihSourceBrw:Y + ihSourceBrw:HEIGHT-PIXELS. 
-
-  END.
-  ELSE DYNAMIC-FUNCTION("DoMessage",0,0,"Selector panel not installed","","").
+      /* If any records should be pre-selected: */
+      IF ix > 6 THEN DO:
+        ioSelector:TARGET-BROWSE-OBJECT:BUFFER-HANDLE:BUFFER-CREATE().
+        ASSIGN ioSelector:TARGET-BROWSE-OBJECT:BUFFER-HANDLE::Id = ix
+               ioSelector:TARGET-BROWSE-OBJECT:BUFFER-HANDLE::Name = CHR(64 + ix)
+               ioSelector:TARGET-BROWSE-OBJECT:BUFFER-HANDLE::RowIdent1 = "rowid" + STRING(ix)
+               cSelectedRows = cSelectedRows + "rowid" + STRING(ix) + ","
+               .
+      END.
+    END.
+    ioSelector:setSelectedRowidList(cSelectedRows).
+    ioSelector:OpenQuerySource().
+    ioSelector:OpenQueryTarget().
+  END.  
 END.
-*/
+
 
 END PROCEDURE.
 

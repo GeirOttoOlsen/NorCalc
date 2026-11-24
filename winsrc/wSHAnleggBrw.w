@@ -63,6 +63,13 @@ DEF TEMP-TABLE NPSHANLG
     FIELD prosjekt_navn AS character
     FIELD aktivt AS logical
     FIELD kundenr AS character
+    FIELD konsulentid AS integer
+    FIELD konsulentnr AS character
+    FIELD kundedistriktNr AS integer
+    FIELD reg_dato AS date
+    FIELD anbudsfrist AS date
+    FIELD anleggstype AS character
+    FIELD arkivnr AS character
     FIELD RowIdent1 AS CHARACTER 
     FIELD RowIdent2 AS CHARACTER 
     FIELD RowCount AS INTEGER
@@ -80,10 +87,17 @@ FUNCTION getBuffersAndFieldsBrwNPSHANLG RETURNS CHARACTER():
      + ';anleggsnr'
      + ';anlegg'
      + ';kundenr'
+     + ';konsulentid'
+     + ';konsulentnr'
+     + ';kundedistriktNr'
+     + ';anbudsfrist'
+     + ';anleggstype'
+     + ';arkivnr'
   + ',NORPROSJEKT'
      + ';prosjektid'
      + ';prosjekt_navn'
      + ';aktivt'
+     + ';reg_dato'
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNPSHANLG RETURNS CHARACTER():
@@ -112,10 +126,16 @@ DEF VAR otbNPSHANLG AS JBoxToolbar NO-UNDO.
 /* Definitions for BROWSE BrwNPSHANLG                                   */
 &Scoped-define FIELDS-IN-QUERY-BrwNPSHANLG NPSHANLG.dato NPSHANLG.anleggsnr ~
 NPSHANLG.anlegg NPSHANLG.prosjektid NPSHANLG.prosjekt_navn NPSHANLG.aktivt ~
-NPSHANLG.kundenr 
+NPSHANLG.kundenr NPSHANLG.konsulentid NPSHANLG.konsulentnr ~
+NPSHANLG.kundedistriktNr NPSHANLG.reg_dato NPSHANLG.anbudsfrist ~
+NPSHANLG.anleggstype NPSHANLG.arkivnr 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNPSHANLG NPSHANLG.dato 
-&Scoped-define QUERY-STRING-BrwNPSHANLG FOR EACH NPSHANLG NO-LOCK INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-BrwNPSHANLG OPEN QUERY BrwNPSHANLG FOR EACH NPSHANLG NO-LOCK INDEXED-REPOSITION.
+&Scoped-define ENABLED-TABLES-IN-QUERY-BrwNPSHANLG NPSHANLG
+&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BrwNPSHANLG NPSHANLG
+&Scoped-define QUERY-STRING-BrwNPSHANLG FOR EACH NPSHANLG NO-LOCK, ~
+    EACH NORPROSJEKT OF NPSHANLG NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BrwNPSHANLG OPEN QUERY BrwNPSHANLG FOR EACH NPSHANLG NO-LOCK, ~
+    EACH NORPROSJEKT OF NPSHANLG NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BrwNPSHANLG NPSHANLG
 &Scoped-define FIRST-TABLE-IN-QUERY-BrwNPSHANLG NPSHANLG
 
@@ -166,6 +186,13 @@ DEFINE BROWSE BrwNPSHANLG
       NPSHANLG.prosjekt_navn COLUMN-LABEL "Prosjektnavn" FORMAT "X(45)":U
       NPSHANLG.aktivt COLUMN-LABEL "Aktivt" FORMAT "ja/nei":U
       NPSHANLG.kundenr COLUMN-LABEL "Kundenr" FORMAT "X(8)":U
+      NPSHANLG.konsulentid COLUMN-LABEL "Konsulentid" FORMAT ">>>9":U
+      NPSHANLG.konsulentnr COLUMN-LABEL "konsulentnr" FORMAT "X(8)":U
+      NPSHANLG.kundedistriktNr COLUMN-LABEL "Dist.nr" FORMAT ">>9":U
+      NPSHANLG.reg_dato COLUMN-LABEL "Reg.dato" FORMAT "99.99.9999":U
+      NPSHANLG.anbudsfrist COLUMN-LABEL "Anbudsfrist" FORMAT "99.99.9999":U
+      NPSHANLG.anleggstype COLUMN-LABEL "Type" FORMAT "X(22)":U
+      NPSHANLG.arkivnr FORMAT "X(10)":U
   ENABLE
       NPSHANLG.dato
 /* _UIB-CODE-BLOCK-END */
@@ -245,7 +272,7 @@ ASSIGN
        FRAME DEFAULT-FRAME:WIDTH            = 115.8.
 
 ASSIGN 
-       NPSHANLG.kundenr:VISIBLE IN BROWSE BrwNPSHANLG = FALSE.
+       NPSHANLG.kundedistriktNr:VISIBLE IN BROWSE BrwNPSHANLG = FALSE.
 
 ASSIGN 
        tbNPSHANLG:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
@@ -264,20 +291,34 @@ THEN C-Win:HIDDEN = yes.
 /* Query rebuild information for BROWSE BrwNPSHANLG
      _TblList          = "norcalc.NPSHANLG"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _FldNameList[1]   > "_<CALC>"
+     _FldNameList[1]   > NPSHANLG.dato
 "NPSHANLG.dato" "Dato" "99.99.9999" "date" ? ? ? ? ? ? yes "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[2]   > "_<CALC>"
+     _FldNameList[2]   > NPSHANLG.anleggsnr
 "NPSHANLG.anleggsnr" "Anleggsnr" ">>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[3]   > "_<CALC>"
+     _FldNameList[3]   > NPSHANLG.anlegg
 "NPSHANLG.anlegg" "Anlegg" "X(45)" "character" ? ? ? ? ? ? no "Anleggets navn (oppdragssted)" no no "45" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[4]   > "_<CALC>"
+     _FldNameList[4]   > NPSHANLG.prosjektid
 "NPSHANLG.prosjektid" "prosjektid" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "9.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[5]   > "_<CALC>"
+     _FldNameList[5]   > NPSHANLG.prosjekt_navn
 "NPSHANLG.prosjekt_navn" "Prosjektnavn" "X(45)" "character" ? ? ? ? ? ? no "" no no "45" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[6]   > "_<CALC>"
+     _FldNameList[6]   > NPSHANLG.aktivt
 "NPSHANLG.aktivt" "Aktivt" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "5.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[7]   > "_<CALC>"
-"NPSHANLG.kundenr" "Kundenr" "X(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[7]   > NPSHANLG.kundenr
+"NPSHANLG.kundenr" "Kundenr" "X(8)" "character" ? ? ? ? ? ? no "" no no "8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[8]   > NPSHANLG.konsulentid
+"NPSHANLG.konsulentid" "Konsulentid" ">>>9" "integer" ? ? ? ? ? ? no "" no no "9.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[9]   > NPSHANLG.konsulentnr
+"NPSHANLG.konsulentnr" "konsulentnr" "X(8)" "character" ? ? ? ? ? ? no "" no no "11" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[10]   > NPSHANLG.kundedistriktNr
+"NPSHANLG.kundedistriktNr" "Dist.nr" ">>9" "integer" ? ? ? ? ? ? no "" no no "6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[11]   > NPSHANLG.reg_dato
+"NPSHANLG.reg_dato" "Reg.dato" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[12]   > NPSHANLG.anbudsfrist
+"NPSHANLG.anbudsfrist" "Anbudsfrist" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[13]   > NPSHANLG.anleggstype
+"NPSHANLG.anleggstype" "Type" "X(22)" "character" ? ? ? ? ? ? no "" no no "22" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[14]   > NPSHANLG.arkivnr
+"NPSHANLG.arkivnr" "Arkivnr" "X(10)" "character" ? ? ? ? ? ? no "" no no "10" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPSHANLG */
 &ANALYZE-RESUME

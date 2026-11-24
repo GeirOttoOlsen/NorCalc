@@ -31,17 +31,26 @@ CLASS JBoxServerFile:
 
   DEFINE PROPERTY ttFile AS HANDLE NO-UNDO GET. 
     PRIVATE SET.
+  
+  def property ShowError as log init false no-undo get. set.
+  def property ErrorMessage as char no-undo get. private set.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+    
+  CONSTRUCTOR PUBLIC JBoxServerFile ():
+
+  END CONSTRUCTOR.
+
+
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
     
   CONSTRUCTOR PUBLIC JBoxServerFile (INPUT ipFilename AS CHARACTER):
-    ASSIGN 
-      myFileName = ipFilename
-      .
-      
-    InitializeJBoxServerFile().
+    InitializeJBoxServerFile(ipFilename).
   END CONSTRUCTOR.
 
   /*------------------------------------------------------------------------------
@@ -49,27 +58,55 @@ CLASS JBoxServerFile:
    Notes:
   ------------------------------------------------------------------------------*/
     
-  METHOD PUBLIC VOID InitializeJBoxServerFile(  ):
+  METHOD PUBLIC VOID InitializeJBoxServerFile(input ipFilename as char):
+    ErrorMessage = ''.
+    if valid-handle(hDS) then do:
+      empty temp-table ttFile.
+      hDS:EMPTY-DATASET ().
+      delete object hDS.
+    end.
+    ASSIGN 
+      myFileName = ipFilename
+      .
+    
     CREATE DATASET hDS.
     hDS:SET-BUFFERS(TEMP-TABLE ttFile:DEFAULT-BUFFER-HANDLE).
+    
 
-    IF NOT JBoxServerAPI:Instance:ProcessDataSet('getserverfile.p',myFilename,hDS) THEN 
-      JBoxServerAPI:Instance:viewCallMessage().    
+    IF NOT JBoxServerAPI:Instance:ProcessDataSet('getserverfile.p',myFilename,hDS) THEN do:
+      if ShowError then 
+        JBoxServerAPI:Instance:viewCallMessage().
+      else 
+        assign 
+          ErrorMessage = JBoxServerAPI:Instance:getCallMessage()
+          bSuccess     = false
+          .
+    end.    
     ELSE 
-    DO:
+    DO:      
       hDS:GET-BUFFER-HANDLE (1):FIND-FIRST ().
-      rGUID = GENERATE-UUID.
-      cGUID = GUID (rGUID).
-      cExtent = SUBSTRING(myFilename,R-INDEX(myFilename,'.')).
-      tmpFilename = session:TEMP-DIRECTORY + cGUID + cExtent. 
+/*      rGUID = GENERATE-UUID.*/
+/*      cGUID = GUID (rGUID). */
+      assign 
+        cExtent = SUBSTRING(myFilename,R-INDEX(myFilename,'.'))
+        myFilename = replace(myFilename,'/','\')
+        tmpFilename = (if not System.IO.Directory:Exists('R:\') then 
+                         session:TEMP-DIRECTORY 
+                       else 
+                         'R:\' + JBoxSession:Instance:UserId + '\') 
+                       + substring(myFilename,r-index(myFilename,'\') + 1)
+        . 
+      if hDS:GET-BUFFER-HANDLE (1):avail THEN do:
+        COPY-LOB OBJECT hDS:GET-BUFFER-HANDLE (1)::BLOBContent TO FILE tmpFileName.
+        bSuccess = true.
+      end.
+      else bSuccess = false.
       
-      IF hDS:GET-BUFFER-HANDLE (1):avail THEN COPY-LOB OBJECT hDS:GET-BUFFER-HANDLE (1)::BLOBContent TO FILE tmpFileName.
-      
-      bSuccess = YES.
     END.
   END METHOD.
 
   DESTRUCTOR PUBLIC JBoxServerFile ( ):
+    empty temp-table ttFile.
     IF VALID-HANDLE(hDS) THEN DELETE OBJECT hDS.
   END DESTRUCTOR.
 

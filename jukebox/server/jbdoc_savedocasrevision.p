@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId     AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOk            AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR iDocId      AS INT    NO-UNDO.
 DEF VAR iRevNo      AS INT    NO-UNDO.
 DEF VAR hBuffDocRev AS HANDLE NO-UNDO.

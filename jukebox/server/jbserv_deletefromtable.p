@@ -10,6 +10,7 @@ DEF INPUT  PARAM icSessionId  AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn     AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK         AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
 
 DEF VAR hQuery     AS HANDLE NO-UNDO.
 DEF VAR hBuffer    AS HANDLE NO-UNDO.

@@ -7,6 +7,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEFINE VAR hBuffEmail        AS HANDLE NO-UNDO.
 DEFINE VAR hBuffAttach       AS HANDLE NO-UNDO.
 DEFINE VAR hBuffInboxEntries AS HANDLE NO-UNDO.

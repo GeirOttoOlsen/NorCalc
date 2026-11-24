@@ -19,6 +19,8 @@ DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 
 DEF VAR iCustNum AS INT NO-UNDO INIT 1.
 
+{incl/validatecaller.i}
+
 DO ON ERROR UNDO, RETURN:
   FIND LAST Customer NO-LOCK NO-ERROR.
   IF AVAIL Customer THEN

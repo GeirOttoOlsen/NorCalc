@@ -14,19 +14,35 @@ DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.
 
 {incl/validatesession.i}
 
-FOR EACH JBoxAppProcess NO-LOCK
-    WHERE JBoxAppProcess.iJBoxApplicationId = INTEGER(icApplicationId)
-      AND JBoxAppProcess.cJBoxUserId        = icComputerUserName
-      AND JBoxAppProcess.bActive
-    :
-  FIND FIRST JBoxAppProcessType NO-LOCK
-       OF JBoxAppProcess
-       NO-ERROR.
-  IF JBoxAppProcess.bRunning THEN
+DEF VAR hbJBoxAppProcess     AS HANDLE NO-UNDO.
+DEF VAR hbJBoxAppProcessType AS HANDLE NO-UNDO.
+DEF VAR bFound               AS LOG    NO-UNDO.
+DEF VAR hqAppProcess         AS HANDLE NO-UNDO.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxAppProcess",OUTPUT hbJBoxAppProcess) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxAppProcessType",OUTPUT hbJBoxAppProcessType) THEN RETURN.
+
+CREATE QUERY hqAppProcess.
+hqAppProcess:SET-BUFFERS (hbJBoxAppProcess).
+hqAppProcess:QUERY-PREPARE ("FOR EACH JBoxAppProcess NO-LOCK WHERE JBoxAppProcess.iJBoxApplicationId = " + icApplicationId
+                          + " AND JBoxAppProcess.cJBoxUserId = '" + icComputerUserName + "'"
+                          + " AND JBoxAppProcess.bActive").
+hqAppProcess:QUERY-OPEN ().
+REPEAT WHILE hqAppProcess:GET-NEXT():
+  
+  bFound = hbJBoxAppProcessType:FIND-FIRST("WHERE iJBoxAppProcessTypeId = " + STRING(hbJBoxAppProcess::iJBoxAppProcessTypeId),NO-LOCK) NO-ERROR.
+  
+  IF hbJBoxAppProcess::bRunning THEN
     ocRunningProcesses = ocRunningProcesses +(IF ocRunningProcesses NE "" THEN ";" ELSE "") 
-                       + (IF AVAILABLE JBoxAppProcessType THEN JBoxAppProcessType.cProcessType ELSE STRING(JBoxAppProcess.iJBoxAppProcessId)).
+                       + (IF bFound THEN hbJBoxAppProcessType::cProcessType ELSE STRING(hbJBoxAppProcess::iJBoxAppProcessId)).
   ELSE
     ocStoppedProcesses = ocStoppedProcesses +(IF ocStoppedProcesses NE "" THEN ";" ELSE "") 
-                       + (IF AVAILABLE JBoxAppProcessType THEN JBoxAppProcessType.cProcessType ELSE STRING(JBoxAppProcess.iJBoxAppProcessId)).
+                       + (IF bFound THEN hbJBoxAppProcessType::cProcessType ELSE STRING(hbJBoxAppProcess::iJBoxAppProcessId)).
 END.
+
+FINALLY:
+  DELETE OBJECT hqAppProcess NO-ERROR.
+  DELETE OBJECT hbJBoxAppProcess NO-ERROR.
+  DELETE OBJECT hbJBoxAppProcessType NO-ERROR.
+END FINALLY.
 

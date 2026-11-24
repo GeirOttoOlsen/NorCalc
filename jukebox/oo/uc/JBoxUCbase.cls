@@ -27,6 +27,10 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
 
   DEFINE VARIABLE  bDisableTextChanged AS LOG NO-UNDO INIT YES.
 
+  DEF PUBLIC PROPERTY CONTAINER-OBJECT AS JBoxContainer NO-UNDO GET. SET.
+  DEF PUBLIC PROPERTY CONTAINER-HANDLE AS HANDLE NO-UNDO GET. PRIVATE SET.
+  DEF PUBLIC PROPERTY DESIGN-WIDGET-HANDLE AS HANDLE NO-UNDO GET. PRIVATE SET.
+
 	CONSTRUCTOR PUBLIC JBoxUCbase (INPUT ihWinSuper    AS HANDLE, /* Window super proc - unknown if object created from window */
                                  INPUT ihWinProc     AS HANDLE,
                                  INPUT ihPlaceHolder AS HANDLE, /* Design widget (rectangle, field, etc) */
@@ -38,7 +42,9 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
            hPlaceHolder     = ihPlaceHolder
            cDefaultFont     = THIS-OBJECT:Font:Name
            iDefaultFontSize = THIS-OBJECT:Font:Size
-           iDeltaWidth      = iiDeltaWidth.
+           iDeltaWidth      = iiDeltaWidth
+           CONTAINER-HANDLE = ihWinProc
+           DESIGN-WIDGET-HANDLE = ihPlaceHolder
            .
 
     InitializeComponent().
@@ -62,7 +68,9 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
            hPlaceHolder     = ihPlaceHolder
            cDefaultFont     = THIS-OBJECT:Font:Name
            iDefaultFontSize = THIS-OBJECT:Font:Size
-           iDeltaWidth      = iiDeltaWidth.
+           iDeltaWidth      = iiDeltaWidth
+           CONTAINER-HANDLE = ihWinProc
+           DESIGN-WIDGET-HANDLE = ihPlaceHolder
            .
 
     DYNAMIC-INVOKE(THIS-OBJECT,"PreInitializeComponent",ihQuery,ihTable).
@@ -112,6 +120,8 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
       THIS-OBJECT:Location = NEW System.Drawing.Point(hPlaceHolder:X,hPlaceHolder:Y).
       
     oForm = CAST(DYNAMIC-FUNCTION("getWindowForm" IN hWinProc),"Progress.Windows.Form").
+
+    THIS-OBJECT:Leave:Subscribe(THIS-OBJECT:LeaveUserControl).
 
     THIS-OBJECT:ResumeLayout(FALSE).
     THIS-OBJECT:PerformLayout().
@@ -182,6 +192,10 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
     RETURN DYNAMIC-INVOKE(THIS-OBJECT,ENTRY(1,PROGRAM-NAME(2)," ")).
   END METHOD.
 
+  METHOD PUBLIC VOID ViewHideUserControl (INPUT ibView AS LOG):
+    RUN ViewHideUserControl IN hWinProc (hPlaceHolder,ibView).
+  END METHOD.   
+
   /* Methods invoked from jukebox (via window super): */
 
   METHOD PUBLIC CHARACTER dotNetDisplay():
@@ -232,6 +246,11 @@ CLASS uc.JBoxUCbase INHERITS UserControl:
 /*    THIS-OBJECT:c1GanttView1:SelectNextControl(?,NO,NO,NO,NO).*/
   END METHOD.
 
+  METHOD PRIVATE VOID LeaveUserControl (sender AS CLASS System.Object, e AS CLASS System.EventArgs):
+    IF CAN-DO(hWinProc:INTERNAL-ENTRIES,"LeaveUserControl") THEN
+      RUN LeaveUserControl IN hWinProc (hPlaceHolder).
+  END METHOD.
+   
 	DESTRUCTOR PUBLIC JBoxUCbase ( ):
 
 		IF VALID-OBJECT(components) THEN DO:

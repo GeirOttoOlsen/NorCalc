@@ -1,5 +1,5 @@
-"ABhack" "protools/abhack/abhackwin.w" "protools/abhack/tux.bmp" yes yes 275 no
-"AppCompiler" "startAppComp.p" "bmp/active16.bmp" no yes 280 no
+"ABhack" "protools/abhack/abhackwin.w" "protools/abhack/tux.bmp" yes yes 285 no
+"AppCompiler" "startAppComp.p" "bmp/active16.bmp" no yes 288 no
 "Clipboard conversion" "ClipboardConversion.w" "bmp/act16e.bmp" yes yes 290 no
 "Find in files" "extractfromfiles.w" "bmp/searc16e.bmp" yes yes 300 no
 "Extract images" "findimages.w" "bmp/clipbmp.bmp" yes yes 310 no

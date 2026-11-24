@@ -456,19 +456,26 @@ END.
 ON MOUSE-SELECT-DBLCLICK OF FRAME FRAME-A
 ANYWHERE
 DO:
-  ihDate:SCREEN-VALUE = STRING(CalendarDate) NO-ERROR.
-  APPLY "any-printable" TO ihDate.
-
-  IF VALID-HANDLE(ihDate) THEN DO:
-    ihDate:SCREEN-VALUE = STRING(CalendarDate).
-    ihDate:MODIFIED = TRUE.
-    APPLY "any-printable" TO ihDate.
-    IF CAN-DO(hParent:INTERNAL-ENTRIES,"MyCalenderAction") THEN
-      RUN MyCalenderAction IN hParent (ihDate:NAME).
-    ELSE IF CAN-DO(hParent:INTERNAL-ENTRIES,"CalenderAction") THEN
-      RUN CalenderAction IN hParent.
+  
+  IF VALID-HANDLE(ihDate) AND NOT ihDate:DATA-TYPE BEGINS "date" THEN DO:
+    IF ihDate:FORMAT = "9999-99-99" THEN
+      ihDate:SCREEN-VALUE = STRING(YEAR(CalendarDate),"9999") + STRING(MONTH(CalendarDate),"99") + STRING(DAY(CalendarDate),"99").
+    ELSE ihDate:SCREEN-VALUE = STRING(CalendarDate) NO-ERROR.  
   END.
-
+  ELSE DO:
+/*    ihDate:SCREEN-VALUE = STRING(CalendarDate) NO-ERROR.*/
+/*    APPLY "any-printable" TO ihDate.                    */
+  
+    IF VALID-HANDLE(ihDate) THEN DO:
+      ihDate:SCREEN-VALUE = STRING(CalendarDate) NO-ERROR.
+      ihDate:MODIFIED = TRUE.
+      APPLY "any-printable" TO ihDate.
+      IF CAN-DO(hParent:INTERNAL-ENTRIES,"MyCalenderAction") THEN
+        RUN MyCalenderAction IN hParent (ihDate:NAME).
+      ELSE IF CAN-DO(hParent:INTERNAL-ENTRIES,"CalenderAction") THEN
+        RUN CalenderAction IN hParent.
+    END.
+  END.
   APPLY "go" TO FRAME {&FRAME-NAME}.
 END.
 

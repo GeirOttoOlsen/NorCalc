@@ -9,6 +9,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 FIND FIRST JBoxDocRel EXCLUSIVE-LOCK
      WHERE JBoxDocRel.iJBoxDocRelId = INT(icParam)
      NO-ERROR.

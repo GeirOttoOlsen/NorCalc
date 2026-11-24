@@ -16,6 +16,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR bOk                 AS LOG    NO-UNDO.
 DEF VAR cUserId             AS CHAR   NO-UNDO.
 DEF VAR cUserGroupList      AS CHAR   NO-UNDO.

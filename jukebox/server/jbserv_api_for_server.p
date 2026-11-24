@@ -56,6 +56,30 @@ DEF VAR bSupprOpenDocMsg        AS LOG  NO-UNDO.
 DEF VAR cSupprOpenDocMsg        AS CHAR NO-UNDO.
 DEF VAR cSaveDir                AS CHAR NO-UNDO.
 DEF VAR cOpenFileErrorList      AS CHAR NO-UNDO.
+DEF VAR cQueryStatFields        AS CHAR NO-UNDO.
+DEF VAR cQueryStatFieldValues   AS CHAR NO-UNDO.
+DEF VAR cQueryLogFile           AS CHAR NO-UNDO.
+DEF VAR cQueryStopAfter         AS CHAR NO-UNDO.
+DEF VAR cOrgBuffersAndFields    AS CHAR NO-UNDO.
+DEF VAR cPreScanQuery           AS CHAR NO-UNDO.
+DEF VAR iPreScanLimit           AS INT  NO-UNDO.
+DEF VAR cNoExistBuffers         AS CHAR NO-UNDO.
+DEF VAR cUniqueBuffer           AS CHAR NO-UNDO.
+DEF VAR cCalcFieldProc          AS CHAR NO-UNDO.
+DEF VAR cCalcFieldFilter        AS CHAR NO-UNDO.
+DEF VAR bIndexOnRowids          AS LOG  NO-UNDO.
+DEF VAR bReturnQueryInfo        AS LOG  NO-UNDO.
+DEF VAR cNoDbReadAccessFields   AS CHAR NO-UNDO.
+DEF VAR cNoDbWriteAccessFields  AS CHAR NO-UNDO.
+DEF VAR cNoDbReadAccessBuffers  AS CHAR NO-UNDO.
+DEF VAR cNoDbWriteAccessBuffers AS CHAR NO-UNDO.
+DEF VAR cNoDbCreateAccessBuffers AS CHAR NO-UNDO.
+DEF VAR cNoDbDeleteAccessBuffers AS CHAR NO-UNDO.
+DEF VAR cBufferFieldSpec         AS CHAR NO-UNDO.
+DEF VAR cBufferDbFieldSpec       AS CHAR NO-UNDO. 
+DEF VAR hCurrQueryObject         AS HANDLE NO-UNDO.
+DEF VAR cMemInfoLogFile          AS CHAR NO-UNDO.
+DEF VAR cFieldValueDelimiter     AS CHAR NO-UNDO.
 
 &IF "{&OPSYS}" = "WIN32" &THEN
   DEF VAR oCmd AS JBoxCmd NO-UNDO.
@@ -149,6 +173,16 @@ DEF TEMP-TABLE ttDocInfo NO-UNDO
     FIELD blChunk         AS BLOB
     .
 httDocInfoBuf = BUFFER ttDocInfo:HANDLE.
+
+DEF TEMP-TABLE ttASconnection
+    FIELD cConnectionName AS CHAR
+    FIELD hAppserver      AS HANDLE
+    FIELD cSessionId      AS CHAR
+    FIELD cUserId         AS CHAR
+    FIELD cUserName       AS CHAR
+    FIELD iCompanyid      AS INT
+    FIELD bActive         AS LOG
+    .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -326,71 +360,31 @@ FUNCTION getASlibHandle RETURNS HANDLE
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
+&IF DEFINED(EXCLUDE-getBufferDbFieldSpec) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getASuserName) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getASuserName Procedure 
-FUNCTION getASuserName RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBufferDbFieldSpec Procedure
+FUNCTION getBufferDbFieldSpec RETURNS CHARACTER 
+  (  ) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
+&IF DEFINED(EXCLUDE-getBufferFieldSpec) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBufferFieldSpec Procedure
+FUNCTION getBufferFieldSpec RETURNS CHARACTER 
+  (  ) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCodeMasterId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCodeMasterId Procedure 
-FUNCTION getCodeMasterId RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getCompany) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCompany Procedure 
-FUNCTION getCompany RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ )  FORWARD.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
 
 &IF DEFINED(EXCLUDE-getContext) = 0 &THEN
 
@@ -494,6 +488,107 @@ FUNCTION getFirstDayOfPriorMonth RETURNS DATE
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getFirstDayOfNextMonth) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextMonth Procedure
+FUNCTION getFirstDayOfNextMonth RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextQuarter Procedure
+FUNCTION getFirstDayOfNextQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextYear Procedure
+FUNCTION getFirstDayOfNextYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorMonth) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorMonth Procedure 
+FUNCTION getFirstDayOfPriorMonth RETURNS DATE
+  ( input ipDate as date ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ENDIF
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorQuarter Procedure
+FUNCTION getFirstDayOfPriorQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorYear Procedure
+FUNCTION getFirstDayOfPriorYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfQuarter Procedure
+FUNCTION getFirstDayOfQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfYear Procedure
+FUNCTION getFirstDayOfYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 &IF DEFINED(EXCLUDE-getInputParam) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getInputParam Procedure 
@@ -505,16 +600,18 @@ FUNCTION getInputParam RETURNS CHARACTER
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
+&IF DEFINED(EXCLUDE-getIsTableCached) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getIsTableCached Procedure
+FUNCTION getIsTableCached RETURNS LOGICAL 
+  (INPUT ihTableHandle AS HANDLE) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
 
 &IF DEFINED(EXCLUDE-getMyDataSet) = 0 &THEN
 
@@ -552,6 +649,84 @@ FUNCTION getNoCompressTypes RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getNoDbCreateAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbCreateAccessBuffers Procedure
+FUNCTION getNoDbCreateAccessBuffers RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbDeleteAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbDeleteAccessBuffers Procedure
+FUNCTION getNoDbDeleteAccessBuffers RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbReadAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbReadAccessBuffers Procedure
+FUNCTION getNoDbReadAccessBuffers RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbReadAccessFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbReadAccessFields Procedure
+FUNCTION getNoDbReadAccessFields RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbWriteAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbWriteAccessBuffers Procedure
+FUNCTION getNoDbWriteAccessBuffers RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbWriteAccessFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNoDbWriteAccessFields Procedure
+FUNCTION getNoDbWriteAccessFields RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getOrgDocFileNames) = 0 &THEN
 
@@ -607,6 +782,19 @@ FUNCTION getPrimaryKeyFields RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getQueryStatFieldValues) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getQueryStatFieldValues Procedure
+FUNCTION getQueryStatFieldValues RETURNS CHARACTER 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getRecordCount) = 0 &THEN
 
@@ -724,6 +912,23 @@ FUNCTION getTempTable RETURNS HANDLE
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getTempTableJoin) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getTempTableJoin Procedure
+FUNCTION getTempTableJoin RETURNS HANDLE 
+  (INPUT iiBatchSize        AS INT,
+   INPUT iiStartRow         AS INT,
+   INPUT icDirection        AS CHAR,
+   INPUT icBuffersAndFields AS CHAR,
+   INPUT icQueryCriteria    AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getTransactionMessage) = 0 &THEN
 
@@ -845,16 +1050,85 @@ FUNCTION runProcDs RETURNS LOGICAL
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-Scandinavian) = 0 &THEN
+&IF DEFINED(EXCLUDE-runProcGetDS) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD Scandinavian Procedure 
-FUNCTION Scandinavian RETURNS LOGICAL
-  ( /* parameter-definitions */ )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD runProcGetDS Procedure
+FUNCTION runProcGetDS RETURNS LOGICAL 
+  (INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
+
+&IF DEFINED(EXCLUDE-runProcGetTT) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD runProcGetTT Procedure
+FUNCTION runProcGetTT RETURNS LOGICAL 
+  (INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setActiveASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setActiveASconnection Procedure
+FUNCTION setActiveASconnection RETURNS LOGICAL 
+  (INPUT icAsConnectionName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setASlibBehaviour) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setASlibBehaviour Procedure
+FUNCTION setASlibBehaviour RETURNS LOGICAL 
+  (INPUT icBehaviour AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setCalcFieldFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCalcFieldFilter Procedure
+FUNCTION setCalcFieldFilter RETURNS LOGICAL 
+  (INPUT icCalcFieldFilter AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setCalcFieldProc) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCalcFieldProc Procedure
+FUNCTION setCalcFieldProc RETURNS LOGICAL 
+  (INPUT icCalcFieldProc AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setContext) = 0 &THEN
 
@@ -866,6 +1140,19 @@ FUNCTION setContext RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setCurrentQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCurrentQueryObject Procedure
+FUNCTION setCurrentQueryObject RETURNS LOGICAL 
+  (INPUT ihCurrQueryObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setDocLoadFileDate) = 0 &THEN
 
@@ -926,6 +1213,32 @@ FUNCTION setExtraFieldsAndValues RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setFieldValueDelimiter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setFieldValueDelimiter Procedure
+FUNCTION setFieldValueDelimiter RETURNS LOGICAL 
+  (INPUT icFieldValueDelimiter AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setIndexOnRowids) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setIndexOnRowids Procedure
+FUNCTION setIndexOnRowids RETURNS LOGICAL 
+  (INPUT ibIndexOnRowids AS LOG) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setInputParam) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setInputParam Procedure 
@@ -936,6 +1249,32 @@ FUNCTION setInputParam RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setNoExistBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setNoExistBuffers Procedure
+FUNCTION setNoExistBuffers RETURNS LOGICAL 
+  (INPUT icNoExistBuffers AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setOrgBuffersAndFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setOrgBuffersAndFields Procedure
+FUNCTION setOrgBuffersAndFields RETURNS LOGICAL 
+  (INPUT icOrgBuffersAndFields AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setOutputParam) = 0 &THEN
 
@@ -959,6 +1298,32 @@ FUNCTION setPostUpdProc RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setPreScanLimit) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setPreScanLimit Procedure
+FUNCTION setPreScanLimit RETURNS LOGICAL 
+  (INPUT iiPreScanLimit AS INTEGER) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setPreScanQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setPreScanQuery Procedure
+FUNCTION setPreScanQuery RETURNS LOGICAL 
+  (INPUT icPreScanQuery AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setPreTransBuffer) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setPreTransBuffer Procedure 
@@ -970,6 +1335,45 @@ FUNCTION setPreTransBuffer RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setQueryLogFile) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setQueryLogFile Procedure
+FUNCTION setQueryLogFile RETURNS LOGICAL 
+  (INPUT icQueryLogFile AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setQueryStatFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setQueryStatFields Procedure
+FUNCTION setQueryStatFields RETURNS LOGICAL 
+  (INPUT icQueryStatFields AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setQueryStopAfter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setQueryStopAfter Procedure
+FUNCTION setQueryStopAfter RETURNS LOGICAL 
+  (INPUT icQueryStopAfter AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setReportFileName) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setReportFileName Procedure 
@@ -980,6 +1384,19 @@ FUNCTION setReportFileName RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setReturnQueryInfo) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setReturnQueryInfo Procedure
+FUNCTION setReturnQueryInfo RETURNS LOGICAL 
+  (INPUT ibReturnQueryInfo AS LOG) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setServerTransInputParam) = 0 &THEN
 
@@ -1003,16 +1420,18 @@ FUNCTION setSessionId RETURNS LOGICAL
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
+&IF DEFINED(EXCLUDE-setUniqueBuffer) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ )  FORWARD.
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setUniqueBuffer Procedure
+FUNCTION setUniqueBuffer RETURNS LOGICAL 
+  (INPUT icUniqueBuffer AS CHAR) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
 
 &IF DEFINED(EXCLUDE-ViewDocs) = 0 &THEN
 
@@ -1356,11 +1775,39 @@ FUNCTION CheckReturnValue RETURNS LOGICAL
     Notes:  
 ------------------------------------------------------------------------------*/
 IF NUM-ENTRIES(icReturnTrans,"¤") > 1 THEN DO:
+  cReturnParam = ENTRY(2,icReturnTrans,"¤").
+  DO ix = 1 TO NUM-ENTRIES(cReturnParam):
+    IF NUM-ENTRIES(ENTRY(ix,cReturnParam),";") > 1 THEN
+      CASE ENTRY(1,ENTRY(ix,cReturnParam),";"):
+        WHEN "nodbreadaccessfields" THEN
+          cNoDbReadAccessFields = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "nodbwriteaccessfields" THEN
+          cNoDbWriteAccessFields = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "nodbreadaccessbuffers" THEN
+          cNoDbReadAccessBuffers = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "nodbwriteaccessbuffers" THEN
+          cNoDbWriteAccessBuffers = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "nodbcreateaccessbuffers" THEN
+          cNoDbCreateAccessBuffers = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "nodbdeleteaccessbuffers" THEN
+          cNoDbDeleteAccessBuffers = REPLACE(ENTRY(2,ENTRY(ix,cReturnParam),";"),"|",",").
+        WHEN "bufferfieldspec" THEN
+          cBufferFieldSpec = ENTRY(2,ENTRY(ix,cReturnParam),";").
+        WHEN "bufferdbfieldspec" THEN
+          cBufferDbFieldSpec = ENTRY(2,ENTRY(ix,cReturnParam),";").
+      END CASE.
+  END.
+  cReturnTrans = ENTRY(1,icReturnTrans,"¤").
+END.
+ELSE cReturnParam = "".
+
+/*
+IF NUM-ENTRIES(icReturnTrans,"¤") > 1 THEN DO:
   ASSIGN cReturnParam = ENTRY(2,icReturnTrans,"¤")
          cReturnTrans = ENTRY(1,cReturnTrans,"¤").
 END.
 ELSE cReturnParam = "".
-
+*/
 RETURN FALSE. 
 
 END FUNCTION.
@@ -1420,15 +1867,27 @@ FUNCTION DoCommit RETURNS LOGICAL
 ------------------------------------------------------------------------------*/
 DEF VAR obOK AS LOG NO-UNDO.
 
-RUN jbserv_servertrans.p
-   (DYNAMIC-FUNCTION("getSessionId"),
-    ibReturnAll,
-    cServerTransInputParam,
-    TABLE-HANDLE httTransAction,
-    INPUT-OUTPUT TABLE-HANDLE httTransRecord,
-    OUTPUT cReturnTrans,
-    OUTPUT obOK,
-    cTransLogFile).
+IF VALID-HANDLE(hCurrQueryObject) AND DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName") NE "" THEN 
+  RUN jbserv_servertrans_sql.p
+     (icSessionId,
+      DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName"),
+      ibReturnAll,
+      cServerTransInputParam,
+      TABLE-HANDLE httTransAction,
+      INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+      OUTPUT cReturnTrans,
+      OUTPUT obOK,
+      cTransLogFile).
+ELSE 
+  RUN jbserv_servertrans.p
+     (icSessionId,
+      ibReturnAll,
+      cServerTransInputParam,
+      TABLE-HANDLE httTransAction,
+      INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+      OUTPUT cReturnTrans,
+      OUTPUT obOK,
+      cTransLogFile).
 
 ASSIGN ixTransActionId        = 0
        ixTransRecordId        = 0
@@ -1443,7 +1902,10 @@ ELSE
 
 CheckReturnValue(cReturnTrans).
 
-RETURN obOK.
+FINALLY:
+  setCurrentQueryObject(?).
+  RETURN obOK.
+END.  
 
 END FUNCTION.
 
@@ -1980,119 +2442,55 @@ END FUNCTION.
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getASuserId) = 0 &THEN
+&IF DEFINED(EXCLUDE-getBufferDbFieldSpec) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getASuserId Procedure 
-FUNCTION getASuserId RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getBufferDbFieldSpec Procedure
+FUNCTION getBufferDbFieldSpec RETURNS CHARACTER 
+  (  ):
 /*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
+ Purpose:
+ Notes:
 ------------------------------------------------------------------------------*/
+DEF VAR cFieldSpec AS CHAR NO-UNDO.
 
-  RETURN cCurrUserId. 
+ASSIGN cFieldSpec         = cBufferDbFieldSpec
+       cBufferDbFieldSpec = "".
+
+RETURN cFieldSpec.
 
 END FUNCTION.
-
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getASuserName) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getASuserName Procedure 
-FUNCTION getASuserName RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
+&IF DEFINED(EXCLUDE-getBufferFieldSpec) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getBufferFieldSpec Procedure
+FUNCTION getBufferFieldSpec RETURNS CHARACTER 
+  (  ):
 /*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
+ Purpose:
+ Notes:
 ------------------------------------------------------------------------------*/
+DEF VAR cFieldSpec AS CHAR NO-UNDO.
 
-RETURN cASuserName.
+ASSIGN cFieldSpec       = cBufferFieldSpec
+       cBufferFieldSpec = "".
+
+RETURN cFieldSpec.
 
 END FUNCTION.
-
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCodeMaster) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCodeMaster Procedure 
-FUNCTION getCodeMaster RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN STRING(iCodeMaster).
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getCodeMasterId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCodeMasterId Procedure 
-FUNCTION getCodeMasterId RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCodeMaster.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompany) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCompany Procedure 
-FUNCTION getCompany RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN STRING(iCurrCompanyId).
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
-
-&IF DEFINED(EXCLUDE-getCompanyId) = 0 &THEN
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCompanyId Procedure 
-FUNCTION getCompanyId RETURNS INTEGER
-  ( /* parameter-definitions */ ) :
-/*------------------------------------------------------------------------------
-  Purpose:  
-    Notes:  
-------------------------------------------------------------------------------*/
-
-RETURN iCurrCompanyId.
-
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&ENDIF
 
 &IF DEFINED(EXCLUDE-getContext) = 0 &THEN
 
@@ -2163,7 +2561,7 @@ ELSE
   cFieldName = icDbField.
 
 RUN jbserv_getfielddatatype.p
-   (DYNAMIC-FUNCTION("getSessionId"),
+   (icSessionId,
     cDbName,
     cTableName,
     cFieldName,
@@ -2260,11 +2658,15 @@ FUNCTION getFieldValues RETURNS CHARACTER
       icBufferName,
       icQueryCriteria,
       icColumns,
+      cFieldValueDelimiter,
       OUTPUT cValues,
       OUTPUT cReturnTrans)
       .
 
-  RETURN cValues.
+  FINALLY:
+    cFieldValueDelimiter = "".
+    RETURN cValues.
+  END.  
 
 END FUNCTION.
 
@@ -2362,24 +2764,26 @@ END FUNCTION.
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-getLanguageCode) = 0 &THEN
+&IF DEFINED(EXCLUDE-getIsTableCached) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLanguageCode Procedure 
-FUNCTION getLanguageCode RETURNS CHARACTER
-  ( /* parameter-definitions */ ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getIsTableCached Procedure
+FUNCTION getIsTableCached RETURNS LOGICAL 
+  ( INPUT ihTableHandle AS HANDLE ) :
 /*------------------------------------------------------------------------------
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
 
-RETURN cCurrLanguage.
+RETURN NO.
 
 END FUNCTION.
-
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
 
 &IF DEFINED(EXCLUDE-getMyDataSet) = 0 &THEN
 
@@ -2467,6 +2871,156 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getNoDbCreateAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbCreateAccessBuffers Procedure
+FUNCTION getNoDbCreateAccessBuffers RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoCreateBuffers AS CHAR NO-UNDO.
+
+ASSIGN cNoCreateBuffers         = cNoDbCreateAccessBuffers
+       cNoDbCreateAccessBuffers = "".
+
+RETURN cNoCreateBuffers.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbDeleteAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbDeleteAccessBuffers Procedure
+FUNCTION getNoDbDeleteAccessBuffers RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoDeleteBuffers AS CHAR NO-UNDO.
+
+ASSIGN cNoDeleteBuffers         = cNoDbDeleteAccessBuffers
+       cNoDbDeleteAccessBuffers = "".
+
+RETURN cNoDeleteBuffers.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbReadAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbReadAccessBuffers Procedure
+FUNCTION getNoDbReadAccessBuffers RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoReadBuffers AS CHAR NO-UNDO.
+
+ASSIGN cNoReadBuffers         = cNoDbReadAccessBuffers
+       cNoDbReadAccessBuffers = "".
+
+RETURN cNoReadBuffers.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbReadAccessFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbReadAccessFields Procedure
+FUNCTION getNoDbReadAccessFields RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoReadFields AS CHAR NO-UNDO.
+
+ASSIGN cNoReadFields         = cNoDbReadAccessFields
+       cNoDbReadAccessFields = "".
+
+RETURN cNoReadFields.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbWriteAccessBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbWriteAccessBuffers Procedure
+FUNCTION getNoDbWriteAccessBuffers RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoWriteBuffers AS CHAR NO-UNDO.
+
+ASSIGN cNoWriteBuffers         = cNoDbWriteAccessBuffers
+       cNoDbWriteAccessBuffers = "".
+
+RETURN cNoWriteBuffers.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getNoDbWriteAccessFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNoDbWriteAccessFields Procedure
+FUNCTION getNoDbWriteAccessFields RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cNoWriteFields AS CHAR NO-UNDO.
+
+ASSIGN cNoWriteFields         = cNoDbWriteAccessFields
+       cNoDbWriteAccessFields = "".
+
+RETURN cNoWriteFields.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getOrgDocFileNames) = 0 &THEN
 
@@ -2589,6 +3143,26 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getQueryStatFieldValues) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getQueryStatFieldValues Procedure
+FUNCTION getQueryStatFieldValues RETURNS CHARACTER 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RETURN cQueryStatFieldValues.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getRecordCount) = 0 &THEN
 
@@ -2883,6 +3457,111 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getTempTableJoin) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getTempTableJoin Procedure
+FUNCTION getTempTableJoin RETURNS HANDLE 
+  ( INPUT iiBatchSize        AS INT,
+    INPUT iiStartRow         AS INT,
+    INPUT icDirection        AS CHAR,
+    INPUT icBuffersAndFields AS CHAR,
+    INPUT icQueryCriteria    AS CHAR) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR hTempTable     AS HANDLE NO-UNDO.
+DEF VAR cParamString   AS CHAR   NO-UNDO.
+DEF VAR hTmpAppService AS HANDLE NO-UNDO.
+
+IF icQueryCriteria = ? THEN 
+  icQueryCriteria = "WHERE FALSE".
+IF cQueryLogFile  NE "" AND cQueryLogFile NE ? THEN cParamString = "logfile;" + cQueryLogFile.
+
+IF cCalcFieldProc NE "" THEN cParamString = TRIM(cParamString + ",calcfieldproc;" + REPLACE(cCalcFieldProc,",",";"),",").
+IF bIndexOnRowids THEN 
+  cParamString   = TRIM(cParamString + ",indexonrowids;yes",",").
+IF cPreScanQuery NE "" THEN
+  cParamString = TRIM(cParamString + ",prescanquery;" + REPLACE(cPreScanQuery,",","¤"),",").
+IF cCalcFieldFilter NE "" THEN
+  cParamString = TRIM(cParamString + ",calcfieldfilter;" + cCalcFieldFilter).
+IF iPreScanLimit NE 0 THEN
+  cParamString = TRIM(cParamString + ",prescanlimit;" + STRING(iPreScanLimit)).
+IF bReturnQueryInfo THEN
+  cParamString = TRIM(cParamString + ",returnqueryinfo;yes",",").
+IF cNoExistBuffers NE "" THEN
+  cParamString = TRIM(cParamString + ",noexistbuffers;" + REPLACE(cNoExistBuffers,",","¤"),",").
+/*IF cSkipCalcFields NE "" THEN                                                  */
+/*  cParamString = TRIM(cParamString + ",skipcalcfields;" + cSkipCalcFields,",").*/
+IF cUniqueBuffer NE "" THEN
+  cParamString = TRIM(cParamString + ",uniqueBuffer;" + cUniqueBuffer,",").
+IF cOrgBuffersAndFields NE "" THEN  
+  cParamString = TRIM(cParamString + ",orgBuffersAndFields;" + REPLACE(REPLACE(cOrgBuffersAndFields,",","¤"),";",CHR(1)),",").
+IF cQueryStopAfter ne "" THEN
+  cParamString = TRIM(cParamString + ",queryStopAfter;" + cQueryStopAfter,",").
+
+
+cParamString = REPLACE(cParamString,"getFirstDayOfMonth",STRING(getFirstDayOfMonth(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorMonth",STRING(getFirstDayOfPriorMonth(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextMonth",STRING(getFirstDayOfNextMonth(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfQuarter",STRING(getFirstDayOfQuarter(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorQuarter",STRING(getFirstDayOfPriorQuarter(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextQuarter",STRING(getFirstDayOfNextQuarter(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfYear",STRING(getFirstDayOfYear(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorYear",STRING(getFirstDayOfPriorYear(TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextYear",STRING(getFirstDayOfNextYear(TODAY))).
+
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfMonth",STRING(getFirstDayOfMonth(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorMonth",STRING(getFirstDayOfPriorMonth(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextMonth",STRING(getFirstDayOfNextMonth(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfQuarter",STRING(getFirstDayOfQuarter(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorQuarter",STRING(getFirstDayOfPriorQuarter(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextQuarter",STRING(getFirstDayOfNextQuarter(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfYear",STRING(getFirstDayOfYear(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorYear",STRING(getFirstDayOfPriorYear(TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextYear",STRING(getFirstDayOfNextYear(TODAY))).
+
+  RUN jbserv_gettemptablejoin.p
+     (icSessionId,
+      iiBatchSize,
+      iiStartRow,
+      icDirection,
+      icBuffersAndFields,
+      icQueryCriteria,
+      cQueryStatFields,
+      cParamString,
+      OUTPUT TABLE-HANDLE hTempTable,
+      OUTPUT cQueryStatFieldValues,
+      OUTPUT cReturnTrans)
+      NO-ERROR.
+
+
+CheckReturnValue(cReturnTrans).
+
+ASSIGN cQueryLogFile    = ""
+       cQueryStatFields = ""
+       cCalcFieldProc   = ""
+       cPreScanQuery    = ""
+       cCalcFieldFilter = ""
+       iPreScanLimit    = 0
+       bReturnQueryInfo = NO
+       cNoExistBuffers  = ""
+       bIndexOnRowids   = NO
+//       cSkipCalcFields  = ""
+       cUniqueBuffer    = ""
+       cQueryStopAfter  = ""
+       .
+RETURN hTempTable.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getTransactionMessage) = 0 &THEN
 
@@ -3294,26 +3973,191 @@ END FUNCTION.
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-Scandinavian) = 0 &THEN
+&IF DEFINED(EXCLUDE-runProcGetDS) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION Scandinavian Procedure 
-FUNCTION Scandinavian RETURNS LOGICAL
-  ( /* parameter-definitions */ ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION runProcGetDS Procedure
+FUNCTION runProcGetDS RETURNS LOGICAL 
+ ( INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  Retrieve custom queries
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR obOk          AS LOG NO-UNDO.
+DEF VAR httBuffer     AS HANDLE NO-UNDO.
+DEF VAR httQuery      AS HANDLE NO-UNDO.
+DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
+                                       
+IF VALID-OBJECT(hdsRunProc) THEN
+  DELETE OBJECT hdsRunProc NO-ERROR.
+hdsRunProc = ?.  
+
+RUN jbserv_runproc_ds.p
+   (icSessionId,
+    icServerProgram,
+    icParamList,
+    OUTPUT DATASET-HANDLE hdsRunProc,
+    OUTPUT cReturnTrans,
+    OUTPUT obOk)
+    .
+
+IF obOk THEN cReturnParam = cReturnTrans.
+
+RETURN obOk.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-runProcGetTT) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION runProcGetTT Procedure
+FUNCTION runProcGetTT RETURNS LOGICAL 
+  ( INPUT icServerProgram  AS CHAR,
+    INPUT icParamList      AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  Retrieve custom queries
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR obOk          AS LOG NO-UNDO.
+DEF VAR httBuffer     AS HANDLE NO-UNDO.
+DEF VAR httQuery      AS HANDLE NO-UNDO.
+DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
+                                       
+IF VALID-HANDLE(httRunProc) THEN
+  DELETE OBJECT httRunProc NO-ERROR.
+httRunProc = ?.  
+
+RUN jbserv_runproc_gettt.p
+   (icSessionId,
+    icServerProgram,
+    icParamList,
+    OUTPUT TABLE-HANDLE httRunProc,
+    OUTPUT cReturnTrans,
+    OUTPUT obOk)
+    .
+
+IF obOk THEN cReturnParam = cReturnTrans.
+
+RETURN obOk.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setActiveASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setActiveASconnection Procedure
+FUNCTION setActiveASconnection RETURNS LOGICAL 
+  ( INPUT icAsConnectionName AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose: Swap datasource (ie appserver handle)
+ Notes:
+------------------------------------------------------------------------------*/
+/*
+IF icAsConnectionName NE "" THEN DO:
+  FIND FIRST ttASconnection
+       WHERE ttASconnection.cConnectionName = icAsConnectionName
+       NO-ERROR.
+  IF AVAIL ttASconnection THEN 
+    ttASconnection.bActive = YES.
+END.
+FOR EACH ttASconnection 
+    WHERE ttASconnection.cConnectionName NE icAsConnectionName
+    : 
+  ttASconnection.bActive = NO. 
+END.
+*/
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setASlibBehaviour) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setASlibBehaviour Procedure
+FUNCTION setASlibBehaviour RETURNS LOGICAL 
+  ( INPUT icBehaviour AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DO ix = 1 TO NUM-ENTRIES(icBehaviour):
+  CASE ENTRY(1,ENTRY(ix,icBehaviour),"|"):
+    WHEN "TransLogFile"        THEN cTransLogFile        = ENTRY(2,ENTRY(ix,icBehaviour),"|").
+    WHEN "QueryLogFile"        THEN cQueryLogFile        = ENTRY(2,ENTRY(ix,icBehaviour),"|").
+    WHEN "MemInfoLogFile"      THEN cMemInfoLogFile      = ENTRY(2,ENTRY(ix,icBehaviour),"|").
+  END CASE.
+END.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setCalcFieldFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCalcFieldFilter Procedure
+FUNCTION setCalcFieldFilter RETURNS LOGICAL 
+  ( INPUT icCalcFieldFilter AS CHAR ) :
 /*------------------------------------------------------------------------------
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-IF CAN-DO("da,dk,no,sv,se,nn,",cCurrLanguage) THEN
-  RETURN TRUE.
-ELSE
-  RETURN FALSE.  
+
+cCalcFieldFilter = icCalcFieldFilter.
+
+RETURN TRUE.
 
 END FUNCTION.
-
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
+
+&IF DEFINED(EXCLUDE-setCalcFieldProc) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCalcFieldProc Procedure
+FUNCTION setCalcFieldProc RETURNS LOGICAL 
+  ( INPUT icCalcFieldProc AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  Set name of server procedure containing all calculated fields 
+            for getTempTableJoin -> jbserv_gettemptablejoin.p 
+    Notes:  
+------------------------------------------------------------------------------*/
+cCalcFieldProc = icCalcFieldProc.
+
+RETURN TRUE.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setContext) = 0 &THEN
 
@@ -3334,6 +4178,28 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setCurrentQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCurrentQueryObject Procedure
+FUNCTION setCurrentQueryObject RETURNS LOGICAL 
+  ( INPUT ihCurrQueryObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  hCurrQueryObject = ihCurrQueryObject.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setDocLoadFileDate) = 0 &THEN
 
@@ -3447,6 +4313,52 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setFieldValueDelimiter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setFieldValueDelimiter Procedure
+FUNCTION setFieldValueDelimiter RETURNS LOGICAL 
+  ( INPUT icFieldValueDelimiter AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  cFieldValueDelimiter = icFieldValueDelimiter.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setIndexOnRowids) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setIndexOnRowids Procedure
+FUNCTION setIndexOnRowids RETURNS LOGICAL 
+  ( INPUT ibIndexOnRowids AS LOG ) :
+/*------------------------------------------------------------------------------
+  Purpose: The first time a resultset for a browse is retrieved an index is 
+           defined on all rowid columns to speed up check for duplicates
+           when subsequent fills are done to the same browse (or query)  
+    Notes:  
+------------------------------------------------------------------------------*/
+bIndexOnRowids = ibIndexOnRowids.
+
+RETURN TRUE.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setInputParam) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setInputParam Procedure 
@@ -3466,6 +4378,50 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setNoExistBuffers) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setNoExistBuffers Procedure
+FUNCTION setNoExistBuffers RETURNS LOGICAL 
+  ( INPUT icNoExistBuffers AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+cNoExistBuffers = icNoExistBuffers.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setOrgBuffersAndFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setOrgBuffersAndFields Procedure
+FUNCTION setOrgBuffersAndFields RETURNS LOGICAL 
+  ( INPUT icOrgBuffersAndFields AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  cOrgBuffersAndFields = icOrgBuffersAndFields.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setOutputParam) = 0 &THEN
 
@@ -3508,6 +4464,51 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setPreScanLimit) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setPreScanLimit Procedure
+FUNCTION setPreScanLimit RETURNS LOGICAL 
+  ( INPUT iiPreScanLimit AS INTEGER ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+iPreScanLimit = iiPreScanLimit.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setPreScanQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setPreScanQuery Procedure
+FUNCTION setPreScanQuery RETURNS LOGICAL 
+  ( INPUT icPreScanQuery AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+cPreScanQuery = icPreScanQuery.
+
+RETURN TRUE. 
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setPreTransBuffer) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setPreTransBuffer Procedure 
@@ -3541,6 +4542,72 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setQueryLogFile) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setQueryLogFile Procedure
+FUNCTION setQueryLogFile RETURNS LOGICAL 
+  ( INPUT icQueryLogFile AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  cQueryLogFile = icQueryLogFile.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setQueryStatFields) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setQueryStatFields Procedure
+FUNCTION setQueryStatFields RETURNS LOGICAL 
+  ( INPUT icQueryStatFields AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+cQueryStatFields = icQueryStatFields.
+
+RETURN TRUE.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setQueryStopAfter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setQueryStopAfter Procedure
+FUNCTION setQueryStopAfter RETURNS LOGICAL 
+  ( INPUT icQueryStopAfter AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+cQueryStopAfter = icQueryStopAfter.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setReportFileName) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setReportFileName Procedure 
@@ -3560,6 +4627,29 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setReturnQueryInfo) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setReturnQueryInfo Procedure
+FUNCTION setReturnQueryInfo RETURNS LOGICAL 
+  ( INPUT ibReturnQueryInfo AS LOG ) :
+/*------------------------------------------------------------------------------
+  Purpose: Used to control parameter to getTempTableJoin if it should retrieve additional query info 
+    Notes:  
+------------------------------------------------------------------------------*/
+
+bReturnQueryInfo = ibReturnQueryInfo.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setServerTransInputParam) = 0 &THEN
 
@@ -3591,8 +4681,21 @@ FUNCTION setSessionId RETURNS LOGICAL
  Notes:
 ------------------------------------------------------------------------------*/
 IF icNewSessionId NE icSessionId THEN DO:
-  DELETE PROCEDURE THIS-PROCEDURE NO-ERROR.
-  RETURN NO.
+  RUN jbserv_validatesession.p (INPUT icNewSessionId, 
+                                OUTPUT ocReturn, 
+                                OUTPUT cCurrUserId, 
+                                OUTPUT iCurrCompanyId,
+                                OUTPUT cCurrLanguage,
+                                OUTPUT cCurrContext
+                                ).
+  IF ocReturn NE "" THEN DO:
+    DELETE PROCEDURE THIS-PROCEDURE NO-ERROR.
+    RETURN NO.
+  END.
+  ELSE DO:
+    icSessionId = icNewSessionId.
+    RETURN YES.
+  END.  
 END.
 ELSE RETURN YES.
 
@@ -3603,25 +4706,29 @@ END FUNCTION.
 
 &ENDIF
 
-&IF DEFINED(EXCLUDE-startASlib) = 0 &THEN
+&IF DEFINED(EXCLUDE-setUniqueBuffer) = 0 &THEN
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION startASlib Procedure 
-FUNCTION startASlib RETURNS LOGICAL
-  ( /* parameter-definitions */ ) :
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setUniqueBuffer Procedure
+FUNCTION setUniqueBuffer RETURNS LOGICAL 
+  ( INPUT icUniqueBuffer AS CHAR ) :
 /*------------------------------------------------------------------------------
-  Purpose:  
+  Purpose:  Passed on to jbserv_gettemptablejoin as a tuning option:
+            When accumulating subtotals the procedure checks if the value has already been processed.
+            This check is unneccessary for the unique buffer.
     Notes:  
 ------------------------------------------------------------------------------*/
-SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(THIS-PROCEDURE).
+cUniqueBuffer = icUniqueBuffer.
 
-RETURN YES.
+RETURN FALSE.   /* Function return value. */
 
 END FUNCTION.
-
+  
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
 &ENDIF
+
 
 &IF DEFINED(EXCLUDE-ViewDocs) = 0 &THEN
 
@@ -3742,3 +4849,168 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getFirstDayOfNextQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextQuarter Procedure
+FUNCTION getFirstDayOfNextQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(4,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(10,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(01,01,YEAR(ipDate) + 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextYear Procedure
+FUNCTION getFirstDayOfNextYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate) + 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfPriorQuarter Procedure
+FUNCTION getFirstDayOfPriorQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(10,01,YEAR(ipDate) - 1).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(01,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(04,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+    
+  return tmpResult.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfPriorYear Procedure
+FUNCTION getFirstDayOfPriorYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate) - 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfQuarter Procedure
+FUNCTION getFirstDayOfQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(01,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(04,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(10,01,YEAR(ipDate)).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfYear Procedure
+FUNCTION getFirstDayOfYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate)).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextMonth) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextMonth Procedure
+FUNCTION getFirstDayOfNextMonth RETURNS DATE 
+  ( input ipDate as date ):
+
+  IF ipDate = ? THEN ipDate = TODAY.
+
+  IF MONTH(TODAY) = 12 THEN
+    RETURN DATE(01,01,YEAR(TODAY) + 1).
+  ELSE 
+    RETURN DATE(MONTH(TODAY) + 1,1,YEAR(TODAY)).  
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF

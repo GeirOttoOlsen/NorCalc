@@ -27,15 +27,28 @@ CLASS JBoxLogHandling:
     index cLogType cLogType
     .
   def static property ttLogHandle as handle get. set.
+  def static property SkrivDirekte as log no-undo get. set.
+  def static property SkrivDirekteLoggfil as char no-undo get. set.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
     
   CONSTRUCTOR PUBLIC JBoxLogHandling ():
-    SUPER ().
+
   END CONSTRUCTOR.
 
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD static PUBLIC VOID addLog(input ipLogMessage as char  ):
+    if SkrivDirekte and SkrivDirekteLoggfil ne '' then do:
+      writeDirectToFile(ipLogMessage).
+      return.
+    end.  
+  END METHOD.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -53,6 +66,17 @@ CLASS JBoxLogHandling:
     .
   END METHOD.
 
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD private static VOID writeDirectToFile(input ipWriteMessage as char ):
+    output stream strOut to value(SkrivDirekteLoggfil) append.
+    put stream strOut unformatted ipWriteMessage skip.
+    output stream strOut close.
+  END METHOD.
 
  /*------------------------------------------------------------------------------
    Purpose:
@@ -193,15 +217,103 @@ CLASS JBoxLogHandling:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  method static public character getBufferContentList (input ipBuffer as handle, input ipDelimiter as char):
+  method static PUBLIC character getBufferLabelList (input ipBuffer as handle, input ipDelimiter as char,input ipExcludeFields as char):
     def var ix as int no-undo.
     def var ReturnText as char no-undo.
     
     do ix = 1 to ipBuffer:num-fields:
-      ReturnText = ReturnText + (if ipBuffer:buffer-field(ix):buffer-value <> ? then string(ipBuffer:buffer-field(ix):buffer-value) else "") + ipDelimiter.  
+      if can-do(ipExcludeFields,ipBuffer:buffer-field(ix):name) then next.
+      ReturnText = ReturnText + ipDelimiter + ipBuffer:buffer-field(ix):label.  
+    end.
+    ReturnText = trim(ReturnText,ipDelimiter).
+    return ReturnText.
+  end method.
+
+/*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  method static public character getBufferContentList (input ipBuffer as handle, input ipDelimiter as char):
+    return getBufferContentList(ipBuffer,ipDelimiter,?).
+  end method.
+
+/*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  method static public character getBufferContentList (input ipBuffer as handle, input ipDelimiter as char, input ipExcludeFields as char):
+    def var ix as int no-undo.
+    def var ReturnText as char no-undo.
+    
+    do ix = 1 to ipBuffer:num-fields:
+      if can-do(ipExcludeFields,ipBuffer:buffer-field(ix):name) then next.
+      case ipBuffer:buffer-field(ix):data-type:
+        when 'date' or when 'datetime' or when 'datetime-tz' then 
+          ReturnText = ReturnText + (if ipBuffer:buffer-field(ix):buffer-value <> ? then string(ipBuffer:buffer-field(ix):string-value) else "") + ipDelimiter.
+        otherwise 
+          ReturnText = ReturnText + (if ipBuffer:buffer-field(ix):buffer-value <> ? then string(ipBuffer:buffer-field(ix):buffer-value) else "") + ipDelimiter.  
+      end case.
     end.
     ReturnText = substring(ReturnText,1,length(ReturnText) - 1).
     return ReturnText.
   end method.
 
+  METHOD static PUBLIC longchar writeLogType(input ipLogType as char,input ipNoInfo as log):
+
+    def var vlcMessage as longchar no-undo.
+
+    fix-codepage(vlcMessage) = 'iso8859-1'.
+
+    if ipLogType = '' then do:
+
+      for each ttLog:
+
+        if ipNoInfo then
+
+          vlcMessage = vlcMessage + ttLog.cLogMessage + chr(13) + chr(10).
+
+        else
+
+          vlcMessage = vlcMessage + string(ttLog.dtLogDate) + ' ' + ttLog.cLogType + ': ' + ttLog.cLogMessage + chr(13) + chr(10).
+
+        delete ttLog.
+
+      end.     
+
+    end.
+
+    else
+
+      for each ttLog where lookup(ttLog.cLogType,ipLogType) gt 0 by iSeq:
+
+        if ipNoInfo then
+
+          vlcMessage = vlcMessage + ttLog.cLogMessage + chr(13) + chr(10).
+
+        else
+
+          vlcMessage = vlcMessage + string(ttLog.dtLogDate) + ' ' + ttLog.cLogType + ': ' + ttLog.cLogMessage + chr(13) + chr(10).
+
+        delete ttLog.
+
+      end.
+
+    return vlcMessage.   
+
+  END METHOD.
+
+  method static public void writeToLogManager(input ipLongchar as longchar,input ipLogType as char):
+    var int  iPos,iChunkSize=30000,iLen=length(ipLongchar).
+    var char chunk.
+    
+    if OpenEdge.Core.String:IsNullOrEmpty(ipLongchar) then 
+      undo, throw new Progress.Lang.AppError('Kan ikke være tom eller ukjent',0).
+      
+    DO iPos = 1 TO iLen BY 30000:
+        Chunk = substring(ipLongchar,iPos,MINIMUM (iChunkSize,iLen - iPos + 1)).
+        LOG-MANAGER:WRITE-MESSAGE(chunk,ipLogType).
+    END.    
+  end method.
 END CLASS.

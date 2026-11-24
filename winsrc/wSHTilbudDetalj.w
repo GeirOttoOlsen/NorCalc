@@ -82,7 +82,7 @@ DEF TEMP-TABLE NPSHTILBUD
     FIELD RowCount AS INTEGER
     INDEX idxRowids  RowIdent1
     .
-DEFINE BUFFER v_NPSHTILBUD FOR NPSHTILBUD.
+DEFINE BUFFER v_NPSHTILBUD FOR temp-table NPSHTILBUD.
 
 FUNCTION getTableHandleQryNPSHTILBUD RETURNS HANDLE().
   RETURN BUFFER NPSHTILBUD:HANDLE:TABLE-HANDLE.
@@ -133,13 +133,14 @@ DEF VAR otbNPSHANLG AS JBoxToolbar NO-UNDO.
 
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS tbNPSHANLG id anleggsnr tilbudsid tilbudsnr ~
-kundenr avgittpris vaar_ref pris_shuntgrupper deres_ref pris bet_bet ~
-pris_tillegg tilbudsdato rabatt% gyldighetstid save_tbNPSHANLG ~
-close_tbNPSHANLG 
-&Scoped-Define DISPLAYED-OBJECTS id anleggsnr tilbudsid tilbudsnr kundenr ~
-avgittpris vaar_ref pris_shuntgrupper deres_ref pris bet_bet pris_tillegg ~
-tilbudsdato rabatt% gyldighetstid 
+&Scoped-Define ENABLED-OBJECTS new_tbNPSHANLG edit_tbNPSHANLG ~
+save_tbNPSHANLG delete_tbNPSHANLG copy_tbNPSHANLG undo_tbNPSHANLG ~
+tbNPSHANLG id tilbudsid tilbudsnr kundenr avgittpris pris_shuntgrupper ~
+vaar_ref pris deres_ref pris_tillegg bet_bet rabatt% tilbudsdato ~
+gyldighetstid 
+&Scoped-Define DISPLAYED-OBJECTS id tilbudsid tilbudsnr kundenr avgittpris ~
+pris_shuntgrupper vaar_ref pris deres_ref pris_tillegg bet_bet rabatt% ~
+tilbudsdato gyldighetstid 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -164,15 +165,35 @@ FUNCTION setParentBrowse RETURNS LOGICAL
 DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
-DEFINE BUTTON close_tbNPSHANLG 
-     IMAGE-UP FILE "bmp/e-exit.bmp":U
-     LABEL "Close" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Close (ALT-C)".
+DEFINE BUTTON copy_tbNPSHANLG 
+     IMAGE-UP FILE "bmp/copy.bmp":U
+     LABEL "Kopier" 
+     SIZE 7.8 BY 1.95 TOOLTIP "Kopier (ALT-K)".
+
+DEFINE BUTTON delete_tbNPSHANLG 
+     IMAGE-UP FILE "bmp/del16e.bmp":U
+     LABEL "Slett" 
+     SIZE 7.8 BY 1.95 TOOLTIP "Slett (CTRL-D)".
+
+DEFINE BUTTON edit_tbNPSHANLG 
+     IMAGE-UP FILE "bmp/edit16e.bmp":U
+     LABEL "Edit" 
+     SIZE 7.8 BY 1.95 TOOLTIP "Edit (CTRL-E)".
+
+DEFINE BUTTON new_tbNPSHANLG 
+     IMAGE-UP FILE "bmp/new16e.bmp":U
+     LABEL "Ny" 
+     SIZE 7.8 BY 1.95 TOOLTIP "Ny (CTRL-N)".
 
 DEFINE BUTTON save_tbNPSHANLG 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Lagre" 
      SIZE 7.8 BY 1.95 TOOLTIP "Lagre (CTRL-S)".
+
+DEFINE BUTTON undo_tbNPSHANLG 
+     IMAGE-UP FILE "bmp/undo16e.bmp":U
+     LABEL "Angre" 
+     SIZE 7.8 BY 1.95 TOOLTIP "Angre (CTRL-Z)".
 
 DEFINE VARIABLE bet_bet AS CHARACTER FORMAT "X(20)" INITIAL "Netto pr. 30 dager" 
      LABEL "Betalings bet." 
@@ -187,11 +208,6 @@ DEFINE VARIABLE vaar_ref AS CHARACTER FORMAT "X(25)"
      LIST-ITEM-PAIRS "Item 1","1"
      DROP-DOWN-LIST
      SIZE 27 BY 1.
-
-DEFINE VARIABLE anleggsnr AS INTEGER FORMAT ">>>>>9" INITIAL 0 
-     LABEL "Anleggsnr" 
-     VIEW-AS FILL-IN 
-     SIZE 10.4 BY 1.
 
 DEFINE VARIABLE avgittpris AS DECIMAL FORMAT ">>,>>>,>>9.99" INITIAL 0 
      LABEL "Avgitt pris" 
@@ -255,7 +271,7 @@ DEFINE VARIABLE tilbudsnr AS CHARACTER FORMAT "X(20)"
 
 DEFINE RECTANGLE tbNPSHANLG
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 18 BY 2.14.
+     SIZE 110 BY 2.14.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -266,28 +282,31 @@ DEFINE QUERY QUERY-2 FOR
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     id AT ROW 1.71 COL 17 COLON-ALIGNED
-     anleggsnr AT ROW 2.67 COL 17 COLON-ALIGNED
-     tilbudsid AT ROW 3.86 COL 17 COLON-ALIGNED
-     tilbudsnr AT ROW 3.86 COL 35 COLON-ALIGNED
-     kundenr AT ROW 5.05 COL 17 COLON-ALIGNED
-     avgittpris AT ROW 5.76 COL 68 COLON-ALIGNED
-     vaar_ref AT ROW 6.24 COL 17 COLON-ALIGNED WIDGET-ID 10
-     pris_shuntgrupper AT ROW 6.95 COL 68 COLON-ALIGNED
-     deres_ref AT ROW 7.43 COL 17 COLON-ALIGNED
-     pris AT ROW 8.14 COL 68 COLON-ALIGNED
-     bet_bet AT ROW 8.62 COL 17 COLON-ALIGNED WIDGET-ID 12
-     pris_tillegg AT ROW 9.1 COL 68 COLON-ALIGNED
-     tilbudsdato AT ROW 9.62 COL 17 COLON-ALIGNED
-     rabatt% AT ROW 10.29 COL 68 COLON-ALIGNED
-     gyldighetstid AT ROW 10.76 COL 17 COLON-ALIGNED
-     save_tbNPSHANLG AT ROW 16.71 COL 90 WIDGET-ID 4
-     close_tbNPSHANLG AT ROW 16.71 COL 98 WIDGET-ID 8
-     tbNPSHANLG AT ROW 16.48 COL 89 WIDGET-ID 2
+     new_tbNPSHANLG AT ROW 1 COL 2 WIDGET-ID 14
+     edit_tbNPSHANLG AT ROW 1 COL 10 WIDGET-ID 16
+     save_tbNPSHANLG AT ROW 1 COL 17.8 WIDGET-ID 4
+     delete_tbNPSHANLG AT ROW 1 COL 25.6 WIDGET-ID 18
+     copy_tbNPSHANLG AT ROW 1 COL 33.4 WIDGET-ID 20
+     undo_tbNPSHANLG AT ROW 1 COL 41.2 WIDGET-ID 22
+     id AT ROW 3.62 COL 15 COLON-ALIGNED
+     tilbudsid AT ROW 5.05 COL 16 COLON-ALIGNED
+     tilbudsnr AT ROW 5.05 COL 37 COLON-ALIGNED
+     kundenr AT ROW 6.24 COL 16 COLON-ALIGNED
+     avgittpris AT ROW 6.48 COL 70 COLON-ALIGNED
+     pris_shuntgrupper AT ROW 7.67 COL 70 COLON-ALIGNED
+     vaar_ref AT ROW 7.91 COL 16 COLON-ALIGNED WIDGET-ID 10
+     pris AT ROW 8.86 COL 70 COLON-ALIGNED
+     deres_ref AT ROW 9.1 COL 16 COLON-ALIGNED
+     pris_tillegg AT ROW 9.81 COL 70 COLON-ALIGNED
+     bet_bet AT ROW 10.29 COL 16 COLON-ALIGNED WIDGET-ID 12
+     rabatt% AT ROW 11 COL 70 COLON-ALIGNED
+     tilbudsdato AT ROW 11.29 COL 16 COLON-ALIGNED
+     gyldighetstid AT ROW 12.43 COL 16 COLON-ALIGNED
+     tbNPSHANLG AT ROW 1 COL 1 WIDGET-ID 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
-         SCROLLABLE SIZE 110.6 BY 18.1 WIDGET-ID 100.
+         SIZE 110.6 BY 13.71 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -306,7 +325,7 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 18.1
+         HEIGHT             = 13.67
          WIDTH              = 110.6
          MAX-HEIGHT         = 23.52
          MAX-WIDTH          = 114.2
@@ -344,12 +363,8 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
 ASSIGN 
-       FRAME DEFAULT-FRAME:HEIGHT           = 18.1
-       FRAME DEFAULT-FRAME:WIDTH            = 110.6.
-
-ASSIGN 
        tbNPSHANLG:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
-                "save;Lagre,close;Closehide".
+                "new;Ny,edit;Edit,save;Lagre,delete;Slett,copy;Kopier,undo;Angrehide".
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -366,7 +381,7 @@ THEN C-Win:HIDDEN = yes.
 OPEN QUERY {&SELF-NAME} FOR EACH NPSHTILBUD NO-LOCK INDEXED-REPOSITION.
      _END_FREEFORM
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _Design-Parent    is FRAME DEFAULT-FRAME @ ( 3.62 , 82 )
+     _Design-Parent    is FRAME DEFAULT-FRAME @ ( 7.43 , 84 )
 */  /* QUERY QUERY-2 */
 &ANALYZE-RESUME
 
@@ -503,13 +518,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY id anleggsnr tilbudsid tilbudsnr kundenr avgittpris vaar_ref 
-          pris_shuntgrupper deres_ref pris bet_bet pris_tillegg tilbudsdato 
-          rabatt% gyldighetstid 
+  DISPLAY id tilbudsid tilbudsnr kundenr avgittpris pris_shuntgrupper vaar_ref 
+          pris deres_ref pris_tillegg bet_bet rabatt% tilbudsdato gyldighetstid 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE tbNPSHANLG id anleggsnr tilbudsid tilbudsnr kundenr avgittpris 
-         vaar_ref pris_shuntgrupper deres_ref pris bet_bet pris_tillegg 
-         tilbudsdato rabatt% gyldighetstid save_tbNPSHANLG close_tbNPSHANLG 
+  ENABLE new_tbNPSHANLG edit_tbNPSHANLG save_tbNPSHANLG delete_tbNPSHANLG 
+         copy_tbNPSHANLG undo_tbNPSHANLG tbNPSHANLG id tilbudsid tilbudsnr 
+         kundenr avgittpris pris_shuntgrupper vaar_ref pris deres_ref 
+         pris_tillegg bet_bet rabatt% tilbudsdato gyldighetstid 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -559,21 +574,26 @@ DO WITH FRAME {&FRAME-NAME}:
 
   oFmNPSHTILBUD = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPSHTILBUD:updateFields  = 'vaar_ref,deres_ref,bet_bet,kundenr,tilbudsdato,pris,avgittpris,gyldighetstid,pris_tillegg,rabatt%,pris_shuntgrupper'.
-  oFmNPSHTILBUD:DisplayFields = 'tilbudsid,id,tilbudsnr,anleggsnr'.
-
+  oFmNPSHTILBUD:DisplayFields = 'tilbudsid,id,tilbudsnr'.
+  oFmNPSHTILBUD:bufferExtraFields = 'anleggsnr'.
+  oFmNPSHTILBUD:customCreateProc = 'npshtilbud_create.p'.
+  oFmNPSHTILBUD:customUpdateValProc = 'ignore'.
   oFmNPSHTILBUD:QUERY-OBJECT = oQryNPSHTILBUD.
   otbNPSHANLG = NEW JBoxToolbar(tbNPSHANLG:HANDLE).
 
   oQryNPSHTILBUD:TOOLBAR-OBJECT = otbNPSHANLG.
   oFmNPSHTILBUD:TOOLBAR-OBJECT = otbNPSHANLG.
+
   assign 
     iGruppeId_saksbehandler       = int(JBoxServerAPI:Instance:FieldValues('Gruppe','Where GruppeNavn="Saksbehandler"','iGruppeId')) 
      
     vaar_ref:DELIMITER       = '|'
+/*    vaar_ref:list-item-pairs = 'Ronny Svennson,Ronny Svensson'*/
     vaar_ref:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList("PersonGruppe,person;cNavn;cNavn","WHERE iGruppeId = " + string(iGruppeId_saksbehandler) + ", First Person of PersonGruppe where bAktiv and person.iJBoxCompanyId = " + DYNAMIC-FUNCTION("getCompanyId") + " BY Person.cNavn")
     bet_bet:DELIMITER       = '|'
-    bet_bet:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList("NPBetalingsbetingelse;BetalingsbetingelseKortnavn;iNPBetalingsbetingelseId","WHERE BetalingsbetingelseAktiv BY NPBetalingsbetingelse.BetalingsbetingelseKortnavn")
+    bet_bet:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList("NPBetalingsbetingelse;Betalingsbetingelse;Betalingsbetingelse","WHERE BetalingsbetingelseAktiv BY NPBetalingsbetingelse.BetalingsbetingelseKortnavn")
     .
+
   RUN InitializeComponents.
 
 END.
@@ -599,6 +619,20 @@ IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"advGuiWin") = "YES" THEN
 THIS-PROCEDURE:CURRENT-WINDOW:WINDOW-STATE = 3.
 THIS-PROCEDURE:CURRENT-WINDOW:MOVE-TO-TOP().
 DYNAMIC-FUNCTION("DoLockWindow",?).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SaveRecord C-Win 
+PROCEDURE SaveRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  oFmNPSHTILBUD:bufferExtraValues = string(oQryNPSHTILBUD:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::anleggsnr).
+  run super.
 
 END PROCEDURE.
 

@@ -560,7 +560,7 @@ PROCEDURE fyll_combo :
   DO WITH FRAME {&FRAME-NAME}:
     ASSIGN  
       NPSHTOPP.vaar_kontakt:DELIMITER = '|'
-      NPSHTOPP.vaar_kontakt:LIST-ITEM-pairs = JBoxServerAPI:Instance:FieldList('NPKontakt;Kontaktperson;id','where true').
+      NPSHTOPP.vaar_kontakt:LIST-ITEM-pairs = JBoxServerAPI:Instance:FieldList('NPKontakt;Kontaktperson;iNPKontaktid','where true').
       .    
   END.
 
@@ -594,6 +594,7 @@ DEFINE VAR cAnleggsnr AS CHAR.
         Btn_OK Btn_Cancel Btn_Help 
       WITH FRAME NY-OPPF.
   dynamic-function('setCurrentRec' in hParent,rowid(npshtopp)).
+  dynamic-function('setNyRecord' in hParent,true).
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

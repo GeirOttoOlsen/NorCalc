@@ -135,48 +135,48 @@ ventiltype
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON copy_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "bmp/copy.bmp":U
      LABEL "Copy" 
-     SIZE 6 BY 1.52 TOOLTIP "Copy (ALT-C)".
+     SIZE 6 BY 1.53 TOOLTIP "Copy (ALT-C)".
 
 DEFINE BUTTON delete_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Delete" 
-     SIZE 6 BY 1.52 TOOLTIP "Delete (CTRL-D)".
+     SIZE 6 BY 1.53 TOOLTIP "Delete (CTRL-D)".
 
 DEFINE BUTTON excel_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "gif/afexcel.gif":U
      LABEL "Excel" 
-     SIZE 6 BY 1.52 TOOLTIP "Excel (ALT-E)".
+     SIZE 6 BY 1.53 TOOLTIP "Excel (ALT-E)".
 
 DEFINE BUTTON filter_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "gif/filter.gif":U
      LABEL "Filter" 
-     SIZE 6 BY 1.52 TOOLTIP "Filter (CTRL-F)".
+     SIZE 6 BY 1.53 TOOLTIP "Filter (CTRL-F)".
 
 DEFINE BUTTON new_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "New" 
-     SIZE 6 BY 1.52 TOOLTIP "New (CTRL-N)".
+     SIZE 6 BY 1.53 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON refresh_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "gif/refresh.gif":U
      LABEL "Refresh" 
-     SIZE 6 BY 1.52 TOOLTIP "Refresh (F5)".
+     SIZE 6 BY 1.53 TOOLTIP "Refresh (F5)".
 
 DEFINE BUTTON save_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Save" 
-     SIZE 6 BY 1.52 TOOLTIP "Save (CTRL-S)".
+     SIZE 6 BY 1.53 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbNPSHVENTILTYPE 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Undo" 
-     SIZE 6 BY 1.52 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 6 BY 1.53 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE fabrikat AS CHARACTER FORMAT "X(15)" 
      LABEL "Fabrikat" 
@@ -192,7 +192,7 @@ DEFINE VARIABLE fiSearch AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE id AS INTEGER FORMAT ">>>>>>9" INITIAL 0 
      LABEL "Ventil id" 
      VIEW-AS FILL-IN 
-     SIZE 11.8 BY 1.
+     SIZE 11.75 BY 1.
 
 DEFINE VARIABLE ventiltype AS CHARACTER FORMAT "X(20)" 
      LABEL "Ventiltype" 
@@ -201,12 +201,12 @@ DEFINE VARIABLE ventiltype AS CHARACTER FORMAT "X(20)"
 
 DEFINE RECTANGLE tbNPSHVENTILTYPE
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 135 BY 1.71.
+     SIZE 135 BY 1.72.
 
 DEFINE VARIABLE VentiltypeAktiv AS LOGICAL INITIAL no 
      LABEL "Aktiv" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -218,7 +218,7 @@ DEFINE QUERY BrwNPSHVENTILTYPE FOR
 DEFINE BROWSE BrwNPSHVENTILTYPE
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNPSHVENTILTYPE C-Win _STRUCTURED
   QUERY BrwNPSHVENTILTYPE NO-LOCK DISPLAY
-      NPSHVENTILTYPE.id COLUMN-LABEL "id" FORMAT ">>>>>>9":U
+      NPSHVENTILTYPE.id COLUMN-LABEL "id" FORMAT ">>>>>>9":U WIDTH 8.4
       NPSHVENTILTYPE.fabrikat COLUMN-LABEL "Fabrikat" FORMAT "X(15)":U
       NPSHVENTILTYPE.ventiltype COLUMN-LABEL "Ventiltype" FORMAT "X(20)":U
             WIDTH 33.4
@@ -228,31 +228,31 @@ DEFINE BROWSE BrwNPSHVENTILTYPE
       NPSHVENTILTYPE.id
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 63 BY 10.29 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 63 BY 10.28 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPSHVENTILTYPE AT ROW 1.1 COL 1.2 WIDGET-ID 10
-     copy_tbNPSHVENTILTYPE AT ROW 1.1 COL 7.2 WIDGET-ID 12
-     undo_tbNPSHVENTILTYPE AT ROW 1.1 COL 13.4 WIDGET-ID 14
-     save_tbNPSHVENTILTYPE AT ROW 1.1 COL 19.4 WIDGET-ID 16
-     delete_tbNPSHVENTILTYPE AT ROW 1.1 COL 25.6 WIDGET-ID 18
-     refresh_tbNPSHVENTILTYPE AT ROW 1.1 COL 31.6 WIDGET-ID 20
-     filter_tbNPSHVENTILTYPE AT ROW 1.1 COL 37.8 WIDGET-ID 22
-     excel_tbNPSHVENTILTYPE AT ROW 1.1 COL 43.8 WIDGET-ID 24
-     fiSearch AT ROW 3.33 COL 2 NO-LABEL
-     BrwNPSHVENTILTYPE AT ROW 4.33 COL 2 WIDGET-ID 200
-     VentiltypeAktiv AT ROW 4.43 COL 76 WIDGET-ID 28
-     id AT ROW 5.29 COL 74 COLON-ALIGNED
-     fabrikat AT ROW 6.29 COL 74 COLON-ALIGNED WIDGET-ID 26
-     ventiltype AT ROW 7.29 COL 74 COLON-ALIGNED
+     new_tbNPSHVENTILTYPE AT ROW 1.09 COL 1.25 WIDGET-ID 10
+     copy_tbNPSHVENTILTYPE AT ROW 1.09 COL 7.25 WIDGET-ID 12
+     undo_tbNPSHVENTILTYPE AT ROW 1.09 COL 13.38 WIDGET-ID 14
+     save_tbNPSHVENTILTYPE AT ROW 1.09 COL 19.38 WIDGET-ID 16
+     delete_tbNPSHVENTILTYPE AT ROW 1.09 COL 25.63 WIDGET-ID 18
+     refresh_tbNPSHVENTILTYPE AT ROW 1.09 COL 31.63 WIDGET-ID 20
+     filter_tbNPSHVENTILTYPE AT ROW 1.09 COL 37.75 WIDGET-ID 22
+     excel_tbNPSHVENTILTYPE AT ROW 1.09 COL 43.75 WIDGET-ID 24
+     fiSearch AT ROW 3.34 COL 2 NO-LABEL
+     BrwNPSHVENTILTYPE AT ROW 4.34 COL 2 WIDGET-ID 200
+     VentiltypeAktiv AT ROW 4.44 COL 76 WIDGET-ID 28
+     id AT ROW 5.28 COL 74 COLON-ALIGNED
+     fabrikat AT ROW 6.28 COL 74 COLON-ALIGNED WIDGET-ID 26
+     ventiltype AT ROW 7.28 COL 74 COLON-ALIGNED
      tbNPSHVENTILTYPE AT ROW 1 COL 1 WIDGET-ID 8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 135.2 BY 13.62 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SCROLLABLE SIZE 135.25 BY 13.63 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -271,12 +271,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Vedlikehold Ventiltype"
-         HEIGHT             = 13.62
-         WIDTH              = 135.2
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 135.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 135.2
+         HEIGHT             = 13.63
+         WIDTH              = 135.25
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 135.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 135.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -334,11 +334,11 @@ THEN C-Win:HIDDEN = yes.
      _TblList          = "norcalc.NPSHVENTILTYPE"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _FldNameList[1]   > "_<CALC>"
-"NPSHVENTILTYPE.id" "id" ">>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHVENTILTYPE.id" "id" ">>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "8.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
 "NPSHVENTILTYPE.fabrikat" "Fabrikat" "X(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
-"NPSHVENTILTYPE.ventiltype" "Ventiltype" "X(20)" "character" ? ? ? ? ? ? no "" no no "33.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHVENTILTYPE.ventiltype" "Ventiltype" "X(20)" "character" ? ? ? ? ? ? no "" no no "33.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
 "NPSHVENTILTYPE.VentiltypeAktiv" "VentiltypeAktiv" "yes/no" "logical" ? ? ? ? ? ? no "" no no "14" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
@@ -513,7 +513,7 @@ END.
 oBrwNPSHVENTILTYPE:OpenQuery().
 
 
-oContainer:initResize(300,200).
+oContainer:initResize(550,500).
 
 END PROCEDURE.
 

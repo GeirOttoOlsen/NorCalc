@@ -18,8 +18,12 @@ DEF VAR ix         AS INT    NO-UNDO.
 CREATE BUFFER hBuffer FOR TABLE "JBoxUserSetting" NO-ERROR.
 IF ERROR-STATUS:ERROR THEN RETURN "No setting table".
 
-IF icSourceFile = "" AND icObjectName = "" AND icContext = "" AND icSettingName = "" THEN
+IF icSourceFile = "" AND icObjectName = "" AND icContext = "" AND icSettingName = "" THEN DO:
+  DELETE OBJECT hBuffer.
   RETURN "".
+END.
+
+IF NUM-ENTRIES(icSettingName,CHR(1)) > 1 THEN cCurrUserId = ENTRY(2,icSettingName,CHR(1)).
 
 DO TRANSACTION ON ERROR UNDO,LEAVE:
   DO ix = 1 TO NUM-ENTRIES(icSettingName):

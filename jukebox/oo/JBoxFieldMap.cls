@@ -80,6 +80,8 @@ CLASS JBoxFieldMap:
       TOOLBAR-OBJECT = ioToolbar.
     END SET.
       
+  DEF PUBLIC PROPERTY CONTAINER-OBJECT AS JBoxContainer GET. SET.    
+      
   DEF PUBLIC PROPERTY updateFields AS CHAR 
       GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"screenUpdateFields"). END GET. 
       SET(icFlds AS CHAR): 
@@ -138,6 +140,19 @@ CLASS JBoxFieldMap:
         swap().  
       END SET.
 
+  DEF PUBLIC PROPERTY disabledFields AS CHAR 
+      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"disabledFields"). END GET. 
+      SET(icSetting AS CHAR): 
+        DYNAMIC-FUNCTION("setAttribute",hFrame,"disabledFields",icSetting).  
+        swap().  
+      END SET.
+
+  DEF PUBLIC PROPERTY fieldNameDeleteWarning AS CHAR 
+      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"fieldNameDeleteWarning"). END GET. 
+      SET(icSetting AS CHAR): 
+        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"fieldNameDeleteWarning",icSetting).
+      END SET.
+
   DEF PUBLIC PROPERTY recordAvailObjects AS CHAR 
       GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"extraUpdateFields"). END GET. 
       SET(icFlds AS CHAR): 
@@ -187,16 +202,16 @@ CLASS JBoxFieldMap:
       END SET.
 
   DEF PUBLIC PROPERTY dynamicDeleteValidation AS LOG 
-      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customDeleteValProc") = "ignore". END GET. 
+      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customDeleteValProc") = "". END GET. 
       SET(ibSetting AS LOG): 
-        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"customDeleteValProc",IF ibSetting THEN "ignore" ELSE "").  
+        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"customDeleteValProc",IF ibSetting THEN "" ELSE "ignore").  
         swap().  
       END SET.
 
   DEF PUBLIC PROPERTY dynamicUpdateValidation AS LOG 
       GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customUpdateValProc") = "ignore". END GET. 
       SET(ibSetting AS LOG): 
-        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"customUpdateValProc",IF ibSetting THEN "ignore" ELSE "").  
+        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"customUpdateValProc",IF ibSetting THEN "" ELSE "ignore").  
         swap().  
       END SET.
               
@@ -258,9 +273,10 @@ CLASS JBoxFieldMap:
       END SET. 
 
   DEF PUBLIC PROPERTY dynamicValidation AS LOG 
-      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customUpdateValProc") NE "ignore". END GET. 
+      GET(): RETURN DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customUpdateValProc") NE "ignore" AND DYNAMIC-FUNCTION("getAttribute",BUFFER-HANDLE,"customDeleteValProc") NE "ignore". END GET. 
       SET(ibSetting AS LOG): 
         DYNAMIC-FUNCTION("setAttribute",hFrame,"customUpdateValProc",IF ibSetting THEN "" ELSE "ignore").
+        DYNAMIC-FUNCTION("setAttribute",BUFFER-HANDLE,"customDeleteValProc",IF ibSetting THEN "" ELSE "ignore").  
         swap().  
       END SET. 
 
@@ -344,6 +360,39 @@ CLASS JBoxFieldMap:
     PUBLISH "setContainerFieldMapObject" FROM hSourceProc (hSourceProc,THIS-OBJECT). /* publish to container class */                             
 	END CONSTRUCTOR.
 
+  METHOD PUBLIC VOID addFrameDisplayFields(INPUT ihFrame AS HANDLE
+                                          ,INPUT icFields AS CHAR):
+    DYNAMIC-FUNCTION("setObjectSourceProc",hSourceProc).  
+    DYNAMIC-FUNCTION("appendFieldMap"
+           ,BUFFER-HANDLE
+           ,ihFrame
+           ,"",""
+           ,icFields,""
+           ,"").
+  END METHOD.                                         
+
+  METHOD PUBLIC VOID addFrameUpdateFields(INPUT ihFrame AS HANDLE
+                                         ,INPUT icFields AS CHAR):
+    DEF VAR cScreenFlds AS CHAR NO-UNDO.
+    DEF VAR cDbFlds     AS CHAR NO-UNDO.
+    DEF VAR ix  AS INT NO-UNDO.
+    IF NUM-ENTRIES(icFields,";") > 1 THEN 
+      DO ix = 1 TO NUM-ENTRIES(icFields):
+        ASSIGN cDbFlds = cDbFlds + (IF cDbFlds NE "" THEN "," ELSE "") + ENTRY(1,ENTRY(ix,icFields),";")
+               cScreenFlds = cScreenFlds + (IF cScreenFlds NE "" THEN "," ELSE "") 
+                           + (IF NUM-ENTRIES(ENTRY(ix,icFields),";") > 1 THEN ENTRY(2,ENTRY(ix,icFields),";") ELSE ENTRY(ix,icFields))
+                           . 
+      END.  
+    ELSE cDbFlds = icFields.  
+    DYNAMIC-FUNCTION("setObjectSourceProc",hSourceProc).  
+    DYNAMIC-FUNCTION("appendFieldMap"
+           ,BUFFER-HANDLE
+           ,ihFrame
+           ,cDbFlds,cScreenFlds
+           ,"",""
+           ,"").
+  END METHOD.                                         
+
   METHOD PUBLIC VOID editRecord():
     RUN InvokeMethod(BUFFER-HANDLE,"editRecord"). 
   END METHOD.
@@ -382,6 +431,33 @@ CLASS JBoxFieldMap:
       RETURN WIDGET-HANDLE(ENTRY(LOOKUP(icFieldName,THIS-OBJECT:updateFields),THIS-OBJECT:updateWidgets)).
     ELSE
       RETURN ?. 
+  END METHOD.
+
+  METHOD PUBLIC VOID setSensitiveFields(INPUT icFieldList AS CHAR):
+    DEF VAR cScreenUpdateWidgets AS CHAR NO-UNDO.
+    DEF VAR cScreenUpdateFields  AS CHAR NO-UNDO.
+    DEF VAR cDisabledFields      AS CHAR NO-UNDO.
+    DEF VAR hWidget              AS HANDLE NO-UNDO.
+    DEF VAR ix                   AS INT NO-UNDO.
+    
+    cScreenUpdateWidgets = getJBoxAttribute("ScreenUpdateWidgets").
+    cScreenUpdateFields  = getJBoxAttribute("ScreenUpdateFields").
+    DO ix = 1 TO NUM-ENTRIES(icFieldList):
+      IF LOOKUP(ENTRY(ix,icFieldList),cScreenUpdateFields) = 0 THEN DO:
+        MESSAGE "Invalid fieldname in fieldlist for setSensitiveFields: " ENTRY(ix,icFieldList)
+        VIEW-AS ALERT-BOX.
+        RETURN.
+      END.
+    END.  
+    DO ix = 1 TO NUM-ENTRIES(cScreenUpdateWidgets):
+      hWidget = WIDGET-HANDLE(ENTRY(ix,cScreenUpdateWidgets)) NO-ERROR.
+      IF VALID-HANDLE(hWidget) THEN DO:
+        IF NOT CAN-DO(icFieldList,hWidget:NAME) THEN
+          cDisabledFields = cDisabledFields + (IF cDisabledFields NE "" THEN "," ELSE "") + hWidget:NAME.
+      END.
+    END. 
+    setJBoxAttribute("DisabledFields",cDisabledFields).
+    DYNAMIC-FUNCTION("setFieldMapState",THIS-OBJECT:BUFFER-HANDLE,"modified").
   END METHOD.
     
   METHOD PUBLIC VOID setJBoxAttribute(icAttribute AS CHAR

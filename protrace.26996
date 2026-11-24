@@ -1,0 +1,330 @@
+=====================================================
+PROGRESS stack trace as of Sun Feb 25 16:44:46 2024
+=====================================================
+
+Progress OpenEdge Release 12.7 build 1156 on WINNT 
+
+Startup parameters:
+-pf C:\Progress\OE127x64\startup.pf,-cpinternal ISO8859-1,-cpstream ISO8859-1,-cpcoll Norwegian,-cpcase Basic,-d dmy,-numsep 44,-numdec 46,(end .pf),-wy,-nosplash,-debugalert,-inp 16000,-tok 4000,-rereadnolock,-s 200,-mmax 65534,-T C:/OpenEdge/OE127_WRK,-basekey INI,-assemblies E:\ws_norshunt\norcalc\assemblies,-p C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p
+
+Exception code: C0000005 ACCESS_VIOLATION
+Fault address:  00007FFCD49559EB 01:00000000007949EB C:\Progress\OE127x64\bin\prow.dll
+
+Registers:
+RAX:000000000000000B
+RBX:0000008654D3D08C
+RCX:0000000000000010
+RDX:0000000000000000
+RSI:0000000000000000
+RDI:0000000000000000
+R8 :0000000000000000
+R9 :0000000000000000
+R10:0000000000000E70
+R11:0000008654D3D0D0
+R12:0000000000371A42
+R13:00000000000002F8
+R14:0000000000000000
+R15:000001CA0589EE50
+CS:RIP:0033:00007FFCD49559EB
+SS:RSP:002B:0000008654D3D000  RBP:0000000000000000
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010202
+
+
+Debugging dll: C:\Progress\OE127x64\bin\DBGHELP.DLL
+Symbol Path:
+ C:\Progress\OE127x64\bin;C:\Progress\OE127x64\pdbfiles
+
+
+Call Stack:
+Address           Frame
+00007FFCD49559EB  0000008654D3D050  wwLockEditorBuffer+1AB
+00007FFCD4955332  0000008654D3D0E0  wwGetEditorValue+62
+00007FFCD4956E1E  0000008654D3D380  wwQueryEditorAttr+100E
+00007FFCD4497E02  0000008654D3D3E0  umEdGetAttr+682
+00007FFCD44A1161  0000008654D3D4F0  umFldClassGetAttr+B31
+00007FFCD44434B6  0000008654D3D550  umSuperGetAttr+13A6
+00007FFCD44403EC  0000008654D3D590  ioGetAttribute+EC
+00007FFCD460BED1  0000008654D3D610  rnwdatr+321
+00007FFCD460C6B3  0000008654D3D670  rnwdatrx+63
+00007FFCD42BB721  0000008654D3D730  fmeval+371
+00007FFCD460FEFF  0000008654D3D9C0  rnuassgn+B4F
+00007FFCD460D7F3  0000008654D3DA20  rnasgsimple+103
+00007FFCD463F1E5  0000008654D3DAD0  rnexec_entry+305
+00007FFCD464B3DC  0000008654D3DB00  rninterpret+3C
+00007FFCD44476ED  0000008654D3DBE0  umeDispatchEvent+108D
+00007FFCD491A51C  0000008654D3DCD0  wwRunDispatcher+21C
+00007FFCD4924901  0000008654D3DD00  wwRunABLIfFromCLR+C1
+00007FFCD4A34089  0000008654D3DD50  Progress::ClrBridge::rnProFromClr::runEventDispatcher+9
+00007FFD23E3057E  0000008654D3DD58  0000:0000000000000000 
+0000000000000001  0000008654D3DD60  0000:0000000000000000 
+00000000C0000005  0000008654D3DD68  0000:0000000000000000 
+0000008654D3BC18  0000008654D3DD70  0000:0000000000000000 
+0000000000000001  0000008654D3DD78  0000:0000000000000000 
+0000463E32410170  0000008654D3DD80  0000:0000000000000000 
+00007FFD83C56370  0000008654D3DD88  LegacyNGenTryEnumerateFusionCache+170780
+0000008654D3E3E0  0000008654D3DD90  0000:0000000000000000 
+00007FFD23EE71B8  0000008654D3DD98  0000:0000000000000000 
+00007FFD23EE71B8  0000008654D3DDA0  0000:0000000000000000 
+0000008654D3DD60  0000008654D3DDA8  0000:0000000000000000 
+00007FFD23E3057E  0000008654D3DDB0  0000:0000000000000000 
+0000008654D3DE00  0000008654D3DDB8  0000:0000000000000000 
+00007FFD23EE71B8  0000008654D3DDC0  0000:0000000000000000 
+0000000000000001  0000008654D3DDC8  0000:0000000000000000 
+000001CA5A5B7410  0000008654D3DDD0  0000:0000000000000000 
+000001CA5AABEE08  0000008654D3DDD8  0000:0000000000000000 
+
+
+** ABL Stack Trace **
+
+--> choose_copy adeuib/_uibmain.p at line 7717  (E:\ws_norshunt\norcalc\jukebox\Tools\12\adeuib\_uibmain.r)
+    USER-INTERFACE-TRIGGER adeuib/_uibmain.p at line 5449  (E:\ws_norshunt\norcalc\jukebox\Tools\12\adeuib\_uibmain.r)
+    copy adeuib/_oeideuib.p at line 618  (adeuib/_oeideuib.r)
+    executeCmd C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p at line 255  (C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p)
+    ReceiveCommand C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_socketclient.p at line 497  (C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_socketclient.p)
+    adeuib/_uibmain.p at line -1  (E:\ws_norshunt\norcalc\jukebox\Tools\12\adeuib\_uibmain.r)
+    _ab.p at line 394  (C:\Progress\OE127x64\gui\_ab.r)
+    runAppBuilder c:/progress/oe127x64/oeide/eclipse/plugins/com.openedge.pdt.oestudio_12.7.0.00/runtime/_abruntime.p at line 151  (c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.oestudio_12.7.0.00\runtime\_abruntime.p)
+    executeCmd C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p at line 255  (C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p)
+    ReceiveCommand C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_socketclient.p at line 497  (C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_socketclient.p)
+    C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p at line 174  (C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_server.p)
+
+** Persistent procedures/Classes **
+
+Handle  File Name
+018698  E:\ws_norshunt\norcalc\jukebox\Tools\12\JukeBox\abTmpDrawObjSuper.r
+018692  adeuib/ide/_widgetevent.r
+018692  adeuib/_ideeventservice.r
+017746  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017744  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017742  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017740  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017738  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017736  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017734  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017732  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017730  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017728  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017726  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017724  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017722  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017720  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017718  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017716  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017714  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017712  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017710  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017708  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017706  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017704  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017702  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017700  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017698  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017696  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017694  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017692  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017690  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017688  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017686  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017684  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017682  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017680  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017678  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017676  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017674  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017672  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017670  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017668  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017666  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017664  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017662  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017660  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017658  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017656  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017654  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017652  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017650  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017648  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017646  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017644  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017642  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017640  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017638  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017636  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017634  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017632  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017630  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017628  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017626  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017624  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017622  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017620  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017618  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017616  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017614  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017612  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017610  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017608  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017606  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017604  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017602  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017600  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017598  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017596  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017594  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017592  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017590  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017588  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017586  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017584  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017582  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017580  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017578  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017576  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017574  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017572  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017570  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017568  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017566  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017564  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017562  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017560  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017558  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017556  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017554  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017552  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017550  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017548  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017546  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017544  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017542  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017540  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017538  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017536  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017534  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+017170  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowse.r
+017155  E:\ws_norshunt\norcalc\jukebox\oo\JBoxPopupMenu.r
+017152  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+017151  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+017150  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+017149  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+017139  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+017136  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDynTableGrid.w
+016492  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016490  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016488  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016486  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016484  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016482  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016480  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+016416  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowse.r
+016401  E:\ws_norshunt\norcalc\jukebox\oo\JBoxPopupMenu.r
+016398  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+016397  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+016396  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+016395  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+016385  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+016382  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDynTableGrid.w
+012926  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012924  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012922  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012920  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012918  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012916  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012914  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012850  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowse.r
+012838  E:\ws_norshunt\norcalc\jukebox\oo\JBoxPopupMenu.r
+012835  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+012834  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+012833  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+012832  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+012822  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+012819  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDynTableGrid.w
+012630  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012628  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012626  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012624  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012622  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012620  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012618  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012616  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012614  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012612  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012610  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012608  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowseFillIn.r
+012535  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerQuery.cls
+000000  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerQuery.cls (STATIC)
+012526  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowse.r
+012511  E:\ws_norshunt\norcalc\jukebox\oo\JBoxPopupMenu.r
+012508  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+012507  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+012506  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+012505  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+012495  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+012492  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDynTableGrid.w
+008782  E:\ws_norshunt\norcalc\jukebox\oo\JBoxBrowse.r
+008769  E:\ws_norshunt\norcalc\jukebox\oo\JBoxPopupMenu.r
+008766  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+008765  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+008764  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+008763  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+008753  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+008750  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDynTableGrid.w
+008731  E:\ws_norshunt\norcalc\jukebox\oo\JBoxMsTabsHelper.r
+008730  E:\ws_norshunt\norcalc\jukebox\oo\JBoxMsTabs.r
+008663  E:\ws_norshunt\norcalc\jukebox\oo\JBoxToolbar.r
+007256  E:\ws_norshunt\norcalc\jukebox\oo\JBoxOOTimer.r
+007255  E:\ws_norshunt\norcalc\jukebox\oo\JBoxSession.r
+007217  E:\ws_norshunt\norcalc\jukebox\server\jbserv_api_for_server.p
+007184  E:\ws_norshunt\norcalc\jukebox\oo\JBoxServerAPI.r
+000000  E:\ws_norshunt\norcalc\jukebox\oo\JBoxServerAPI.r (STATIC)
+007180  E:\ws_norshunt\norcalc\jukebox\oo\JBoxSchemaCache.r
+000000  E:\ws_norshunt\norcalc\jukebox\oo\JBoxSchemaCache.r (STATIC)
+007134  E:\ws_norshunt\norcalc\jukebox\oo\uc\JBoxMsTreeView.cls
+007134  E:\ws_norshunt\norcalc\jukebox\oo\uc\JBoxUCbase.cls
+007121  E:\ws_norshunt\norcalc\jukebox\oo\JBoxStatusBar.r
+007120  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainerHelper.r
+007119  E:\ws_norshunt\norcalc\jukebox\oo\JBoxContainer.r
+007100  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapperForm.r
+007098  E:\ws_norshunt\norcalc\jukebox\oo\JBoxWrapWindowInForm.r
+007094  E:\ws_norshunt\norcalc\jukebox\winsrc\JBoxDbViewer.w
+006997  E:\ws_norshunt\norcalc\jukebox\oo\JBoxOOTimer.r
+000000  E:\ws_norshunt\norcalc\jukebox\oo\JBoxSession.r (STATIC)
+001946  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerTrans.cls
+000000  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerTrans.cls (STATIC)
+001927  E:\ws_norshunt\norcalc\jukebox\server\jbserv_api_for_server.p
+001922  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerSide.cls
+000000  E:\ws_norshunt\norcalc\jukebox\server\JBoxServerSide.cls (STATIC)
+001912  E:\ws_norshunt\norcalc\jukebox\lib\JBoxFUlib.p
+001903  E:\ws_norshunt\norcalc\jukebox\lib\JBoxASLib.p
+001902  E:\ws_norshunt\norcalc\jukebox\lib\JBoxObjLib.p
+001900  E:\ws_norshunt\norcalc\jukebox\lib\JBoxUIlib.p
+001899  E:\ws_norshunt\norcalc\jukebox\lib\ResizeLib.p
+001634  adeuib/ide/request/_requestmanager.r
+000000  adeuib/ide/request/_request.r (STATIC)
+001607  adeuib/_oeideuib.r
+001606  adecomm/as-utils.r
+001567  adecomm/_palette.r
+001566  protools/_protool.r
+001162  adecomm/_winmenu.r
+001160  adeshar/_mlmgr.r
+001031  adeuib/_oeidesync.r
+001015  adeuib/_abfuncs.r
+001014  E:\ws_norshunt\norcalc\jukebox\Tools\12\adecomm\oeideservice.r
+001010  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_serverdefault.p
+001009  e:\ws_norshunt\.metadata\.plugins\com.openedge.pdt.core\.runtime\org.sonarlint.eclipse.pdt\oe\slintsch.p
+001008  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.ve_12.7.0.00\runtime\_ideveruntime.p
+001007  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.text_12.7.0.00\runtime\_idetxtruntime.p
+001006  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_idewsruntime.p
+001005  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_idedbruntime.p
+001004  c:\progress\oe127x64\oeide\eclipse\plugins\com.openedge.pdt.oestudio_12.7.0.00\runtime\_abruntime.p
+001002  C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_socketclient.p
+001001  C:\Progress\OE127x64\oeide\eclipse\plugins\com.openedge.pdt.project_12.7.0.00\runtime\_oeidecontext.p
+
+** PROPATH **
+E:\ws_norshunt\norcalc,E:\ws_norshunt\norcalc\oo,E:\ws_norshunt\norcalc\winsrc,E:\ws_norshunt\norcalc\img,E:\ws_norshunt\norcalc\Source,E:\ws_norshunt\norcalc\jukebox\server,E:\ws_norshunt\norcalc\server,E:\ws_norshunt\norcalc\jukebox,E:\ws_norshunt\norcalc\jukebox\src,E:\ws_norshunt\norcalc\jukebox\img,E:\ws_norshunt\norcalc\jukebox\oo,E:\ws_norshunt\norcalc\jukebox\obj,E:\ws_norshunt\norcalc\jukebox\lib,E:\ws_norshunt\norcalc\jukebox\winsrc,E:\ws_norshunt\norcalc\jukebox\winsrc\admin,E:\ws_norshunt\norcalc\jukebox\Tools,E:\ws_norshunt\norcalc\jukebox\Tools\12,C:\Progress\OE127x64,C:\Progress\OE127x64\bin,C:\Progress\OE127x64\gui\,C:\Progress\OE127x64\gui\adecomm.pl,C:\Progress\OE127x64\gui\adecomp.pl,C:\Progress\OE127x64\gui\adedict.pl,C:\Progress\OE127x64\gui\adeedit.pl,C:\Progress\OE127x64\gui\adeicon.pl,C:\Progress\OE127x64\gui\adeshar.pl,C:\Progress\OE127x64\gui\adeuib.pl,C:\Progress\OE127x64\gui\adeweb.pl,C:\Progress\OE127x64\gui\adexml.pl,C:\Progress\OE127x64\gui\dataadmin.pl,C:\Progress\OE127x64\gui\prodict.pl,C:\Progress\OE127x64\gui\protools.pl,C:\Progress\OE127x64\gui\OpenEdge.Core.pl,C:\Progress\OE127x64\gui\OpenEdge.BusinessLogic.pl,C:\Progress\OE127x64\gui\netlib\OpenEdge.Net.pl,C:\Progress\OE127x64\gui,C:\Progress\OE127x64\gui\ablunit.apl,C:\Progress\OE127x64\gui\adecomm.apl,C:\Progress\OE127x64\gui\adedict.apl,C:\Progress\OE127x64\gui\adeicon.apl,C:\Progress\OE127x64\gui\dataadmin.apl,C:\Progress\OE127x64\gui\OpenEdge.BusinessLogic.apl,C:\Progress\OE127x64\gui\OpenEdge.Core.apl,C:\Progress\OE127x64\gui\OpenEdge.ServerAdmin.apl,C:\Progress\OE127x64\gui\prodict.apl,C:\Progress\OE127x64\gui\adedesk.pl,C:\Progress\OE127x64\gui\aderes.pl
+
+** Databases (logical/type/physical) **
+   norcalc             PROGRESS  e:/dbs/norcalc12/norcalc
+
+** End of Protrace **

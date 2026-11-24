@@ -19,6 +19,8 @@ DEF VAR hWriteAccess         AS HANDLE NO-UNDO.
 
 iMenuId = INT(ENTRY(1,icParam,";")).
 
+{incl/validatecaller.i}
+
 CREATE BUFFER hBuffJBoxCompanyMenu FOR TABLE "JBoxCompanyMenu" NO-ERROR.
 IF ERROR-STATUS:ERROR THEN DO:
   obOk = NO.  

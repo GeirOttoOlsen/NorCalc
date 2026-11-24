@@ -17,6 +17,18 @@ DEF VAR cField        AS CHAR   NO-UNDO.
 DEF VAR cValue        AS CHAR   NO-UNDO.
 DEF VAR hField        AS HANDLE NO-UNDO.
 DEF VAR bOk           AS LOG    NO-UNDO.
+DEF VAR hbJBoxChangeLogHeader AS HANDLE NO-UNDO.
+DEF VAR hbJBoxChangeLog       AS HANDLE NO-UNDO.
+DEF VAR hqChangeLog           AS HANDLE NO-UNDO.
+DEF VAR cTable                AS CHAR   NO-UNDO.
+
+{incl/validatecaller.i}
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxChangeLogHeader",OUTPUT hbJBoxChangeLogHeader) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxChangeLog",OUTPUT hbJBoxChangeLog) THEN RETURN.
+
+CREATE QUERY hqChangeLog.
+hqChangeLog:SET-BUFFERS(hbJBoxChangeLog).
 
 UndoChangeLog:
 DO TRANSACTION ON ERROR UNDO, LEAVE.
@@ -27,43 +39,44 @@ DO TRANSACTION ON ERROR UNDO, LEAVE.
     RETURN.
   END.
 
-  FIND FIRST JBoxChangeLogHeader EXCLUSIVE-LOCK 
-       WHERE JBoxChangeLogHeader.iJBoxChangeLogHeaderId = INT(ihBuffer:BUFFER-FIELD("iJBoxChangeLogHeaderId"):BUFFER-VALUE)
-       NO-WAIT NO-ERROR.
-  IF NOT AVAIL JBoxChangeLogHeader THEN DO:
+  bOK = hbJBoxChangeLogHeader:FIND-FIRST("WHERE JBoxChangeLogHeader.iJBoxChangeLogHeaderId = INT('" + STRING(ihBuffer::iJBoxChangeLogHeaderId) + "')",EXCLUSIVE-LOCK,NO-WAIT)
+        NO-ERROR.
+  IF NOT bOk THEN DO:
     ocReturn = "Changelog not available".
     RETURN.
   END.
-  IF JBoxChangeLogHeader.dUndoDate NE ? THEN DO:
+  IF hbJBoxChangeLogHeader::dUndoDate NE ? THEN DO:
     ocReturn = "Changes are already undone".
     RETURN.
   END.
 
-  ASSIGN JBoxChangeLogHeader.dUndoDate   = TODAY
-         JBoxChangeLogHeader.iUndoTime   = TIME
-         JBoxChangeLogHeader.dModified   = TODAY
-         JBoxChangeLogHeader.cModifiedBy = DYNAMIC-FUNCTION("getASuserId" IN SOURCE-PROCEDURE).
+  ASSIGN hbJBoxChangeLogHeader::dUndoDate   = TODAY
+         hbJBoxChangeLogHeader::iUndoTime   = TIME
+         hbJBoxChangeLogHeader::dModified   = TODAY
+         hbJBoxChangeLogHeader::cModifiedBy = DYNAMIC-FUNCTION("getASuserId" IN SOURCE-PROCEDURE).
 
-  FOR EACH JBoxChangeLog NO-LOCK
-      OF JBoxChangeLogHeader
-      :
-    IF NOT CAN-DO(cBufferNames,JBoxChangeLog.cTableChanged) THEN DO:
+  hqChangeLog:QUERY-PREPARE ("FOR EACH JBoxChangeLog NO-LOCK WHERE JBoxChangeLog.iJboxChangeLogHeaderId = " + STRING(hbJBoxChangeLogHeader::iJBoxChangeLogHeaderId)).
+  hqChangeLog:QUERY-OPEN ().
+  REPEAT WHILE hqChangeLog:GET-NEXT():
+    IF NOT CAN-DO(cBufferNames,hbJBoxChangeLog::cTableChanged) THEN DO:
       ASSIGN iBuffCnt = iBuffCnt + 1
-             cBufferNames = cBufferNames + (IF cBufferNames NE "" THEN "," ELSE "") + JBoxChangeLog.cTableChanged.
-      CREATE BUFFER hBuffer[iBuffCnt] FOR TABLE JBoxChangeLog.cTableChanged.
+             cBufferNames = cBufferNames + (IF cBufferNames NE "" THEN "," ELSE "") + hbJBoxChangeLog::cTableChanged
+             cTable = hbJBoxChangeLog::cTableChanged
+             .
+      CREATE BUFFER hBuffer[iBuffCnt] FOR TABLE cTable.
       iCurrBuffer = iBuffCnt.
     END.
-    ELSE iCurrBuffer = LOOKUP(JBoxChangeLog.cTableChanged,cBufferNames).
+    ELSE iCurrBuffer = LOOKUP(hbJBoxChangeLog::cTableChanged,cBufferNames).
 
    cFindString = "WHERE ".
 
-    DO ix = 1 TO NUM-ENTRIES(JBoxChangeLog.cEntityIdFields):
-      ASSIGN cField = ENTRY(ix,JBoxChangeLog.cEntityIdFields)
-             cValue = ENTRY(ix,JBoxChangeLog.cEntityIdValues,"|")
+    DO ix = 1 TO NUM-ENTRIES(hbJBoxChangeLog::cEntityIdFields):
+      ASSIGN cField = ENTRY(ix,hbJBoxChangeLog::cEntityIdFields)
+             cValue = ENTRY(ix,hbJBoxChangeLog::cEntityIdValues,"|")
              .
       hField = hBuffer[iCurrBuffer]:BUFFER-FIELD(cField) NO-ERROR.
       IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
-        ocReturn = "Field " + cField + " does not exist in table " + JBoxChangeLog.cTableChanged.
+        ocReturn = "Field " + cField + " does not exist in table " + hbJBoxChangeLog::cTableChanged.
         UNDO, LEAVE UndoChangeLog.
       END.
       CASE hField:DATA-TYPE:
@@ -79,21 +92,21 @@ DO TRANSACTION ON ERROR UNDO, LEAVE.
 
     bOk = hBuffer[iCurrBuffer]:FIND-FIRST(cFindString,EXCLUSIVE-LOCK,NO-WAIT) NO-ERROR.
     IF hBuffer[iCurrBuffer]:LOCKED THEN DO:
-      ocReturn = "Record " + cFindString + " in table " + JBoxChangeLog.cTableChanged + " is locked".
+      ocReturn = "Record " + cFindString + " in table " + hbJBoxChangeLog::cTableChanged + " is locked".
       UNDO, LEAVE UndoChangeLog.
     END.
-    IF bOk THEN DO ix = 1 TO NUM-ENTRIES(JBoxChangeLog.cFieldsChanged):
-      hField = hBuffer[iCurrBuffer]:BUFFER-FIELD(ENTRY(ix,JBoxChangeLog.cFieldsChanged)) NO-ERROR.
+    IF bOk THEN DO ix = 1 TO NUM-ENTRIES(hbJBoxChangeLog::cFieldsChanged):
+      hField = hBuffer[iCurrBuffer]:BUFFER-FIELD(ENTRY(ix,hbJBoxChangeLog::cFieldsChanged)) NO-ERROR.
       IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN DO:
-        ocReturn = "Field " + ENTRY(ix,JBoxChangeLog.cFieldsChanged) + " does not exist in table " + JBoxChangeLog.cTableChanged.
+        ocReturn = "Field " + ENTRY(ix,hbJBoxChangeLog::cFieldsChanged) + " does not exist in table " + hbJBoxChangeLog::cTableChanged.
         UNDO, LEAVE UndoChangeLog.
       END.
       CASE hField:DATA-TYPE:
-           WHEN "character" THEN hField:BUFFER-VALUE = ENTRY(ix,JBoxChangeLog.cFromValues,"|").
-           WHEN "date"      THEN hField:BUFFER-VALUE = DATE(ENTRY(ix,JBoxChangeLog.cFromValues,"|")).
-           WHEN "decimal"   THEN hField:BUFFER-VALUE = DECIMAL(ENTRY(ix,JBoxChangeLog.cFromValues,"|")).
-           WHEN "integer"   THEN hField:BUFFER-VALUE = INTEGER(ENTRY(ix,JBoxChangeLog.cFromValues,"|")).
-           WHEN "logical"   THEN hField:BUFFER-VALUE = LOGICAL(ENTRY(ix,JBoxChangeLog.cFromValues,"|")).
+           WHEN "character" THEN hField:BUFFER-VALUE = ENTRY(ix,hbJBoxChangeLog::cFromValues,"|").
+           WHEN "date"      THEN hField:BUFFER-VALUE = DATE(ENTRY(ix,hbJBoxChangeLog::cFromValues,"|")).
+           WHEN "decimal"   THEN hField:BUFFER-VALUE = DECIMAL(ENTRY(ix,hbJBoxChangeLog::cFromValues,"|")).
+           WHEN "integer"   THEN hField:BUFFER-VALUE = INTEGER(ENTRY(ix,hbJBoxChangeLog::cFromValues,"|")).
+           WHEN "logical"   THEN hField:BUFFER-VALUE = LOGICAL(ENTRY(ix,hbJBoxChangeLog::cFromValues,"|")).
       END CASE.
     END.
   END.
@@ -104,3 +117,9 @@ DO ix = 1 TO 20:
 END.
 
 obOK = ocReturn = "".
+
+FINALLY:
+  DELETE OBJECT hbJBoxChangeLog NO-ERROR.
+  DELETE OBJECT hbJBoxChangeLogHeader NO-ERROR.
+  DELETE OBJECT hbJBoxChangeLog NO-ERROR.      
+END FINALLY.

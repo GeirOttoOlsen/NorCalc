@@ -1,0 +1,25 @@
+
+Buffer: JBoxMenuToMenu    Action: create      Criteria:     Codepage: ISO8859-1
+Key fields: iToMenuId,iFromMenuId
+Fields: iToMenuId,iFromMenuId,iSeq
+Values: 81820
+Val.proc: 
+Create proc: 
+Post update proc: 
+ocReturn: 
+Initial action: yes  cFindString:  Avail TransActBuffer: yes
+Start update, cCurrUpdValCrit: 
+              cCurrValueFields: iToMenuId,iFromMenuId,iSeq
+              cCurrValues (replaced CHR(1) with |): 81|82|0
+              cCurrValType: 
+Update validation message: 
+Buffer: JBoxMenuToMenu. Action: create done.
+
+STRING(hCurrBuffer:ROWID): 0x000000000002712f
+hBuffTransRecord:BUFFER-FIELD("iTransRecordId"):BUFFER-VALUE: 1
+
+hBuffTransRecord:BUFFER-FIELD("cTransRecordValues"):BUFFER-VALUE: 81820
+
+hBuffTransRecord:BUFFER-FIELD("cTransRecordIdValues"):BUFFER-VALUE: 
+----------------------------------------------
+

@@ -4,11 +4,21 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
-DEF VAR hLogoutTime AS HANDLE NO-UNDO.
+{incl/validatecaller.i} 
 
-FIND FIRST JBoxLoginSession WHERE JBoxLoginSession.cSessionId = icSessionId EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
-IF AVAIL JBoxLoginSession THEN DO:
-  hLogoutTime = BUFFER JBoxLoginSession:HANDLE:BUFFER-FIELD("iLogoutTime") NO-ERROR.
+DEF VAR hLogoutTime AS HANDLE NO-UNDO.
+DEF VAR hbJBoxLoginSession AS HANDLE NO-UNDO.
+DEF VAR bFound AS LOG NO-UNDO.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxLoginSession",OUTPUT hbJBoxLoginSession) THEN RETURN.
+
+bFound = hbJBoxLoginSession:FIND-FIRST("WHERE JBoxLoginSession.cSessionId = '" + icSessionId + "'", EXCLUSIVE-LOCK, NO-WAIT) NO-ERROR.
+IF bFound THEN DO:
+  hLogoutTime = hbJBoxLoginSession:HANDLE:BUFFER-FIELD("iLogoutTime") NO-ERROR.
   IF VALID-HANDLE(hLogoutTime) THEN
     hLogoutTime:BUFFER-VALUE = TIME.
 END.
+
+FINALLY:
+  DELETE OBJECT hbJBoxLoginSession NO-ERROR.
+END FINALLY.

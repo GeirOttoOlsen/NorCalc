@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR cMailTo       AS CHAR NO-UNDO.
 DEF VAR cStatus       AS CHAR NO-UNDO.
 DEF VAR cMailFrom     AS CHAR NO-UNDO.

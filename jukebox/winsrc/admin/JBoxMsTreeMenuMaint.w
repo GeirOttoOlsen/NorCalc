@@ -163,6 +163,13 @@ FUNCTION RefreshMenuDropDown RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ReposToMenuId C-Win 
+FUNCTION ReposToMenuId RETURNS LOGICAL
+  ( INPUT iMyParameter AS INT )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setImgSize C-Win 
 FUNCTION setImgSize RETURNS LOGICAL
   ( INPUT icImage      AS CHAR,
@@ -388,6 +395,8 @@ END.
 ON VALUE-CHANGED OF cmbMenu IN FRAME DEFAULT-FRAME /* Menu */
 DO:
   RUN FillTreeView.
+  APPLY "end-move" TO btnSplitBarX IN FRAME frSplitBarX.
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -443,10 +452,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     WAIT-FOR CLOSE OF THIS-PROCEDURE.
 END.
 
-ON "window-resized" OF {&WINDOW-NAME} DO:
-  DYNAMIC-FUNCTION("setWidgetResize",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE:CURRENT-WINDOW,"resize","").
-  RUN MoveToTop IN hCurrTabProc NO-ERROR.
-END.
+/*ON "window-resized" OF {&WINDOW-NAME} DO:                                                                     */
+/*  DYNAMIC-FUNCTION("setWidgetResize",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE:CURRENT-WINDOW,"resize","").*/
+/*  RUN MoveToTop IN hCurrTabProc NO-ERROR.                                                                     */
+/*END.                                                                                                          */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -792,6 +801,7 @@ oJBoxMsTreeView:AddContextMenuItem("", "NewMenu", "MenuRecord","Menu", "bmp\add.
 
 oJBoxMsTreeView:AddContextMenuStrip("", "menubar").
 oJBoxMsTreeView:AddContextMenuItem("menubar","","MenuSubRecord", "New sub-menu", "bmp\add.bmp").
+oJBoxMsTreeView:AddContextMenuItem("menubar","","MenuItemRecord","New menu-item", "bmp\add.bmp").
 oJBoxMsTreeView:AddContextMenuItem("menubar","","DeleteRecord","Delete", "bmp\deleterec.bmp").
 oJBoxMsTreeView:AddContextMenuItem("menubar","","DeleteLinkRecord","Delete link to parent", "bmp\delete.bmp").
 oJBoxMsTreeView:AddContextMenuItem("menubar","","WhereUsedRecord","Where used..", "bmp\links.bmp").
@@ -918,7 +928,6 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ImportXMLRecord C-Win 
 PROCEDURE ImportXMLRecord :
-
 DEF VAR lcXML         AS LONGCHAR NO-UNDO.
 DEF VAR oMenuXml      AS JBoxXmlDoc NO-UNDO.
 DEF VAR cFileName     AS CHAR NO-UNDO.
@@ -1036,8 +1045,9 @@ DO WITH FRAME {&FRAME-NAME}:
                             
   oQryJBoxMenu = NEW JBoxQuery(hTempTable).
  
-  oTabMenu = NEW JBoxMsTabs(TabMenu:HANDLE,oQryJBoxMenu,"newbmp\regblue.bmp;newbmp\user16.bmp").
+  oTabMenu = NEW JBoxMsTabs(TabMenu:HANDLE,oQryJBoxMenu,"newbmp\regblue.bmp;newbmp\user16.bmp;newbmp\application.bmp").
   oTabMenu:AddPage("Menu details", "JBoxMsMenuView.w","regblue.bmp").
+  oTabMenu:AddPage("All menu-items", "JBoxMenuBrw.w","application.bmp").
  
   oTbJBoxMenu = NEW JBoxToolbar(TbJBoxMenu:HANDLE).
 
@@ -1203,6 +1213,8 @@ PROCEDURE MoveToTop :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+APPLY "end-move" TO btnSplitBarX IN FRAME frSplitBarX.
+
 IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"advGuiWin") = "YES" THEN
   RUN ShowForm("").
 
@@ -1308,13 +1320,9 @@ IF iReturn = 2 AND cReturn NE "" THEN DO:
       ELSE LEAVE.
     END.
     
-    DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
-    DYNAMIC-FUNCTION("ExpandTree" IN hTree,TRIM(cExpandList,"|")).
-    DYNAMIC-FUNCTION("SelectNode" IN hTree,cNode).
-    RUN tvNodeEvent("select",cNode).
-    DYNAMIC-FUNCTION("DoLockWindow",?).
+    oJBoxMsTreeView:ExpandNodes(TRIM(cExpandList,"|")).
+    oJBoxMsTreeView:SelectNode(TRIM(cNode)).
   END.
-
 END.
 
 END PROCEDURE.
@@ -1387,23 +1395,13 @@ IF iReturn = 2 AND cReturn NE "" THEN DO:
       ELSE LEAVE.
     END.
 
-   MESSAGE 'TRIM(cExpandList,"|")' TRIM(cExpandList,"|") skip
-           'cNode' cNode
-   VIEW-AS ALERT-BOX.
     oJBoxMsTreeView:ExpandNodes(TRIM(cExpandList,"|")).
-    oJBoxMsTreeView:SelectNode(cNode).
+    oJBoxMsTreeView:SelectNode(TRIM(cNode)).
     
-    /*
-
-    DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
-    DYNAMIC-FUNCTION("ExpandTree" IN hTree,TRIM(cExpandList,"|")).
-    DYNAMIC-FUNCTION("SelectNode" IN hTree,cNode).
-    RUN tvNodeEvent("select",cNode).
-    DYNAMIC-FUNCTION("DoLockWindow",?).
-    */
   END.
 
 END.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1862,6 +1860,26 @@ cmbMenu:LIST-ITEM-PAIRS IN FRAME {&FRAME-NAME} = "||" + DYNAMIC-FUNCTION("getFie
 cmbMenu:SCREEN-VALUE = "".
 
 APPLY "value-changed" TO cmbMenu.
+
+RETURN YES.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ReposToMenuId C-Win 
+FUNCTION ReposToMenuId RETURNS LOGICAL
+  ( INPUT iiMenuNodeId AS INT ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+
+DO WITH FRAME {&FRAME-NAME}:
+  oQryJBoxMenu:BUFFER-HANDLE:FIND-FIRST("WHERE iJBoxMenuId = " + STRING(iiMenuNodeId)) NO-ERROR.
+  IF oQryJBoxMenu:BUFFER-HANDLE:AVAIL THEN
+    oJBoxMsTreeView:SelectNode(TRIM(STRING(oQryJBoxMenu:BUFFER-HANDLE::iNodeIndex))).
+END.
 
 RETURN YES.
 

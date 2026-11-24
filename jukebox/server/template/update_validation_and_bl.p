@@ -13,6 +13,8 @@ DEF INPUT  PARAM icValues            AS CHAR NO-UNDO.
 DEF INPUT  PARAM icSessionId         AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.  
 
+{incl/validatecaller.i}
+
 FIND Customer WHERE ROWID(Customer) = TO-ROWID(icRowId) EXCLUSIVE-LOCK NO-ERROR.
 IF AVAIL Customer THEN
   <automatically recalculate credit limit, f.ex>

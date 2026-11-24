@@ -339,6 +339,7 @@ DO:
           VIEW-AS ALERT-BOX WARNING BUTTONS OK-CANCEL UPDATE bOk.
     ELSE bOk = YES.
     IF bOk THEN DO:
+      edCode:SCREEN-VALUE = REPLACE(edCode:SCREEN-VALUE,"<filename>",ENTRY(NUM-ENTRIES(cFileName,"\"),cFileName,"\")).
       OUTPUT TO VALUE(cFileName).
       PUT UNFORMATTED edCode:SCREEN-VALUE.
       OUTPUT CLOSE.

@@ -120,6 +120,9 @@ DEF VAR iDeSelectIndex     AS INT    NO-UNDO.
 DEF VAR cBaseQuerySource   AS CHAR   NO-UNDO.
 DEF VAR cCurrMaxValueField AS CHAR   NO-UNDO.
 DEF VAR oSelector          AS JBoxDynSelector NO-UNDO.
+DEF VAR cTtName            AS CHAR   NO-UNDO.
+DEF VAR oBrwSource         AS JBoxBrowse NO-UNDO.
+DEF VAR iFrameFont         AS INT    NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -136,9 +139,9 @@ DEF VAR oSelector          AS JBoxDynSelector NO-UNDO.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS btnDeSelect rectBrwSource rectSearchSource ~
-rectBrwTarget rectWinToolBar SourceToolbar Btn_OK Btn_Cancel btnDeSelectAll ~
-btnSelect btnSelectAll 
+&Scoped-Define ENABLED-OBJECTS btnDeSelect rectBrwSource rectBrwTarget ~
+rectWinToolBar SourceToolbar btnDeSelectAll Btn_OK Btn_Cancel btnSelect ~
+btnSelectAll 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -202,7 +205,7 @@ FUNCTION UndoSelection RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON btnDeSelect 
@@ -237,15 +240,11 @@ DEFINE BUTTON Btn_OK
 
 DEFINE RECTANGLE rectBrwSource
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 47 BY 14.76.
+     SIZE 47 BY 14.52.
 
 DEFINE RECTANGLE rectBrwTarget
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 47 BY 14.76.
-
-DEFINE RECTANGLE rectSearchSource
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 16 BY .95.
+     SIZE 47 BY 14.52.
 
 DEFINE RECTANGLE rectWinToolBar
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -258,34 +257,33 @@ DEFINE RECTANGLE SourceToolbar
 DEFINE BUTTON btnSplitBarX 
      IMAGE-UP FILE "bmp/tabright.bmp":U NO-FOCUS FLAT-BUTTON
      LABEL "" 
-     SIZE 2 BY 14.57.
+     SIZE 2 BY 13.95.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
      btnDeSelect AT ROW 11.05 COL 51.6
+     btnDeSelectAll AT ROW 12.19 COL 51.6
      Btn_OK AT ROW 17.29 COL 73.2 NO-TAB-STOP 
      Btn_Cancel AT ROW 17.29 COL 89.2 NO-TAB-STOP 
-     btnDeSelectAll AT ROW 12.19 COL 51.6
      btnSelect AT ROW 9.91 COL 51.6
      btnSelectAll AT ROW 8.76 COL 51.6
-     rectBrwSource AT ROW 3.62 COL 1.8
-     rectSearchSource AT ROW 2.48 COL 2
-     rectBrwTarget AT ROW 3.62 COL 57.6
+     rectBrwSource AT ROW 3.86 COL 1.8
+     rectBrwTarget AT ROW 3.86 COL 57.6
      rectWinToolBar AT ROW 1.24 COL 94
      SourceToolbar AT ROW 1.38 COL 43.8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SIZE 104.6 BY 17.62.
 
 DEFINE FRAME frSplitBarX
-     btnSplitBarX AT ROW 1.05 COL 10.4
+     btnSplitBarX AT ROW 1.19 COL 10.4
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 39.6 ROW 3.67
-         SIZE 22.8 BY 14.67.
+         AT COLUMN 39.6 ROW 3.95
+         SIZE 22.8 BY 14.24.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -396,17 +394,6 @@ END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL C-Win C-Win
-ON WINDOW-RESIZED OF C-Win /* Velg */
-DO:
-  DYNAMIC-FUNCTION("setWidgetResize",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE:CURRENT-WINDOW,"resize","").
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 &Scoped-define SELF-NAME btnDeSelect
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnDeSelect C-Win
@@ -547,6 +534,17 @@ END.
 
 {incl/wintrigg.i}
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL C-Win C-Win
+ON WINDOW-RESIZED OF C-Win /* Velg */
+DO:
+  DYNAMIC-FUNCTION("setWidgetResize",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE:CURRENT-WINDOW,"resize","").
+  PUBLISH "selectorResized" (THIS-PROCEDURE:CURRENT-WINDOW).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 /* Best default for GUI applications is...                              */
 PAUSE 0 BEFORE-HIDE.
 
@@ -556,9 +554,18 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
-  DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
 
   RUN enable_UI.
+
+  DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
+
+  iFrameFont = INT(JBoxSession:Instance:getJBoxAttribute("defaultFrameFont")) NO-ERROR.
+  IF iFrameFont > 0 THEN
+    FRAME {&FRAME-NAME}:FONT = iFrameFont.
+
+  IF icServerSelectProc BEGINS "TTname;" THEN
+    ASSIGN cTtName = ENTRY(2,icServerSelectProc,";")
+           icServerSelectProc = "".
 
   RUN InitWindow.
 
@@ -571,13 +578,21 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"mySelectorObject") THEN DO:
     oSelector = NEW JBoxDynSelector(ihParent,THIS-PROCEDURE,hBrwSource,hBrwTarget,SourceToolbar:HANDLE).
+    IF cTtName NE "" THEN
+      oSelector:NAME = cTtName.
     RUN mySelectorObject IN ihParent (oSelector).
+    oBrwSource = oSelector:SOURCE-BROWSE-OBJECT.
   END.  
-  ELSE IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"setSelectorAttributes") THEN
-    RUN setSelectorAttributes IN ihParent (hBrwSource,hBrwTarget).
-  ELSE IF VALID-HANDLE(SOURCE-PROCEDURE) AND CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"setSelectorAttributes") THEN
-    RUN setSelectorAttributes IN SOURCE-PROCEDURE (hBrwSource,hBrwTarget).
+  ELSE DO:
+    oBrwSource = NEW JBoxBrowse(hBrwSource,THIS-PROCEDURE).
+    IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"setSelectorAttributes") THEN
+      RUN setSelectorAttributes IN ihParent (hBrwSource,hBrwTarget).
+    ELSE IF VALID-HANDLE(SOURCE-PROCEDURE) AND CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"setSelectorAttributes") THEN
+      RUN setSelectorAttributes IN SOURCE-PROCEDURE (hBrwSource,hBrwTarget).
+  END.
 
+  oBrwSource:createGridFilter("").
+  
   IF NOT VALID-HANDLE(hBrwSource:POPUP-MENU) THEN
     DYNAMIC-FUNCTION("NewMenuBand",
                       hBrwSource,  /* parent widget */
@@ -586,7 +601,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   DYNAMIC-FUNCTION("initTranslation",THIS-PROCEDURE:CURRENT-WINDOW).
 
+  APPLY "window-resized" TO CURRENT-WINDOW.
+  
   THIS-PROCEDURE:CURRENT-WINDOW:HIDDEN = FALSE.
+  DYNAMIC-FUNCTION("DoLockWindow",?).
   
   JBoxSession:Instance:setDelayedFocus(THIS-PROCEDURE:CURRENT-WINDOW,hBrwSource).
   
@@ -624,36 +642,9 @@ PROCEDURE DeSelectAllRecord :
 ------------------------------------------------------------------------------*/
 IF NOT hBrwTarget:QUERY:IS-OPEN THEN RETURN.
 
-hBrwTarget:QUERY:GET-FIRST().
-REPEAT WHILE NOT hBrwTarget:QUERY:QUERY-OFF-END:
-  ASSIGN cSelRowidList = REPLACE(cSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-         cSelRowidList = REPLACE(cSelRowidList,",,",",")
-         .
+hBrwTarget:SELECT-ALL().
+RUN DeSelectRecord.
 
-  IF NOT CAN-DO(cDeSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-    cDeSelRowidList = cDeSelRowidList + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
-
-  IF icServerDeSelectProc = "" THEN 
-    hBuffTarget:BUFFER-DELETE().
-
-  hBrwTarget:QUERY:GET-NEXT().
-END.
-
-IF icServerDeSelectProc NE "" THEN DO:
-  DO ix = 1 TO NUM-ENTRIES(cDeSelRowidList):
-    bOk = DYNAMIC-FUNCTION("DoUpdate",hBuffTarget:NAME,
-                  icServerDeSelectProc,
-                  "",
-                  ENTRY(ix,cDeSelRowidList),
-                  "",
-                  "",
-                  FALSE).
-  END.
-  DYNAMIC-FUNCTION("DoCommit",FALSE).
-END.
-
-RUN OpenQuerySource.
-RUN OpenQueryTarget.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -666,16 +657,22 @@ PROCEDURE DeSelectRecord :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+DEF VAR cNewList AS CHAR NO-UNDO.
+DEF VAR iy       AS INT  NO-UNDO.
+
 IF hBrwTarget:NUM-SELECTED-ROWS > 0 THEN 
   DO ix = 1 TO hBrwTarget:NUM-SELECTED-ROWS:
     bOk = hBrwTarget:FETCH-SELECTED-ROW(ix).
     IF bOK THEN DO:
-      ASSIGN cSelRowidList = REPLACE(cSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-             cSelRowidList = REPLACE(cSelRowidList,",,",",")
-             .
+      cNewList = "".
+      DO iy = 1 TO NUM-ENTRIES(cSelRowidList):
+        IF ENTRY(iy,cSelRowidList) NE hBuffTarget::RowIdent1 THEN
+          cNewList = cNewList + (IF cNewList NE "" THEN "," ELSE "") + ENTRY(iy,cSelRowidList).
+      END.          
+      cSelRowidList = cNewList.
   
       IF NOT CAN-DO(cDeSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-        cDeSelRowidList = cDeSelRowidList + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
+        cDeSelRowidList = cDeSelRowidList + (IF cDeSelRowidList NE "" THEN "," ELSE "") + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE.
   
       IF icServerDeSelectProc = "" THEN 
         hBuffTarget:BUFFER-DELETE().
@@ -735,9 +732,8 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE btnDeSelect rectBrwSource rectSearchSource rectBrwTarget 
-         rectWinToolBar SourceToolbar Btn_OK Btn_Cancel btnDeSelectAll 
-         btnSelect btnSelectAll 
+  ENABLE btnDeSelect rectBrwSource rectBrwTarget rectWinToolBar SourceToolbar 
+         btnDeSelectAll Btn_OK Btn_Cancel btnSelect btnSelectAll 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
   ENABLE btnSplitBarX 
@@ -800,15 +796,13 @@ DO WITH FRAME {&FRAME-NAME}:
 
   /* If transaction handling outside the selector we need the OK/Cancel buttons: */
   IF icServerSelectProc = "" THEN 
-    ASSIGN rectSearchSource:Y  = rectSearchSource:Y - 26
-           rectBrwSource:Y     = rectBrwSource:Y - 24
+    ASSIGN rectBrwSource:Y     = rectBrwSource:Y - 24
            rectBrwTarget:Y     = rectBrwTarget:Y - 24
            FRAME frSplitBarX:Y = FRAME frSplitBarX:Y - 24
            btnSelectAll:Y      = btnSelectAll:Y - 24
            btnSelect:Y         = btnSelect:Y - 24
            btnDeSelect:Y       = btnDeSelect:Y - 24
            btnDeSelectAll:Y    = btnDeSelectAll:Y - 24
-           SourceToolbar:Y     = rectSearchSource:Y
            rectWinToolBar:HIDDEN = TRUE
            .
   ELSE
@@ -826,7 +820,6 @@ DO WITH FRAME {&FRAME-NAME}:
            cSortColumn     = ENTRY(1,ENTRY(2,ENTRY(1,icSourceTableAndFlds),";"),"|")
            .
   ELSE DO: 
-    rectSearchSource:HIDDEN = TRUE.
     IF NUM-ENTRIES(ENTRY(1,icSourceTableAndFlds),";") > 1 AND ENTRY(2,ENTRY(1,icSourceTableAndFlds),";") = "!" THEN
       icSourceTableAndFlds = REPLACE(icSourceTableAndFlds,";!;",";").
   END.  
@@ -888,11 +881,6 @@ DO WITH FRAME {&FRAME-NAME}:
 
   DYNAMIC-FUNCTION("setAttribute",hBrwSource,"basequery",cBaseQuerySource).
   DYNAMIC-FUNCTION("setAttribute",hBrwSource,"querywhere","").
-
-  IF cInitSourceSort NE "" THEN DO:
-    hSearchFieldSource = DYNAMIC-FUNCTION("NewBrowseSearchField",rectSearchSource:HANDLE,hBrwSource,1).
-    DYNAMIC-FUNCTION("CreateObjectLink",hSearchFieldSource,hBrwSource).
-  END.
 
   hBrwTarget = DYNAMIC-FUNCTION("NewBrowse",           /* Create a browse object */
                     rectBrwTarget:HANDLE,              /* Rectangle to define coordinates for browse */
@@ -1070,8 +1058,11 @@ PROCEDURE OpenQueryTarget :
 DEF VAR cModSortColumn AS CHAR NO-UNDO.
 
 IF icServerSelectProc = "" THEN DO:
-
-  IF cSortColumn NE "" AND SUBSTR(cSortColumn,LENGTH(cSortColumn)) = "]" THEN
+  IF DYNAMIC-FUNCTION("getAttribute",hBrwTarget,"querySort") = "iJBoxSelectIndex" THEN DO:
+    cModSortColumn = "iJBoxSelectIndex".
+    DYNAMIC-FUNCTION("setSortLabel",hBrwTarget,"",NO).
+  END.  
+  ELSE IF cSortColumn NE "" AND SUBSTR(cSortColumn,LENGTH(cSortColumn)) = "]" THEN
     cModSortColumn = "jbextent_" + RIGHT-TRIM(SUBSTR(cSortColumn,R-INDEX(cSortColumn,"[") + 1),"]") + "_" + SUBSTR(cSortColumn,1,R-INDEX(cSortColumn,"[") - 1).
   ELSE cModSortColumn = cSortColumn.
 
@@ -1080,6 +1071,11 @@ IF icServerSelectProc = "" THEN DO:
                                     (IF bDesc THEN " DESC" ELSE "")
                                   ELSE "")).
   hBrwTarget:QUERY:QUERY-OPEN().
+
+  IF cModSortColumn = "iJBoxSelectIndex" THEN
+    REPEAT WHILE hBrwTarget:QUERY:GET-NEXT():
+      iSelectIndex = hBuffTarget::iJBoxSelectIndex.
+    END.  
 
   PUBLISH "EndJBoxEvent" (hBrwTarget,THIS-PROCEDURE,hBrwTarget,"OpenQuery").
 
@@ -1116,70 +1112,11 @@ PROCEDURE SelectAllRecord :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-DEF VAR iNewBatch AS INT NO-UNDO.
-
 IF NOT hBrwSource:QUERY:IS-OPEN THEN RETURN.
 
 hBrwSource:SELECT-ALL().
 RUN SelectRecord.
-/*
 
-IF DYNAMIC-FUNCTION("getAttribute",hBrwSource,"lastrowid") = "" THEN DO:
-  RUN dAskForQueryBatch.w (OUTPUT iNewBatch).
-  IF iNewBatch NE 0 THEN DO:
-    bDesc = IF DYNAMIC-FUNCTION("getAttribute",hBrwSource,"querydesc") = "desc" THEN TRUE ELSE FALSE.
-    DYNAMIC-FUNCTION("setAttribute",hBrwSource,"rowstobatch",STRING(iNewBatch)).
-
-    iNewBatch = DYNAMIC-FUNCTION("fillBrowse",hBrwSource,
-                        iNewBatch,
-                        INT(DYNAMIC-FUNCTION("getAttribute",hBrwSource,"querystart")),
-                        DYNAMIC-FUNCTION("getAttribute",hBrwSource,"buffersandfields"),
-                        DYNAMIC-FUNCTION("getAttribute",hBrwSource,"basequery") + 
-                          DYNAMIC-FUNCTION("getAttribute",hBrwSource,"queryfilter") + 
-                          DYNAMIC-FUNCTION("getAttribute",hBrwSource,"querywhere") + 
-                          DYNAMIC-FUNCTION("getAttribute",hBrwSource,"queryjoin"),
-                        DYNAMIC-FUNCTION("getAttribute",hBrwSource,"querysort"),
-                        bDesc).
-    DYNAMIC-FUNCTION("setAttribute",hBrwSource,"querystart",STRING(iNewBatch)).
-  END.
-  ELSE RETURN.
-END.
-
-iSelectIndex = iSelectIndex + 1.
-hBrwSource:QUERY:GET-FIRST().
-REPEAT WHILE NOT hBrwSource:QUERY:QUERY-OFF-END:
-  IF icServerSelectProc = "" THEN DO:
-    hBuffTarget:BUFFER-CREATE().
-    hBuffTarget:BUFFER-COPY(hBuffSource).
-    hBuffTarget:BUFFER-FIELD("iJBoxSelectIndex"):BUFFER-VALUE = iSelectIndex.
-  END.
-
-  ASSIGN cDeSelRowidList = REPLACE(cDeSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-         cDeSelRowidList = REPLACE(cDeSelRowidList,",,",",")
-         .
-
-  IF NOT CAN-DO(cSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-    cSelRowidList = cSelRowidList + hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
-
-
-  hBrwSource:QUERY:GET-NEXT().
-END.
-IF icServerSelectProc NE "" THEN DO:
-  DO ix = 1 TO NUM-ENTRIES(cSelRowidList):
-    bOk = DYNAMIC-FUNCTION("DoUpdate",hBuffSource:NAME,
-                  icServerSelectProc,
-                  "",
-                  ENTRY(ix,cSelRowidList),
-                  "",
-                  "",
-                  FALSE).
-  END.
-  DYNAMIC-FUNCTION("DoCommit",FALSE).
-END.
-
-RUN OpenQuerySource.
-RUN OpenQueryTarget.
-*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1194,6 +1131,8 @@ PROCEDURE SelectRecord :
 ------------------------------------------------------------------------------*/
 DEF VAR cSelRowList   AS CHAR NO-UNDO.
 DEF VAR cCurrMaxValue AS CHAR NO-UNDO.
+DEF VAR cNewList      AS CHAR NO-UNDO.
+DEF VAR iy            AS INT  NO-UNDO.
 
 IF cCurrMaxValueField NE "" THEN
   cCurrMaxValue = DYNAMIC-FUNCTION("getLocalQueryMaxValue",hBrwTarget,cCurrMaxValueField,0).
@@ -1210,13 +1149,18 @@ IF hBrwSource:NUM-SELECTED-ROWS > 0 THEN DO:
         hBuffTarget:BUFFER-FIELD("iJBoxSelectIndex"):BUFFER-VALUE = iSelectIndex.
         cSelRowList = cSelRowList + (IF cSelRowList NE "" THEN "," ELSE "") + hBuffTarget::RowIdent1.
       END.
-  
-      ASSIGN cDeSelRowidList = REPLACE(cDeSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-             cDeSelRowidList = REPLACE(cDeSelRowidList,",,",",")
+    
+      cNewList = "".
+      DO iy = 1 TO NUM-ENTRIES(cDeSelRowidList):
+        IF ENTRY(iy,cDeSelRowidList) NE hBuffSource::RowIdent1 THEN
+          cNewList = cNewList + (IF cNewList NE "" THEN "," ELSE "") + ENTRY(iy,cDeSelRowidList).
+      END.          
+      ASSIGN cDeSelRowidList = cNewList
              .
-  
+    
       IF NOT CAN-DO(cSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-        cSelRowidList = cSelRowidList + hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
+        cSelRowidList = cSelRowidList + (IF cSelRowidList NE "" THEN "," ELSE "") 
+                      + hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE.
     END.
   END.
 END.
@@ -1265,6 +1209,11 @@ PROCEDURE StartSearch :
 DEF VAR cModSortColumn AS CHAR NO-UNDO.
 
 IF icServerSelectProc = "" AND DYNAMIC-FUNCTION("GetCurrentObject") = hBrwTarget THEN DO:
+  IF DYNAMIC-FUNCTION("getAttribute",hBrwTarget,"querysort") = "iJBoxSelectIndex" THEN DO:
+    APPLY "end-search" TO hBrwTarget.
+    RETURN.
+  END.  
+  
   IF cSortColumn = hBrwTarget:CURRENT-COLUMN:NAME THEN bDesc = NOT bDesc.
   ELSE bDesc = FALSE.
   cSortColumn = hBrwTarget:CURRENT-COLUMN:NAME.
@@ -1422,7 +1371,10 @@ FUNCTION setSelectedRowids RETURNS LOGICAL
     Notes:  
 ------------------------------------------------------------------------------*/
 
-cSelRowidList = icSelRowidList.
+cSelRowidList = TRIM(icSelRowidList,",").
+IF cSelRowidList NE "" THEN
+  DYNAMIC-FUNCTION("setAttribute",hBrwSource,"basequery",cBaseQuerySource +
+                  " AND NOT CAN-DO('" + TRIM(cSelRowidList,",") + "',Rowident1)").
 
 RETURN TRUE.
 

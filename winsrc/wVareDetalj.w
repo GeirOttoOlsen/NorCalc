@@ -86,7 +86,7 @@ DEF TEMP-TABLE NPVare
     FIELD RowCount AS INTEGER
     INDEX idxRowids  RowIdent1 RowIdent2 RowIdent3
     .
-DEFINE BUFFER v_NPVare FOR NPVare.
+DEFINE BUFFER v_NPVare FOR temp-table NPVare.
 
 FUNCTION getTableHandleQryNPVare RETURNS HANDLE().
   RETURN BUFFER NPVare:HANDLE:TABLE-HANDLE.

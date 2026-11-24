@@ -57,6 +57,7 @@ DEF VAR bRunAsAdmin       AS LOG    NO-UNDO.
 DEF VAR hWindow           AS HANDLE NO-UNDO.
 DEF VAR hFrame            AS HANDLE NO-UNDO.
 DEF VAR hBgFrame          AS HANDLE NO-UNDO.
+DEF VAR cPrefUser         AS CHAR   NO-UNDO.
 
 DEF VAR httDoc          AS HANDLE NO-UNDO.
 DEF TEMP-TABLE ttDoc NO-UNDO
@@ -453,14 +454,18 @@ IF SEARCH(cRoot + "signature.txt") NE ? THEN DO:
                       cRoot
                       ).
 
-      OUTPUT TO VALUE(cRoot + "preferences.txt").
-      PUT UNFORMATTED "language¤"    + DYNAMIC-FUNCTION("getLanguageCode") SKIP
-                      "userid¤"      + DYNAMIC-FUNCTION("getASuserid") SKIP
-                      "behaviour¤"   + DYNAMIC-FUNCTION("getBehaviour") SKIP
-                      "date-format¤" + SESSION:DATE-FORMAT SKIP
-                      "num-format¤"  + SESSION:NUMERIC-FORMAT SKIP
-                      .
-      OUTPUT CLOSE.
+      cPrefUser = DYNAMIC-FUNCTION("getASuserid") NO-ERROR.
+  
+      IF ERROR-STATUS:GET-MESSAGE(1) = "" THEN DO:
+        OUTPUT TO VALUE(cRoot + "preferences.txt").
+        PUT UNFORMATTED "language¤"    + DYNAMIC-FUNCTION("getLanguageCode") SKIP
+                        "userid¤"      + DYNAMIC-FUNCTION("getASuserid") SKIP
+                        "behaviour¤"   + DYNAMIC-FUNCTION("getBehaviour") SKIP
+                        "date-format¤" + SESSION:DATE-FORMAT SKIP
+                        "num-format¤"  + SESSION:NUMERIC-FORMAT SKIP
+                        .
+        OUTPUT CLOSE.
+      END.  
 
     END.
     ELSE 

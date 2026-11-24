@@ -1,5 +1,7 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12 GUI
 &ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
+&ANALYZE-RESUME
 /* Connected Databases 
           norcalc          PROGRESS
 */
@@ -62,14 +64,14 @@ DEF TEMP-TABLE NPKUNDE
     FIELD adresse2 AS character
     FIELD postnr AS character
     FIELD poststed AS character
-    FIELD avdeling AS character
+    FIELD fylke AS character
+    FIELD kundedistriktNr AS integer
+    FIELD kundedistrikt AS character
+    FIELD land AS character
     FIELD avtale AS character
     FIELD aktiv AS logical
-    FIELD fylke AS character
-    FIELD kundedistrikt AS character
-    FIELD kundedistriktNr AS integer
+    FIELD avdeling AS character
     FIELD kundedistriktnavn AS character
-    FIELD land AS character
     FIELD mobil AS character
     FIELD telefon AS character
     FIELD fax AS character
@@ -116,13 +118,13 @@ FUNCTION getBuffersAndFieldsBrwNPKUNDE RETURNS CHARACTER():
      + ';adresse2'
      + ';postnr'
      + ';poststed'
-     + ';avdeling'
+     + ';fylke'
+     + ';kundedistriktNr'
+     + ';kundedistrikt'
+     + ';land'
      + ';avtale'
      + ';aktiv'
-     + ';fylke'
-     + ';kundedistrikt'
-     + ';kundedistriktNr'
-     + ';land'
+     + ';avdeling'
      + ';mobil'
      + ';telefon'
      + ';fax'
@@ -140,11 +142,11 @@ FUNCTION getBuffersAndFieldsBrwNPKUNDE RETURNS CHARACTER():
      + ';katalog_nt_type'
      + ';kilde'
      + ';er_konsulent'
-     + ';konsulentnr'
+     + ';konsulentnr|konsulentnr'
      + ';kontaktperson_np'
      + ';kontaktperson_nt'
      + ';kontor_type'
-     + ';kundenr_de'
+     + ';kundenr_de|kundenr dataease'
      + ';kundenr_i'
      + ';kundenr_sp'
      + ';rabatt%_1'
@@ -155,13 +157,44 @@ FUNCTION getBuffersAndFieldsBrwNPKUNDE RETURNS CHARACTER():
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNPKUNDE RETURNS CHARACTER():
-  RETURN 'EACH NPkundedistrikt OF NPKUNDE NO-LOCK'.
+  RETURN 'EACH NPkundedistrikt OF NPKUNDE OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR otbNPKUNDE AS JBoxToolbar NO-UNDO.
 DEF VAR oTabNPKUNDE AS JBoxMsTabs NO-UNDO.
 
 
 DEF VAR opopupNPKUNDE AS JBoxPopupMenu NO-UNDO.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS C-Win 
+/*------------------------------------------------------------------------
+
+  File: 
+
+  Description: 
+
+  Input Parameters:
+      <none>
+
+  Output Parameters:
+      <none>
+
+  Author: 
+
+  Created: 12/04/20 -  2:53 pm
+
+------------------------------------------------------------------------*/
+/*          This .W file was created with the Progress AppBuilder.       */
+/*----------------------------------------------------------------------*/
+
+/* ***************************  Definitions  ************************** */
+
+/* Parameters Definitions ---                                           */
+
+/* Local Variable Definitions ---                                       */
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -184,9 +217,9 @@ DEF VAR opopupNPKUNDE AS JBoxPopupMenu NO-UNDO.
 /* Definitions for BROWSE BrwNPKUNDE                                    */
 &Scoped-define FIELDS-IN-QUERY-BrwNPKUNDE NPKUNDE.kundenr NPKUNDE.kundenavn ~
 NPKUNDE.adresse1 NPKUNDE.adresse2 NPKUNDE.postnr NPKUNDE.poststed ~
-NPKUNDE.avdeling NPKUNDE.avtale NPKUNDE.aktiv NPKUNDE.fylke ~
-NPKUNDE.kundedistrikt NPKUNDE.kundedistriktNr NPKUNDE.kundedistriktnavn ~
-NPKUNDE.land NPKUNDE.mobil NPKUNDE.telefon NPKUNDE.fax NPKUNDE.organisasjon ~
+NPKUNDE.fylke NPKUNDE.kundedistriktNr NPKUNDE.kundedistrikt NPKUNDE.land ~
+NPKUNDE.avtale NPKUNDE.aktiv NPKUNDE.avdeling NPKUNDE.kundedistriktnavn ~
+NPKUNDE.mobil NPKUNDE.telefon NPKUNDE.fax NPKUNDE.organisasjon ~
 NPKUNDE.sist_oppdatert NPKUNDE.kundekategori NPKUNDE.dm_kode ~
 NPKUNDE.katalog_np_antall NPKUNDE.katalog_np_dato ~
 NPKUNDE.katalog_np_oppdatert NPKUNDE.katalog_np_type ~
@@ -198,12 +231,8 @@ NPKUNDE.kundenr_i NPKUNDE.kundenr_sp NPKUNDE.rabatt%_1 NPKUNDE.rabatt%_2 ~
 NPKUNDE.tilbudsmottager 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNPKUNDE NPKUNDE.kundenr ~
 NPKUNDE.adresse1 
-&Scoped-define ENABLED-TABLES-IN-QUERY-BrwNPKUNDE NPKUNDE
-&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BrwNPKUNDE NPKUNDE
-&Scoped-define QUERY-STRING-BrwNPKUNDE FOR EACH NPKUNDE NO-LOCK, ~
-    EACH NPkundedistrikt OF NPKUNDE NO-LOCK INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-BrwNPKUNDE OPEN QUERY BrwNPKUNDE FOR EACH NPKUNDE NO-LOCK, ~
-    EACH NPkundedistrikt OF NPKUNDE NO-LOCK INDEXED-REPOSITION.
+&Scoped-define QUERY-STRING-BrwNPKUNDE FOR EACH NPKUNDE NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BrwNPKUNDE OPEN QUERY BrwNPKUNDE FOR EACH NPKUNDE NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BrwNPKUNDE NPKUNDE
 &Scoped-define FIRST-TABLE-IN-QUERY-BrwNPKUNDE NPKUNDE
 
@@ -212,8 +241,9 @@ NPKUNDE.adresse1
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS tbNPKUNDE TabNPKUNDE refresh_tbNPKUNDE ~
-filter_tbNPKUNDE excel_tbNPKUNDE fiSearch BrwNPKUNDE 
-&Scoped-Define DISPLAYED-OBJECTS fiSearch 
+filter_tbNPKUNDE excel_tbNPKUNDE btnSearch btnClear fiSearch Prosjekt ~
+Tilbudsnr BrwNPKUNDE 
+&Scoped-Define DISPLAYED-OBJECTS fiSearch Prosjekt Tilbudsnr 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -229,6 +259,14 @@ filter_tbNPKUNDE excel_tbNPKUNDE fiSearch BrwNPKUNDE
 DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON btnClear 
+     LABEL "Blank" 
+     SIZE 7 BY 1.14 TOOLTIP "Nullstill sï¿½k".
+
+DEFINE BUTTON btnSearch 
+     LABEL "Søk" 
+     SIZE 7 BY 1.14 TOOLTIP "Sï¿½k".
+
 DEFINE BUTTON excel_tbNPKUNDE 
      IMAGE-UP FILE "gif/afexcel.gif":U
      LABEL "Eksporter til E&xcel" 
@@ -248,9 +286,19 @@ DEFINE VARIABLE fiSearch AS CHARACTER FORMAT "X(256)":U
      VIEW-AS FILL-IN 
      SIZE 14 BY 1 NO-UNDO.
 
+DEFINE VARIABLE Prosjekt AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Prosjekt" 
+     VIEW-AS FILL-IN 
+     SIZE 35 BY 1 NO-UNDO.
+
+DEFINE VARIABLE Tilbudsnr AS CHARACTER FORMAT "X(256)":U 
+     LABEL "Tilbudsnr" 
+     VIEW-AS FILL-IN 
+     SIZE 35 BY 1 NO-UNDO.
+
 DEFINE RECTANGLE TabNPKUNDE
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 157 BY 12.14.
+     SIZE 157 BY 10.48.
 
 DEFINE RECTANGLE tbNPKUNDE
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
@@ -266,20 +314,20 @@ DEFINE QUERY BrwNPKUNDE FOR
 DEFINE BROWSE BrwNPKUNDE
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNPKUNDE C-Win _STRUCTURED
   QUERY BrwNPKUNDE NO-LOCK DISPLAY
-      NPKUNDE.kundenr COLUMN-LABEL "Kundenr" FORMAT "X(8)":U
+      NPKUNDE.kundenr COLUMN-LABEL "Kundenr" FORMAT "X(15)":U
       NPKUNDE.kundenavn COLUMN-LABEL "Kundenavn" FORMAT "X(30)":U
       NPKUNDE.adresse1 COLUMN-LABEL "Adresse 1" FORMAT "X(30)":U
       NPKUNDE.adresse2 COLUMN-LABEL "Adresse 2" FORMAT "X(30)":U
       NPKUNDE.postnr COLUMN-LABEL "Postnr." FORMAT "X(8)":U
       NPKUNDE.poststed COLUMN-LABEL "Poststed" FORMAT "X(22)":U
-      NPKUNDE.avdeling COLUMN-LABEL "Avd." FORMAT "X(30)":U
+      NPKUNDE.fylke COLUMN-LABEL "Fylke" FORMAT "X(18)":U
+      NPKUNDE.kundedistriktNr COLUMN-LABEL "Dist.nr" FORMAT ">>9":U
+      NPKUNDE.kundedistrikt COLUMN-LABEL "Distrikt" FORMAT "X(30)":U
+      NPKUNDE.land COLUMN-LABEL "Land" FORMAT "X(20)":U
       NPKUNDE.avtale COLUMN-LABEL "Avtale" FORMAT "X(6)":U
       NPKUNDE.aktiv COLUMN-LABEL "Aktiv" FORMAT "ja/nei":U
-      NPKUNDE.fylke COLUMN-LABEL "Fylke" FORMAT "X(18)":U
-      NPKUNDE.kundedistrikt COLUMN-LABEL "Distrikt" FORMAT "X(30)":U
-      NPKUNDE.kundedistriktNr COLUMN-LABEL "Dist.nr" FORMAT ">>9":U
+      NPKUNDE.avdeling COLUMN-LABEL "Avd." FORMAT "X(30)":U
       NPKUNDE.kundedistriktnavn COLUMN-LABEL "Distrikt" FORMAT "x(100)":U
-      NPKUNDE.land COLUMN-LABEL "Land" FORMAT "X(20)":U
       NPKUNDE.mobil COLUMN-LABEL "Mobil" FORMAT "x(15)":U
       NPKUNDE.telefon COLUMN-LABEL "Telefon" FORMAT "X(15)":U
       NPKUNDE.fax COLUMN-LABEL "Fax" FORMAT "X(15)":U
@@ -302,8 +350,8 @@ DEFINE BROWSE BrwNPKUNDE
       NPKUNDE.kontaktperson_np COLUMN-LABEL "Kontaktperson - NP" FORMAT "X(25)":U
       NPKUNDE.kontaktperson_nt COLUMN-LABEL "Kontaktperson - NT" FORMAT "X(25)":U
       NPKUNDE.kontor_type COLUMN-LABEL "Kontortype" FORMAT "X(15)":U
-      NPKUNDE.kundenr_de COLUMN-LABEL "Knr. d.ease" FORMAT "X(8)":U
-      NPKUNDE.kundenr_i COLUMN-LABEL "Kundenr" FORMAT ">>>>>>9":U
+      NPKUNDE.kundenr_de COLUMN-LABEL "Knr. d.ease" FORMAT "X(15)":U
+      NPKUNDE.kundenr_i COLUMN-LABEL "Kundenr" FORMAT ">>>>>>>9":U
       NPKUNDE.kundenr_sp COLUMN-LABEL "Knr. spektra" FORMAT "X(8)":U
       NPKUNDE.rabatt%_1 COLUMN-LABEL "Rabatt 1" FORMAT ">>9.99":U
       NPKUNDE.rabatt%_2 COLUMN-LABEL "Rabatt 2" FORMAT ">>9.99":U
@@ -313,7 +361,7 @@ DEFINE BROWSE BrwNPKUNDE
       NPKUNDE.adresse1
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 157 BY 6.91 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 157 BY 8.33 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
@@ -322,10 +370,14 @@ DEFINE FRAME DEFAULT-FRAME
      refresh_tbNPKUNDE AT ROW 1.1 COL 1.2 WIDGET-ID 16
      filter_tbNPKUNDE AT ROW 1.1 COL 7.4 WIDGET-ID 22
      excel_tbNPKUNDE AT ROW 1.1 COL 13.4 WIDGET-ID 18
+     btnSearch AT ROW 2.52 COL 114 WIDGET-ID 28
+     btnClear AT ROW 2.52 COL 121 WIDGET-ID 30
      fiSearch AT ROW 2.67 COL 1 NO-LABEL
+     Prosjekt AT ROW 2.67 COL 26 COLON-ALIGNED
+     Tilbudsnr AT ROW 2.67 COL 75 COLON-ALIGNED
      BrwNPKUNDE AT ROW 3.86 COL 1 WIDGET-ID 200
      tbNPKUNDE AT ROW 1 COL 1 WIDGET-ID 2
-     TabNPKUNDE AT ROW 11 COL 1 WIDGET-ID 20
+     TabNPKUNDE AT ROW 12.67 COL 1 WIDGET-ID 20
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 1 ROW 1
@@ -386,18 +438,18 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
-/* BROWSE-TAB BrwNPKUNDE fiSearch DEFAULT-FRAME */
+/* BROWSE-TAB BrwNPKUNDE Tilbudsnr DEFAULT-FRAME */
 ASSIGN 
        FRAME DEFAULT-FRAME:HEIGHT           = 22.19
        FRAME DEFAULT-FRAME:WIDTH            = 158.
 
 ASSIGN 
-       NPKUNDE.kundedistrikt:VISIBLE IN BROWSE BrwNPKUNDE = FALSE
-       NPKUNDE.kundedistriktNr:VISIBLE IN BROWSE BrwNPKUNDE = FALSE.
+       NPKUNDE.kundedistriktNr:VISIBLE IN BROWSE BrwNPKUNDE = FALSE
+       NPKUNDE.kundedistrikt:VISIBLE IN BROWSE BrwNPKUNDE = FALSE.
 
 ASSIGN 
        excel_tbNPKUNDE:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
-                "refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excel,multiSortBrowse;Sorter på flere kolonner,copyBrowseRows;Kopier rad(er)".
+                "refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excel,multiSortBrowse;Sorter pï¿½ flere kolonner,copyBrowseRows;Kopier rad(er)".
 
 /* SETTINGS FOR FILL-IN fiSearch IN FRAME DEFAULT-FRAME
    ALIGN-L                                                              */
@@ -418,88 +470,89 @@ THEN C-Win:HIDDEN = yes.
 /* Query rebuild information for BROWSE BrwNPKUNDE
      _TblList          = "norcalc.NPKUNDE"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _FldNameList[1]   > NPKUNDE.kundenr
-"NPKUNDE.kundenr" "Kundenr" "X(8)" "character" ? ? ? ? ? ? yes "" no no "8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[2]   > NPKUNDE.kundenavn
-"NPKUNDE.kundenavn" "Kundenavn" "X(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[3]   > NPKUNDE.adresse1
-"NPKUNDE.adresse1" "Adresse 1" "X(30)" "character" ? ? ? ? ? ? yes "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[4]   > NPKUNDE.adresse2
-"NPKUNDE.adresse2" "Adresse 2" "X(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[5]   > NPKUNDE.postnr
-"NPKUNDE.postnr" "Postnr." "X(8)" "character" ? ? ? ? ? ? no "" no no "8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[6]   > NPKUNDE.poststed
-"NPKUNDE.poststed" "Poststed" "X(22)" "character" ? ? ? ? ? ? no "" no no "22" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[7]   > NPKUNDE.avdeling
-"NPKUNDE.avdeling" "Avd." "X(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[8]   > NPKUNDE.avtale
-"NPKUNDE.avtale" "Avtale" "X(6)" "character" ? ? ? ? ? ? no "" no no "6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[9]   > NPKUNDE.aktiv
-"NPKUNDE.aktiv" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "4.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[10]   > NPKUNDE.fylke
-"NPKUNDE.fylke" "Fylke" "X(18)" "character" ? ? ? ? ? ? no "Velg fylke" no no "18" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[11]   > NPKUNDE.kundedistrikt
-"NPKUNDE.kundedistrikt" "Distrikt" "X(30)" "character" ? ? ? ? ? ? no "Velg distrikt" no no "30" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[12]   > NPKUNDE.kundedistriktNr
-"NPKUNDE.kundedistriktNr" "Dist.nr" ">>9" "integer" ? ? ? ? ? ? no "" no no "6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[13]   > NPKUNDE.kundedistriktnavn
-"NPKUNDE.kundedistriktnavn" "Distrikt" "x(100)" "character" ? ? ? ? ? ? no "" no no "100" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[14]   > NPKUNDE.land
-"NPKUNDE.land" "Land" "X(20)" "character" ? ? ? ? ? ? no "" no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[15]   > NPKUNDE.mobil
-"NPKUNDE.mobil" "Mobil" "x(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[16]   > NPKUNDE.telefon
-"NPKUNDE.telefon" "Telefon" "X(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[17]   > NPKUNDE.fax
-"NPKUNDE.fax" "Fax" "X(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[18]   > NPKUNDE.organisasjon
-"NPKUNDE.organisasjon" "Organisasjon" "X(1024)" "character" ? ? ? ? ? ? no "" no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[19]   > NPKUNDE.sist_oppdatert
-"NPKUNDE.sist_oppdatert" "Sist oppd." "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[20]   > NPKUNDE.kundekategori
-"NPKUNDE.kundekategori" "Kategori" "X(6)" "character" ? ? ? ? ? ? no "Velg kundekategori" no no "7.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[21]   > NPKUNDE.dm_kode
-"NPKUNDE.dm_kode" "DM kode" "X(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[22]   > NPKUNDE.katalog_np_antall
-"NPKUNDE.katalog_np_antall" "antall" ">9" "integer" ? ? ? ? ? ? no "" no no "5" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[23]   > NPKUNDE.katalog_np_dato
-"NPKUNDE.katalog_np_dato" "Katalog NP" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[24]   > NPKUNDE.katalog_np_oppdatert
-"NPKUNDE.katalog_np_oppdatert" "oppdatert" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[25]   > NPKUNDE.katalog_np_type
-"NPKUNDE.katalog_np_type" "type" "X(4)" "character" ? ? ? ? ? ? no "" no no "4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[26]   > NPKUNDE.katalog_nt_antall
-"NPKUNDE.katalog_nt_antall" "antall" ">9" "integer" ? ? ? ? ? ? no "" no no "5" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[27]   > NPKUNDE.katalog_nt_dato
-"NPKUNDE.katalog_nt_dato" "Katalog NP" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[28]   > NPKUNDE.katalog_nt_oppdatert
-"NPKUNDE.katalog_nt_oppdatert" "oppdatert" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[29]   > NPKUNDE.katalog_nt_type
-"NPKUNDE.katalog_nt_type" "type" "X(4)" "character" ? ? ? ? ? ? no "" no no "4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[30]   > NPKUNDE.kilde
-"NPKUNDE.kilde" "Kilde" "X(10)" "character" ? ? ? ? ? ? no "" no no "10" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[31]   > NPKUNDE.er_konsulent
-"NPKUNDE.er_konsulent" "Konsulent" "yes/no" "logical" ? ? ? ? ? ? no "" no no "9.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[32]   > NPKUNDE.konsulentnr
-"NPKUNDE.konsulentnr" "konsulentnr" ">>>>>>>9" "integer" ? ? ? ? ? ? no "" no no "11" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[33]   > NPKUNDE.kontaktperson_np
-"NPKUNDE.kontaktperson_np" "Kontaktperson - NP" "X(25)" "character" ? ? ? ? ? ? no "" no no "25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[34]   > NPKUNDE.kontaktperson_nt
-"NPKUNDE.kontaktperson_nt" "Kontaktperson - NT" "X(25)" "character" ? ? ? ? ? ? no "" no no "25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[35]   > NPKUNDE.kontor_type
-"NPKUNDE.kontor_type" "Kontortype" "X(15)" "character" ? ? ? ? ? ? no "" no no "15" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[36]   > NPKUNDE.kundenr_de
-"NPKUNDE.kundenr_de" "Knr. d.ease" "X(8)" "character" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[37]   > NPKUNDE.kundenr_i
-"NPKUNDE.kundenr_i" "Kundenr" ">>>>>>9" "integer" ? ? ? ? ? ? no "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[38]   > NPKUNDE.kundenr_sp
-"NPKUNDE.kundenr_sp" "Knr. spektra" "X(8)" "character" ? ? ? ? ? ? no "" no no "11.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[39]   > NPKUNDE.rabatt%_1
-"NPKUNDE.rabatt%_1" "Rabatt 1" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[40]   > NPKUNDE.rabatt%_2
-"NPKUNDE.rabatt%_2" "Rabatt 2" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[41]   > NPKUNDE.tilbudsmottager
-"NPKUNDE.tilbudsmottager" "Tilbud" "ja/nei" "logical" ? ? ? ? ? ? no "Denne kunden kan motta tilbud (J/N)" no no "5.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _TblOptList       = ", OUTER, OUTER, OUTER, OUTER"
+     _FldNameList[1]   > "_<CALC>"
+"NPKUNDE.kundenr" "Kundenr" "X(15)" "character" ? ? ? ? ? ? yes ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[2]   > "_<CALC>"
+"NPKUNDE.kundenavn" "Kundenavn" "X(30)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[3]   > "_<CALC>"
+"NPKUNDE.adresse1" "Adresse 1" "X(30)" "character" ? ? ? ? ? ? yes ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[4]   > "_<CALC>"
+"NPKUNDE.adresse2" "Adresse 2" "X(30)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[5]   > "_<CALC>"
+"NPKUNDE.postnr" "Postnr." "X(8)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[6]   > "_<CALC>"
+"NPKUNDE.poststed" "Poststed" "X(22)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[7]   > "_<CALC>"
+"NPKUNDE.fylke" "Fylke" "X(18)" "character" ? ? ? ? ? ? no "Velg fylke" no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[8]   > "_<CALC>"
+"NPKUNDE.kundedistriktNr" "Dist.nr" ">>9" "integer" ? ? ? ? ? ? no ? no no ? no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[9]   > "_<CALC>"
+"NPKUNDE.kundedistrikt" "Distrikt" "X(30)" "character" ? ? ? ? ? ? no "Velg distrikt" no no ? no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[10]   > "_<CALC>"
+"NPKUNDE.land" "Land" "X(20)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[11]   > "_<CALC>"
+"NPKUNDE.avtale" "Avtale" "X(6)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[12]   > "_<CALC>"
+"NPKUNDE.aktiv" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[13]   > "_<CALC>"
+"NPKUNDE.avdeling" "Avd." "X(30)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[14]   > "_<CALC>"
+"NPKUNDE.kundedistriktnavn" "Distrikt" "x(100)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[15]   > "_<CALC>"
+"NPKUNDE.mobil" "Mobil" "x(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[16]   > "_<CALC>"
+"NPKUNDE.telefon" "Telefon" "X(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[17]   > "_<CALC>"
+"NPKUNDE.fax" "Fax" "X(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[18]   > "_<CALC>"
+"NPKUNDE.organisasjon" "Organisasjon" "X(1024)" "character" ? ? ? ? ? ? no ? no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[19]   > "_<CALC>"
+"NPKUNDE.sist_oppdatert" "Sist oppd." "99.99.9999" "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[20]   > "_<CALC>"
+"NPKUNDE.kundekategori" "Kategori" "X(6)" "character" ? ? ? ? ? ? no "Velg kundekategori" no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[21]   > "_<CALC>"
+"NPKUNDE.dm_kode" "DM kode" "X(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[22]   > "_<CALC>"
+"NPKUNDE.katalog_np_antall" "antall" ">9" "integer" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[23]   > "_<CALC>"
+"NPKUNDE.katalog_np_dato" "Katalog NP" "99.99.9999" "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[24]   > "_<CALC>"
+"NPKUNDE.katalog_np_oppdatert" "oppdatert" "99.99.9999" "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[25]   > "_<CALC>"
+"NPKUNDE.katalog_np_type" "type" "X(4)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[26]   > "_<CALC>"
+"NPKUNDE.katalog_nt_antall" "antall" ">9" "integer" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[27]   > "_<CALC>"
+"NPKUNDE.katalog_nt_dato" "Katalog NP" "99.99.9999" "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[28]   > "_<CALC>"
+"NPKUNDE.katalog_nt_oppdatert" "oppdatert" "99.99.9999" "date" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[29]   > "_<CALC>"
+"NPKUNDE.katalog_nt_type" "type" "X(4)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[30]   > "_<CALC>"
+"NPKUNDE.kilde" "Kilde" "X(10)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[31]   > "_<CALC>"
+"NPKUNDE.er_konsulent" "Konsulent" "yes/no" "logical" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[32]   > "_<CALC>"
+"NPKUNDE.konsulentnr" "konsulentnr" ">>>>>>>9" "integer" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[33]   > "_<CALC>"
+"NPKUNDE.kontaktperson_np" "Kontaktperson - NP" "X(25)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[34]   > "_<CALC>"
+"NPKUNDE.kontaktperson_nt" "Kontaktperson - NT" "X(25)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[35]   > "_<CALC>"
+"NPKUNDE.kontor_type" "Kontortype" "X(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[36]   > "_<CALC>"
+"NPKUNDE.kundenr_de" "Knr. d.ease" "X(15)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[37]   > "_<CALC>"
+"NPKUNDE.kundenr_i" "Kundenr" ">>>>>>>9" "integer" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[38]   > "_<CALC>"
+"NPKUNDE.kundenr_sp" "Knr. spektra" "X(8)" "character" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[39]   > "_<CALC>"
+"NPKUNDE.rabatt%_1" "Rabatt 1" ">>9.99" "decimal" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[40]   > "_<CALC>"
+"NPKUNDE.rabatt%_2" "Rabatt 2" ">>9.99" "decimal" ? ? ? ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[41]   > "_<CALC>"
+"NPKUNDE.tilbudsmottager" "Tilbud" "ja/nei" "logical" ? ? ? ? ? ? no "Denne kunden kan motta tilbud (J/N)" no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPKUNDE */
 &ANALYZE-RESUME
@@ -530,6 +583,38 @@ DO:
   /* This event will close the window and terminate the procedure.  */
   APPLY "CLOSE":U TO THIS-PROCEDURE.
   RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btnClear
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnClear C-Win
+ON CHOOSE OF btnClear IN FRAME DEFAULT-FRAME /* Blank */
+DO:
+ /*  oBrwNPKUNDE:setFilter(icFieldList, icOperList, icValueList)*/
+  Prosjekt:screen-value = ''.
+  Tilbudsnr:screen-value = ''. 
+  oBrwNPKUNDE:preScanBaseQuery = ''.
+  oBrwNPKUNDE:openQuery().
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btnSearch
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnSearch C-Win
+ON CHOOSE OF btnSearch IN FRAME DEFAULT-FRAME /* Sï¿½k */
+DO:
+  if prosjekt:SCREEN-VALUE ne '' and Tilbudsnr:screen-value ne '' then undo, throw new Progress.Lang.AppError('Kan ikke sï¿½ke pï¿½ bï¿½de begge feltene',1).
+  if prosjekt:screen-value = '' and Tilbudsnr:screen-value = '' then return no-apply.  
+  if prosjekt:screen-value ne '' then 
+    oBrwNPKUNDE:preScanBaseQuery = 'norprosjekt where prosjekt_navn' + (if index(prosjekt:screen-value,'*') gt 0 then ' matches ' else ' begins ') + quoter(Prosjekt:screen-value) + ',each npshanlg of norprosjekt, each npshtilbud of npshanlg, each npkunde of npshtilbud'.
+  else 
+    oBrwNPKUNDE:preScanBaseQuery = 'npshtilbud where tilbudsnr' + (if index(tilbudsnr:screen-value,'*') gt 0 then ' matches ' else ' begins ') + quoter(tilbudsnr:screen-value) + ', each npkunde of npshtilbud'.
+  oBrwNPKUNDE:openQuery().
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -626,10 +711,11 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY fiSearch 
+  DISPLAY fiSearch Prosjekt Tilbudsnr 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE tbNPKUNDE TabNPKUNDE refresh_tbNPKUNDE filter_tbNPKUNDE 
-         excel_tbNPKUNDE fiSearch BrwNPKUNDE 
+         excel_tbNPKUNDE btnSearch btnClear fiSearch Prosjekt Tilbudsnr 
+         BrwNPKUNDE 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -662,27 +748,36 @@ DO WITH FRAME {&FRAME-NAME}:
   oTabNPKUNDE:setLinkFields("kundenr").
   oTabNPKUNDE:AddPage("Kunde detaljer","wNPKundedetalj.w","id_card.ico").
   
-  oTabNPKUNDE:setLinkFields("iKundeId;Kundenr",2).
-  oTabNPKUNDE:AddPage("Kontakter","wKundekontakt.w","businesspeople.ico").
+  oTabNPKUNDE:setLinkFields("id;kundenr",2).
+  oTabNPKUNDE:AddPage("Kontakter","wNPkontakt2.w","businesspeople.ico").
 
   oTabNPKUNDE:setLinkFields("Kundenr",3).
-  oTabNPKUNDE:AddPage("Oppfølging","wNPKundeoppfølging.w","phone_recall.ico").
+  oTabNPKUNDE:AddPage("Oppfølging","wNPKundeoppfolging.w","phone_recall.ico").
 
   oTabNPKUNDE:setLinkFields("Kundenr",4).
+  oTabNPKUNDE:AddPage("Tilbud","wSHTilbudBrw.w","folder2.ico").
+
+  oTabNPKUNDE:setLinkFields("Kundenr",5).
+  oTabNPKUNDE:AddPage("Tilbud oppfølging","wSHTilbudBrw2.w","folder2.ico").
+
+  oTabNPKUNDE:setLinkFields("Kundenr",6).
   oTabNPKUNDE:AddPage("Shunt anlegg","wSHanleggBrw.w","folder2.ico").
 
-  oTabNPKUNDE:setLinkFields("kundenr",5).
-  oTabNPKUNDE:AddPage("Spirovent anlegg","wSPanleggBrw.w","folder2.ico").
+  oTabNPKUNDE:setLinkFields("Kundenr",7).
+  oTabNPKUNDE:AddPage("Anlegg via tilbud","wSHanleggBrw3.w","folder2.ico").
+
+/*  oTabNPKUNDE:setLinkFields("kundenr",5).                                */
+/*  oTabNPKUNDE:AddPage("Spirovent anlegg","wSPanleggBrw.w","folder2.ico").*/
 
   opopupNPKUNDE = NEW JBoxPopupMenu().
-  opopupNPKUNDE:AddToolGroup('refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excel,multiSortBrowse;Sorter på flere kolonner').
+  opopupNPKUNDE:AddToolGroup('refresh;Refresh,filter;Filter,browseconfig;Column setup,excel;Excel,multiSortBrowse;Sorter pï¿½ flere kolonner').
 
   oBrwNPKUNDE:POPUP-MENU-OBJECT = opopupNPKUNDE.
 END.
 oBrwNPKUNDE:OpenQuery().
 
 
-oContainer:initResize().
+oContainer:initResize(400,500).
 
 END PROCEDURE.
 
@@ -708,13 +803,4 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE multiSortBrowseRecord C-Win 
-PROCEDURE multiSortBrowseRecord :
-RUN SUPER.
-
-
-END PROCEDURE.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
 

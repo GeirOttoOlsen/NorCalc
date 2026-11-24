@@ -80,8 +80,8 @@ DEF TEMP-TABLE ttSpecialFields  NO-UNDO
 
 {incl/validatesession.i}
 
-FUNCTION getASuserId  RETURNS CHARACTER FORWARD.
-FUNCTION getCompanyId RETURNS INTEGER   FORWARD.
+/*FUNCTION getASuserId  RETURNS CHARACTER FORWARD.*/
+/*FUNCTION getCompanyId RETURNS INTEGER   FORWARD.*/
 
 IF cLogFile NE "" THEN DO:
   OUTPUT TO VALUE(cLogFile) APPEND.
@@ -106,10 +106,10 @@ DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
       DELETE OBJECT hBuffer[iy] NO-ERROR.
     END.
     IF NOT ENTRY(1,cBufferDef,";") BEGINS "JBox" THEN DO:
-      ocReturn = "Invalid buffer definition: " + ENTRY(1,cBufferDef,";").
+//      ocReturn = "Invalid buffer definition: " + ENTRY(1,cBufferDef,";").
       IF cLogFile NE "" THEN
-        PUT UNFORMATTED "ocReturn: " ocReturn SKIP
-        "Error:    " ERROR-STATUS:GET-MESSAGE(1) SKIP.
+        PUT UNFORMATTED "Invalid buffer definition: " + ENTRY(1,cBufferDef,";") SKIP
+ 	  		"Error:    " ERROR-STATUS:GET-MESSAGE(1) SKIP.
     END.
     RETURN.
   END.
@@ -161,7 +161,7 @@ DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
               END.
               ELSE DO:
                 ocReturn = "Error in definition of calculated field: " + cExtraField + " for getFieldList" + CHR(10) + icBuffersAndFields.
-                IF cLogFile NE "" THEN
+	              IF cLogFile NE "" THEN
                   PUT UNFORMATTED "ocReturn: " ocReturn SKIP.
                 LEAVE QueryDefLoop.
               END.
@@ -594,6 +594,7 @@ PROCEDURE ExtentFieldValue:
   ocValue = STRING(ihExtentField:BUFFER-VALUE(iiExtent)).
 END PROCEDURE.
 
+/*
 FUNCTION getASuserId RETURNS CHARACTER
   ( /* parameter-definitions */ ) :
 /*------------------------------------------------------------------------------
@@ -615,3 +616,4 @@ FUNCTION getCompanyId RETURNS INTEGER
 RETURN iCurrCompanyId. 
 
 END FUNCTION.
+*/

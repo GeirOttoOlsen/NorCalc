@@ -81,6 +81,8 @@ DEF VAR cProgramMultiInstanceList AS CHAR NO-UNDO.
 DEF VAR bSizedToFit           AS LOG NO-UNDO.
 DEF VAR bQuitOnClose          AS LOG NO-UNDO INIT YES.
 DEF VAR hActivatedWinProc AS HANDLE NO-UNDO.
+DEF VAR oCurrChildForm   AS CLASS Progress.Lang.Object NO-UNDO.
+DEF VAR bKeepActionMenu  AS LOG NO-UNDO.
 
 DEF TEMP-TABLE ttProgram
     FIELD oRibbonObj   AS CLASS Progress.Lang.Object
@@ -560,7 +562,9 @@ IF AVAIL ttProgram AND VALID-HANDLE(ttProgram.hWinProc) THEN DO:
     
     hActivatedWinProc = ttProgram.hWinProc.
     BuildActionRibbonGroup(hMenu:FIRST-CHILD,vGrpWinMenu,"Infragistics.Win.UltraWinToolbars.RibbonGroup").
+    bKeepActionMenu = YES.
   END.
+
   IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"MoveToTop") THEN
     RUN MoveToTop IN ttProgram.hWinProc.
   ELSE DO:
@@ -621,6 +625,32 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-BringCurrChildToFront) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE BringCurrChildToFront Procedure
+PROCEDURE BringCurrChildToFront:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+
+IF VALID-HANDLE(hTimer) THEN DO:
+  RUN SetProcToRun IN hTimer ("CheckTimerEvent",THIS-PROCEDURE).
+  DYNAMIC-FUNCTION("setInterval" IN hTimer,iTimerInterval).
+END.
+
+CAST(oCurrChildForm,"Progress.Windows.MDIChildForm"):BringToFront().
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-BuildMenu) = 0 &THEN
 
@@ -976,7 +1006,6 @@ PROCEDURE CloseChildWindow :
 DEF INPUT  PARAM iiNodeKey AS INT  NO-UNDO.
 DEF OUTPUT PARAM ocReturn  AS CHAR NO-UNDO.
 
-
 FIND FIRST ttProgram 
      WHERE ttProgram.iNodeIndex = iiNodeKey
      NO-ERROR.
@@ -993,7 +1022,9 @@ IF AVAIL ttProgram THEN DO:
 /*         DELETE OBJECT CAST(ttProgram.oChildForm,"Progress.Windows.Form").  */
       ttProgram.oChildForm = ?.
     END.
-    ClearActionRibbonGroup().
+    IF NOT bKeepActionMenu THEN
+      ClearActionRibbonGroup().
+    bKeepActionMenu = NO.  
   END.
   ELSE ocReturn = "cancel".
 END.
@@ -1014,8 +1045,6 @@ PROCEDURE CloseMenu :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-MESSAGE 
-VIEW-AS ALERT-BOX.
 FOR EACH ttProgram:
   IF VALID-HANDLE(ttProgram.hWinProc) THEN DO:
     APPLY "close" TO ttProgram.hWinProc.
@@ -1217,6 +1246,7 @@ DEFINE INPUT PARAMETER poArgs      AS System.EventArgs NO-UNDO.
 
 DEF VAR cRetVal         AS CHAR NO-UNDO.
 DEF VAR hDummy          AS HANDLE NO-UNDO.
+DEF VAR ix              AS INT NO-UNDO.
 
 CASE icEventName:
   /* pass menu item stuff through */
@@ -1239,7 +1269,7 @@ CASE icEventName:
             IF NOT PROGRAM-NAME(3) BEGINS "setStatusMenuItem" THEN DO:
               ttProgram.hTrigWidget:CHECKED = NOT ttProgram.hTrigWidget:CHECKED.
               IF CAN-DO(ttProgram.hParent:INTERNAL-ENTRIES,"MenuItemChecked") THEN
-                RUN MenuItemChecked IN ttProgram.hWinProc (ttProgram.hTrigWidget).
+                RUN MenuItemChecked IN ttProgram.hParent (ttProgram.hTrigWidget).
               APPLY "VALUE-CHANGED" TO ttProgram.hTrigWidget.
             END.
           END.
@@ -1272,8 +1302,10 @@ CASE icEventName:
     RUN CloseChildWindow (INT(STRING(CAST(poSender, Form):Tag)),OUTPUT cRetVal).
   END. 
    
-  WHEN 'FormActivated' THEN 
+  WHEN 'FormActivated' THEN DO: 
+    DO ix = 1 TO 100000: END.
     RUN ActivateWindow (INT(STRING(CAST(poSender, Form):Tag))).
+  END.  
   WHEN 'TabSelected' THEN 
     RUN SetCurrTab (cast(poArgs, RibbonTabEventArgs):TAB:KEY).
   WHEN 'TabInitialized' THEN
@@ -1515,6 +1547,7 @@ IF NOT VALID-HANDLE(hMainMenu) OR hMainMenu = THIS-PROCEDURE THEN DO:
   SUBSCRIBE TO "NewCustomMenuWindow" ANYWHERE.
   SUBSCRIBE TO "RestartMenu"         ANYWHERE.
   SUBSCRIBE TO "getMainFormObject"   ANYWHERE.
+  SUBSCRIBE TO "StartTabDataBrowse"  ANYWHERE.
 END.
   
 SUBSCRIBE TO "EmbedInChildForm" ANYWHERE.
@@ -1667,9 +1700,11 @@ PROCEDURE InvalidateHandle :
 DEF INPUT PARAM ihWinProc AS HANDLE NO-UNDO.
 
 DEF BUFFER ttProgram FOR ttProgram.
+DEF BUFFER bttProgram FOR ttProgram.
 
 FOR EACH ttProgram
     WHERE (IF ihWinProc NE ? THEN ttProgram.hParent = ihWinProc ELSE TRUE):
+  
   IF VALID-HANDLE(ttProgram.hWinProc) THEN 
     APPLY "close" TO ttProgram.hWinProc.
   IF AVAIL ttProgram THEN DO:
@@ -1693,6 +1728,12 @@ IF AVAIL ttProgram THEN DO:
       oChildForm:CLOSE().
   END.
   DELETE OBJECT ttProgram.hWinMenuItem NO-ERROR.
+
+  FIND FIRST bttProgram
+       WHERE bttProgram.hWinProc = ttProgram.hParent
+       NO-ERROR.
+  IF AVAIL bttProgram THEN
+    RUN ActivateWindow(bttProgram.iNodeIndex).     
 
   IF ttProgram.bChildWin THEN DELETE ttProgram.
 END.
@@ -2138,8 +2179,8 @@ FOR EACH ttProgram
   IF VALID-HANDLE(ttProgram.hTrigWidget) THEN DO:
     IF ttProgram.hTrigWidget:PRIVATE-DATA NE "" THEN DO:
       hCorrBtn = WIDGET-HANDLE(ttProgram.hTrigWidget:PRIVATE-DATA) NO-ERROR.
-      IF VALID-HANDLE(hCorrBtn) AND SEARCH(hCorrBtn:IMAGE) NE ? THEN   
-        goJBoxMainForm:setMenuToolImage(ttProgram.iNodeIndex,hCorrBtn:IMAGE).
+/*      IF VALID-HANDLE(hCorrBtn) AND SEARCH(hCorrBtn:IMAGE) NE ? THEN         */
+/*        goJBoxMainForm:setMenuToolImage(ttProgram.iNodeIndex,hCorrBtn:IMAGE).*/
     END.    
       
     IF ttProgram.hTrigWidget:SENSITIVE THEN
@@ -2318,6 +2359,7 @@ DEF OUTPUT PARAM ohWinHandle    AS HANDLE NO-UNDO.
 
 DEF VAR hMenuItm    AS HANDLE NO-UNDO.
 DEF VAR bAlarmProc  AS LOG    NO-UNDO.
+DEF VAR hInitProc   AS HANDLE NO-UNDO.
 
 DEF BUFFER ttProgram FOR ttProgram.
 DEF BUFFER bttProgram FOR ttProgram.
@@ -2353,38 +2395,57 @@ FIND FIRST ttProgram
 IF NOT AVAIL ttProgram OR ibNew OR (AVAIL ttProgram AND NOT VALID-HANDLE(ttProgram.hWinProc)) THEN DO:
   IF NOT AVAIL ttProgram THEN DO:
     CREATE ttProgram.
-    ASSIGN ttProgram.cProcName     = icProcName
+    ASSIGN ttProgram.cProcName    = (IF icProcName = "JBoxDataBrw.w" THEN "" ELSE icProcName) // icProcName
+           ttProgram.cLaunchType  = (IF icProcName = "JBoxDataBrw.w" THEN "DATA-BROWSE" ELSE "START-WINDOW")
            ttProgram.cMenuTitle   = icWinTitle
            ttProgram.hParent      = ihParent
            ttProgram.bChildWin    = TRUE
            .
-  END.         
-  
+  END.           
+    
   IF cWinStartParam NE "" THEN
     RUN VALUE(icProcName) PERSIST SET ttProgram.hWinProc (cWinStartParam).
-  ELSE  
-    RUN VALUE(icProcName) PERSIST SET ttProgram.hWinProc.
+  ELSE DO:  
+    RUN VALUE(icProcName) PERSIST SET ttProgram.hWinProc NO-ERROR.
+    IF ERROR-STATUS:ERROR THEN DO:
+      RUN JBoxDataBrw.w PERSIST SET ttProgram.hWinProc.
+      RUN VALUE(icProcName) PERSIST SET hInitProc (ttProgram.hWinProc).
+        
+      IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"setParent") AND CAN-DO(hInitProc:INTERNAL-ENTRIES,"myDatabrowseObject") THEN DO:
+        DYNAMIC-FUNCTION("setParent" IN ttProgram.hWinProc,hInitProc).
+        IF CAN-DO(hInitProc:INTERNAL-ENTRIES,"InitializeObject") THEN
+          RUN InitializeObject IN hInitProc.
+      END.    
+    
+      IF VALID-HANDLE(hInitProc) AND NOT CAN-DO(hInitProc:INTERNAL-ENTRIES,"InvalidateHandle") THEN DELETE PROCEDURE hInitProc.
+      ELSE 
+        SUBSCRIBE PROCEDURE hInitProc TO "InvalidateHandle" IN ttProgram.hWinProc.
+    END. 
+    ELSE DO:
+      IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"setParent") THEN 
+        DYNAMIC-FUNCTION("setParent" IN ttProgram.hWinProc,ihParent).
+      
+      IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"InitializeObject") THEN DO:
+        IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"InitializeChild") THEN
+          RUN InitializeChild IN ihParent (ttProgram.hWinProc).
+        IF icProcName NE "JBoxDataBrw.w" THEN   
+          RUN InitializeObject IN ttProgram.hWinProc.
+        
+        FIND bttProgram WHERE ROWID(bttProgram) = ROWID(ttProgram).
+        IF VALID-OBJECT(bttProgram.oContainer) THEN DO:
+          FIND bParentTtProgram WHERE bParentTtProgram.hWinProc = ihParent NO-ERROR.
+          IF AVAIL bParentTtProgram AND VALID-OBJECT(bParentTtProgram.oContainer) THEN
+            CAST(bParentTtProgram.oContainer,"JBoxContainer"):AddSubContainer(CAST(bttProgram.oContainer,"JBoxContainer")).
+        END.
+      END.
+    END.  
+  END.    
     
   IF icWinTitle NE "" THEN
     ttProgram.hWinProc:CURRENT-WINDOW:TITLE = ttProgram.cMenuTitle.
   
   ttProgram.hWindow = ttProgram.hWinProc:CURRENT-WINDOW.  
   
-  IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"setParent") THEN 
-    DYNAMIC-FUNCTION("setParent" IN ttProgram.hWinProc,ihParent).
-  
-  IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"InitializeObject") THEN DO:
-    IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"InitializeChild") THEN
-      RUN InitializeChild IN ihParent (ttProgram.hWinProc).
-    RUN InitializeObject IN ttProgram.hWinProc.
-    
-    FIND bttProgram WHERE ROWID(bttProgram) = ROWID(ttProgram).
-    IF VALID-OBJECT(bttProgram.oContainer) THEN DO:
-      FIND bParentTtProgram WHERE bParentTtProgram.hWinProc = ihParent NO-ERROR.
-      IF AVAIL bParentTtProgram AND VALID-OBJECT(bParentTtProgram.oContainer) THEN
-        CAST(bParentTtProgram.oContainer,"JBoxContainer"):AddSubContainer(CAST(bttProgram.oContainer,"JBoxContainer")).
-    END.
-  END.
 
   IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"ChangeCompany") THEN
     DYNAMIC-FUNCTION("setCompanyHeader",ttProgram.hWinProc:CURRENT-WINDOW).
@@ -2505,6 +2566,129 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-StartTabDataBrowse) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartTabDataBrowse Procedure
+PROCEDURE StartTabDataBrowse:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM icProcName     AS CHAR   NO-UNDO.
+DEF INPUT  PARAM icTabTitle     AS CHAR   NO-UNDO.
+DEF INPUT  PARAM ihParent       AS HANDLE NO-UNDO.
+DEF INPUT  PARAM ibNew          AS LOG    NO-UNDO.
+DEF INPUT  PARAM ibKeepOpen     AS LOG    NO-UNDO.
+DEF OUTPUT PARAM ohWinHandle    AS HANDLE NO-UNDO.
+
+DEF VAR iMyTabIndex AS INT NO-UNDO.
+DEF VAR hWin        AS HANDLE NO-UNDO.
+DEF VAR rttProgram  AS ROWID NO-UNDO.
+
+DEF BUFFER bttProgram  FOR ttProgram.
+DEF BUFFER bParentTtProgram FOR ttProgram.
+
+IF SEARCH(icProcName) = ? AND SEARCH(SUBSTR(icProcName,1,LENGTH(icProcName) - 1) + "r") = ? THEN DO:
+  icProcName = ENTRY(NUM-ENTRIES(REPLACE(icProcName,"/","\"),"\"),"\").
+  IF SEARCH(icProcName) = ? AND SEARCH(SUBSTR(icProcName,1,LENGTH(icProcName) - 1) + "r") = ? THEN DO:
+    MESSAGE "Could not find" icProcName
+            VIEW-AS ALERT-BOX.
+    RETURN.
+  END.  
+END.
+
+FIND FIRST ttProgram 
+     WHERE ttProgram.cProcName = icProcName
+       AND ttProgram.oChildForm NE ?
+      NO-ERROR.
+IF NOT AVAIL ttProgram THEN
+  FIND FIRST ttProgram 
+       WHERE ttProgram.cProcName = icProcName NO-ERROR.
+
+IF AVAIL ttProgram AND NOT ibNew THEN DO:
+  IF NOT ibNew AND ttProgram.oChildForm NE ? THEN DO:
+    ASSIGN iLastMenuId = ttProgram.iJBoxMenuId
+           ohWinHandle = ttProgram.hWinProc
+           CAST(ttProgram.oChildForm,"Progress.Windows.MDIChildForm"):Text = icTabTitle.
+                  
+    CAST(ttProgram.oChildForm,"Progress.Windows.MDIChildForm"):BringToFront().
+  END.
+  ELSE DO:
+    ASSIGN ttProgram.hParent    = ihParent
+           ttProgram.cMenuLabel = (IF icTabTitle NE "" THEN icTabTitle ELSE ttProgram.cMenuLabel)
+           rttProgram           = ROWID(ttProgram).
+    RUN StartWindow(STRING(ttProgram.iNodeIndex)).
+    FIND ttProgram WHERE ROWID(ttProgram) = rttProgram NO-ERROR.
+    IF AVAIL ttProgram THEN DO:
+      ohWinHandle = ttProgram.hWinProc.
+      IF ibKeepOpen THEN
+        ttProgram.hParent = ?.
+    END.
+  END.  
+  RETURN.
+END.
+ELSE DO:
+  CREATE ttProgram.
+  ASSIGN ttProgram.cProcName    = icProcName
+         ttProgram.cMenuTitle   = icTabTitle
+         ttProgram.cMenuLabel   = icTabTitle
+         ttProgram.cLaunchType  = "DATA-BROWSE"
+         ttProgram.bEmbed       = YES
+         ttProgram.hParent      = ihParent
+         ttProgram.bChildWin    = NO
+         iNewTabWinIdx          = iNewTabWinIdx - 1
+         ttProgram.iNodeIndex   = iNewTabWinIdx
+         iMyTabIndex            = iNewTabWinIdx
+         .
+  RUN StartWindow(STRING(ttProgram.iNodeIndex)).
+  
+  FIND FIRST ttProgram
+       WHERE ttProgram.iNodeIndex = iMyTabIndex
+       NO-ERROR.
+  IF AVAIL ttProgram THEN DO:
+    ohWinHandle = ttProgram.hWinProc.
+
+/*    
+    IF VALID-HANDLE(ihParent) AND VALID-OBJECT(ttProgram.oContainer) THEN DO:
+      FIND bParentTtProgram WHERE bParentTtProgram.hWinProc = ihParent NO-ERROR.
+      IF AVAIL bParentTtProgram AND VALID-OBJECT(bParentTtProgram.oContainer) THEN
+        CAST(bParentTtProgram.oContainer,"JBoxContainer"):AddSubContainer(CAST(ttProgram.oContainer,"JBoxContainer")).
+    END.
+    
+    IF ibKeepOpen THEN
+      ttProgram.hParent = ?.
+    ELSE IF icProcName = "JBoxDataBrw.w" THEN DO:
+      FIND FIRST bttProgram 
+           WHERE bttProgram.hParent   = ttProgram.hParent
+             AND bttProgram.hWinProc  NE ttProgram.hWinProc 
+             AND bttProgram.cProcName = "JBoxDataBrw.w"
+           NO-ERROR.
+/*      IF AVAIL bttProgram THEN DO:                                                                             */
+/*        oLastMdiTab:MoveToGroup(CAST(bttProgram.oMdiTab,"Infragistics.Win.UltraWinTabbedMdi.MdiTab"):TabGroup).*/
+/*      END.                                                                                                     */
+/*      ELSE DO:                                                                                                 */
+/*        goJBoxMainForm:TabOrientation = "Horizontal".                                                          */
+      oLastMdiTab:MoveToNewGroup().
+      hWin = ohWinHandle:CURRENT-WINDOW.
+      APPLY "WINDOW-RESIZED" TO hWin.
+      PUBLISH "SetStatusBarWidth" (ohWinHandle:CURRENT-WINDOW).
+/*        goJBoxMainForm:TabOrientation = "Vertical".                                                            */
+/*      END.                                                                                                     */
+    END.
+    */  
+  END.
+END.        
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-StartTabWindow) = 0 &THEN
 
@@ -2639,7 +2823,9 @@ PROCEDURE StartTimer :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-IF SEARCH("controls.dll") NE ? AND SEARCH("JBoxJLWTimer.r") NE ? THEN
+IF (SEARCH("JBoxOOtimer.r") NE ? OR SEARCH("JBoxOOtimer.r") NE ?) THEN 
+  RUN JBoxOOtimer.p PERSIST SET hTimer ("CheckTimerEvent",iTimerInterval).
+ELSE IF SEARCH("controls.dll") NE ? AND PROCESS-ARCHITECTURE = 32 AND SEARCH("JBoxJLWTimer.r") NE ? THEN
   RUN JBoxJLWtimer.w PERSIST SET hTimer ("CheckTimerEvent",iTimerInterval).
 ELSE IF SEARCH("JBoxABLtimer.r") NE ? AND PROPATH MATCHES "*webclient*" THEN
   RUN JBoxABLtimer.w PERSIST SET hTimer ("CheckTimerEvent",iTimerInterval).
@@ -2905,6 +3091,9 @@ END.
 IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"MoveToTop") THEN
   RUN MoveToTop IN ttProgram.hWinProc.
 
+IF CAN-DO(ttProgram.hWinProc:INTERNAL-ENTRIES,"PostInitialize") THEN
+  RUN PostInitialize IN ttProgram.hWinProc.
+
 IF bLogProgramExec THEN DO:
   LOG-MANAGER:CLOSE-LOG().
 
@@ -2977,14 +3166,39 @@ END PROCEDURE.
 PROCEDURE ViewCurrTab :
 /*------------------------------------------------------------------------------
  Purpose:
- Notes:
+ Notes: Infragistics er det verste makkverket av en pakke jeg noen gang har vært borti
 ------------------------------------------------------------------------------*/
-FIND FIRST ttProgram 
-     WHERE ttProgram.iNodeIndex = iCurrNodeKey
-     NO-ERROR.
-IF AVAIL ttProgram THEN 
-  RUN ViewTabProcHandle(ttProgram.hWinProc).     
 
+/*FIND FIRST ttProgram                                                       */
+/*     WHERE ttProgram.iNodeIndex = INT(goJBoxMainForm:ultraActiveMdiTab:Key)*/
+/*     NO-ERROR.                                                             */
+
+//goJBoxMainForm:ultraActiveMdiTab:Form:Activate().
+
+JBoxSession:Instance:setJBoxAttribute("cancel_bring_childform_to_top","yes").
+
+/*MESSAGE goJBoxMainForm:ultraActiveMdiTab:Index skip     */
+/*        goJBoxMainForm:ultraActiveMdiTab:IsSelected skip*/
+/*         iCurrNodeKey                                   */
+/*VIEW-AS ALERT-BOX.                                      */
+/*FIND FIRST ttProgram                          */
+/*     WHERE ttProgram.iNodeIndex = iCurrNodeKey*/
+/*     NO-ERROR.                                */
+/*
+IF AVAIL ttProgram THEN DO:
+  MESSAGE ttProgram.hWinProc:FILE-NAME
+  VIEW-AS ALERT-BOX.
+  /*
+  IF VALID-HANDLE(hTimer) THEN DO:
+    oCurrChildForm = ttProgram.oChildForm.
+    RUN SetProcToRun IN hTimer ("BringCurrChildToFront",THIS-PROCEDURE).
+    DYNAMIC-FUNCTION("setInterval" IN hTimer,2000).
+  END.  
+  ELSE
+  */ 
+  RUN ViewTabProcHandle(ttProgram.hWinProc).
+END.  
+*/
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -3115,6 +3329,8 @@ REPEAT WHILE VALID-HANDLE(hChild):
                ixNode                 = ixNode + 1
                bFirstInGroup          = NO
                .
+        IF hChild:TOGGLE-BOX THEN               
+          goJBoxMainForm:SetStatusMenuItem(ttProgram.oRibbonObj,ttProgram.hTrigWidget:CHECKED).               
       END.
     END.
   END CASE.

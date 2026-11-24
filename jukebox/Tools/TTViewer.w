@@ -308,6 +308,9 @@ PROCEDURE InitWindow :
   Notes:       
 ------------------------------------------------------------------------------*/
 DO WITH FRAM {&FRAME-NAME}:
+  
+  SUBSCRIBE TO "refreshTtViewer" ANYWHERE.
+  
   hBrowse = DYNAMIC-FUNCTION("NewBrowse",
                                    rectBrwTT:HANDLE,
                                    1000,
@@ -318,7 +321,7 @@ DO WITH FRAM {&FRAME-NAME}:
                                    + ";+iRecordCount|INTEGER|>>>>>9||Record count"
                                    + ";+cContainer|CHARACTER|x(25)||Container"
                                    + ";+cProcedure|CHARACTER|x(25)||Procedure"
-                                   + ";!hTTbuffer|HANDLE"
+                                   + ";hTTbuffer|HANDLE"
                                   ,"where false",
                                    "sort|cName").
   hBuffer = hBrowse:QUERY:GET-BUFFER-HANDLE(1).
@@ -457,6 +460,20 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE refreshTtCount C-Win
+PROCEDURE refreshTtViewer:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RUN RefreshRecord.
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 /* ************************  Function Implementations ***************** */
 

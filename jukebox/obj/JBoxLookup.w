@@ -84,6 +84,8 @@ DEF VAR hWinToolBar        AS HANDLE NO-UNDO.
 DEF VAR iSelectIndex       AS INT NO-UNDO.
 DEF VAR iDeSelectIndex     AS INT NO-UNDO.
 DEF VAR oLookup            AS JBoxDynLookup NO-UNDO.
+DEF VAR oBrwLookup         AS JBoxBrowse NO-UNDO.
+DEF VAR iFrameFont         AS INT NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -100,8 +102,8 @@ DEF VAR oLookup            AS JBoxDynLookup NO-UNDO.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rectBrwSource rectSearchSource ~
-rectWinToolBar Btn_OK Btn_Cancel 
+&Scoped-Define ENABLED-OBJECTS rectBrwSource rectWinToolBar Btn_OK ~
+Btn_Cancel 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -137,7 +139,7 @@ FUNCTION LocalTranslation RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON Btn_Cancel AUTO-END-KEY 
@@ -152,11 +154,7 @@ DEFINE BUTTON Btn_OK
 
 DEFINE RECTANGLE rectBrwSource
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 102.2 BY 13.57.
-
-DEFINE RECTANGLE rectSearchSource
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 22 BY .95.
+     SIZE 102.2 BY 14.76.
 
 DEFINE RECTANGLE rectToolBar
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -172,13 +170,12 @@ DEFINE RECTANGLE rectWinToolBar
 DEFINE FRAME DEFAULT-FRAME
      Btn_OK AT ROW 17.24 COL 73.2
      Btn_Cancel AT ROW 17.24 COL 89.2
-     rectBrwSource AT ROW 3.62 COL 1.8
-     rectSearchSource AT ROW 2.48 COL 2
+     rectBrwSource AT ROW 2.43 COL 1.8
      rectWinToolBar AT ROW 1.19 COL 95.2
      rectToolBar AT ROW 1.19 COL 1.8
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SIZE 104.6 BY 17.62
          DEFAULT-BUTTON Btn_OK.
 
@@ -449,10 +446,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     SUBSCRIBE TO "ExpandSearchDialog" ANYWHERE.
 
   IF NOT VALID-HANDLE(ihParent) THEN ihParent = SOURCE-PROCEDURE.
+  ELSE IF CAN-DO(ihParent:INTERNAL-ENTRIES,"getLookupTtHandle") THEN
+    DYNAMIC-FUNCTION("setAttribute",rectBrwSource,"temptablehandle",STRING(DYNAMIC-FUNCTION("getLookupTtHandle" IN ihParent))).
 
   DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
 
   RUN enable_UI.
+
+  iFrameFont = INT(JBoxSession:Instance:getJBoxAttribute("defaultFrameFont")) NO-ERROR.
+  IF iFrameFont > 0 THEN
+    FRAME {&FRAME-NAME}:FONT = iFrameFont.
+
 
   RUN InitWindow.
 
@@ -469,6 +473,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
 
   ON 'default-action':U OF hBrwSource
   DO:
+    IF DYNAMIC-FUNCTION("getAttribute",hBrwSource,"disableDefaultAction") = "yes" THEN RETURN.
     APPLY "choose" TO btn_ok IN FRAME {&FRAME-NAME}.
     RETURN.
   END.
@@ -541,7 +546,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  ENABLE rectBrwSource rectSearchSource rectWinToolBar Btn_OK Btn_Cancel 
+  ENABLE rectBrwSource rectWinToolBar Btn_OK Btn_Cancel 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -608,8 +613,6 @@ DO WITH FRAME {&FRAME-NAME}:
     ASSIGN cInitSourceSort = "SORT|" + ENTRY(2,ENTRY(1,icSourceTableAndFlds),";")
            cSortColumn     = ENTRY(1,ENTRY(2,ENTRY(1,icSourceTableAndFlds),";"),"|")
            .
-  ELSE IF cInitSourceSort = "" THEN
-    rectSearchSource:HIDDEN = TRUE.
 
   IF icSourceQuery MATCHES "*(*Company)" OR icSourceQuery MATCHES "*(Codemaster)" THEN 
     ASSIGN cCompanyTag = SUBSTR(icSourceQuery,R-INDEX(icSourceQuery,"("))
@@ -669,10 +672,10 @@ DO WITH FRAME {&FRAME-NAME}:
     DYNAMIC-FUNCTION("setAttribute",hBrwSource,"basequery",cBaseQuerySource).
   DYNAMIC-FUNCTION("setAttribute",hBrwSource,"querywhere","").
 
-  IF cInitSourceSort NE "" THEN DO:
-    hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",rectSearchSource:HANDLE,hBrwSource,1).
-    DYNAMIC-FUNCTION("CreateObjectLink",hSearchField,hBrwSource).
-  END.
+/*  IF cInitSourceSort NE "" THEN DO:                                                              */
+/*    hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",rectSearchSource:HANDLE,hBrwSource,1).*/
+/*    DYNAMIC-FUNCTION("CreateObjectLink",hSearchField,hBrwSource).                                */
+/*  END.                                                                                           */
 
   DYNAMIC-FUNCTION("NewMenuBand",
                     hBrwSource,  /* parent widget */
@@ -704,11 +707,16 @@ DO WITH FRAME {&FRAME-NAME}:
 
   IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"myLookupObject") THEN DO:
     oLookup = NEW JBoxDynLookup(ihParent,THIS-PROCEDURE,hBrwSource,rectToolbar:HANDLE).
+    oBrwLookup = oLookup:BROWSE-OBJECT.
     RUN myLookupObject IN ihParent(oLookup).
   END.  
+  ELSE DO:
+    oBrwLookup = NEW JBoxBrowse (hBrwSource,THIS-PROCEDURE).
+    IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"setLookupAttributes") THEN
+      RUN setLookupAttributes IN ihParent(hBrwSource,rectToolbar:HANDLE,hSearchField).
+  END.    
 
-  ELSE IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"setLookupAttributes") THEN
-    RUN setLookupAttributes IN ihParent(hBrwSource,rectToolbar:HANDLE,hSearchField).
+  oBrwLookup:createGridFilter("").
     
   JBoxServerAPI:Instance:fillLookupTableFromLookup(hBrwSource).  
 

@@ -10,6 +10,8 @@ DEF INPUT  PARAM icSessionId     AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOk            AS LOG    NO-UNDO INIT YES.
 
+{incl/validatecaller.i}
+
 DEF VAR iDocId        AS INT    NO-UNDO.
 DEF VAR cLockString   AS CHAR   NO-UNDO.
 

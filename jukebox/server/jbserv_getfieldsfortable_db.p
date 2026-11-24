@@ -4,6 +4,8 @@ DEF INPUT PARAM icTableName AS CHAR NO-UNDO.
 DEF SHARED VAR cFields AS CHAR NO-UNDO.
 DEF VAR ix AS INT NO-UNDO.
 
+{incl/validatecaller.i}
+
 FOR EACH dictdb._file NO-LOCK
     WHERE dictdb._file._tbl-type = "T"
       AND dictdb._file._file-name = icTableName

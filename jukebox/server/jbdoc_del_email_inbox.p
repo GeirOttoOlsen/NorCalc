@@ -6,6 +6,8 @@ DEF OUTPUT PARAM ocError     AS CHAR NO-UNDO.
 DEF VAR bOk           AS LOG  NO-UNDO.
 DEF VAR cDeleteParam  AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 FIND JBoxEmailInbox WHERE ROWID(JBoxEmailInbox) = TO-ROWID(icRowid) NO-LOCK NO-ERROR.
 
 cDeleteParam = DYNAMIC-FUNCTION("getInputParam" IN SOURCE-PROCEDURE).

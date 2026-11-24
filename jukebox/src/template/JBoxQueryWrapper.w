@@ -67,6 +67,12 @@ DEF VAR oDynDataBrowse AS JBoxDynDataBrowse NO-UNDO.
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME DEFAULT-FRAME
+&Scoped-define BROWSE-NAME BROWSE-2
+
+/* Definitions for FRAME DEFAULT-FRAME                                  */
+
+/* Standard List Definitions                                            */
+&Scoped-Define ENABLED-OBJECTS BROWSE-2 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -82,6 +88,15 @@ DEF VAR oDynDataBrowse AS JBoxDynDataBrowse NO-UNDO.
 DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
+
+/* Browse definitions                                                   */
+DEFINE BROWSE BROWSE-2
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BROWSE-2 C-Win _STRUCTURED
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 30 BY 4.5 FIT-LAST-COLUMN.
+
 
 /* ************************  Frame Definitions  *********************** */
 
@@ -132,7 +147,6 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB C-Win 
 /* ************************* Included-Libraries *********************** */
 
-
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -146,6 +160,7 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
+/* BROWSE-TAB BROWSE-2 TEXT-1 DEFAULT-FRAME */
 ASSIGN 
        FRAME DEFAULT-FRAME:HEIGHT           = 11.38
        FRAME DEFAULT-FRAME:WIDTH            = 62.8.
@@ -188,6 +203,7 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define BROWSE-NAME BROWSE-2
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK C-Win 
@@ -283,51 +299,47 @@ PROCEDURE InitializeObject :
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
 
-/*
+
 oDynDataBrowse:EnableSaveQuery = YES.
-oDynDataBrowse:TotalFields = "fSaldo,avgift-pr-ar".
 oDynDataBrowse:userSettingContext = THIS-PROCEDURE:FILE-NAME.
-oDynDataBrowse:calcFieldProc = "customer_browsecalc.p".
-*/
+
 oDynDataBrowse:InitializeQuery(
-    "Customer"
-      + ";SalesRep"
-      + ";Custnum"
-      + ";Name"
-      + ";+OrderTot|DECIMAL|->><>>>,>>9.99|CustOrderTotal|Order total"
-    + ",SalesRep"
-      + ";RepName@2"
-    ,"WHERE false"
-      + ",FIRST SalesRep NO-LOCK OF Customer"
-     ,"Salesrep"  /* Initial sort column */
-     ,TRUE). /* <- do record count */
+    "<buffersAndFields>"
+    ,"<queryJoin>"
+    ,"<querySort>"  /* Initial sort column */
+    ,FALSE /* <- do record count */
+// ,<sqlDB> /* reference to sql database, ie parameter for jbserv_get_sql_data.p */     
+    ).
+    
+oDynDataBrowse:BROWSE-OBJECT:calcFieldProc = "<calcFieldProc>".
 
-
-IF JBoxServerAPI:Instance:getActionPermission("PurgeSalesRep") THEN
-  oDynDataBrowse:POPUP-MENU-OBJECT:addTool("PurgeRep","Promote salesrep"). /* Add PurgeRepRecord procedure to handle the promotion.. */
-      
+/*
+IF JBoxServerAPI:Instance:getActionPermission("PressureSalesRep") THEN
+  oDynDataBrowse:POPUP-MENU-OBJECT:addTool("PressureRep","Increase salesrep quota"). /* Add PressureRepRecord procedure to add to quota */
+*/      
 
 /* Set attributes to define lookups (and drop-downs) in the dynamic filter: */
 {incl/dynfilterlookups.i oDynDataBrowse:BROWSE-OBJECT:BROWSE-HANDLE}
 
-/* Assist in describing the prescan q1uery route for Item since it is not directly joined from Order: */
-oDynDataBrowse:BROWSE-OBJECT:setPreScanQuery("Avgift","EACH Objekt WHERE Objekt.Avgift-art = Avgift.Art NO-LOCK").
+/* Assist in describing the prescan query path for Item since it is not directly joined from Order: 
+oDynDataBrowse:BROWSE-OBJECT:setPreScanQuery("Item","EACH OrderLine OF Item NO-LOCK,FIRST Order NO-LOCK OF OrderLine").
+*/
 
+/* Accumulate totals for these fields 
+oDynDataBrowse:BROWSE-OBJECT:TotalFields = "fSaldo,avgift-pr-ar".
+*/
 
-/* Opt: More info on which datatypes and / or fields subject to accumulation or as distinct columns: */
+/* Opt: More info on which datatypes subject to accumulation or as distinct columns: 
+oDynDataBrowse:BROWSE-OBJECT:AccumDataTypes = "DECIMAL,INTEGER"). 
+oDynDataBrowse:BROWSE-OBJECT:DistinctDataTypes = "CHARACTER,INTEGER,DATE".
+*/
 
-/* DYNAMIC-FUNCTION("setAttribute",oDynDataBrowse:BROWSE-OBJECT,"accumdatatypes","INTEGER"). */
-/* DYNAMIC-FUNCTION("setAttribute",oDynDataBrowse:BROWSE-OBJECT,"distinctdatatypes","CHARACTER,INTEGER,DATE"). */
+/* Or more specific
+oDynDataBrowse:BROWSE-OBJECT:AvailAccumFields = "Belop,ValBelop".
+oDynDataBrowse:BROWSE-OBJECT:AvailDistinctColumns = "Anlegg,AnleggTekst".
+*/
 
-/*
-DYNAMIC-FUNCTION("setAttribute",oDynDataBrowse:BROWSE-OBJECT,"availaccumfields","Belop,ValBelop").
-
-DYNAMIC-FUNCTION("setAttribute",oDynDataBrowse:BROWSE-OBJECT,"availdistinctcolumns",
-                 "Anlegg,AnleggTekst,AvgKode,AvgSystem,BetPeriode,BilagsArt,BilagsArtTekst,Bilagsdato,Bilagsnr,Bilagstype,cEiendomNavn,cKontoNavn,cProduktNavn,cProsjektNavn,cStedTekst,iEiendomNr,iHovedbokId,iJBoxCompanyId,iKontoNr,iProdukt,iProsjektNr,iSted,Kundegr,KundegrTekst,Linjenr,Periode,SrKonto,ValBelop,ValKode").
-*/ 
-
-
-oDynDataBrowse:BROWSE-OBJECT:setFilter("sperre <> 'O'").
+//oDynDataBrowse:BROWSE-OBJECT:setFilter("region = 'usa'").
 oDynDataBrowse:BROWSE-OBJECT:openQuery().
 
 END PROCEDURE.
@@ -354,7 +366,7 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE JusterAvgiftRecord C-Win 
-PROCEDURE JusterAvgiftRecord :
+PROCEDURE PressureRepRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -362,10 +374,10 @@ PROCEDURE JusterAvgiftRecord :
 DEF VAR iReturn  AS INT NO-UNDO.
 DEF VAR cPerCent AS CHAR NO-UNDO.
 
-JBoxSession:Instance:PromptForValue("Angi prosentvis endring","DECIMAL","->9.99|").
+JBoxSession:Instance:PromptForValue("Add percentage to quota","DECIMAL","->9.99","5").
 IF JBoxSession:Instance:PromptValueOk THEN DO:
   IF oDynDataBrowse:BROWSE-OBJECT:processRows("objekt_juster_avgift.p",JBoxSession:Instance:PromptValue) THEN
-    JBoxSession:Instance:ViewMessage("Avgift er justert for " + STRING(oDynDataBrowse:BROWSE-OBJECT:BROWSE-HANDLE:NUM-SELECTED-ROWS) + " kontrakter").
+    JBoxSession:Instance:ViewMessage("Quota adjusted for " + STRING(oDynDataBrowse:BROWSE-OBJECT:BROWSE-HANDLE:NUM-SELECTED-ROWS) + " salesreps").
 END.  
 
 

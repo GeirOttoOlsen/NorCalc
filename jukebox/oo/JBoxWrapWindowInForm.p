@@ -47,6 +47,8 @@ DEF VAR         iWinContainerY    AS INT    NO-UNDO.
 DEF VAR         iDeltaWinY        AS INT    NO-UNDO.
 DEF VAR         oContainer        AS JBoxContainer NO-UNDO.
 DEF VAR         bTopMenu          AS LOG    NO-UNDO INIT YES.
+DEF VAR oMenuItemArray   AS System.Windows.Forms.ToolStripMenuItem NO-UNDO EXTENT 30.
+DEF VAR iMenuItemNodeIdx AS INT NO-UNDO EXTENT 30.
 
 DEF TEMP-TABLE ttUserControls
     FIELD oUserControl     AS Progress.Lang.Object
@@ -109,6 +111,19 @@ FUNCTION buildWindowMenu RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-DeleteUserControlByPlaceholder) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD DeleteUserControlByPlaceholder Procedure
+FUNCTION DeleteUserControlByPlaceholder RETURNS LOGICAL 
+  (INPUT ihPlaceHolder AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getCurrentUserControl) = 0 &THEN
 
@@ -233,7 +248,9 @@ FUNCTION setContainerObject RETURNS LOGICAL
 /* ***************************  Main Block  *************************** */
 IF PROGRAM-NAME(3) BEGINS "AddPage " THEN 
   PUBLISH "EmbedTabInChildForm" (ihProc,OUTPUT bEmbedInChildForm). /* Target: JBoxMsTabsHelper.p */
-ELSE  
+ELSE IF PROGRAM-NAME(3) BEGINS "StartChildWindow " THEN  
+  bEmbedInChildForm = NO.
+ELSE
   PUBLISH "EmbedInChildForm" (ihProc,OUTPUT bEmbedInChildForm). /* Target: JBoxRibbonMenu.p */
 
 IF NOT bEmbedInChildForm AND ihWindow NE ? THEN DO:
@@ -418,8 +435,10 @@ PROCEDURE CloseForm :
 DEF INPUT  PARAMETER ihCurrProc   AS HANDLE NO-UNDO.
 DEF OUTPUT PARAM     obFormClosed AS LOG    NO-UNDO.
 IF ihCurrProc = ihProc THEN DO:
-  oForm:Close().
-  DELETE OBJECT oForm NO-ERROR.
+  IF VALID-OBJECT(oForm) THEN DO:
+    oForm:Close().
+    DELETE OBJECT oForm NO-ERROR.
+  END.  
   obFormClosed = YES.
 END.
 END PROCEDURE.
@@ -661,7 +680,7 @@ IF AVAIL ttUserControls THEN DO:
   IF CAN-DO(ttUserControls.hSourceProc:INTERNAL-ENTRIES,"dotNetSave") AND ENTRY(2,PROGRAM-NAME(2)," ") NE ttUserControls.hSourceProc:FILE-NAME THEN
     RUN dotNetSave IN ttUserControls.hSourceProc.
   ELSE 
-    DYNAMIC-INVOKE(ttUserControls.oUserControl,"dotNetSave").
+    DYNAMIC-INVOKE(ttUserControls.oUserControl,"dotNetSave") NO-ERROR.
 END.
 END PROCEDURE.
 
@@ -776,7 +795,7 @@ IF AVAIL ttUserControls THEN DO:
   IF CAN-DO(ttUserControls.hSourceProc:INTERNAL-ENTRIES,icMethod) THEN
     RUN VALUE(icMethod) IN ttUserControls.hSourceProc.
   ELSE 
-    DYNAMIC-INVOKE(ttUserControls.oUserControl,icMethod).
+    DYNAMIC-INVOKE(ttUserControls.oUserControl,icMethod) NO-ERROR.
 END.
 ELSE IF VALID-HANDLE(ihObject) THEN RUN SUPER (ihObject,icMethod).
 
@@ -1002,23 +1021,38 @@ PROCEDURE SetWinMenuActionState :
   Parameters:  <none>
   Notes:       Published from jboxobjlib.p, setToolbar 
 ------------------------------------------------------------------------------*/
-DEF VAR oMenuItem AS "System.Windows.Forms.ToolStripMenuItem" NO-UNDO.
-DEF VAR hCorrBtn  AS HANDLE NO-UNDO.
+DEF VAR oMenuItem   AS "System.Windows.Forms.ToolStripMenuItem" NO-UNDO.
+DEF VAR hCorrBtn    AS HANDLE NO-UNDO.
+DEF VAR ix          AS INT NO-UNDO.
+DEF VAR bMnuInArray AS LOG NO-UNDO.
 
 FOR EACH ttWinMenu
     WHERE ttWinMenu.iNodeIndex > 1000
     :
 
   IF VALID-HANDLE(ttWinMenu.hTrigWidget) THEN DO:
-    oMenuItem = CAST(ttWinMenu.oMenuItem,"System.Windows.Forms.ToolStripMenuItem").
+    bMnuInArray = NO.
+    DO ix = 1 TO 30:
+      IF iMenuItemNodeIdx[ix] = ttWinMenu.iNodeIndex THEN DO:
+        oMenuItem = oMenuItemArray[ix] NO-ERROR.
+        bMnuInArray = YES.
+        LEAVE.
+      END.  
+    END.  
+    IF NOT bMnuInArray THEN
+      oMenuItem = CAST(ttWinMenu.oMenuItem,"System.Windows.Forms.ToolStripMenuItem") NO-ERROR.
+     /* 
     IF ttWinMenu.hTrigWidget:PRIVATE-DATA NE "" THEN DO:
       hCorrBtn = WIDGET-HANDLE(ttWinMenu.hTrigWidget:PRIVATE-DATA) NO-ERROR.
-      IF VALID-HANDLE(hCorrBtn) AND SEARCH(hCorrBtn:IMAGE) NE ? THEN   
-        oMenuItem:Image = System.Drawing.Image:FromFile(SEARCH(hCorrBtn:IMAGE)).        
+      IF VALID-HANDLE(hCorrBtn) AND SEARCH(hCorrBtn:IMAGE) NE ? THEN
+        oMenuItem:Image = System.Drawing.Image:FromFile(SEARCH(hCorrBtn:IMAGE)).
+    END.
+    */    
+    IF VALID-OBJECT(oMenuItem) AND VALID-HANDLE(ttWinMenu.hTrigWidget) THEN DO:
+      oMenuItem:Enabled = ttWinMenu.hTrigWidget:SENSITIVE.
+      IF ttWinMenu.hTrigWidget:TOGGLE-BOX THEN
+        oMenuItem:Checked = ttWinMenu.hTrigWidget:Checked.
     END.    
-    oMenuItem:Enabled = ttWinMenu.hTrigWidget:SENSITIVE.
-    IF ttWinMenu.hTrigWidget:TOGGLE-BOX THEN
-      oMenuItem:Checked = ttWinMenu.hTrigWidget:Checked.
   END.
 END.
 
@@ -1109,8 +1143,10 @@ IF NOT bEmbedInChildForm THEN DO:
   
     END.
   END.
+
   
   oForm:Show().   
+  oForm:WindowState = System.Windows.Forms.FormWindowState:Normal.
 
   DEF VAR hSfr AS HANDLE NO-UNDO.
   hSfr = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",ihWindow,"StatusBarFrame")) NO-ERROR.
@@ -1126,7 +1162,14 @@ IF NOT bEmbedInChildForm THEN DO:
   END.
 
 END.
-ELSE IF VALID-OBJECT(oChildForm) THEN oChildForm:BringToFront().
+ELSE IF VALID-OBJECT(oChildForm) THEN DO:
+  /* Blir satt i JBoxRibbonMenu, ViewCurrTab */
+  IF JBoxSession:Instance:getJBoxAttribute("cancel_bring_childform_to_top") NE "yes" 
+     AND NOT PROGRAM-NAME(4) BEGINS "USER-INTERFACE-TRIGGER" /* resize fra tab-folder */ 
+     AND NOT PROGRAM-NAME(6) BEGINS "USER-INTERFACE-TRIGGER" THEN /* resize fra sub-tab-folder */ 
+    oChildForm:BringToFront().
+  JBoxSession:Instance:setJBoxAttribute("cancel_bring_childform_to_top","").
+END.  
 
 /*
 IF icPage NE "" THEN
@@ -1161,17 +1204,33 @@ IF ihCurrWindow NE ihWindow THEN RETURN.
 
 DEF VAR oUserControlInstance AS System.Windows.Forms.Control NO-UNDO.
 
-IF NOT PROGRAM-NAME(4) BEGINS "DisplayRecord" AND NOT PROGRAM-NAME(4) BEGINS "DoFill" AND NOT PROGRAM-NAME(4) BEGINS "StartWindow" THEN 
+IF NOT PROGRAM-NAME(4) BEGINS "DisplayRecord" 
+   AND NOT PROGRAM-NAME(4) BEGINS "DoFill" 
+   AND NOT PROGRAM-NAME(4) BEGINS "StartWindow"
+   AND NOT PROGRAM-NAME(4) BEGINS "StartSearch"
+   AND NOT PROGRAM-NAME(4) BEGINS "EndResizeBrowseColumn"
+   AND NOT PROGRAM-NAME(4) BEGINS "DefaultActionBrowse"
+   AND NOT PROGRAM-NAME(4) BEGINS "DispBrwOverlayWidgets"
+   
+   THEN DO:
+/*  IF VALID-OBJECT(oForm) THEN          */
+/*    oForm:SuspendLayout().             */
+/*  ELSE IF VALID-OBJECT(oChildForm) THEN*/
+/*    oChildForm:SuspendLayout().        */
   FOR EACH ttUserControls
       WHERE ttUserControls.bVisible
       :
     oUserControlInstance = DYNAMIC-CAST(ttUserControls.oUserControl,ttUserControls.cUserControlType).
     IF ibView THEN 
       oUserControlInstance:BringToFront().
-    ELSE
+    ELSE 
       oUserControlInstance:SendToBack().
   END.
-
+/*  IF VALID-OBJECT(oForm) THEN          */
+/*    oForm:ResumeLayout().              */
+/*  ELSE IF VALID-OBJECT(oChildForm) THEN*/
+/*    oChildForm:ResumeLayout().         */
+END.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1254,7 +1313,10 @@ DEF VAR oWidgetInstance      AS System.Windows.Forms.Control NO-UNDO.
 FIND FIRST ttUserControls
      WHERE ttUserControls.hPlaceholder = ihPlaceholder
      NO-ERROR.
-IF AVAIL ttUserControls THEN DO:
+IF AVAIL ttUserControls
+   AND (NOT PROGRAM-NAME(4) BEGINS "DispBrwOverlayWidgets" OR ttUserControls.cWidgetType = "DevExpress.XtraEditors.DateEdit")
+   AND NOT PROGRAM-NAME(4) BEGINS "WaitForForm"
+   THEN DO:
   oUserControlInstance = DYNAMIC-CAST(ttUserControls.oUserControl,ttUserControls.cUserControlType).
   IF (ihPlaceHolder:HIDDEN AND ibView = ?) OR NOT ibView THEN DO:
     oUserControlInstance:SendToBack().
@@ -1338,13 +1400,14 @@ FUNCTION buildWindowMenu RETURNS LOGICAL
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-DEF VAR hChild        AS HANDLE NO-UNDO.
-DEF VAR cDummy        AS CHAR   NO-UNDO.
-DEF VAR bFirstInGroup AS LOG    NO-UNDO.
-DEF VAR hCorrBtn      AS HANDLE NO-UNDO.
-DEF VAR cImage        AS CHAR   NO-UNDO.
-DEF VAR bMenuIsBar    AS LOG    NO-UNDO.
-DEF VAR oSubMenu      AS Progress.Lang.Object NO-UNDO.
+DEF VAR hChild           AS HANDLE NO-UNDO.
+DEF VAR cDummy           AS CHAR   NO-UNDO.
+DEF VAR bFirstInGroup    AS LOG    NO-UNDO.
+DEF VAR hCorrBtn         AS HANDLE NO-UNDO.
+DEF VAR cImage           AS CHAR   NO-UNDO.
+DEF VAR bMenuIsBar       AS LOG    NO-UNDO.
+DEF VAR oSubMenu         AS Progress.Lang.Object NO-UNDO.
+DEF VAR iMnuItmIdx       AS INT NO-UNDO.
 
 DEF BUFFER ttWinMenu FOR ttWinMenu.
 
@@ -1385,26 +1448,43 @@ REPEAT WHILE VALID-HANDLE(hChild):
                  bFirstInGroup        = NO
                  oSubMenu             = ttWinMenu.oMenuItem
                  .
+          iMnuItmIdx = iMnuItmIdx + 1.
+          IF iMnuItmIdx < 31 THEN
+            ASSIGN oMenuItemArray[iMnuItmIdx] = CAST(oForm:AddMenuItem(oSubMenu,ixNode,hChild:LABEL,
+                                                            cImage,
+                                                            IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "",
+                                                            bFirstInGroup),"System.Windows.Forms.ToolStripMenuItem")
+                  iMenuItemNodeIdx[iMnuItmIdx] = ixNode
+                  NO-ERROR.       
           CREATE ttWinMenu.
           ASSIGN ttWinMenu.iNodeIndex   = ixNode
-                 ttWinMenu.oMenuItem    = oForm:AddMenuItem(oSubMenu,ttWinMenu.iNodeIndex,hChild:LABEL,
+                 ttWinMenu.oMenuItem    = IF iMnuItmIdx > 30 THEN oForm:AddMenuItem(oSubMenu,ttWinMenu.iNodeIndex,hChild:LABEL,
                                                             cImage,
                                                             IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "",
                                                             bFirstInGroup)
+                                          ELSE ?                   
                  ttWinMenu.hTrigWidget  = hChild
                  ttWinMenu.cAccelerator = (IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "")
                  ixNode                 = ixNode + 1
                  bFirstInGroup          = NO
                  NO-ERROR.
-
         END.  
         ELSE DO:
+          iMnuItmIdx = iMnuItmIdx + 1.
+          IF iMnuItmIdx < 31 THEN
+            ASSIGN oMenuItemArray[iMnuItmIdx] = CAST(oForm:AddMenuItem(ioParent,ixNode,hChild:LABEL,
+                                                            cImage,
+                                                            IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "",
+                                                            bFirstInGroup),"System.Windows.Forms.ToolStripMenuItem")       
+                  iMenuItemNodeIdx[iMnuItmIdx] = ixNode
+                  NO-ERROR.       
           CREATE ttWinMenu.
           ASSIGN ttWinMenu.iNodeIndex   = ixNode
-                 ttWinMenu.oMenuItem    = oForm:AddMenuItem(ioParent,ttWinMenu.iNodeIndex,hChild:LABEL,
+                 ttWinMenu.oMenuItem    = IF iMnuItmIdx > 30 THEN oForm:AddMenuItem(ioParent,ttWinMenu.iNodeIndex,hChild:LABEL,
                                                             cImage,
                                                             IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "",
                                                             bFirstInGroup)
+                                          ELSE ?                  
                  ttWinMenu.hTrigWidget  = hChild
                  ttWinMenu.cAccelerator = (IF hChild:ACCELERATOR NE ? THEN hChild:ACCELERATOR ELSE "")
                  ixNode                 = ixNode + 1
@@ -1429,6 +1509,39 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-DeleteUserControlByPlaceholder) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION DeleteUserControlByPlaceholder Procedure
+FUNCTION DeleteUserControlByPlaceholder RETURNS LOGICAL 
+  ( INPUT ihPlaceHolder AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  DEFINE VARIABLE result AS LOGICAL NO-UNDO.
+
+  FIND FIRST ttUserControls 
+       WHERE ttUserControls.hPlaceHolder = ihPlaceHolder
+       NO-ERROR.
+  IF AVAIL ttUserControls THEN DO:
+     IF VALID-OBJECT(ttUserControls.oUserControl) THEN DO:
+       DELETE OBJECT ttUserControls.oUserControl.
+     END.
+     DELETE ttUserControls NO-ERROR.
+     RESULT = YES.  
+  END.
+   
+  RETURN result.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getCurrentUserControl) = 0 &THEN
 

@@ -14,13 +14,13 @@ USING Progress.Lang.*.
 
 CLASS JBoxBrowseDropDown:
   DEF VAR hSourceProc AS HANDLE NO-UNDO.
-  DEF VAR hOverlay    AS HANDLE NO-UNDO.
+  DEF PUBLIC PROPERTY DropDownHandle AS HANDLE NO-UNDO GET. PROTECTED SET.
 
   DEF PUBLIC PROPERTY SCREEN-VALUE  AS CHAR 
-      GET(): RETURN hOverlay:SCREEN-VALUE. 
+      GET(): RETURN DropDownHandle:SCREEN-VALUE. 
       END GET. 
       SET(icScreenValue AS CHAR):
-        hOverlay:SCREEN-VALUE = icScreenValue.
+        DropDownHandle:SCREEN-VALUE = icScreenValue.
       END SET.
 
   CONSTRUCTOR PUBLIC JBoxBrowseDropDown (ioBrowse              AS JBoxBrowse
@@ -132,18 +132,18 @@ CLASS JBoxBrowseDropDown:
     DYNAMIC-FUNCTION("setObjectSourceProc",hSourceProc).  
 
     IF icValueList NE "" THEN   
-      hOverlay  = DYNAMIC-FUNCTION("NewBrowseDropDown",ioBrowse:BROWSE-HANDLE,icBrowseColumn,icTableColumn
+      DropDownHandle  = DYNAMIC-FUNCTION("NewBrowseDropDown",ioBrowse:BROWSE-HANDLE,icBrowseColumn,icTableColumn
                  ,"","",icValueList).
     ELSE
-      hOverlay  = DYNAMIC-FUNCTION("NewBrowseDropDown",ioBrowse:BROWSE-HANDLE,icBrowseColumn,icTableColumn
+      DropDownHandle  = DYNAMIC-FUNCTION("NewBrowseDropDown",ioBrowse:BROWSE-HANDLE,icBrowseColumn,icTableColumn
                  ,icDropDownTblsAndFlds,icDropDownCriteria,"").
                  
-    DYNAMIC-FUNCTION("CreateOverlayLink",ioBrowse:BROWSE-HANDLE,hOverlay,icBrowseColumn).
+    DYNAMIC-FUNCTION("CreateOverlayLink",ioBrowse:BROWSE-HANDLE,DropDownHandle,icBrowseColumn).
     
     IF ibRefreshRow THEN
-      DYNAMIC-FUNCTION("setAttribute",hOverlay,"refreshRow","yes").
+      DYNAMIC-FUNCTION("setAttribute",DropDownHandle,"refreshRow","yes").
       
-    ioBrowse:registerOverlay(THIS-OBJECT,"JBoxBrowseDropDown",icBrowseColumn,hOverlay).               
+    ioBrowse:registerOverlay(THIS-OBJECT,"JBoxBrowseDropDown",icBrowseColumn,DropDownHandle).               
                    
   END METHOD.                                       
 

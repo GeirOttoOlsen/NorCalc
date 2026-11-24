@@ -488,7 +488,7 @@ END.
 oBrwNPkundekategori:OpenQuery().
 
 
-oContainer:initResize(300,200).
+oContainer:initResize(540,200).
 
 END PROCEDURE.
 

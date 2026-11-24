@@ -30,13 +30,14 @@
 /* Parameters Definitions ---                                           */
 /*DEFINE SHARED VAR Current-Oppf-Rec AS ROWID.             */
 /*DEFINE SHARED VAR anleggsnrParam LIKE NPSHANLG.anleggsnr.*/
-/*DEFINE SHARED VAR tilbudsIdParam LIKE NPSHTILBUD.id.     */
+/*DEFINE SHARED VAR tilbudsIdParam LIKE NPSHTILBUD.inpkontaktid.     */
 /* Local Variable Definitions ---                                       */
 def var hParent as handle no-undo.
 def var current-rec as rowid no-undo.
 def var anleggsNrParam like npshanlg.anleggsnr.
 def var TilbudsIdParam like npshtilbud.id.
 def var i as int no-undo.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -48,7 +49,7 @@ def var i as int no-undo.
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME ENDRE-OPPF
 
 /* Internal Tables (found by Frame, Query & Browse Queries)             */
@@ -161,7 +162,7 @@ DEFINE FRAME ENDRE-OPPF
           VIEW-AS COMBO-BOX 
           LIST-ITEMS "Ingen","Avklares","Informasjon","TLF/FAX/BREV","Besøk","Pleies","Bedres","Endres","Avvise" 
           DROP-DOWN-LIST
-          SIZE 28.8 BY 1.05
+          SIZE 28.8 BY 1
           BGCOLOR 15 FGCOLOR 0 FONT 2
      NPSHTOPP.neste_oppf_uke AT ROW 5.76 COL 25 COLON-ALIGNED
           VIEW-AS FILL-IN 
@@ -213,7 +214,7 @@ DEFINE FRAME ENDRE-OPPF
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX ENDRE-OPPF
-   Custom                                                               */
+   FRAME-NAME Custom                                                    */
 ASSIGN 
        FRAME ENDRE-OPPF:SCROLLABLE       = FALSE
        FRAME ENDRE-OPPF:HIDDEN           = TRUE.
@@ -551,7 +552,7 @@ IF AVAILABLE NPSHTOPP THEN
         Btn_OK Btn_Cancel Btn_Help 
       WITH FRAME ENDRE-OPPF.
 ELSE
-    MESSAGE 'Oppfølgingstabellen er opptatt. Prøv senere.' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+    MESSAGE 'Oppfølgingstabellen er opptatt. Prøv senere. rowid(' + string(current-rec) + ')' VIEW-AS ALERT-BOX TITLE 'STOPP'.
     RETURN.
 END PROCEDURE.
 

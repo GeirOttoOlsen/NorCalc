@@ -6,13 +6,22 @@ DEF INPUT  PARAM iiFromTime          AS INT  NO-UNDO.
 DEF INPUT  PARAM icExtra             AS CHAR NO-UNDO.
 DEF OUTPUT PARAM oiChangeLogHeaderId AS INT  NO-UNDO.
 
-CREATE JBoxChangeLogHeader.
-ASSIGN JBoxChangeLogHeader.cChangeLogHeaderText = icText
-       JBoxChangeLogHeader.cCreatedBy           = icUserId
-       JBoxChangeLogHeader.dChange              = idFrom
-       JBoxChangeLogHeader.iChangeTime          = iiFromTime
-       JBoxChangeLogHeader.iJBoxCompanyId       = iiCompanyId
-       JBoxChangeLogHeader.dCreated             = TODAY
-       .
-oiChangeLogHeaderId = JBoxChangeLogHeader.iJBoxChangeLogHeaderId.
+DEF VAR hbJBoxChangeLogHeader AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxChangeLogHeader",OUTPUT hbJBoxChangeLogHeader) THEN RETURN.
+
+hbJBoxChangeLogHeader:BUFFER-CREATE ().
+ASSIGN hbJBoxChangeLogHeader::cChangeLogHeaderText = icText
+       hbJBoxChangeLogHeader::cCreatedBy           = icUserId
+       hbJBoxChangeLogHeader::dChange              = idFrom
+       hbJBoxChangeLogHeader::iChangeTime          = iiFromTime
+       hbJBoxChangeLogHeader::iJBoxCompanyId       = iiCompanyId
+       hbJBoxChangeLogHeader::dCreated             = TODAY
+       .
+oiChangeLogHeaderId = hbJBoxChangeLogHeader::iJBoxChangeLogHeaderId.
+
+FINALLY:
+  DELETE OBJECT hbJBoxChangeLogHeader NO-ERROR.      
+END FINALLY.

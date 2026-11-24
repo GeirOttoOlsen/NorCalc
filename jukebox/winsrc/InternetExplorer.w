@@ -312,7 +312,13 @@ DO WITH FRAME {&FRAME-NAME}:
   oJBoxInternetExplorer = NEW uc.JBoxInternetExplorer(THIS-PROCEDURE,JBoxInternetExplorer:HANDLE).
   oJBoxInternetExplorer:RegisterWithJukeBox(YES).
   oJboxInternetExplorer:ScriptErrorsSuppressed = YES.
-  oJboxInternetExplorer:setURI("http://www.progress.com").
+  oJBoxInternetExplorer:getDotNetWidget():AllowNavigation = YES.
+//  oJBoxInternetExplorer:getDotNetWidget():AllowDrop = YES.
+  oJBoxInternetExplorer:getDotNetWidget():AllowWebBrowserDrop = YES.
+  MESSAGE  oJBoxInternetExplorer:getDotNetWidget():Version
+  
+  VIEW-AS ALERT-BOX.
+  oJboxInternetExplorer:setURI("http://192.168.105.103:8089/pie/piechart.html").
 END.
 &ENDIF
 END PROCEDURE.

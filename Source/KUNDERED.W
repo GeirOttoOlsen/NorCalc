@@ -573,29 +573,28 @@ PROCEDURE nyKunde :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-CREATE NPKUNDE.
-Current-Kunde-Rec = ROWID(NPKUNDE).
-IF AVAILABLE NPKUNDE THEN
-DO:
- NPKUNDE.aktiv = YES.
- NPKUNDE.sist_oppdatert  = TODAY.
- DISPLAY NPKUNDE.aktiv NPKUNDE.sist_oppdatert WITH FRAME Dialog-Frame.
- 
- UPDATE   NPKUNDE.kundenavn NPKUNDE.kundekategori NPKUNDE.kundenr 
-         NPKUNDE.adresse1  NPKUNDE.avtale NPKUNDE.sist_oppdatert
-         NPKUNDE.adresse2 NPKUNDE.avdeling
-         NPKUNDE.postnr NPKUNDE.poststed
-         NPKUNDE.land NPKUNDE.kundedistriktnr NPKUNDE.telefon NPKUNDE.fax   NPKUNDE.dm_kode
-         NPKUNDE.kontor_type NPKUNDE.aktiv  NPKUNDE.er_konsulent   NPKUNDE.tilbudsmottager 
-         NPKUNDE.katalog_np_dato NPKUNDE.katalog_np_antall 
-         NPKUNDE.katalog_np_type NPKUNDE.katalog_np_oppdatert NPKUNDE.kontaktperson_np 
-         NPKUNDE.katalog_nt_dato NPKUNDE.katalog_nt_antall 
-         NPKUNDE.katalog_nt_type NPKUNDE.katalog_nt_oppdatert  NPKUNDE.kontaktperson_nt
-         NPKUNDE.organisasjon 
-         
-         Btn_OK Btn_Cancel Btn_Help 
-      WITH FRAME Dialog-Frame.
-END.
+  do transaction:
+    CREATE NPKUNDE.
+    Current-Kunde-Rec = ROWID(NPKUNDE).
+    NPKUNDE.aktiv = YES.
+    NPKUNDE.sist_oppdatert  = TODAY.
+    DISPLAY NPKUNDE.aktiv NPKUNDE.sist_oppdatert WITH FRAME Dialog-Frame.
+     UPDATE   NPKUNDE.kundenavn NPKUNDE.kundekategori NPKUNDE.kundenr 
+             NPKUNDE.adresse1  NPKUNDE.avtale NPKUNDE.sist_oppdatert
+             NPKUNDE.adresse2 NPKUNDE.avdeling
+             NPKUNDE.postnr NPKUNDE.poststed
+             NPKUNDE.land NPKUNDE.kundedistriktnr NPKUNDE.telefon NPKUNDE.fax   NPKUNDE.dm_kode
+             NPKUNDE.kontor_type NPKUNDE.aktiv  NPKUNDE.er_konsulent   NPKUNDE.tilbudsmottager 
+             NPKUNDE.katalog_np_dato NPKUNDE.katalog_np_antall 
+             NPKUNDE.katalog_np_type NPKUNDE.katalog_np_oppdatert NPKUNDE.kontaktperson_np 
+             NPKUNDE.katalog_nt_dato NPKUNDE.katalog_nt_antall 
+             NPKUNDE.katalog_nt_type NPKUNDE.katalog_nt_oppdatert  NPKUNDE.kontaktperson_nt
+             NPKUNDE.organisasjon 
+             
+             Btn_OK Btn_Cancel Btn_Help 
+          WITH FRAME Dialog-Frame.
+  end.
+  
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

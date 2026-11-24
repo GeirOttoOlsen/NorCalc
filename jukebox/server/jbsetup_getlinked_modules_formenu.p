@@ -16,6 +16,8 @@ DEF VAR hQuery             AS HANDLE NO-UNDO.
 
 iMenuId = INT(ENTRY(1,icParam,";")).
 
+{incl/validatecaller.i}
+
 CREATE BUFFER hBuffJBoxAppModuleItem FOR TABLE "JBoxAppModuleItem" NO-ERROR.
 IF ERROR-STATUS:ERROR THEN DO:
   obOk = NO.  

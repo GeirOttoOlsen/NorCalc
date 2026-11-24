@@ -16,6 +16,8 @@ DEF INPUT  PARAM icRowid             AS CHAR NO-UNDO.
 DEF INPUT  PARAM icSessionId         AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.  
 
+{incl/validatecaller.i}
+
 FIND JBoxFileImportLog WHERE ROWID(JBoxFileImportLog) = TO-ROWID(icRowId) EXCLUSIVE-LOCK NO-ERROR.
 IF AVAIL JBoxFileImportLog THEN DO:
   FOR EACH JBoxFileImportLogFileHeader OF JBoxFileImportLog

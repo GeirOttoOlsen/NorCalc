@@ -23,8 +23,8 @@ ROUTINE-LEVEL ON ERROR UNDO, THROW.
 DEF INPUT PARAM icUserId AS CHAR NO-UNDO.
 DEF INPUT PARAM ihServer AS HANDLE NO-UNDO.
 
-DEF VAR oMenuXML         AS JBoxXmlDoc NO-UNDO.
-DEF VAR oJBoxMainForm    AS JBoxMainForm NO-UNDO. 
+/*DEF VAR oMenuXML         AS JBoxXmlDoc NO-UNDO.  */
+/*DEF VAR oJBoxMainForm    AS JBoxMainForm NO-UNDO.*/
 DEF VAR hDialogFrame     AS HANDLE NO-UNDO.
 DEF VAR hTimer           AS HANDLE NO-UNDO.
 DEF VAR bOkUser          AS LOG NO-UNDO.
@@ -33,28 +33,38 @@ DEF VAR bOkUser          AS LOG NO-UNDO.
 ON 'close':U OF THIS-PROCEDURE RETURN.
 
 JBoxSession:Instance:AppServerHandle = ihServer.
-JBoxSession:Instance:LanguageCode = "NO".
-JBoxSession:Instance:BaseLanguageCode = "NO".
 JBoxSession:Instance:AppTitle = "NorCalc".
-JBoxSession:Instance:UseAdvGui = YES.
-JBoxSession:Instance:setRowShadeColor(240,240,240).
 
 /*def var oFirmaInfo as class SysParameter_cl no-undo.*/
 /*oFirmaInfo = new SysParameter_cl('FirmaInfo',0).    */
 
 
 /*RUN JBoxLogin.w (OUTPUT bOkUser).*/
-RUN JBoxWebLogin.w ('goo','NO',OUTPUT bOkUser).
+RUN JBoxWebLogin.w (icUserId,'NO',OUTPUT bOkUser).
+
+
+JBoxSession:Instance:setJBoxAttribute('btnImg_browseconfig','img/ico/table.ico').
+JBoxSession:Instance:setJBoxAttribute('btnImg_refresh','img/ico/document_refresh.ico').
+JBoxSession:Instance:setJBoxAttribute('btnImg_filter','img/ico/document_find.ico').
+JBoxSession:Instance:setJBoxAttribute('btnImg_excel','img/ico/excel.ico').
+
+/*JBoxSession:Instance:setJBoxAttribute('btnImg_edit','img/ico/document_edit.ico').*/
+/*JBoxSession:Instance:setJBoxAttribute('btnImg_new','img\ico\document_add.ico').  */
+//JBoxSession:Instance:setJBoxAttribute('btnImg_new_disabled','gif/document_add_disabled.gif').
+
+//JBoxSession:Instance:LanguageCode = "NO".
+//JBoxSession:Instance:BaseLanguageCode = "NO".
+JBoxSession:Instance:UseAdvGui = YES.
+JBoxSession:Instance:setRowShadeColor(240,240,240).
+
 IF NOT bOkUser THEN QUIT.
-
-
 
 JBoxMainMenu:Instance:InitializeObject(1).
 
 //  JBoxMainMenu:Instance:oMainForm:Height = JBoxMainMenu:Instance:oMainForm:Height + 80.
   
-JBoxMainMenu:Instance:StatusText = IF icUserId NE "" THEN icUserId ELSE JBoxSession:Instance:UserId + " / " + JBoxSession:Instance:UserName.
-JBoxMainMenu:Instance:setWindowCaption("NorCalc" + IF SESSION:PARAM MATCHES "*test*" THEN " - TEST" ELSE "").
+/*JBoxMainMenu:Instance:StatusText = IF icUserId NE "" THEN icUserId ELSE JBoxSession:Instance:UserId + " / " + JBoxSession:Instance:UserName.*/
+/*JBoxMainMenu:Instance:setWindowCaption("NorCalc" + IF SESSION:PARAM MATCHES "*test*" THEN " - TEST" ELSE "").                               */
 
   //JBoxMainMenu:Instance:ViewStartPanel().
   

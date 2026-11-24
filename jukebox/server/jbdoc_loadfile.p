@@ -18,6 +18,8 @@ DEF OUTPUT PARAM ocLastKeyString  AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn         AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOK             AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR mpDocument      AS MEMPTR NO-UNDO.
 DEF VAR ix              AS INT    NO-UNDO.
 DEF VAR iByteCount      AS INT    NO-UNDO.
@@ -58,7 +60,6 @@ DEF VAR bImportLogFile      AS LOG    NO-UNDO.
 DEF VAR hFldCreatedDate     AS HANDLE NO-UNDO.
 DEF VAR hFldCreatedBy       AS HANDLE NO-UNDO.
 DEF VAR cUserId             AS CHAR   NO-UNDO.
-DEF VAR hJbAPI              AS HANDLE NO-UNDO.
 DEF VAR hParamfld           AS HANDLE NO-UNDO.
 DEF VAR bParamFldError      AS LOG    NO-UNDO.
 
@@ -87,14 +88,14 @@ FUNCTION getCurrentFileLineNum RETURNS INTEGER ( ):
   ELSE RETURN iRecordCount.
 END.
 
-FUNCTION startASlib RETURNS LOGICAL ():
-  IF NOT VALID-HANDLE(hJbAPI) THEN
-    RUN jbserv_api_for_server.p PERSIST SET hJbAPI (icSessionId).
-  SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hJbAPI).
-END.
+/*FUNCTION startASlib RETURNS LOGICAL ():                          */
+/*  IF NOT VALID-HANDLE(hJbAPI) THEN                               */
+/*    RUN jbserv_api_for_server.p PERSIST SET hJbAPI (icSessionId).*/
+/*  SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hJbAPI).                  */
+/*END.                                                             */
 
 FUNCTION getASlibHandle RETURNS HANDLE ():
-  RETURN hJbAPI.
+  RETURN hAsLib.
 END FUNCTION.
 
 FUNCTION CreImportDataLog RETURNS LOGICAL (INPUT icLogType AS CHAR,INPUT icLogName AS CHAR,INPUT icLogDesc AS CHAR,icLogText AS CHAR):   
@@ -115,7 +116,7 @@ FUNCTION CreImportDataLog RETURNS LOGICAL (INPUT icLogType AS CHAR,INPUT icLogNa
       END.
     END.
     DO ix = 1 TO NUM-ENTRIES(cFileLabelList,";"): /* hbImport:NUM-FIELDS: */
-      cSourceData = cSourceData + (IF cSourceData NE "" THEN JBoxFileImportHeader.cDelimiter ELSE "") + STRING(hbImport:BUFFER-FIELD(ENTRY(ix,cFileLabelList,";")):BUFFER-VALUE).
+      cSourceData = cSourceData + (IF cSourceData NE "" THEN JBoxFileImportHeader.cDelimiter ELSE "") + (IF hbImport:BUFFER-FIELD(ENTRY(ix,cFileLabelList,";")):BUFFER-VALUE NE ? THEN STRING(hbImport:BUFFER-FIELD(ENTRY(ix,cFileLabelList,";")):BUFFER-VALUE) ELSE "?").
     END.
     IF icLogText NE "" THEN
       cSourceData = cSourceData + JBoxFileImportHeader.cDelimiter + icLogText.
@@ -430,9 +431,9 @@ IF VALID-HANDLE(hImportProg) THEN DO:
   DELETE PROCEDURE hImportProg NO-ERROR.
 END.
 
-IF VALID-HANDLE(hJbAPI) THEN DO:
-  DYNAMIC-FUNCTION("setPreTransBuffer" IN hJbAPI,?).  
-  DELETE PROCEDURE hJbAPI.  
+IF VALID-HANDLE(hAsLib) THEN DO:
+  DYNAMIC-FUNCTION("setPreTransBuffer" IN hAsLib,?).  
+//  DELETE PROCEDURE hJbAPI.  
 END. 
 
 

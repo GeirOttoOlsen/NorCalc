@@ -8,4 +8,6 @@ DEF INPUT  PARAM icSessionId AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG    NO-UNDO INIT YES.
 
+{incl/validatecaller.i}
+
 ocReturn = SESSION:TEMP-DIRECTORY.

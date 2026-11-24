@@ -115,7 +115,7 @@ DEF VAR bUseWithJukebox     AS LOG    NO-UNDO INIT YES.
 
 DEF STREAM strWatchLog.
 
-DEF TEMP-TABLE ttOrgWinSize 
+DEF TEMP-TABLE ttOrgWinSize NO-UNDO 
     FIELD chWindow      AS CHAR
     FIELD iWidthPixels  AS INT
     FIELD iHeightPixels AS INT
@@ -126,7 +126,7 @@ DEF TEMP-TABLE ttOrgWinSize
     FIELD hProcedure    AS HANDLE
     .
 
-DEF TEMP-TABLE ttCurrWinSize 
+DEF TEMP-TABLE ttCurrWinSize NO-UNDO 
     FIELD chWindow      AS CHAR
     FIELD iWidthPixels  AS INT
     FIELD iHeightPixels AS INT
@@ -135,55 +135,55 @@ DEF TEMP-TABLE ttCurrWinSize
     index idxWindow is primary unique hWindow 
     .
 
-DEF TEMP-TABLE ttNoResizeX
+DEF TEMP-TABLE ttNoResizeX NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttNoResizeY
+DEF TEMP-TABLE ttNoResizeY NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttAddResizeX
+DEF TEMP-TABLE ttAddResizeX NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttAddResizeY
+DEF TEMP-TABLE ttAddResizeY NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttNoMoveX
+DEF TEMP-TABLE ttNoMoveX NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttNoMoveY
+DEF TEMP-TABLE ttNoMoveY NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttAddMoveX
+DEF TEMP-TABLE ttAddMoveX NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttAddMoveY
+DEF TEMP-TABLE ttAddMoveY NO-UNDO
     FIELD chWindow AS CHAR
     FIELD chFrame  AS CHAR
     FIELD cWidget  AS CHAR
     INDEX ixRes chFrame cWidget.
 
-DEF TEMP-TABLE ttSplitBarX
+DEF TEMP-TABLE ttSplitBarX NO-UNDO
     FIELD chWindow         AS CHAR
     FIELD hSplitBar        AS HANDLE 
     FIELD hSplitFrame      AS HANDLE 
@@ -200,7 +200,7 @@ DEF TEMP-TABLE ttSplitBarX
     INDEX ixHnd hSplitBar
     INDEX ixFrame hSplitFrame.
 
-DEF TEMP-TABLE ttFollowSplitBarX
+DEF TEMP-TABLE ttFollowSplitBarX NO-UNDO
     FIELD chWindow        AS CHAR
     FIELD hSplitBar       AS HANDLE
     FIELD hWidget         AS WIDGET-HANDLE
@@ -208,14 +208,14 @@ DEF TEMP-TABLE ttFollowSplitBarX
     INDEX ixRes chWindow hSplitBar.
 DEF BUFFER bttFollowSplitBarX FOR ttFollowSplitBarX.
 
-DEF TEMP-TABLE ttPrevSplitBarXpos
+DEF TEMP-TABLE ttPrevSplitBarXpos NO-UNDO
     FIELD chWindow        AS CHAR
     FIELD cFrameName      AS CHAR
     FIELD iPrevXpos       AS INT
     INDEX ixRes chWindow cFrameName.
 
 
-DEF TEMP-TABLE ttSplitBarY
+DEF TEMP-TABLE ttSplitBarY NO-UNDO
     FIELD chWindow             AS CHAR
     FIELD hSplitBar            AS HANDLE 
     FIELD hSplitFrame          AS HANDLE 
@@ -233,7 +233,7 @@ DEF TEMP-TABLE ttSplitBarY
     INDEX ixHnd hSplitBar
     INDEX ixFrame hSplitFrame.
 
-DEF TEMP-TABLE ttFollowSplitBarY
+DEF TEMP-TABLE ttFollowSplitBarY NO-UNDO
     FIELD chWindow        AS CHAR
     FIELD hSplitBar       AS HANDLE
     FIELD hWidget         AS WIDGET-HANDLE
@@ -241,25 +241,25 @@ DEF TEMP-TABLE ttFollowSplitBarY
     INDEX ixRes chWindow hSplitBar.
 DEF BUFFER bttFollowSplitBarY FOR ttFollowSplitBarY.
 
-DEF TEMP-TABLE ttPrevSplitBarYpos
+DEF TEMP-TABLE ttPrevSplitBarYpos NO-UNDO
     FIELD chWindow        AS CHAR
     FIELD cFrameName      AS CHAR
     FIELD iPrevYpos       AS INT
     INDEX ixRes chWindow cFrameName.
 
 
-DEF TEMP-TABLE ttResizeTypes
+DEF TEMP-TABLE ttResizeTypes NO-UNDO
     FIELD chWindow        AS CHAR
     FIELD cTypes          AS CHAR
     INDEX ixRes chWindow.
 
-DEF TEMP-TABLE ttBGcolour
+DEF TEMP-TABLE ttBGcolour NO-UNDO
     FIELD hFrame          AS HANDLE
     FIELD cColour         AS CHAR
     FIELD cColourDir      AS CHAR
     FIELD bAllFrames      AS LOG.
 
-DEF TEMP-TABLE ttSettingsLoaded
+DEF TEMP-TABLE ttSettingsLoaded NO-UNDO
     FIELD cColour         AS CHAR 
     FIELD cColourDir      AS CHAR 
     FIELD iCurrX          AS INT 
@@ -273,11 +273,11 @@ DEF TEMP-TABLE ttSettingsLoaded
     FIELD hWindow         AS HANDLE
     FIELD cSettingsName   AS CHAR.
 
-DEF TEMP-TABLE ttLastInitFunction
+DEF TEMP-TABLE ttLastInitFunction NO-UNDO
     FIELD hWindow         AS HANDLE
     FIELD cFunction       AS CHAR.
 
-DEF TEMP-TABLE ttMenuStruct
+DEF TEMP-TABLE ttMenuStruct NO-UNDO
     FIELD hWindow     AS HANDLE
     FIELD cType       AS CHAR
     FIELD hParent     AS HANDLE
@@ -287,17 +287,17 @@ DEF TEMP-TABLE ttMenuStruct
     FIELD cParam      AS CHAR.
 DEF BUFFER bttMenuStruct FOR ttMenuStruct.
 
-DEF TEMP-TABLE ttAllFrames 
+DEF TEMP-TABLE ttAllFrames NO-UNDO 
     FIELD hWindow     AS HANDLE
     FIELD hFrame      AS HANDLE
     FIELD bProcessed  AS LOG.
 
-DEF TEMP-TABLE ttAddSpecialResize
+DEF TEMP-TABLE ttAddSpecialResize NO-UNDO
     FIELD hProcedure AS HANDLE
     FIELD hFrame     AS HANDLE
     INDEX ixRes hProcedure hFrame.
 
-DEF TEMP-TABLE ttResizeXgroup
+DEF TEMP-TABLE ttResizeXgroup NO-UNDO
     FIELD hWindow    AS HANDLE
     FIELD chFrame    AS CHAR
     FIELD cWidget    AS CHAR
@@ -306,7 +306,7 @@ DEF TEMP-TABLE ttResizeXgroup
     .
 DEF BUFFER bttResizeXgroup FOR ttResizeXgroup.
 
-DEF TEMP-TABLE ttResizeYgroup
+DEF TEMP-TABLE ttResizeYgroup NO-UNDO
     FIELD hWindow    AS HANDLE
     FIELD chFrame    AS CHAR
     FIELD cWidget    AS CHAR
@@ -315,7 +315,7 @@ DEF TEMP-TABLE ttResizeYgroup
     .
 DEF BUFFER bttResizeYgroup FOR ttResizeYgroup.
 
-DEF TEMP-TABLE ttMoveXgroup
+DEF TEMP-TABLE ttMoveXgroup NO-UNDO
     FIELD hWindow    AS HANDLE
     FIELD chFrame    AS CHAR
     FIELD cWidget    AS CHAR
@@ -324,7 +324,7 @@ DEF TEMP-TABLE ttMoveXgroup
     .
 DEF BUFFER bttMoveXgroup FOR ttMoveXgroup.
 
-DEF TEMP-TABLE ttMoveYgroup
+DEF TEMP-TABLE ttMoveYgroup NO-UNDO
     FIELD hWindow    AS HANDLE
     FIELD chFrame    AS CHAR
     FIELD cWidget    AS CHAR
@@ -333,7 +333,7 @@ DEF TEMP-TABLE ttMoveYgroup
     .
 DEF BUFFER bttMoveYgroup FOR ttMoveYgroup.
 
-DEF TEMP-TABLE ttAnchor
+DEF TEMP-TABLE ttAnchor NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hAnchor       AS HANDLE
     FIELD hWidget       AS WIDGET-HANDLE
@@ -343,35 +343,35 @@ DEF TEMP-TABLE ttAnchor
     INDEX ixWidget hWidget
     .
 
-DEF TEMP-TABLE ttNeverResizeX
+DEF TEMP-TABLE ttNeverResizeX NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hFrame        AS HANDLE
     FIELD hWidget       AS HANDLE
     INDEX idxNeverWindow hWindow hFrame
     INDEX idxNeverWidget hWidget.
 
-DEF TEMP-TABLE ttNeverResizeY
+DEF TEMP-TABLE ttNeverResizeY NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hFrame        AS HANDLE
     FIELD hWidget       AS HANDLE
     INDEX idxNeverWindow hWindow hFrame
     INDEX idxNeverWidget hWidget.
 
-DEF TEMP-TABLE ttNeverMoveX
+DEF TEMP-TABLE ttNeverMoveX NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hFrame        AS HANDLE
     FIELD hWidget       AS HANDLE
     INDEX idxNeverWindow hWindow hFrame
     INDEX idxNeverWidget hWidget.
 
-DEF TEMP-TABLE ttNeverMoveY
+DEF TEMP-TABLE ttNeverMoveY NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hFrame        AS HANDLE
     FIELD hWidget       AS HANDLE
     INDEX idxNeverWindow hWindow hFrame
     INDEX idxNeverWidget hWidget.
 
-DEF TEMP-TABLE ttADMFolderRect
+DEF TEMP-TABLE ttADMFolderRect NO-UNDO
     FIELD hWindow       AS HANDLE
     FIELD hFolderFrm    AS HANDLE
     FIELD hRect         AS HANDLE
@@ -383,12 +383,12 @@ DEF TEMP-TABLE ttADMFolderRect
     INDEX ixFolderWidget hRect
     .
 
-DEF TEMP-TABLE ttTransMarker
+DEF TEMP-TABLE ttTransMarker NO-UNDO
     FIELD hWindow      AS HANDLE
     FIELD hMarker      AS HANDLE
     INDEX ixMarker  hWindow.
 
-DEF TEMP-TABLE ttOrgWidgetPos
+DEF TEMP-TABLE ttOrgWidgetPos NO-UNDO
     FIELD hWindow      AS HANDLE
     FIELD hFrame       AS HANDLE
     FIELD hWidget      AS HANDLE
@@ -403,10 +403,10 @@ DEF TEMP-TABLE ttOrgWidgetPos
     INDEX ixWidget  hWidget
     INDEX idxRow  IS PRIMARY hFrame iRow iCol.
 
-DEF TEMP-TABLE ttOneTimeException
+DEF TEMP-TABLE ttOneTimeException NO-UNDO
     FIELD hWidget AS HANDLE.
 
-DEF TEMP-TABLE ttStatusFrame
+DEF TEMP-TABLE ttStatusFrame NO-UNDO
     FIELD hWindow          AS HANDLE
     FIELD hStatusFrame     AS HANDLE
     FIELD hStatusRectangle AS HANDLE
@@ -1085,6 +1085,20 @@ FUNCTION SaveWinSettings RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-ScreenToClient32) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ScreenToClient32 Procedure
+FUNCTION ScreenToClient32 RETURNS INTEGER 
+  (INPUT iHWND AS INT,
+   INPUT mpt_mousexy AS INT64) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setAddMoveX) = 0 &THEN
 
@@ -2065,7 +2079,7 @@ ELSE DO:
   FIND FIRST ttSettingsLoaded
        WHERE ttSettingsLoaded.hWindow = ihWindow NO-ERROR.
   
-  IF AVAIL ttSettingsLoaded THEN 
+  IF AVAIL ttSettingsLoaded AND SEARCH(cDirectory + "resizelib-" + cResizeUser + "-" + ttSettingsLoaded.cSettingsName + ".ini") NE ? THEN 
     OS-DELETE VALUE(cDirectory + "resizelib-" + cResizeUser + "-" + ttSettingsLoaded.cSettingsName + ".ini").
 END.
 END PROCEDURE.
@@ -2723,9 +2737,10 @@ DO ix = 1 TO NUM-ENTRIES (cPixelList):
   IF NOT VALID-HANDLE(hRect) THEN LEAVE.
  
   ASSIGN hRect:X            = iTotal + {&rightLeft} + 1
-         hRect:WIDTH-PIXELS = hText:WIDTH-PIXELS  + ({&rightLeft} * 2).
-  
-  iTotal =  hText:X + hText:WIDTH-PIXELS /* + {&topBottom} + 1*/.
+         hRect:WIDTH-PIXELS = hText:WIDTH-PIXELS  + ({&rightLeft} * 2)
+         NO-ERROR.
+  IF NOT ERROR-STATUS:ERROR THEN 
+    iTotal =  hText:X + hText:WIDTH-PIXELS /* + {&topBottom} + 1*/.
 END.
 
 IF iNewWidth1 < iOrgWidth1 THEN 
@@ -3161,8 +3176,10 @@ END.
 DYNAMIC-FUNCTION("setAttribute",ihWindow,"StatusBarPixelList",icFieldPixelList).
 
 ASSIGN
-  cTopColor = IF ibTopLine THEN 15 ELSE 8
-  iFontSize = IF iiFont = ? THEN 1 ELSE iiFont.
+  cTopColor  = IF ibTopLine THEN 15 ELSE 8
+  iFontSize  = IF iiFont = ? THEN 1 ELSE iiFont
+  iOrgHeight = ihWindow:HEIGHT-PIXELS
+  .
 
 PUBLISH "AdjustFormHeight" (ihWindow,
                             (IF ((SESSION:PIXELS-PER-ROW -
@@ -3173,7 +3190,6 @@ PUBLISH "AdjustFormHeight" (ihWindow,
                                  ({&topBottom} * 2) + 3)
                             ).
 
-iOrgHeight = ihWindow:HEIGHT-PIXELS.
 ihWindow:HEIGHT-PIXELS = ihWindow:HEIGHT-PIXELS +
                       (IF ((SESSION:PIXELS-PER-ROW -
                            FONT-TABLE:GET-TEXT-HEIGHT-PIXELS(iFontSize)) > 
@@ -3264,7 +3280,7 @@ DO ix = 1 TO NUM-ENTRIES (icFieldPixelList):
       FRAME         = wFrame2
       HEIGHT-PIXELS = wFrame2:HEIGHT-PIXELS - (({&topbottom} + 1) * 2)
       WIDTH-PIXELS  = INTEGER(ENTRY(ix,icFieldPixelList))
-      FORMAT        = "X(256)"
+      FORMAT        = "X(2000)"
       FONT          = iFontSize
       bgcolor       = wRectFrame:bgcolor
       /* Make sure not to cover the rectangles. */
@@ -3627,6 +3643,7 @@ FOR EACH ttFollowSplitBarX
     THEN DO:
 
     ttFollowSplitBarX.hWidget:X = ttSplitBarX.hSplitBar:X + ttFollowSplitBarX.iDeltaSplitBar NO-ERROR.
+    cMoveToTopList = cMoveToTopList + STRING(ttFollowSplitBarX.hWidget) + ",".      
 
     hWidget2 = ttFollowSplitBarX.hWidget:SIDE-LABEL-HANDLE NO-ERROR.
     IF NOT ERROR-STATUS:ERROR THEN
@@ -4610,6 +4627,12 @@ DO WHILE hWidget <> ? :
 
   IF cWidgetName = "folder-frm" THEN 
     setADMFolderRect(hWidget,"minimize").
+    
+  IF hWidget:PRIVATE-DATA = "tab-folder" AND cAction = "resize" THEN DO:
+    hWidget = hWidget:NEXT-SIBLING.
+    NEXT.
+  END.
+      
 
   IF NOT VALID-HANDLE(hWidget) OR CAN-FIND(FIRST ttADMFolderRect WHERE ttADMFolderRect.hRect = hWidget) THEN DO:
     hWidget = hWidget:NEXT-SIBLING.
@@ -4780,6 +4803,8 @@ DO WHILE hWidget <> ? :
         hWidget:WIDTH-PIXELS = hWidget:WIDTH-PIXELS + TRUNC((iDeltaX * ttResizeXgroup.fPercent) / 100,0) NO-ERROR.
       ELSE IF NOT bResizeXdone THEN 
         hWidget:WIDTH-PIXELS = hWidget:WIDTH-PIXELS + iDeltaX NO-ERROR.
+        
+      IF hWidget:TYPE = "browse" THEN DYNAMIC-FUNCTION("reDrawGridFilter",hWidget) NO-ERROR.  
         
       IF ERROR-STATUS:GET-MESSAGE(1) NE "" THEN  
         WidgetWatch(hWidget,"Error resize Y: " + ERROR-STATUS:GET-MESSAGE(1)).
@@ -4993,7 +5018,6 @@ DO WHILE hWidget <> ? :
     hWidget = hWidget:NEXT-SIBLING.
 
 END.
-    
 RETURN TRUE.  
 
 END FUNCTION.
@@ -6089,6 +6113,36 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-ScreenToClient32) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ScreenToClient32 Procedure
+FUNCTION ScreenToClient32 RETURNS INTEGER 
+  ( INPUT iHWND AS INT,
+    INPUT mpt_mousexy AS INT64):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEFINE VARIABLE result AS INT NO-UNDO.
+
+RUN ScreenToClient (iHWND,mpt_mousexy,OUTPUT result).
+
+RETURN result.
+END FUNCTION.
+
+PROCEDURE ScreenToClient EXTERNAL "user32.dll" :
+   DEFINE INPUT  PARAMETER hWnd        AS LONG.
+   DEFINE INPUT  PARAMETER lpPoint     AS LONG. /* memptr */
+   DEFINE RETURN PARAMETER ReturnValue AS LONG.
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setAddMoveX) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setAddMoveX Procedure 
@@ -6263,7 +6317,7 @@ IF icAction = "minimize" THEN DO:
   hRectangle = hRectangle:FIRST-CHILD.
   REPEAT WHILE VALID-HANDLE(hRectangle):
 
-    IF hRectangle:TYPE = "rectangle" THEN DO:
+    IF hRectangle:TYPE = "rectangle" AND hRectangle:PRIVATE-DATA NE "tab-folder" THEN DO:
       IF NOT CAN-FIND(FIRST ttADMFolderRect WHERE ttADMFolderRect.hRect = hRectangle) THEN DO:
         CREATE ttADMFolderRect.
         ASSIGN ttADMFolderRect.hWindow    = ihFolderFrm:WINDOW
@@ -8768,6 +8822,14 @@ DEFINE VARIABLE cMessage  AS CHARACTER  NO-UNDO.
 IF (pcType EQ ?) OR (pcDoc EQ ?) THEN 
   RETURN "Unable to open document".
 
+DO ON ERROR UNDO, THROW:  
+  System.Diagnostics.Process:Start(pcDoc).
+  CATCH eOS AS Progress.Lang.Error :
+     cMessage = eOS:GetMessage(1).
+  END CATCH.
+END.
+
+/*
 /* RUN ShellExecuteA (INPUT 0,            */
 /*                    INPUT pcType,       */
 /*                    INPUT 'iexplore',   */
@@ -8815,6 +8877,7 @@ ELSE DO:
       OTHERWISE    cMessage = "undocumented".
   END.
 END.
+*/
 RETURN cMessage.
 
 END FUNCTION.
@@ -8996,7 +9059,7 @@ IF cAction = "Adjust" THEN DO:
 
     chFrame = STRING(hWidget2).
     
-    IF NOT CAN-FIND(FIRST ttNoResizeX WHERE ttNoResizeX.chFrame  = STRING(hWidget2)
+    IF NOT CAN-FIND(FIRST ttNoResizeX WHERE ttNoResizeX.chFrame = STRING(hWidget2)
                                         AND ttNoResizeX.cWidget = hWidget2:NAME)
        AND hWidget2:WIDTH-PIXELS NE hWidget2:WIDTH-PIXELS + iDeltaX
        THEN DO:
@@ -9347,7 +9410,7 @@ FUNCTION SpecialResize RETURNS LOGICAL
     Notes:  
 ------------------------------------------------------------------------------*/
 FIND FIRST ttAddSpecialResize WHERE ttAddSpecialResize.hFrame = hWidget NO-LOCK NO-ERROR. /* Smart Frame Flolder object (from Smartpak ) */
-IF AVAIL ttAddSpecialResize AND VALID-HANDLE(ttAddSpecialResize.hProcedure) THEN DO: 
+IF AVAIL ttAddSpecialResize AND VALID-HANDLE(ttAddSpecialResize.hProcedure) THEN DO:
   ASSIGN
         hWidget:HIDDEN                = TRUE 
         hWidget:SCROLLABLE            = TRUE 
@@ -9656,6 +9719,8 @@ IF ihObject:TYPE = "BROWSE" THEN DO:
             cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN STRING(YEAR(hField:BUFFER-VALUE)) + "-" + STRING(MONTH(hField:BUFFER-VALUE),"99") + "-" + STRING(DAY(hField:BUFFER-VALUE),"99") ELSE "") + cDelimiter.
           ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
             cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" OR hField:DATA-TYPE = "DATETIME-TZ" THEN 
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
           ELSE 
             cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN ReplaceInText(hField:BUFFER-VALUE,"") ELSE "") + cDelimiter.
         END.
@@ -9689,6 +9754,8 @@ IF ihObject:TYPE = "BROWSE" THEN DO:
           ELSE IF hField:DATA-TYPE = "DATE" AND cDateFormat = "yyyy-mm-dd" THEN 
             cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN STRING(YEAR(hField:BUFFER-VALUE)) + "-" + STRING(MONTH(hField:BUFFER-VALUE),"99") + "-" + STRING(DAY(hField:BUFFER-VALUE),"99") ELSE "") + cDelimiter.
           ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
+            cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" OR hField:DATA-TYPE = "DATETIME-TZ" THEN 
             cOutput = cOutput + (IF hField:STRING-VALUE NE ? THEN hField:STRING-VALUE ELSE "") + cDelimiter.
           ELSE 
             cOutput = cOutput + (IF hField:BUFFER-VALUE NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE,CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
@@ -9778,6 +9845,8 @@ ELSE DO: /* <-- buffer */
             cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN STRING(YEAR(hField:BUFFER-VALUE[ix])) + "-" + STRING(MONTH(hField:BUFFER-VALUE[ix]),"99") + "-" + STRING(DAY(hField:BUFFER-VALUE[ix]),"99") ELSE "") + cDelimiter.
           ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
             cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" OR hField:DATA-TYPE = "DATETIME-TZ" THEN 
+            cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + cDelimiter.
           ELSE 
             cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE[ix],CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
         END.
@@ -9799,6 +9868,8 @@ ELSE DO: /* <-- buffer */
             cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN STRING(YEAR(hField:BUFFER-VALUE[ix])) + "-" + STRING(MONTH(hField:BUFFER-VALUE[ix]),"99") + "-" + STRING(DAY(hField:BUFFER-VALUE[ix]),"99") ELSE "") + cDelimiter.
           ELSE IF hField:DATA-TYPE = "DATE" OR hField:DATA-TYPE = "LOGICAL" THEN 
             cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + cDelimiter.
+          ELSE IF hField:DATA-TYPE = "DATETIME" OR hField:DATA-TYPE = "DATETIME-TZ" THEN 
+            cOutput = cOutput + (IF hField:STRING-VALUE[ix] NE ? THEN hField:STRING-VALUE[ix] ELSE "") + cDelimiter.
           ELSE 
             cOutput = cOutput + (IF hField:BUFFER-VALUE[ix] NE ? THEN REPLACE(REPLACE(REPLACE(hField:BUFFER-VALUE[ix],CHR(10)," "),CHR(9)," "),CHR(13)," ") ELSE "") + cDelimiter.
         END.
@@ -9814,7 +9885,7 @@ END.
 
 OUTPUT CLOSE.
 
-
+bOK = SESSION:SET-WAIT-STATE("").
 
 PUBLISH "ExcelFileComplete" (ihObject,cFileName,OUTPUT bReturn).
 IF bReturn THEN RETURN FALSE.

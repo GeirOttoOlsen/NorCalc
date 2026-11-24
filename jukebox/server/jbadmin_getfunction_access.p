@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 FOR EACH JBoxFunctionAccess NO-LOCK
     WHERE JBoxFunctionAccess.iJBoxFunctionId = INT(icParam)
       AND (JBoxFunctionAccess.cJBoxUserId NE "" OR JBoxFunctionAccess.iJboxUserGroupId NE 0)

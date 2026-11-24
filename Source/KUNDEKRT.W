@@ -212,7 +212,7 @@ DEFINE VARIABLE COMBO-BOX_kundedistriktnr AS INTEGER FORMAT "->,>>>,>>9" INITIAL
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "dummy",0
      DROP-DOWN-LIST
-     SIZE 32 BY 1
+     SIZE 32 BY 1.05
      BGCOLOR 2 FGCOLOR 1 FONT 2.
 
 DEFINE VARIABLE COMBO-BOX_kundekategori AS CHARACTER FORMAT "X(6)" 
@@ -1131,11 +1131,18 @@ DO:
         THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(kundenrParam).
     RUN KUNDERED.W (INPUT THIS-PROCEDURE:PRIVATE-DATA) NO-ERROR.
     FIND NPKUNDE WHERE ROWID(NPKUNDE) = Current-Kunde-Rec NO-LOCK NO-ERROR NO-WAIT.
-    IF AVAILABLE NPKUNDE THEN DO:
+    IF AVAILABLE NPKUNDE THEN DO on error undo, leave:
           {&OPEN-BROWSERS-IN-QUERY-Browse-Kunder}
             REPOSITION Browse-Kunder TO ROWID(Current-Kunde-Rec).
             APPLY 'VALUE-CHANGED' TO Browse-Kunder
                 IN FRAME DEFAULT-FRAME.          
+       CATCH eAny AS Progress.Lang.Error :
+          MESSAGE 'Debug:current-kunde-rec:' string(Current-Kunde-Rec) skip eAny:GetMessage(1)   
+          VIEW-AS ALERT-BOX.     
+          if avail npkunde then MESSAGE 'NPKUNDE nr:' NPKUNDE.kundenr
+                                VIEW-AS ALERT-BOX.
+       END CATCH.
+                
     END.
   
 END.

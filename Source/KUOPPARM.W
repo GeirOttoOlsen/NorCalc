@@ -52,7 +52,7 @@ DEFINE VAR i AS INTEGER.
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Dialog-Frame
 
 /* Standard List Definitions                                            */
@@ -116,7 +116,7 @@ DEFINE VARIABLE COMBO-BOX-saksbeh AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE COMBO-BOX_kundedistriktnr AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
      LABEL "Distrikt" 
      VIEW-AS COMBO-BOX 
-     LIST-ITEM-PAIRS "",         0
+     LIST-ITEM-PAIRS "",0
      DROP-DOWN-LIST
      SIZE 36.8 BY 1.05
      BGCOLOR 2 FGCOLOR 1 FONT 2.
@@ -209,7 +209,7 @@ DEFINE FRAME Dialog-Frame
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
-                                                                        */
+   FRAME-NAME                                                           */
 ASSIGN 
        FRAME Dialog-Frame:SCROLLABLE       = FALSE
        FRAME Dialog-Frame:HIDDEN           = TRUE

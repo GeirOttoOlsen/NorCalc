@@ -40,13 +40,8 @@ CREATE WIDGET-POOL.
 /* Parameters Definitions ---                                           */
 
 /* Local Variable Definitions ---                                       */
-
 DEF VAR bOk         AS LOG    NO-UNDO.
-DEF VAR ix          AS INT    NO-UNDO.
-DEF VAR hBrowse     AS HANDLE NO-UNDO.
-DEF VAR hQuery      AS HANDLE NO-UNDO.
-DEF VAR hToolbar    AS HANDLE NO-UNDO.
-DEF VAR hFieldMap   AS HANDLE NO-UNDO.
+DEF VAR hBrowse     AS HANDLE NO-UNDO. /* placeholder */
 DEF VAR oContainer  AS JBoxContainer NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
@@ -206,6 +201,9 @@ ON CLOSE OF THIS-PROCEDURE DO:
   DYNAMIC-FUNCTION("SetCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
   PUBLISH "InvalidateHandle" (THIS-PROCEDURE).
   RUN disable_UI.
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+    DELETE OBJECT oContainer NO-ERROR.
+  &ENDIF
 END.
 
 &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  

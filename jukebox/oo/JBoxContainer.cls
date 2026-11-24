@@ -13,7 +13,8 @@ USING Progress.Lang.*.
 
 CLASS JBoxContainer:
   DEF TEMP-TABLE ttChildWin 
-      FIELD hChildWin AS HANDLE.
+      FIELD hChildWin AS HANDLE
+      FIELD hDataBrw  AS HANDLE.
 
   DEF TEMP-TABLE ttSubContainer 
       FIELD oSubContainer AS Progress.Lang.Object
@@ -21,12 +22,38 @@ CLASS JBoxContainer:
       FIELD cProcName  AS CHAR 
       .
       
-  DEF VAR hHelper      AS HANDLE NO-UNDO.    
-  DEF VAR bNoMoveToTop AS LOG NO-UNDO.
+  DEF VAR bNoMoveToTop        AS LOG    NO-UNDO.
+  DEF VAR bNewDataBrw         AS LOG    NO-UNDO.
+  DEF VAR bNoOpenDataBrwQuery AS LOG    NO-UNDO.
+
+  
+  DEF PUBLIC PROPERTY ChildDataBrowseHandle  AS HANDLE NO-UNDO GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY ChildDataBrowseObject  AS JBoxDynDataBrowse NO-UNDO 
+      GET: 
+        IF VALID-HANDLE(ChildDataBrowseHandle) THEN
+          RETURN DYNAMIC-FUNCTION("getDynDataBrowseObject" IN ChildDataBrowseHandle).
+        ELSE
+          RETURN ?.
+      END GET. PROTECTED SET.
  
   DEF PUBLIC PROPERTY CONTAINER-HANDLE AS HANDLE GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY CONTAINER-HELPER-HANDLE AS HANDLE GET. PROTECTED SET.
 
-  DEF PUBLIC PROPERTY CURRENT-WINDOW AS HANDLE GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY WrapperFormObject  AS JBoxWrapperForm NO-UNDO
+      GET:
+        DEF VAR oForm AS PROGRESS.Lang.Object NO-UNDO.
+        DEF VAR oWrapper AS JBoxWrapperForm NO-UNDO.
+        oForm = DYNAMIC-FUNCTION("getWindowForm" IN CONTAINER-HANDLE).
+        oWrapper = CAST(oForm,"JBoxWrapperForm") NO-ERROR.
+        RETURN oWrapper.
+      END GET.   
+      PROTECTED SET.
+
+  DEF PUBLIC PROPERTY CURRENT-WINDOW AS HANDLE GET:
+      IF CURRENT-WINDOW NE CONTAINER-HANDLE:CURRENT-WINDOW THEN CURRENT-WINDOW = CONTAINER-HANDLE:CURRENT-WINDOW. 
+      RETURN CURRENT-WINDOW.
+      END GET.
+      PROTECTED SET.
   DEF PUBLIC PROPERTY myCURRENT-WINDOW AS HANDLE GET. PROTECTED SET.
 
   DEF PUBLIC PROPERTY FRAME-HANDLE AS HANDLE GET. 
@@ -39,6 +66,8 @@ CLASS JBoxContainer:
   DEF PUBLIC PROPERTY QUERY-OBJECT AS JBoxQuery GET. SET.    
   DEF PUBLIC PROPERTY TOOLBAR-OBJECT AS JBoxToolbar GET. SET.    
   DEF PUBLIC PROPERTY FIELDMAP-OBJECT AS JBoxFieldMap GET. SET.    
+  DEF PUBLIC PROPERTY TABFOLDER-OBJECT AS JBoxMsTabs GET. SET.   
+  DEF PUBLIC PROPERTY TREEVIEW-OBJECT AS uc.JBoxMsTreeView GET. SET. 
   DEF PUBLIC PROPERTY BROWSE-HANDLE AS HANDLE 
     GET:
       IF VALID-HANDLE(BROWSE-HANDLE) THEN RETURN BROWSE-HANDLE.
@@ -65,7 +94,15 @@ CLASS JBoxContainer:
   DEF PUBLIC PROPERTY X AS INT
       GET():
         IF VALID-OBJECT(WrapperForm) THEN RETURN WrapperForm:Location:X.
-        ELSE RETURN myCURRENT-WINDOW:X.
+        ELSE DO:
+          IF VALID-HANDLE(myCURRENT-WINDOW) THEN
+            RETURN myCURRENT-WINDOW:X.
+          ELSE DO:
+            MESSAGE "Error when positioning window in X-direction. Window may not get initialized properly"
+            VIEW-AS ALERT-BOX.
+            RETURN 0.
+          END.    
+        END.  
       END GET.
       SET(iiX AS INT):
         DEF VAR oLoc AS System.Drawing.Point NO-UNDO.
@@ -78,13 +115,21 @@ CLASS JBoxContainer:
           WrapperForm:Location = oLoc.
           IF bHideAgain THEN WrapperForm:Visible = NO.
         END.
-        ELSE myCURRENT-WINDOW:X = iiX.  
+        ELSE IF VALID-HANDLE(myCURRENT-WINDOW) THEN myCURRENT-WINDOW:X = iiX.  
       END SET.  
       
   DEF PUBLIC PROPERTY Y AS INT
       GET():
         IF VALID-OBJECT(WrapperForm) THEN RETURN WrapperForm:Location:Y.
-        ELSE RETURN myCURRENT-WINDOW:Y.
+        ELSE DO:
+          IF VALID-HANDLE(myCURRENT-WINDOW) THEN
+            RETURN myCURRENT-WINDOW:Y.
+          ELSE DO:
+            MESSAGE "Error when positioning window in Y-direction. Window may not get initialized properly"
+            VIEW-AS ALERT-BOX.
+            RETURN 0.
+          END.    
+        END.  
       END GET.
       SET(iiY AS INT):
         DEF VAR oLoc AS System.Drawing.Point NO-UNDO.
@@ -97,7 +142,7 @@ CLASS JBoxContainer:
           WrapperForm:Location = oLoc.
           IF bHideAgain THEN WrapperForm:Visible = NO.
         END.
-        ELSE myCURRENT-WINDOW:Y = iiY.  
+        ELSE IF VALID-HANDLE(myCURRENT-WINDOW) THEN myCURRENT-WINDOW:Y = iiY.  
       END SET.  
 
   CONSTRUCTOR PUBLIC JBoxContainer ():
@@ -113,7 +158,7 @@ CLASS JBoxContainer:
     IF VALID-HANDLE(CURRENT-WINDOW) THEN
       FRAME-HANDLE = CURRENT-WINDOW:FIRST-CHILD.
       
-    RUN JBoxContainerHelper.p PERSIST SET hHelper (THIS-OBJECT).  
+    RUN JBoxContainerHelper.p PERSIST SET CONTAINER-HELPER-HANDLE (THIS-OBJECT).  
       
     PUBLISH "setWindowContainerObject" FROM CONTAINER-HANDLE (CONTAINER-HANDLE,THIS-OBJECT).
 
@@ -134,6 +179,17 @@ CLASS JBoxContainer:
    Notes:
   ------------------------------------------------------------------------------*/
 
+  METHOD PUBLIC VOID DeleteUserControlByPlaceholder( INPUT ihPlaceholder AS HANDLE ):
+    
+    DYNAMIC-FUNCTION("DeleteUserControlByPlaceholder" IN CONTAINER-HANDLE,ihPlaceholder).
+
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
   METHOD PUBLIC JBoxContainer getChildContainer( INPUT ihChildHandle AS HANDLE ):
     
     FIND ttSubContainer 
@@ -145,10 +201,12 @@ CLASS JBoxContainer:
 
   METHOD PUBLIC JBoxContainer getChildContainer( INPUT icProcName AS CHAR ):
     
-    FIND ttSubContainer 
-         WHERE ttSubContainer.cProcName = icProcName NO-ERROR.
-    IF AVAIL ttSubContainer THEN RETURN CAST(ttSubContainer.oSubContainer,"JBoxContainer").
-    ELSE RETURN ?.     
+    FOR EACH ttSubContainer 
+        WHERE ttSubContainer.cProcName = icProcName:
+      IF VALID-HANDLE(ttSubContainer.hContainer) THEN RETURN CAST(ttSubContainer.oSubContainer,"JBoxContainer").
+      ELSE DELETE ttSubContainer.
+    END.  
+    RETURN ?.     
 
   END METHOD.
 
@@ -169,7 +227,10 @@ CLASS JBoxContainer:
 
   METHOD PUBLIC LOGICAL unFreezeContainer():
     DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","").
-    DYNAMIC-FUNCTION("DoLockWindow",?).
+    IF VALID-HANDLE(myCURRENT-WINDOW) THEN 
+      DYNAMIC-FUNCTION("DoRedrawWindow",myCURRENT-WINDOW).
+    ELSE  
+      DYNAMIC-FUNCTION("DoLockWindow",?).
     RETURN YES.
   END METHOD.  
   
@@ -188,36 +249,53 @@ CLASS JBoxContainer:
     DEF VAR oChildContainer AS JBoxContainer NO-UNDO.
     DEF VAR oObj            AS Progress.Lang.Object NO-UNDO.
   
-    IF NOT bNoMoveToTop THEN
-      PUBLISH "StartChildWindow" FROM CONTAINER-HANDLE(icProcName,icWinTitle,CONTAINER-HANDLE,ibNew,OUTPUT ohWinHandle).
-    ELSE  
-      PUBLISH "StartChildWindowNoView" FROM CONTAINER-HANDLE(icProcName,icWinTitle,CONTAINER-HANDLE,ibNew,OUTPUT ohWinHandle).
-    
-    IF NOT VALID-HANDLE(ohWinHandle) THEN DO:
-      IF NOT ibNew THEN
-        FOR EACH ttChildWin:
-          IF VALID-HANDLE(ttChildWin.hChildWin) AND hChildWin:FILE-NAME = icProcName THEN RETURN ttChildWin.hChildWin. 
-        END.
-          
+    IF NOT ibNew THEN
+      FOR EACH ttChildWin:
+        IF VALID-HANDLE(ttChildWin.hChildWin) AND hChildWin:FILE-NAME = icProcName THEN RETURN ttChildWin.hChildWin. 
+      END.
+
+    IF bNewDataBrw THEN DO:        
+      RUN VALUE(icProcName) PERSIST SET ohWinHandle (ChildDataBrowseHandle).
+      DYNAMIC-FUNCTION("setParent" IN ChildDataBrowseHandle,ohWinHandle).
+      SUBSCRIBE PROCEDURE ohWinHandle TO "InvalidateHandle" IN ChildDataBrowseHandle.
+    END.  
+    ELSE 
       RUN VALUE(icProcName) PERSIST SET ohWinHandle.
-      
-      IF CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"InitializeObject") THEN DO:
+    
+    IF CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"InitializeObject") THEN DO:
+      IF CAN-DO(CONTAINER-HANDLE:INTERNAL-ENTRIES,"InitializeChild") THEN RUN InitializeChild IN CONTAINER-HANDLE (ohWinHandle).
+      IF CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"setParent") THEN DYNAMIC-FUNCTION("setParent" IN ohWinHandle,CONTAINER-HANDLE).
+      IF icProcName = "JBoxDataBrw.w" THEN DO:
+        IF NOT CAN-DO(CONTAINER-HANDLE:INTERNAL-ENTRIES,"myDataBrowseObject") THEN
+          MESSAGE "Warning: Caller must have the myDataBrowseObject callback procedure for initialization of the query"
+          VIEW-AS ALERT-BOX.
+        DYNAMIC-FUNCTION("setAttribute",ohWinHandle,"childwindow","yes").  
+      END.   
+      ELSE 
         RUN InitializeObject IN ohWinHandle.
-        oObj = SESSION:LAST-OBJECT.
-        DO WHILE VALID-OBJECT(oObj):
-          IF TYPE-OF(oObj,JBoxContainer) THEN DO:
-            oChildContainer = CAST(oObj,JBoxContainer).
-            IF oChildContainer:CONTAINER-HANDLE = ohWinHandle THEN DO:
-              oChildContainer:PARENT-CONTAINER-OBJECT = THIS-OBJECT.
-              THIS-OBJECT:AddSubContainer(oChildContainer).
-              LEAVE.
-            END.  
+      
+      oObj = SESSION:LAST-OBJECT.
+      DO WHILE VALID-OBJECT(oObj):
+        IF TYPE-OF(oObj,JBoxContainer) THEN DO:
+          oChildContainer = CAST(oObj,JBoxContainer).
+          IF oChildContainer:CONTAINER-HANDLE = ohWinHandle THEN DO:
+            oChildContainer:PARENT-CONTAINER-OBJECT = THIS-OBJECT.
+            THIS-OBJECT:AddSubContainer(oChildContainer).
+            SUBSCRIBE PROCEDURE oChildContainer:CONTAINER-HELPER-HANDLE TO "InvalidateHandle" IN THIS-OBJECT:CONTAINER-HANDLE.
+            LEAVE.
           END.  
-          oObj = oObj:PREV-SIBLING.
-        END.
-      END.  
+        END.  
+        oObj = oObj:PREV-SIBLING.
+      END.
+    END.  
+    IF CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"setWinTitle") THEN
+      DYNAMIC-FUNCTIOn("setWinTitle" IN ohWinHandle,icWinTitle).
+    ELSE   
       ohWinHandle:CURRENT-WINDOW:TITLE = icWinTitle.
-      IF NOT bNoMoveToTop AND CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"MoveToTop") THEN RUN MoveToTop IN ohWinHandle.
+    IF NOT bNoMoveToTop THEN DO:
+      IF CAN-DO(ohWinHandle:INTERNAL-ENTRIES,"MoveToTop") THEN RUN MoveToTop IN ohWinHandle.
+      ELSE IF bNewDataBrw THEN 
+        RUN MoveToTop IN ChildDataBrowseHandle.
     END.
     
     bNoMoveToTop = NO.
@@ -227,6 +305,8 @@ CLASS JBoxContainer:
     IF NOT AVAIL ttChildWin THEN DO:
       CREATE ttChildWin.
       ttChildWin.hChildWin = ohWinHandle.
+      IF bNewDataBrw THEN
+        ttChildWin.hDataBrw = ChildDataBrowseHandle.
     END.       
     RETURN ohWinHandle.
     
@@ -239,6 +319,72 @@ CLASS JBoxContainer:
     RETURN THIS-OBJECT:StartChildWindow(icProcName, icWinTitle, ibNew).                                          
   END METHOD.                                             
 
+  METHOD PUBLIC HANDLE StartChildDataBrowse (icProcName     AS CHAR
+                                            ,icWinTitle    AS CHAR
+                                            ,ibNew         AS LOG).
+
+    IF NOT ibNew THEN
+      FOR EACH ttChildWin:
+        IF VALID-HANDLE(ttChildWin.hChildWin) AND hChildWin:FILE-NAME = icProcName THEN DO:
+          RUN MoveToTop IN ttChildWin.hDataBrw.
+          RETURN ttChildWin.hChildWin.
+        END.   
+      END.
+    
+    RUN JBoxDataBrw.w PERSISTE SET ChildDataBrowseHandle.
+    ChildDataBrowseHandle:CURRENT-WINDOW:TITLE = icWinTitle.
+    
+    bNewDataBrw = YES.
+
+    RETURN THIS-OBJECT:StartChildWindow(icProcName, icWinTitle, ibNew).                                          
+  END METHOD.                                             
+
+/* Må pønske ut en lur måte for å stanse første openquery
+  METHOD PUBLIC HANDLE StartChildDataBrwNoOpenQuery (icProcName     AS CHAR
+                                                    ,icWinTitle    AS CHAR
+                                                    ,ibNew         AS LOG).
+    bNoOpenDataBrwQuery = YES.                                                    
+    RETURN THIS-OBJECT:StartChildDataBrw(icProcName, icWinTitle, ibNew).                                          
+  END.                                        
+*/
+
+  METHOD PUBLIC JBoxDynDataBrowse getChildDataBrwObject (INPUT ihProcHandle AS HANDLE):
+    FOR EACH ttChildWin:
+      IF VALID-HANDLE(ttChildWin.hChildWin) AND ttChildWin.hChildWin = ihProcHandle THEN DO:
+        IF VALID-HANDLE(ttChildWin.hDataBrw) THEN
+          RETURN DYNAMIC-FUNCTION("getDynDataBrowseObject" IN ttChildWin.hDataBrw).
+      END.   
+    END.
+  END.  
+
+  METHOD PUBLIC JBoxDynDataBrowse getChildDataBrwObject (INPUT icProcName AS CHAR):
+    FOR EACH ttChildWin:
+      IF VALID-HANDLE(ttChildWin.hChildWin) AND ttChildWin.hChildWin:FILE-NAME = icProcName THEN DO:
+        IF VALID-HANDLE(ttChildWin.hDataBrw) THEN
+          RETURN DYNAMIC-FUNCTION("getDynDataBrowseObject" IN ttChildWin.hDataBrw).
+      END.   
+    END.
+  END.  
+  
+  METHOD CHARACTER getFrameFields (INPUT ihFrame      AS HANDLE
+                                  ,INPUT icNameFilter AS CHAR
+                                  ,INPUT icTypeFilter AS CHAR
+                                  ,INPUT icScreenValueFilter AS CHAR
+                                  ,INPUT icTrimPrefix AS CHAR).
+    RETURN DYNAMIC-FUNCTION("getFrameFields",ihFrame,icNameFilter,icTypeFilter,icScreenValueFilter,icTrimPrefix).
+  END METHOD.                                
+
+  METHOD CHARACTER getFunction (INPUT icFunctionName AS CHAR).
+    IF VALID-HANDLE(CONTAINER-HANDLE) AND CAN-DO(CONTAINER-HANDLE:INTERNAL-ENTRIES,icFunctionName) THEN
+      RETURN STRING(DYNAMIC-FUNCTION(icFunctionName IN CONTAINER-HANDLE)).
+    ELSE IF NOT VALID-HANDLE(CONTAINER-HANDLE) THEN
+      MESSAGE "Container-handle not set"
+      VIEW-AS ALERT-BOX.  
+    ELSE
+      MESSAGE "Function " icFunctionName "is missing in container"
+      VIEW-AS ALERT-BOX.  
+  END METHOD.                                
+
   METHOD PUBLIC HANDLE StartChildTab (icProcName     AS CHAR
                                      ,icTabTitle     AS CHAR
                                      ,ibNew          AS LOG
@@ -246,6 +392,18 @@ CLASS JBoxContainer:
     DEF VAR ohWinHandle    AS HANDLE NO-UNDO.
   
     PUBLISH "StartChildTab" FROM CONTAINER-HANDLE(icProcName,icTabTitle,CONTAINER-HANDLE,ibNew,ibKeepOpen,"",OUTPUT ohWinHandle).
+    RETURN ohWinHandle.
+    
+  END METHOD.
+
+  METHOD PUBLIC HANDLE StartTabDataBrowse (icProcName     AS CHAR
+                                          ,icTabTitle     AS CHAR
+                                          ,ibNew          AS LOG
+                                          ,ibKeepOpen     AS LOG).
+    DEF VAR ohWinHandle    AS HANDLE NO-UNDO.
+  
+    PUBLISH "StartTabDataBrowse" FROM CONTAINER-HANDLE(icProcName,icTabTitle,CONTAINER-HANDLE,ibNew,ibKeepOpen,OUTPUT ohWinHandle).
+    
     RETURN ohWinHandle.
     
   END METHOD.
@@ -266,7 +424,9 @@ CLASS JBoxContainer:
   
     CREATE ttSubContainer.
     ASSIGN ttSubContainer.oSubContainer = CAST(ioSubContainer,"Progress.Lang.Object")
-           ttSubContainer.hContainer = ioSubContainer:CONTAINER-HANDLE. 
+           ttSubContainer.hContainer = ioSubContainer:CONTAINER-HANDLE
+           ttSubContainer.cProcName  = ttSubContainer.hContainer:FILE-NAME
+           . 
     RETURN THIS-OBJECT.
     
   END METHOD.
@@ -381,13 +541,13 @@ CLASS JBoxContainer:
     PUBLISH "DoSplitBar" FROM CONTAINER-HANDLE (ENTRY(1,PROGRAM-NAME(1)," "),SplitBarY,icWidgetList,0,0).
   END METHOD.
   METHOD PUBLIC VOID setSplitBarYlimits(INPUT ihSplitBarBtn AS HANDLE
-                                       ,INPUT iMinX         AS INT
-                                       ,INPUT iMaxX         AS INT):
-    PUBLISH "DoSplitBar" FROM CONTAINER-HANDLE (ENTRY(1,PROGRAM-NAME(1)," "),ihSplitBarBtn,"",iMinX,iMaxX).
+                                       ,INPUT iMinY         AS INT
+                                       ,INPUT iMaxY         AS INT):
+    PUBLISH "DoSplitBar" FROM CONTAINER-HANDLE (ENTRY(1,PROGRAM-NAME(1)," "),ihSplitBarBtn,"",iMinY,iMaxY).
   END METHOD.
-  METHOD PUBLIC VOID setSplitBarYlimits(INPUT iMinX         AS INT
-                                       ,INPUT iMaxX         AS INT):
-    PUBLISH "DoSplitBar" FROM CONTAINER-HANDLE (ENTRY(1,PROGRAM-NAME(1)," "),SplitBarY,"",iMinX,iMaxX).
+  METHOD PUBLIC VOID setSplitBarYlimits(INPUT iMinY         AS INT
+                                       ,INPUT iMaxY         AS INT):
+    PUBLISH "DoSplitBar" FROM CONTAINER-HANDLE (ENTRY(1,PROGRAM-NAME(1)," "),SplitBarY,"",iMinY,iMaxY).
   END METHOD.
 
   METHOD PUBLIC VOID setResizeXgroup(INPUT ifPercent        AS DEC
@@ -433,11 +593,14 @@ CLASS JBoxContainer:
   END METHOD.  
 
   DESTRUCTOR PUBLIC JBoxContainer ( ):
-    DELETE PROCEDURE hHelper NO-ERROR.
+    DELETE PROCEDURE CONTAINER-HELPER-HANDLE NO-ERROR.
     FOR EACH ttChildWin:
       IF VALID-HANDLE(ttChildWin.hChildWin) THEN 
         APPLY "close" TO ttChildWin.hChildWin.
     END.  
+    FOR EACH ttSubContainer:
+      DELETE OBJECT ttSubContainer.oSubContainer NO-ERROR.
+    END.
   END DESTRUCTOR.
 END CLASS.
   

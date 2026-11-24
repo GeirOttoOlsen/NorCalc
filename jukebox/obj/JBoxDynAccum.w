@@ -62,7 +62,7 @@ DEF VAR cBrowseColumn     AS CHAR   NO-UNDO.
 DEF VAR cSelAccumFlds     AS CHAR   NO-UNDO.
 
 DEF VAR cAccumDataTypes       AS CHAR   NO-UNDO INIT "DECIMAL".
-DEF VAR cDistinctDataTypes    AS CHAR   NO-UNDO INIT "CHARACTER,DATE,LOGICAL".
+DEF VAR cDistinctDataTypes    AS CHAR   NO-UNDO INIT "CHARACTER,DATE,LOGICAL,INTEGER,INT64".
 DEF VAR cAvailAccumFields     AS CHAR   NO-UNDO.
 DEF VAR cAvailDistinctColumns AS CHAR   NO-UNDO.
 DEF VAR cActivePinButton      AS CHAR   NO-UNDO.
@@ -284,6 +284,42 @@ END.
 
 /* **********************  Internal Procedures  *********************** */
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ChangeFieldRoleRecord C-Win 
+PROCEDURE ChangeFieldRoleRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+IF CAN-DO(cAvailAccumFields,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)  THEN DO:
+  ASSIGN cAvailAccumFields = REPLACE(cAvailAccumFields,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE,"")
+         cAvailAccumFields = REPLACE(cAvailAccumFields,",,","")
+         cAvailDistinctColumns = cAvailDistinctColumns + (IF cAvailDistinctColumns NE "" THEN "," ELSE "") + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE 
+         .
+//  IF hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE THEN
+/*    ASSIGN hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE= NO      */
+/*           hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE = YES.*/
+         
+END.         
+ELSE DO:       
+  ASSIGN cAvailDistinctColumns = REPLACE(cAvailDistinctColumns,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE,"")
+         cAvailDistinctColumns = REPLACE(cAvailDistinctColumns,",,",",")
+         cAvailAccumFields = cAvailAccumFields + (IF cAvailAccumFields NE "" THEN "," ELSE "") + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE
+         .
+//  IF hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE THEN
+/*    ASSIGN hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE = YES   */
+/*           hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE = NO.*/
+END.         
+
+DYNAMIC-FUNCTION("setAttribute",ihBrowse,"availaccumfields",cAvailAccumFields).
+DYNAMIC-FUNCTION("setAttribute",ihBrowse,"availdistinctcolumns",cAvailDistinctColumns).
+
+RUN InvokeMethod(hBrowse,"OpenQuery").       
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ClearAccumRecord C-Win 
 PROCEDURE ClearAccumRecord :
 /*------------------------------------------------------------------------------
@@ -311,6 +347,25 @@ DYNAMIC-FUNCTION("setCurrentObject",hBrowse).
 RUN OpenQuery.
 
 /* PUBLISH "DynAccumDone" (ihBrowse,"clear").  */
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DefaultActionBrowse C-Win 
+PROCEDURE DefaultActionBrowse :
+
+IF VALID-HANDLE(hDistinctOverlay) THEN DO:
+  hDistinctOverlay:CHECKED = NOT hDistinctOverlay:CHECKED.
+  DYNAMIC-FUNCTION("setCurrentObject",hDistinctOverlay).
+END.  
+ELSE DO:
+  hAccumOverlay:CHECKED = NOT hAccumOverlay:CHECKED.
+  DYNAMIC-FUNCTION("setCurrentObject",hAccumOverlay).
+END.  
+
+RUN ValChngBrowseToggle.
 
 END PROCEDURE.
 
@@ -355,6 +410,13 @@ DYNAMIC-FUNCTION("setAttribute",hAccumOverlay,"hideframewhendeleteobject","yes")
 DYNAMIC-FUNCTION("DeleteObject",hAccumOverlay).
 DYNAMIC-FUNCTION("setAttribute",hDistinctOverlay,"hideframewhendeleteobject","yes").
 DYNAMIC-FUNCTION("DeleteObject",hDistinctOverlay).
+
+IF hBuffer:AVAIL THEN
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledEvents",
+                   IF NOT CAN-DO("integer,int64,decimal",hBuffer::DataType)
+                      OR hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE
+                      OR hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE
+                      THEN "ChangeFieldRole" ELSE "").
 
 RUN SUPER.
 
@@ -478,6 +540,8 @@ DEF VAR cKeepAccumOpen        AS CHAR   NO-UNDO.
 DEF VAR iNumViewRows          AS INT    NO-UNDO.
 DEF VAR bKeep                 AS LOG    NO-UNDO.
 DEF VAR cCurrViewFields       AS CHAR   NO-UNDO.
+DEF VAR hBrwMenu              AS LOG    NO-UNDO.
+DEF VAR cTable                AS CHAR   NO-UNDO.
 
 DO WITH FRAME {&FRAME-NAME}:
   ASSIGN cActivePinButton  = DYNAMIC-FUNCTION("getAttribute",SESSION,"ActivePinButton")
@@ -517,10 +581,19 @@ DO WITH FRAME {&FRAME-NAME}:
                            + ";!+Seq|INTEGER" 
                            + ";+!OrgSeq|INTEGER" 
                            + ";+!SortType|INTEGER"  /* 0: No sorting, 1: ASC, 2: DESC */
+                           + ";+!TableName|CHARACTER"
                             ,"where false"
                             ,"").
 
   DYNAMIC-FUNCTION("setNoColumnSort",hBrowse,"ColumnLabel,Distinct,Accum,Total").
+  
+  hBrowse:TOOLTIP = IF DYNAMIC-FUNCTION("Scandinavian") THEN
+                      "Dobbelklikk for å velge felt for sumnivå eller akkumulering" + CHR(10)
+                    + "Høyreklikk for å bytte rolle for tallfelt"
+                    ELSE
+                      "Double-click to select field as break-level or aggregate" + CHR(10)
+                    + "Right-click to swap role for number-field"
+                    .  
 
   DYNAMIC-FUNCTION("NewMenuBand",
                    hBrowse,
@@ -550,9 +623,27 @@ DO WITH FRAME {&FRAME-NAME}:
   IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctdatatypes") NE "" THEN
     cDistinctDataTypes    = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctdatatypes").
 
+  DO ix = 1 TO NUM-ENTRIES(cAccumFields):
+    IF NOT CAN-DO(cAvailAccumFields,ENTRY(ix,cAccumFields)) THEN
+      cAvailAccumFields = cAvailAccumFields + (IF cAvailAccumFields NE "" THEN "," ELSE "") + ENTRY(ix,cAccumFields).
+  END.
+
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"uselocaldata","yes").
   DYNAMIC-FUNCTION("CreateObjectLink",hToolbar,hBrowse).
 
+  IF cAvailAccumFields = "" THEN
+    DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+      IF NOT CAN-DO(cCurrViewFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN NEXT.
+      IF CAN-DO(cAccumDataTypes,ihBrowse:GET-BROWSE-COLUMN(ix):DATA-TYPE) THEN
+        cAvailAccumFields = cAvailAccumFields + (IF cAvailAccumFields NE "" THEN "," ELSE "") + ihBrowse:GET-BROWSE-COLUMN(ix):NAME. 
+    END.
+  IF cAvailDistinctColumns = "" THEN
+    DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+      IF NOT CAN-DO(cCurrViewFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN NEXT.
+      IF CAN-DO(cDistinctDataTypes,ihBrowse:GET-BROWSE-COLUMN(ix):DATA-TYPE) THEN
+        cAvailDistinctColumns = cAvailDistinctColumns + (IF cAvailDistinctColumns NE "" THEN "," ELSE "") + ihBrowse:GET-BROWSE-COLUMN(ix):NAME. 
+    END.
+      
   DO ix = 1 TO ihBrowse:NUM-COLUMNS:
     IF NOT CAN-DO(cCurrViewFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN NEXT.
 
@@ -560,13 +651,9 @@ DO WITH FRAME {&FRAME-NAME}:
            cDataType     = ihBrowse:GET-BROWSE-COLUMN(ix):DATA-TYPE
            bKeep         = NO.
 
-    IF cAvailAccumFields NE "" AND CAN-DO(cAvailAccumFields,cBrowseColumn) THEN
+    IF CAN-DO(cAvailAccumFields,cBrowseColumn) THEN
       bKeep = YES.
-    ELSE IF cAvailDistinctColumns NE "" AND CAN-DO(cAvailDistinctColumns,cBrowseColumn) THEN 
-      bKeep = YES.
-    ELSE IF cAvailAccumFields = "" AND CAN-DO(cAccumDataTypes,cDataType) THEN
-      bKeep = YES.
-    ELSE IF cAvailDistinctColumns = "" AND CAN-DO(cDistinctDataTypes,cDataType) THEN 
+    ELSE IF CAN-DO(cAvailDistinctColumns,cBrowseColumn) THEN 
       bKeep = YES.
 
     IF NOT bKeep THEN NEXT.
@@ -579,14 +666,15 @@ DO WITH FRAME {&FRAME-NAME}:
            hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE       = CAN-DO(cAccumFields,cBrowseColumn)
            hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE    = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):DATA-TYPE
            hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE      = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):FORMAT
-           hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE = ihBrowse:GET-BROWSE-COLUMN(ix):LABEL
-                                                            /*  ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):LABEL */
+           hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE = ihBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cBrowseColumn):LABEL
 /*                                                             + (IF CAN-DO(cAccumSortFields,cBrowseColumn) THEN                           */
 /*                                                                 (IF CAN-DO(cDescAccumSortFields,cBrowseColumn) THEN " (v)" ELSE " (^)") */
 /*                                                                ELSE "")                                                                 */
            hBuffer:BUFFER-FIELD("SortType"):BUFFER-VALUE    = IF CAN-DO(cDescAccumSortFields,cBrowseColumn) THEN 2
                                                               ELSE IF CAN-DO(cAccumSortFields,cBrowseColumn) THEN 1
                                                               ELSE 0
+           cTable                                           = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + cBrowseColumn)
+           hBuffer:BUFFER-FIELD("TableName"):BUFFER-VALUE   = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + cBrowseColumn) // ENTRY(NUM-ENTRIES(cTable,"."),cTable,".")           
            .
     IF CAN-DO(cAllAccumFields,cBrowseColumn) THEN
       hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE            = LOOKUP(cBrowseColumn,cAllAccumFields) - 200.
@@ -597,6 +685,12 @@ DO WITH FRAME {&FRAME-NAME}:
     IF rRepos = ? AND hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE NE "" THEN 
       rRepos = hBuffer:ROWID.
   END.
+
+  hBrwMenu = DYNAMIC-FUNCTION("NewMenuBand",
+                   hBrowse,                                      /* Parent widget */
+                   "ChangeFieldRole;"
+                   + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Rollebytte" ELSE "Change role")
+                  ,"").
 
   DYNAMIC-FUNCTION("setAttribute",ihBrowse,"keepaccumopen",cKeepAccumOpen).
 
@@ -807,7 +901,7 @@ RUN SUPER.
 
 IF hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE THEN
   hDistinct:BGCOLOR = 10.
-IF hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE THEN
+ELSE IF hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE THEN
   hAccum:BGCOLOR = 12.
 
 IF cAvailAccumFields NE "" AND CAN-DO(cAvailAccumFields,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN 
@@ -857,18 +951,22 @@ DEF VAR cButton            AS CHAR   NO-UNDO.
 DEF VAR hSortColumn        AS HANDLE NO-UNDO.
 DEF VAR hCurrSearchField   AS HANDLE NO-UNDO.
 DEF VAR hColumn            AS HANDLE NO-UNDO.
+DEF VAR cDistDbFields      AS CHAR   NO-UNDO.
+DEF VAR cAccumTables       AS CHAR   NO-UNDO.
 
 cSelAccumFlds = "".
 
 hQuery:GET-FIRST().
 REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   IF hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE THEN DO:
-    cDistinctFields = cDistinctFields + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ",".
+    ASSIGN cDistinctFields = cDistinctFields + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ","
+           cDistDbFields = cDistDbFields + hBuffer:BUFFER-FIELD("TableName"):BUFFER-VALUE + ",".
     IF NUM-ENTRIES(cAccumSortFields) < 4 THEN
       cAccumSortFields = cAccumSortFields + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ",".
   END.
   IF hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE THEN
-    cSelAccumFlds = cSelAccumFlds + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ",".
+    ASSIGN cSelAccumFlds = cSelAccumFlds + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ","
+           cAccumTables  = cAccumTables + hBuffer:BUFFER-FIELD("TableName"):BUFFER-VALUE + ",".
   IF hBuffer:BUFFER-FIELD("Distinct"):BUFFER-VALUE OR hBuffer:BUFFER-FIELD("Accum"):BUFFER-VALUE THEN
     cAllSelectedFields = cAllSelectedFields + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE + ",".
 
@@ -881,6 +979,8 @@ ASSIGN cDistinctFields    = TRIM(cDistinctFields,",")
        cSelAccumFlds      = TRIM(cSelAccumFlds,",")
        cAccumSortFields   = TRIM(cAccumSortFields,",")
        cAllSelectedFields = TRIM(cAllSelectedFields,",")
+       cDistDbFields      = TRIM(cDistDbFields,",")
+       cAccumTables       = TRIM(cAccumTables,",")
        .
 
 IF cAllSelectedFields = "" THEN DO:
@@ -896,7 +996,9 @@ IF cAllSelectedFields = "" THEN DO:
 END.
 
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"distinctcolumns",cDistinctFields).
+DYNAMIC-FUNCTION("setAttribute",ihBrowse,"distinctTables",cDistDbFields).
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"accumfields",cSelAccumFlds).
+DYNAMIC-FUNCTION("setAttribute",ihBrowse,"accumTables",cAccumTables).
 /* IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"uselocaldata") = "yes" THEN  */
   DYNAMIC-FUNCTION("setAttribute",ihBrowse,"querystatfields",cSelAccumFlds).
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"accumsortfields",cAccumSortFields).
@@ -904,13 +1006,17 @@ DYNAMIC-FUNCTION("setAttribute",ihBrowse,"allaccumfields",cAllSelectedFields).
 
 DYNAMIC-FUNCTION("setSortString",ihBrowse,cAccumSortFields).
 
+DYNAMIC-FUNCTION("setAttribute",ihBrowse,"accumviewfields","").
+
 IF cAllSelectedFields NE "" THEN
   PUBLISH "BeforeDynAccum" (ihBrowse,"accum").
-ELSE 
+ELSE DO: 
   PUBLISH "BeforeDynAccum" (ihBrowse,"clear").
+END.
 
-DYNAMIC-FUNCTION("setCurrentObject",ihBrowse).
-RUN OpenQuery.
+RUN InvokeMethod(ihBrowse,"OpenQuery").
+/*DYNAMIC-FUNCTION("setCurrentObject",ihBrowse).*/
+/*RUN OpenQuery.                                */
 
 IF cAllSelectedFields NE "" THEN DO:
   ihBrowse:FIT-LAST-COLUMN = NO.

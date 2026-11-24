@@ -11,6 +11,8 @@ DEF VAR cPrograms        AS CHAR NO-UNDO.
 DEF VAR cFileName        AS CHAR NO-UNDO.
 DEF VAR cFilePath        AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 ASSIGN iModuleId = INT(ENTRY(1,icParam,"|"))
        cPrograms = ENTRY(2,icParam,"|")
        .

@@ -49,7 +49,19 @@ DEF VAR cCompileStatus    AS CHAR   NO-UNDO.
 DEF VAR bCancelCompile    AS LOG    NO-UNDO.
 DEF VAR ghMainAppBuilderWindow AS HANDLE NO-UNDO.
 DEF VAR hMenuItemOpenFile AS HANDLE NO-UNDO.
+DEF VAR oBrowse           AS JBoxBrowse NO-UNDO.
 
+DEF TEMP-TABLE ttFiles
+     FIELD Seq AS INTEGER FORMAT ">>>>>>9" LABEL "Seq"
+     FIELD FileName AS  CHAR FORMAT "x(256)" LABEL "File"
+     FIELD FileType AS  CHAR FORMAT "x(10)" LABEL "Type"
+     FIELD SaveInto AS  CHAR FORMAT "x(256)" LABEL "Save into"
+     FIELD ErrorMessage AS  CHAR FORMAT "x(256)" LABEL "Message"
+     FIELD CompileDate AS DATE FORMAT "99/99/9999" LABEL "Compile date"
+     FIELD CompileTime AS  CHAR FORMAT "|Time"
+     FIELD Compiled AS datetime FORMAT "99/99/9999 hh:mm:ss" LABEL "Compiled"
+     FIELD Generated AS LOGICAL FORMAT "Y/N"
+     .
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -66,10 +78,11 @@ DEF VAR hMenuItemOpenFile AS HANDLE NO-UNDO.
 &Scoped-define FRAME-NAME DEFAULT-FRAME
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rectBrwFiles rectTBFiles SearchField ~
-btnStartCompile cmbDefaults cmbSaveInto fiFileTypes tbSave tbCompileSubdir 
+&Scoped-Define ENABLED-OBJECTS rectBrwFiles rectTBFiles btnStartCompile ~
+cmbDefaults cmbSaveInto fiFileTypes tbSave tbCompileSubdir ~
+tbRecompileAnyway 
 &Scoped-Define DISPLAYED-OBJECTS cmbDefaults cmbSaveInto fiFileTypes tbSave ~
-tbCompileSubdir 
+tbCompileSubdir tbRecompileAnyway 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -119,7 +132,7 @@ FUNCTION ViewRecordCount RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON btnStartCompile 
@@ -140,7 +153,7 @@ DEFINE VARIABLE cmbSaveInto AS CHARACTER
      VIEW-AS COMBO-BOX SORT INNER-LINES 5
      LIST-ITEMS "","Server","Winsrc" 
      DROP-DOWN AUTO-COMPLETION UNIQUE-MATCH
-     SIZE 50 BY 1 TOOLTIP "Default folder for r-code. Can be overridden for each file/folder" NO-UNDO.
+     SIZE 66 BY 1 TOOLTIP "Default folder for r-code. Can be overridden for each file/folder" NO-UNDO.
 
 DEFINE VARIABLE fiFileTypes AS CHARACTER FORMAT "X(256)":U INITIAL "*.p *.w *.cls" 
      LABEL "File types" 
@@ -149,20 +162,21 @@ DEFINE VARIABLE fiFileTypes AS CHARACTER FORMAT "X(256)":U INITIAL "*.p *.w *.cl
 
 DEFINE RECTANGLE rectBrwFiles
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 129 BY 15.24.
+     SIZE 149.2 BY 16.43.
 
 DEFINE RECTANGLE rectTBFiles
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 17 BY .95.
 
-DEFINE RECTANGLE SearchField
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 20 BY .95.
-
 DEFINE VARIABLE tbCompileSubdir AS LOGICAL INITIAL yes 
      LABEL "Compile sub-folders" 
      VIEW-AS TOGGLE-BOX
      SIZE 22.6 BY .81 NO-UNDO.
+
+DEFINE VARIABLE tbRecompileAnyway AS LOGICAL INITIAL no 
+     LABEL "Recompile" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 19.8 BY .81 TOOLTIP "Recompile even if the file hasn't changed" NO-UNDO.
 
 DEFINE VARIABLE tbSave AS LOGICAL INITIAL yes 
      LABEL "Save r-code" 
@@ -175,17 +189,17 @@ DEFINE VARIABLE tbSave AS LOGICAL INITIAL yes
 DEFINE FRAME DEFAULT-FRAME
      btnStartCompile AT ROW 19.33 COL 2.6
      cmbDefaults AT ROW 1.38 COL 27.8 COLON-ALIGNED
-     cmbSaveInto AT ROW 19.38 COL 59 COLON-ALIGNED
+     cmbSaveInto AT ROW 19.38 COL 61 COLON-ALIGNED
      fiFileTypes AT ROW 1.38 COL 70 COLON-ALIGNED
      tbSave AT ROW 1.52 COL 91.2
      tbCompileSubdir AT ROW 1.52 COL 107.6
-     rectBrwFiles AT ROW 3.86 COL 1.8
+     tbRecompileAnyway AT ROW 1.52 COL 131.6 WIDGET-ID 2
+     rectBrwFiles AT ROW 2.67 COL 1.8
      rectTBFiles AT ROW 1.43 COL 2
-     SearchField AT ROW 2.67 COL 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SIZE 130.6 BY 19.71.
+         AT COLUMN 1 ROW 1
+         SIZE 151.8 BY 19.71.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -205,7 +219,7 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          HIDDEN             = YES
          TITLE              = "Compile procedures"
          HEIGHT             = 19.67
-         WIDTH              = 130.6
+         WIDTH              = 151.8
          MAX-HEIGHT         = 50
          MAX-WIDTH          = 320
          VIRTUAL-HEIGHT     = 50
@@ -424,6 +438,127 @@ END.
 
 /* **********************  Internal Procedures  *********************** */
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE BuildLibRecord C-Win 
+PROCEDURE BuildLibRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR rootsrcdir AS CHAR NO-UNDO.
+DEF VAR srcdirlist AS CHAR NO-UNDO.
+DEF VAR srcsubdirlist AS CHAR NO-UNDO.
+DEF VAR libname AS CHAR NO-UNDO.
+DEF VAR libfile AS CHAR NO-UNDO.
+DEF VAR tmpsaveinto AS CHAR NO-UNDO.
+DEF VAR tmpdir AS CHAR NO-UNDO.
+DEF VAR prolibcmd AS CHAR NO-UNDO.
+DEF VAR ix AS INT NO-UNDO.
+
+rootsrcdir = "\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\".
+
+DO ix = 1 TO hBrowse:NUM-SELECTED-ROWS:
+  IF hBrowse:FETCH-SELECTED-ROW(ix) THEN DO:
+    IF hBuffer::FileType = "DRW"  THEN DO:
+      ASSIGN tmpdir     = RIGHT-TRIM(hBuffer::FileName,"\")
+             srcdirlist = srcdirlist + (IF srcdirlist NE "" THEN "," ELSE "") + tmpdir
+             .
+      IF NUM-ENTRIES(tmpdir,"\") NE NUM-ENTRIES(rootsrcdir,"\") THEN DO:
+        IF NUM-ENTRIES(tmpdir,"\") < NUM-ENTRIES(rootsrcdir,"\") THEN
+          rootsrcdir = tmpdir.
+        tmpdir = TRIM(SUBSTR(tmpdir,LENGTH(rootsrcdir) + 1),"\").
+        IF NOT CAN-DO(srcsubdirlist,tmpdir) THEN
+          srcsubdirlist = srcsubdirlist + (IF srcsubdirlist NE "" THEN "," ELSE "") + tmpdir.       
+      END.         
+    END.
+           
+    IF tmpsaveinto NE "" AND hBuffer::SaveInto NE tmpsaveinto THEN DO:
+      MESSAGE "All files/catalogs must compile into the same target directory"
+      VIEW-AS ALERT-BOX.
+      RETURN.
+    END.  
+    tmpsaveinto = hBuffer::SaveInto.
+  END.  
+END.
+IF hBrowse:NUM-SELECTED-ROWS = 0 THEN DO: 
+  hBrowse:QUERY:GET-FIRST ().
+  REPEAT WHILE hBuffer:AVAIL:
+    IF hBuffer::FileType = "DRW"  THEN DO:
+      ASSIGN tmpdir     = RIGHT-TRIM(hBuffer::FileName,"\")
+             srcdirlist = srcdirlist + (IF srcdirlist NE "" THEN "," ELSE "") + tmpdir
+             .
+      IF NUM-ENTRIES(tmpdir,"\") NE NUM-ENTRIES(rootsrcdir,"\") THEN DO:
+        IF NUM-ENTRIES(tmpdir,"\") < NUM-ENTRIES(rootsrcdir,"\") THEN
+          rootsrcdir = tmpdir.
+        tmpdir = TRIM(SUBSTR(tmpdir,LENGTH(rootsrcdir) + 1),"\").
+        IF NOT CAN-DO(srcsubdirlist,tmpdir) THEN
+          srcsubdirlist = srcsubdirlist + (IF srcsubdirlist NE "" THEN "," ELSE "") + tmpdir.       
+      END.         
+    END.
+
+    IF tmpsaveinto NE "" AND hBuffer::SaveInto NE tmpsaveinto THEN DO:
+      MESSAGE "All files/catalogs must compile into the same directory"
+      VIEW-AS ALERT-BOX.
+      RETURN.
+    END.  
+    tmpsaveinto = hBuffer::SaveInto.
+    hBrowse:QUERY:GET-NEXT ().
+  END.
+END.  
+IF tmpsaveinto = "" THEN DO:
+  tmpsaveinto = cmbSaveInto:SCREEN-VALUE IN FRAME {&FRAME-NAME}.
+  IF tmpsaveinto = ? OR tmpsaveinto = "" THEN DO:
+    MESSAGE 'You must specify the "save into" catalog'
+    VIEW-AS ALERT-BOX.
+    RETURN.
+  END.
+END.
+
+SYSTEM-DIALOG GET-FILE libname
+              TITLE "Choose Prolib file"
+              FILTERS "Prolib files (*.pl)" "*.pl"
+              .
+              
+IF libname = "" THEN RETURN.
+          
+SESSION:SET-WAIT-STATE("general").          
+libfile = ENTRY(NUM-ENTRIES(libname,"\"),libname,"\").        
+
+IF NUM-ENTRIES(libfile,".") = 1 THEN 
+  ASSIGN libfile = libfile + ".pl"
+         libname = libname + ".pl".      
+    
+tmpsaveinto = RIGHT-TRIM(tmpsaveinto,"\") + "\".              
+
+       
+prolibcmd = "%dlc%\bin\prolib " + libfile + " -create" + "&%dlc%\bin\prolib " + libfile + " -add *.r".
+DO ix = 1 TO NUM-ENTRIES(srcsubdirlist):
+  prolibcmd = prolibcmd + "&%dlc%\bin\prolib " + libfile + " -add " + ENTRY(ix,srcsubdirlist) + "\*.r".
+END.
+
+prolibcmd = prolibcmd + "&%dlc%\bin\prolib " + libfile + " -list > " + SESSION:TEMP-DIR + ENTRY(1,libfile,".") + "_list.txt".
+       
+/*MESSAGE "libFile" libFile skip            */
+/*        "rootsrcdir" rootsrcdir skip      */
+/*        "srcsubdirlist" srcsubdirlist skip*/
+/*        "prolibcmd" prolibcmd             */
+/*VIEW-AS ALERT-BOX.                        */
+       
+IF SEARCH(tmpsaveinto + libfile) NE ? THEN OS-DELETE VALUE(tmpsaveinto + libfile).
+              
+OS-COMMAND SILENT VALUE("cd " + tmpsaveinto + "&" + prolibcmd).
+OS-COMMAND NO-WAIT VALUE("notepad " + SESSION:TEMP-DIR + ENTRY(1,libfile,".") + "_list.txt").
+IF tmpsaveinto + libfile NE libname THEN
+  OS-COPY VALUE(tmpsaveinto + libfile) VALUE(libname).              
+
+FINALLY:
+  SESSION:SET-WAIT-STATE("").
+END FINALLY.            
+              
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE CompileMe C-Win 
 PROCEDURE CompileMe :
 /*------------------------------------------------------------------------------
@@ -443,13 +578,14 @@ DEF VAR bMatch              AS LOG  NO-UNDO.
 DEF VAR ix                  AS INT  NO-UNDO.
 DEF VAR cSubDirList         AS CHAR NO-UNDO.
 DEF VAR cSubDirSaveIntoList AS CHAR NO-UNDO.
+def var oCurrentSourcecode as System.IO.FileInfo no-undo.
+def var oCurrentRcode as System.IO.FileInfo no-undo.
 
 ASSIGN iSeq      = iiSeq
        cSaveInto = icSaveInto
        .
 IF cSaveInto = "" AND cmbSaveInto:SCREEN-VALUE IN FRAME {&FRAME-NAME} NE ? THEN
   cSaveInto = cmbSaveInto:SCREEN-VALUE.
-
 IF icFileType BEGINS "DR" THEN DO:
   INPUT FROM OS-DIR(icFileOrDir).
 
@@ -481,6 +617,14 @@ IF icFileType BEGINS "DR" THEN DO:
       END.
 
       IF tbSave:CHECKED THEN DO:
+        oCurrentSourcecode = new System.IO.FileInfo(hBuffer::FileName).
+        if oCurrentSourcecode:Exists then do:
+          oCurrentRcode = new System.IO.FileInfo(cSaveInto + '\' + replace(replace(replace(oCurrentSourcecode:Name,'.p','.r'),'.w','.r'),'.cls','.r')).
+        end.
+        IF NOT tbRecompileAnyway:CHECKED AND oCurrentSourcecode:LastWriteTime lt oCurrentRcode:LastWriteTime then do:
+          hBuffer:buffer-field('ErrorMessage'):buffer-value = 'Source unchanged since last compile'.
+          next.
+        end.
         IF cSaveInto NE "" THEN
           COMPILE VALUE(icFileOrDir + "\" + cOsFile) SAVE INTO VALUE(cSaveInto) NO-ERROR.
         ELSE DO:
@@ -488,7 +632,12 @@ IF icFileType BEGINS "DR" THEN DO:
         END.
       END.
       ELSE COMPILE VALUE(icFileOrDir + "\" + cOsFile) NO-ERROR.
-        
+
+      oCurrentRcode = new System.IO.FileInfo(cSaveInto + '\' + replace(replace(replace(oCurrentSourcecode:Name,'.p','.r'),'.w','.r'),'.cls','.r')).
+      if oCurrentSourcecode:LastWriteTime lt oCurrentRcode:LastWriteTime then next.
+      
+      hBuffer:buffer-field('Compiled'):buffer-value = oCurrentRcode:LastWriteTime.
+              
 /*       PROCESS EVENTS.                 */
 /*       IF bCancelCompile THEN DO:      */
 /*         MESSAGE PROGRAM-NAME(1) SKIP  */
@@ -499,6 +648,7 @@ IF icFileType BEGINS "DR" THEN DO:
 
       ASSIGN hBuffer:BUFFER-FIELD("ErrorMessage"):BUFFER-VALUE = ERROR-STATUS:GET-MESSAGE(1)
              iCompileCount = iCompileCount + 1.
+
       IF hBuffer:BUFFER-FIELD("ErrorMessage"):BUFFER-VALUE NE "" THEN
         iErrorCount = iErrorCount + 1.
     END.
@@ -534,6 +684,14 @@ IF icFileType BEGINS "DR" THEN DO:
 END.
 ELSE DO:
   hBuffer:FIND-FIRST("WHERE FileName = '" + icFileOrDir + "'").
+  oCurrentSourcecode = new System.IO.FileInfo(hBuffer::FileName).
+  if oCurrentSourcecode:Exists then do:
+    oCurrentRcode = new System.IO.FileInfo(cSaveInto + '\' + replace(replace(replace(oCurrentSourcecode:Name,'.p','.r'),'.w','.r'),'.cls','.r')).
+  end.
+  IF NOT tbRecompileAnyway:CHECKED AND oCurrentRcode:Exists and oCurrentSourcecode:LastWriteTime lt oCurrentRcode:LastWriteTime then do:
+    hBuffer:buffer-field('ErrorMessage'):buffer-value = 'Source unchanged since last compile'.
+    next.
+  end.
 
   IF tbSave:CHECKED THEN DO:
     IF cSaveInto NE "" THEN
@@ -543,10 +701,13 @@ ELSE DO:
   END.
   ELSE COMPILE VALUE(icFileOrDir) NO-ERROR.
 
+  oCurrentRcode = new System.IO.FileInfo(cSaveInto + '\' + replace(replace(replace(oCurrentSourcecode:Name,'.p','.r'),'.w','.r'),'.cls','.r')).
+ 
   ASSIGN hBuffer:BUFFER-FIELD("ErrorMessage"):BUFFER-VALUE = ERROR-STATUS:GET-MESSAGE(1)
          hBuffer:BUFFER-FIELD("SaveInto"):BUFFER-VALUE = cSaveInto
          hBuffer:BUFFER-FIELD("CompileDate"):BUFFER-VALUE = TODAY
          hBuffer:BUFFER-FIELD("CompileTime"):BUFFER-VALUE = STRING(TIME,"HH:MM:SS")
+         hBuffer:buffer-field('Compiled'):buffer-value = oCurrentRcode:LastWriteTime
          iCompileCount = iCompileCount + 1
          .
   IF hBuffer:BUFFER-FIELD("ErrorMessage"):BUFFER-VALUE NE "" THEN
@@ -646,9 +807,10 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY cmbDefaults cmbSaveInto fiFileTypes tbSave tbCompileSubdir 
+          tbRecompileAnyway 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE rectBrwFiles rectTBFiles SearchField btnStartCompile cmbDefaults 
-         cmbSaveInto fiFileTypes tbSave tbCompileSubdir 
+  ENABLE rectBrwFiles rectTBFiles btnStartCompile cmbDefaults cmbSaveInto 
+         fiFileTypes tbSave tbCompileSubdir tbRecompileAnyway 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -727,6 +889,7 @@ DO WITH FRAME {&FRAME-NAME}:
          cmbDefaults:DELIMITER = "|"
          cmbDefaults:LIST-ITEM-PAIRS = RIGHT-TRIM("||JukeBox project|JBpro|JukeBox|JB|" + LoadDefaults(),"|")
          .
+         /*
   hBrowse = DYNAMIC-FUNCTION("NewBrowse",
                                  rectBrwFiles:HANDLE,
                                  100,
@@ -739,14 +902,22 @@ DO WITH FRAME {&FRAME-NAME}:
                                + ";+ErrorMessage|CHARACTER|x(256)||Message"
                                + ";+CompileDate|DATE|99/99/9999||Compile date"
                                + ";+CompileTime|CHARACTER||Time"
+                               + ";+Compiled|datetime|99/99/9999 hh:mm:ss||Compiled"
                                + ";+!Generated|LOGICAL|Y/N"
                                 ,"WHERE false"
                                 ,"SORT|Seq").
-  hBrowse:GET-BROWSE-COLUMN(2):WIDTH-PIXELS = 200.
-  hBrowse:GET-BROWSE-COLUMN(4):WIDTH-PIXELS = 200.
+           */                     
+  hBuffer = BUFFER ttFiles:HANDLE.
+
+  oBrowse = NEW JBoxBrowse(rectBrwFiles:HANDLE,THIS-PROCEDURE,YES,hBuffer).
+  hBrowse = oBrowse:BROWSE-HANDLE.
+                                
+  hBrowse:GET-BROWSE-COLUMN(2):WIDTH-PIXELS = 250.
+  hBrowse:GET-BROWSE-COLUMN(4):WIDTH-PIXELS = 250.
   hBrowse:GET-BROWSE-COLUMN(5):WIDTH-PIXELS = 200.
 
-  RUN findAppBuilder.
+
+//  RUN findAppBuilder.
 
   DYNAMIC-FUNCTION("NewMenuBand",hBrowse,
                    "MultiSortBrowse;Sort on multiple columns"
@@ -758,19 +929,24 @@ DO WITH FRAME {&FRAME-NAME}:
                   ,"").
   hMenuItemOpenFile = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"menu-itemOpenFile")) NO-ERROR.
 
-  hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",SearchField:HANDLE,hBrowse,1).
-  DYNAMIC-FUNCTION("createObjectLink",hBrowse,hSearchField).
+/*  hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",SearchField:HANDLE,hBrowse,1).*/
+/*  DYNAMIC-FUNCTION("createObjectLink",hBrowse,hSearchField).                           */
 
   hTBFiles = DYNAMIC-FUNCTION("NewToolbar",
                                 rectTBFiles:HANDLE,
                                 "File",
                                 "New,Delete,Filter,Excel"
+                              + ",SaveSetup;Save setup¤menu enable"
+                              + ",LoadSetup;Load setup¤menu enable"
                               + ",EditDefault;Edit &defaults¤menu enable"
+                              + ",BuildLib;Build library¤menu enable"
                               + ",rule¤menu"
                               + ",Close;Exit¤menu enable"
                                 ,"maxborder").
 
   hBuffer = hBrowse:QUERY:GET-BUFFER-HANDLE(1).
+
+  oBrowse:createGridFilter("").
 
   hBrowse:DROP-TARGET = TRUE.
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"getrecordcount","yes").
@@ -816,6 +992,34 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE LoadSetupRecord C-Win
+PROCEDURE LoadSetupRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cJsonFile AS CHAR NO-UNDO.
+
+SYSTEM-DIALOG GET-FILE cJsonFile 
+    TITLE   "Choose app.comp setup file"
+    FILTERS "Json files (*.json)"   "*.json"
+    .
+IF cJsonFile NE "" THEN DO:
+  TEMP-TABLE ttFiles:EMPTY-TEMP-TABLE().
+  TEMP-TABLE ttFiles:READ-JSON("file",cJsonFile).   
+  cmbDefaults:SCREEN-VALUE IN FRAME {&FRAME-NAME} = " ".
+  DYNAMIC-FUNCTION("setCurrentObject",hBrowse).
+  RUN OpenQuery.
+END.  
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE NewRecord C-Win 
 PROCEDURE NewRecord :
 /*------------------------------------------------------------------------------
@@ -848,6 +1052,31 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SaveSetupRecord C-Win
+PROCEDURE SaveSetupRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cJsonFile AS CHAR NO-UNDO.
+
+SYSTEM-DIALOG GET-FILE cJsonFile 
+    TITLE   "Choose app.comp setup file"
+    FILTERS "Json files (*.json)"   "*.json"
+    .
+IF cJsonFile NE "" THEN DO:
+  IF NOT cJsonFile MATCHES "*.json" THEN cJsonFile = cJsonFile + ".json".
+  TEMP-TABLE ttFiles:WRITE-JSON("file",cJsonFile,YES).   
+END.
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartCompileRecord C-Win 
 PROCEDURE StartCompileRecord :
@@ -1074,6 +1303,7 @@ DEF VAR iSeq      AS INT  NO-UNDO.
 DEF VAR bMatch    AS LOG  NO-UNDO.
 DEF VAR iy        AS INT  NO-UNDO.
 DEF VAR cCompList AS CHAR NO-UNDO.
+DEF VAR cInput    AS CHAR NO-UNDO.
 
 hBuffer:FIND-LAST() NO-ERROR.
 IF hBuffer:AVAIL THEN
@@ -1104,6 +1334,20 @@ DO ix = 1 TO NUM-ENTRIES(icFileNames,";"):
              .
     END.
     cCompList = cCompList + STRING(hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE) + ",".
+  END.
+  ELSE IF ENTRY(ix,icFileNames,";") MATCHES "*.csv" THEN DO:
+    INPUT FROM VALUE(ENTRY(ix,icFileNames,";")).
+    SET ^.
+    REPEAT:
+      IMPORT UNFORMATTED cInput.
+      hBuffer:BUFFER-CREATE().
+      ASSIGN hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = INT(ENTRY(1,cInput,";"))
+             hBuffer:BUFFER-FIELD("FileName"):BUFFER-VALUE = ENTRY(2,cInput,";")
+             hBuffer:BUFFER-FIELD("FileType"):BUFFER-VALUE = ENTRY(3,cInput,";") 
+             hBuffer:BUFFER-FIELD("SaveInto"):BUFFER-VALUE = ENTRY(4,cInput,";")
+             . 
+    END.  
+    INPUT CLOSE.
   END.
 END.
 
@@ -1146,13 +1390,16 @@ DO ix = 1 TO 50:
   cKey = icKey + "_" + STRING(ix).
   GET-KEY-VALUE SECTION "JBoxCompiler" KEY cKey VALUE cValue. 
   IF cValue NE ? THEN DO:
-    hBuffer:BUFFER-CREATE().
-    ASSIGN iSeq = iSeq + 1000
-           hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
-           hBuffer:BUFFER-FIELD("FileName"):BUFFER-VALUE = ENTRY(1,cValue,"|")
-           hBuffer:BUFFER-FIELD("SaveInto"):BUFFER-VALUE = ENTRY(2,cValue,"|")
-           hBuffer:BUFFER-FIELD("FileType"):BUFFER-VALUE = "DRW"
-           .
+    FILE-INFO:FILE-NAME = ENTRY(1,cValue,"|").
+    IF FILE-INFO:FULL-PATHNAME NE ? THEN DO:
+      hBuffer:BUFFER-CREATE().
+      ASSIGN iSeq = iSeq + 1000
+             hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = iSeq
+             hBuffer:BUFFER-FIELD("FileName"):BUFFER-VALUE = ENTRY(1,cValue,"|")
+             hBuffer:BUFFER-FIELD("SaveInto"):BUFFER-VALUE = ENTRY(2,cValue,"|")
+             hBuffer:BUFFER-FIELD("FileType"):BUFFER-VALUE = FILE-INFO:FILE-TYPE
+             .
+    END.
   END.
 END.
 

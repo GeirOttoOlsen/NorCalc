@@ -27,6 +27,7 @@ DEF VAR hOrgDocRelBuff  AS HANDLE NO-UNDO.
 DEF VAR hOrgDocBuffer   AS HANDLE NO-UNDO.
 DEF VAR hBuffDocRev     AS HANDLE NO-UNDO.
 DEF VAR ix              AS INT    NO-UNDO.
+DEF VAR iDocId          AS INT    NO-UNDO.
 
 {incl/validatesession.i}
 
@@ -148,21 +149,34 @@ ELSE IF ENTRY(1,icParam,"|") = "JBoxDocument" THEN DO:
 /*   hQuery:GET-FIRST().                                                          */
 
   DO ix = 2 TO NUM-ENTRIES(icParam,"|"):
-    hBufferDocument:FIND-FIRST("WHERE iJBoxDocumentId = " + ENTRY(ix,icParam,"|"),NO-LOCK) NO-ERROR.
-    IF hBufferDocument:AVAIL THEN DO:
-      httBuffer:BUFFER-CREATE().
-      httBuffer:BUFFER-COPY(hBufferDocument).
-      IF LENGTH(httBuffer::blDocument) = ? AND (SEARCH(httBuffer::cFileName) NE ? OR SEARCH(REPLACE(httBuffer::cFileName,"\","/")) NE ?) THEN DO:
-        CREATE ttFileBlob.
-        IF SEARCH(httBuffer::cFileName) NE ? THEN
-          FILE-INFO:FILE-NAME = SEARCH(httBuffer::cFileName).
-        ELSE
-          FILE-INFO:FILE-NAME = SEARCH(REPLACE(httBuffer::cFileName,"\","/")).
-        COPY-LOB FROM FILE FILE-INFO:FULL-PATHNAME TO OBJECT ttFileBlob.blDocument.
-        ttFileBlob.iDocSize = FILE-INFO:FILE-SIZE.
-        httBuffer:BUFFER-COPY(BUFFER ttFileBlob:HANDLE).
+    iDocId = INT(ENTRY(ix,icParam,"|")) NO-ERROR.
+    IF NOT ERROR-STATUS:ERROR THEN DO:
+      hBufferDocument:FIND-FIRST("WHERE iJBoxDocumentId = " + ENTRY(ix,icParam,"|"),NO-LOCK) NO-ERROR.
+      IF hBufferDocument:AVAIL THEN DO:
+        httBuffer:BUFFER-CREATE().
+        httBuffer:BUFFER-COPY(hBufferDocument).
+        IF LENGTH(httBuffer::blDocument) = ? AND (SEARCH(httBuffer::cFileName) NE ? OR SEARCH(REPLACE(httBuffer::cFileName,"\","/")) NE ?) THEN DO:
+          CREATE ttFileBlob.
+          IF SEARCH(httBuffer::cFileName) NE ? THEN
+            FILE-INFO:FILE-NAME = SEARCH(httBuffer::cFileName).
+          ELSE
+            FILE-INFO:FILE-NAME = SEARCH(REPLACE(httBuffer::cFileName,"\","/")).
+          COPY-LOB FROM FILE FILE-INFO:FULL-PATHNAME TO OBJECT ttFileBlob.blDocument.
+          ttFileBlob.iDocSize = FILE-INFO:FILE-SIZE.
+          httBuffer:BUFFER-COPY(BUFFER ttFileBlob:HANDLE).
+        END.
       END.
-    END.
+    END.  
+    ELSE IF SEARCH(ENTRY(ix,icParam,"|")) NE ? OR SEARCH(REPLACE(ENTRY(ix,icParam,"|"),"\","/")) NE ? THEN DO:
+      CREATE ttFileBlob.
+      IF SEARCH(ENTRY(ix,icParam,"|")) NE ? THEN
+        FILE-INFO:FILE-NAME = SEARCH(ENTRY(ix,icParam,"|")).
+      ELSE
+        FILE-INFO:FILE-NAME = SEARCH(REPLACE(ENTRY(ix,icParam,"|"),"\","/")).
+      COPY-LOB FROM FILE FILE-INFO:FULL-PATHNAME TO OBJECT ttFileBlob.blDocument.
+      ttFileBlob.iDocSize = FILE-INFO:FILE-SIZE.
+      httBuffer:BUFFER-COPY(BUFFER ttFileBlob:HANDLE).
+    END.  
   END.
 END.
 ELSE IF ENTRY(1,icParam,"|") = "JBoxDocRev" THEN DO:

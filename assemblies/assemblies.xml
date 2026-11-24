@@ -1,149 +1,166 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <references>
-<assembly name="Bullzip.PdfWriter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=041d71cacb6e853c"/>
-<assembly name="Bullzip.PdfWriter.Lib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=83ead703d1b9af2c"/>
-<assembly name="Email.Net, Version=1.0.0.33423, Culture=neutral, PublicKeyToken=null"/>
-<assembly name="C1.Data.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
-<assembly name="C1.Data.Design.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
-<assembly name="C1.Data.Express.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
-<assembly name="C1.Win.C1Chart.2, Version=2.1.20131.23069, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1Editor.2, Version=2.1.20131.199, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1Excel.2, Version=2.1.20131.251, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1FlexGrid.2, Version=2.1.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1FlexGridClassic.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1GanttView.2, Version=2.0.20131.102, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1Gauge.2, Version=2.0.20131.89, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1List.2, Version=2.1.20131.226, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="OELicense, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
-<assembly name="Infragistics4.Documents.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Shared.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.AppStylistSupport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.Misc.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.SupportDialogs.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraChart.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGanttView.v13.1, Version=13.1.20131.2015, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraGauge.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinCalcManager.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinCalcManager.v13.1.FormulaBuilder, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinChart.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinDataSource.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinDock.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinEditors.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinExplorerBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGauge.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGrid.DocumentExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGrid.ExcelExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGrid.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinInkProvider.Ink17.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinInkProvider.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinListBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinListView.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinMaskedEdit.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinPrintPreviewDialog.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinSchedule.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinSpellChecker.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinStatusBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinTabbedMdi.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinTabControl.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinToolbars.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinTree.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics3.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics3.Win.UltraWinGrid.ExcelExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="OpenPop, Version=2.0.4.369, Culture=neutral, PublicKeyToken=bebb5741791313cd"/>
-<assembly name="TXTextControl.Windows.Forms, Version=19.0.400.500, Culture=neutral, PublicKeyToken=6b83fe9a75cfb638"/>
-<assembly name="TXTextControl, Version=19.0.1200.500, Culture=neutral, PublicKeyToken=6b83fe9a75cfb638"/>
-<assembly name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="Accessibility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Deployment, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Runtime.Serialization.Formatters.Soap, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="C1.C1Pdf.2, Version=2.1.20131.237, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="C1.Win.C1Schedule.2, Version=2.0.20131.230, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-<assembly name="System.Drawing.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="GdPicture.NET.10, Version=10.2.0.18, Culture=neutral, PublicKeyToken=b62102bee80b7c03"/>
-<assembly name="Microsoft.VisualBasic, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="GdPicture.NET.10.PDF, Version=3.1.0.17, Culture=neutral, PublicKeyToken=b1d4d4d8c4f6a901"/>
-<assembly name="GdPicture.NET.10.barcode.1d.writer, Version=3.0.0.0, Culture=neutral, PublicKeyToken=5f99ba40956a0028"/>
-<assembly name="GdPicture.NET.10.barcode.2d.writer, Version=1.0.0.3, Culture=neutral, PublicKeyToken=b07b07c1c6bfc575"/>
-<assembly name="System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-<assembly name="O2S.Components.PDFView4NET, Version=4.6.1.21, Culture=neutral, PublicKeyToken=bdf0cc7afcc23208"/>
-<assembly name="Telerik.Reporting, Version=8.2.14.1027, Culture=neutral, PublicKeyToken=a9d7983dfcc261be"/>
-<assembly name="Telerik.ReportViewer.WinForms, Version=8.2.14.1027, Culture=neutral, PublicKeyToken=a9d7983dfcc261be"/>
-<assembly name="Bullzip.PdfWriter, Version=1.0.0.4, Culture=neutral, PublicKeyToken=041d71cacb6e853c"/>
-<assembly name="C1.C1Excel.2, Version=2.1.20131.251, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.C1Report.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=594a0605db190bb9"/>
-<assembly name="C1.Win.C1Chart.2, Version=2.0.20131.23069, Culture=neutral, PublicKeyToken=a22e16972c085838"/>
-<assembly name="C1.Win.C1Chart3D.2, Version=2.0.20131.23069, Culture=neutral, PublicKeyToken=a22e16972c085838"/>
-<assembly name="C1.Win.C1Editor.2, Version=2.0.20131.199, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1FlexGrid.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1FlexGrid.Classic.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
-<assembly name="C1.Win.C1List.2, Version=2.1.20131.226, Culture=neutral, PublicKeyToken=6b24f8f981dbd7bc"/>
-<assembly name="C1.Win.C1Report.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=41780e2fc605e636"/>
-<assembly name="C1.Win.C1ReportDesigner.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=fb528571dbff5bd2"/>
-<assembly name="DevExpress.Data.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.Data.v11.1.Linq, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.DemoData.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.DemoReports.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.Design.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.Utils.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.XtraEditors.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.BonusSkins.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=95fc6c5621878f0a"/>
-<assembly name="DevExpress.CodeParser.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.Printing.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.RichEdit.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.SpellChecker.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.XtraRichEdit.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.XtraRichEdit.v11.1.Extensions, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="DevExpress.XtraRichEdit.v11.1.Printing, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
-<assembly name="FarPoint.Win.Chart.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Ink, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Spread.Html, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.TextRenderer, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.CalcEngine, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Excel, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Localization, Version=7.20.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.PDF, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.PluginCalendar.WinForms, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Chart, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Spread, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPoint.Win.Spread.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="FarPointLicenseWrapper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
-<assembly name="GrapeCity.Win.PluginInputMan.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="GrapeCity.Win.PluginInputMan, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
-<assembly name="Infragistics3.Win.UltraWinGrid.ExcelExport.v9.2, Version=9.2.20092.2119, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.Core.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.IO.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.Reports.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.TextDocument.CSharp.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.TextDocument.TSql.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.TextDocument.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.TextDocument.VisualBasic.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Documents.Word.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Math.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Undo.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinFormattedText.WordWriter.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGanttView.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="Infragistics4.Win.UltraWinGrid.WordWriter.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
-<assembly name="CrystalDecisions.Windows.Forms.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
-<assembly name="CrystalDecisions.CrystalReports.Engine, Version=13.0.3500.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
-<assembly name="CrystalDecisions.Shared.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
-<assembly name="CrystalDecisions.VSDesigner.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.CrystalReports.Engine, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.ClientDoc, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.CommLayer, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.Controllers, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.CubeDefModel, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.DataDefModel, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.DataSetConversion, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportAppServer.ReportDefModel, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.ReportSource, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.Shared, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.Windows.Forms, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="Bullzip.PdfWriter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=041d71cacb6e853c"/>
+    <assembly name="Bullzip.PdfWriter.Lib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=83ead703d1b9af2c"/>
+    <assembly name="Email.Net, Version=1.0.0.33423, Culture=neutral, PublicKeyToken=null"/>
+    <assembly name="C1.Data.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
+    <assembly name="C1.Data.Design.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
+    <assembly name="C1.Data.Express.2, Version=2.0.20131.267, Culture=neutral, PublicKeyToken=900b028620cd3a1b"/>
+    <assembly name="C1.Win.C1Chart.2, Version=2.1.20131.23069, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1Editor.2, Version=2.1.20131.199, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1Excel.2, Version=2.1.20131.251, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1FlexGrid.2, Version=2.1.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1FlexGridClassic.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1GanttView.2, Version=2.0.20131.102, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1Gauge.2, Version=2.0.20131.89, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1List.2, Version=2.1.20131.226, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="OELicense, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+    <assembly name="Infragistics4.Documents.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Shared.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.AppStylistSupport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.Misc.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.SupportDialogs.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraChart.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGanttView.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraGauge.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinCalcManager.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinCalcManager.v13.1.FormulaBuilder, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinChart.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinDataSource.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinDock.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinEditors.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinExplorerBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGauge.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGrid.DocumentExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGrid.ExcelExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGrid.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinInkProvider.Ink17.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinInkProvider.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinListBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinListView.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinMaskedEdit.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinPrintPreviewDialog.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinSchedule.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinSpellChecker.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinStatusBar.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinTabbedMdi.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinTabControl.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinToolbars.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinTree.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.v13.1.Design, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics3.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics3.Win.UltraWinGrid.ExcelExport.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="OpenPop, Version=2.0.4.369, Culture=neutral, PublicKeyToken=bebb5741791313cd"/>
+    <assembly name="TXTextControl.Windows.Forms, Version=19.0.400.500, Culture=neutral, PublicKeyToken=6b83fe9a75cfb638"/>
+    <assembly name="TXTextControl, Version=19.0.1200.500, Culture=neutral, PublicKeyToken=6b83fe9a75cfb638"/>
+    <assembly name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="Accessibility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Deployment, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Runtime.Serialization.Formatters.Soap, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="C1.C1Pdf.2, Version=2.1.20131.237, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="C1.Win.C1Schedule.2, Version=2.0.20131.230, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.Drawing.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="GdPicture.NET.10, Version=10.2.0.18, Culture=neutral, PublicKeyToken=b62102bee80b7c03"/>
+    <assembly name="Microsoft.VisualBasic, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="GdPicture.NET.10.PDF, Version=3.1.0.17, Culture=neutral, PublicKeyToken=b1d4d4d8c4f6a901"/>
+    <assembly name="GdPicture.NET.10.barcode.1d.writer, Version=3.0.0.0, Culture=neutral, PublicKeyToken=5f99ba40956a0028"/>
+    <assembly name="GdPicture.NET.10.barcode.2d.writer, Version=1.0.0.3, Culture=neutral, PublicKeyToken=b07b07c1c6bfc575"/>
+    <assembly name="System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="O2S.Components.PDFView4NET, Version=4.6.1.21, Culture=neutral, PublicKeyToken=bdf0cc7afcc23208"/>
+    <assembly name="Telerik.Reporting, Version=8.2.14.1027, Culture=neutral, PublicKeyToken=a9d7983dfcc261be"/>
+    <assembly name="Telerik.ReportViewer.WinForms, Version=8.2.14.1027, Culture=neutral, PublicKeyToken=a9d7983dfcc261be"/>
+    <assembly name="Bullzip.PdfWriter, Version=1.0.0.4, Culture=neutral, PublicKeyToken=041d71cacb6e853c"/>
+    <assembly name="C1.C1Excel.2, Version=2.1.20131.251, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.C1Report.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=594a0605db190bb9"/>
+    <assembly name="C1.Win.C1Chart.2, Version=2.0.20131.23069, Culture=neutral, PublicKeyToken=a22e16972c085838"/>
+    <assembly name="C1.Win.C1Chart3D.2, Version=2.0.20131.23069, Culture=neutral, PublicKeyToken=a22e16972c085838"/>
+    <assembly name="C1.Win.C1Editor.2, Version=2.0.20131.199, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1FlexGrid.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1FlexGrid.Classic.2, Version=2.6.20131.765, Culture=neutral, PublicKeyToken=79882d576c6336da"/>
+    <assembly name="C1.Win.C1List.2, Version=2.1.20131.226, Culture=neutral, PublicKeyToken=6b24f8f981dbd7bc"/>
+    <assembly name="C1.Win.C1Report.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=41780e2fc605e636"/>
+    <assembly name="C1.Win.C1ReportDesigner.2, Version=2.6.20131.54624, Culture=neutral, PublicKeyToken=fb528571dbff5bd2"/>
+    <assembly name="DevExpress.Data.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.Data.v11.1.Linq, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.DemoData.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.DemoReports.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.Design.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.Utils.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.XtraEditors.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.BonusSkins.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=95fc6c5621878f0a"/>
+    <assembly name="DevExpress.CodeParser.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.Printing.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.RichEdit.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.SpellChecker.v11.1.Core, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.XtraRichEdit.v11.1, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.XtraRichEdit.v11.1.Extensions, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="DevExpress.XtraRichEdit.v11.1.Printing, Version=11.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a"/>
+    <assembly name="FarPoint.Win.Chart.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Ink, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Spread.Html, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.TextRenderer, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.CalcEngine, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Excel, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Localization, Version=7.20.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.PDF, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.PluginCalendar.WinForms, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Chart, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Spread, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPoint.Win.Spread.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="FarPointLicenseWrapper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+    <assembly name="GrapeCity.Win.PluginInputMan.Design, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="GrapeCity.Win.PluginInputMan, Version=7.35.20132.1, Culture=neutral, PublicKeyToken=327c3516b1b18457"/>
+    <assembly name="Infragistics3.Win.UltraWinGrid.ExcelExport.v9.2, Version=9.2.20092.2119, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.Core.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.Excel.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.IO.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.Reports.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.TextDocument.CSharp.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.TextDocument.TSql.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.TextDocument.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.TextDocument.VisualBasic.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Documents.Word.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Math.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Undo.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinFormattedText.WordWriter.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGanttView.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="Infragistics4.Win.UltraWinGrid.WordWriter.v13.1, Version=13.1.20131.2048, Culture=neutral, PublicKeyToken=7dd5c3163f2cd0cb"/>
+    <assembly name="CrystalDecisions.Windows.Forms.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.CrystalReports.Engine, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.Shared.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="CrystalDecisions.VSDesigner.resources, Version=13.0.3500.0, Culture=nb-NO, PublicKeyToken=692fbea5521e1304"/>
+    <assembly name="ChilkatDotNet48, Version=9.5.0.96, Culture=neutral, PublicKeyToken=eb5fc1fc52ef09bd"/>
+    <assembly name="System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Security.Cryptography.X509Certificates, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+    <assembly name="System.Xml.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+    <assembly name="System.IO.Compression.ZipFile, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
 </references>

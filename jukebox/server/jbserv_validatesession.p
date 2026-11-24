@@ -6,15 +6,17 @@ DEF OUTPUT PARAM oiCurrCompanyId AS INT    NO-UNDO.
 DEF OUTPUT PARAM ocCurrLanguage  AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocContext       AS CHAR   NO-UNDO.
 
+IF SESSION:CLIENT-TYPE = "WEBCLIENT" THEN RETURN.
+
 DEF VAR hJBoxLoginSession AS HANDLE NO-UNDO.
 DEF VAR bJbLsFound        AS LOG    NO-UNDO.
 
-IF icSessionId = "" THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxLoginSession",OUTPUT hJBoxLoginSession) THEN DO:
+  ocCurrUserId = USERID(LDBNAME(1)).
+  RETURN.
+END.  
 
-CREATE BUFFER hJBoxLoginSession FOR TABLE "JBoxLoginSession" NO-ERROR.
-IF NOT VALID-HANDLE(hJBoxLoginSession) THEN RETURN.
-
-bJbLsFound = hJBoxLoginSession:FIND-FIRST("WHERE JBoxLoginSession.cSessionId = '" + icSessionId + "'") NO-ERROR.
+bJbLsFound = hJBoxLoginSession:FIND-FIRST("WHERE JBoxLoginSession.cSessionId = '" + icSessionId + "'",NO-LOCK) NO-ERROR.
 IF bJbLsFound AND icSessionId NE "" THEN
   ASSIGN SESSION:DATE-FORMAT    = hJBoxLoginSession:BUFFER-FIELD("cDateFormat"):BUFFER-VALUE
          SESSION:NUMERIC-FORMAT = hJBoxLoginSession:BUFFER-FIELD("cNumFormat"):BUFFER-VALUE
@@ -23,8 +25,11 @@ IF bJbLsFound AND icSessionId NE "" THEN
          ocCurrLanguage         = hJBoxLoginSession:BUFFER-FIELD("cLanguage"):BUFFER-VALUE
          ocContext              = hJBoxLoginSession:BUFFER-FIELD("cContext"):BUFFER-VALUE
          .
+ELSE IF (SESSION:CLIENT-TYPE = "4GLCLIENT" AND NUM-DBS > 0) THEN 
+  ocCurrUserId = USERID(LDBNAME(1)).
 ELSE 
   ocReturn = "Invalid session. Either expired or reset due to system upgrade. Try new login".
          
-DELETE OBJECT hJBoxLoginSession.
-
+FINALLY:         
+  DELETE OBJECT hJBoxLoginSession NO-ERROR.
+END FINALLY.

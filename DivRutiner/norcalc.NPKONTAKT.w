@@ -46,7 +46,7 @@ DEFINE BUTTON Btn_Export
        BGCOLOR 8.
 
 DEFINE VARIABLE fi-search1 AS CHARACTER FORMAT 'X(256)':U
-       LABEL 'kontaktperson'
+       LABEL 'Etternavn'
        VIEW-AS FILL-IN
        SIZE 10 BY .88 NO-UNDO.
 
@@ -61,8 +61,9 @@ DEFINE QUERY q1 FOR norcalc.NPKONTAKT.
 
 DEFINE BROWSE b1 QUERY q1
   DISPLAY
-      norcalc.NPKONTAKT.id COLUMN-LABEL "!id"
-      norcalc.NPKONTAKT.kontaktperson COLUMN-LABEL "!kontaktperson"
+      norcalc.NPKONTAKT.iNPKontaktid COLUMN-LABEL "!iKontaktid"
+      norcalc.NPKONTAKT.Etternavn COLUMN-LABEL "!Etternavn"
+      norcalc.NPKONTAKT.Etternavn COLUMN-LABEL "!Fornavn"
   ENABLE ALL
   WITH NO-ROW-MARKERS SEPARATORS SCROLLABLE
        SIZE 100 BY 13.
@@ -71,9 +72,9 @@ DEFINE BROWSE b1 QUERY q1
 
 DEFINE FRAME f1
        b1 AT ROW 1 COL 1 HELP 'Browse'
-       fi-search1  AT ROW 14.3 COL 5 LABEL 'kontaktperson' HELP 'Search for '
+       fi-search1  AT ROW 14.3 COL 5 LABEL 'Etternavn' HELP 'Search for '
        Btn_Search  AT ROW 14.3 COL 72 HELP 'Search'
-       fi-search2  AT ROW 14.3 COL 30  LABEL 'id' HELP 'Search for '
+       fi-search2  AT ROW 14.3 COL 30  LABEL 'iNPKontaktid' HELP 'Search for '
        Btn_Export AT ROW 14.3 COL 82 HELP 'Export rows as semicolon separated values'
        Btn_Done AT ROW 14.3 COL 92 HELP 'Close window'
        WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY
@@ -119,12 +120,12 @@ DO WITH FRAME f1:
   ASSIGN fi-search1 fi-search2.
   IF fi-search1 NE ? AND fi-search1:SCREEN-VALUE NE '' THEN DO:
     OPEN QUERY q1 FOR EACH norcalc.NPKONTAKT WHERE
-         kontaktperson BEGINS fi-search1 
-         AND IF fi-search2 NE ? AND fi-search2:SCREEN-VALUE NE '' THEN id = fi-search2 ELSE TRUE.
+         etternavn BEGINS fi-search1 
+         AND IF fi-search2 NE ? AND fi-search2:SCREEN-VALUE NE '' THEN iNPKontaktid = fi-search2 ELSE TRUE.
   END.
   ELSE IF fi-search2 NE ? AND fi-search2:SCREEN-VALUE NE '' THEN DO: 
     OPEN QUERY q1 FOR EACH norcalc.NPKONTAKT WHERE
-         id = fi-search2.
+         iNPKontaktid = fi-search2.
   END.
   ELSE  OPEN QUERY q1 FOR EACH norcalc.NPKONTAKT.
   bOK = SESSION:SET-WAIT-STATE('').
@@ -168,14 +169,14 @@ DO WITH FRAME f1:
   PUT SKIP(1).
   IF fi-search1:SCREEN-VALUE NE '' THEN DO:
     FOR EACH norcalc.NPKONTAKT WHERE
-        kontaktperson BEGINS fi-search1 
-        AND IF fi-search2:SCREEN-VALUE NE '' THEN id = fi-search2 ELSE TRUE        NO-LOCK:
+        etternavn BEGINS fi-search1 
+        AND IF fi-search2:SCREEN-VALUE NE '' THEN iNPKontaktid = fi-search2 ELSE TRUE        NO-LOCK:
       EXPORT DELIMITER ";" NPKONTAKT.
     END.
   END.
   ELSE IF fi-search2:SCREEN-VALUE NE '' THEN DO: 
      FOR EACH norcalc.NPKONTAKT WHERE
-         id = fi-search2        NO-LOCK:
+         iNPKontaktid = fi-search2        NO-LOCK:
       EXPORT DELIMITER ";" NPKONTAKT.
     END.
   END.

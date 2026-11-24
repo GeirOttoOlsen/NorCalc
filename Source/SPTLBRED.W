@@ -31,11 +31,23 @@
 /* ***************************  Definitions  ************************** */
 
 /* Parameters Definitions ---                                           */
-DEFINE INPUT PARAMETER appdata AS CHARACTER.
-DEFINE INPUT-OUTPUT  PARAMETER  nyRecord AS LOGICAL.
-DEFINE OUTPUT PARAMETER nyId AS INTEGER INITIAL 0.
-DEFINE SHARED VAR Current-Tilbuds-Rec AS ROWID.
-DEFINE SHARED VAR anleggsnrParam LIKE NPSPANLG.anleggsnr.
+/*DEFINE INPUT PARAMETER appdata AS CHARACTER.             */
+/*DEFINE INPUT-OUTPUT  PARAMETER  nyRecord AS LOGICAL.     */
+/*DEFINE OUTPUT PARAMETER nyId AS INTEGER INITIAL 0.       */
+/*DEFINE SHARED VAR Current-Tilbuds-Rec AS ROWID.          */
+/*DEFINE SHARED VAR anleggsnrParam LIKE NPSPANLG.anleggsnr.*/
+
+def var appdata as char no-undo. /*setter den via JboxSession:AppTitle*/
+appdata = JBoxSession:Instance:AppTitle.
+def var hParent as handle no-undo.
+
+DEFINE VAR Current-Rec AS ROWID.
+DEFINE VAR anleggsnrParam LIKE NPSHANLG.anleggsnr.
+def var Current-Tilbuds-Rec as rowid no-undo.
+
+def var nyRecord as logical no-undo.
+def var ip_nest_id as int no-undo.
+def var Nyid as int no-undo.
 
 /* Local Variable Definitions ---                                       */
 DEFINE VAR iNextTilbudsnr AS INTEGER.
@@ -289,6 +301,9 @@ DO:
                     nyId = ip_neste_id.
                 Current-Tilbuds-Rec = ROWID(NPSPTILBUD).
             END.
+        else do:
+          
+        end.
   
 END.
 
@@ -415,18 +430,19 @@ ON WINDOW-CLOSE OF FRAME {&FRAME-NAME} APPLY "END-ERROR":U TO SELF.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
-  pointer = SESSION:SET-WAIT-STATE("").   
+/*  pointer = SESSION:SET-WAIT-STATE("").*/
+  hParent = source-procedure.
+  current-rec = dynamic-function('getCurrentRec' in hParent).
+  nyRecord    = logical(dynamic-function('getNyRecord' in hParent)).
+  anleggsnrParam = int(dynamic-function("getAttribute",hParent,'AnleggsnrParam')).
+
    RUN fyll_combo.
-   IF nyRecord THEN
-        RUN nyttTilbud.
-   ELSE
-    DO:
-        SELECT endrings_laas INTO laast FROM NPSPANLG WHERE anleggsnr = anleggsnrParam.
-        IF laast THEN
-            RUN visTilbud.
-        ELSE
-            RUN endreTilbud.
-    END.  
+   IF nyRecord THEN RUN nyttTilbud.
+   ELSE DO:
+     SELECT endrings_laas INTO laast FROM NPSPANLG WHERE anleggsnr = anleggsnrParam.
+     IF laast THEN RUN visTilbud.
+     ELSE          RUN endreTilbud.
+   END.  
 
 END.
 RUN disable_UI.
@@ -492,30 +508,49 @@ PROCEDURE endreTilbud :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-  FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec EXCLUSIVE-LOCK 
-    NO-WAIT NO-ERROR.
-  IF AVAILABLE NPSPTILBUD THEN
-  DO:
-      DISPLAY NPSPTILBUD.anleggsnr   
-           NPSPTILBUD.tilbudsnr WITH FRAME TILBUD.
-      FIND NPKUNDE WHERE NPKUNDE.kundenr = NPSPTILBUD.kundenr NO-LOCK
-        NO-WAIT NO-ERROR.
-      IF AVAILABLE NPKUNDE THEN  FILL-IN-KUNDENAVN = NPKUNDE.kundenavn.  
+  do transaction:
+    FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec EXCLUSIVE-LOCK NO-WAIT NO-ERROR.
+    IF AVAILABLE NPSPTILBUD THEN DO:
+        DISPLAY 
+          NPSPTILBUD.anleggsnr  
+          NPSPTILBUD.tilbudsnr 
+          WITH FRAME TILBUD.
+        FIND NPKUNDE WHERE NPKUNDE.kundenr = NPSPTILBUD.kundenr NO-LOCK NO-WAIT NO-ERROR.
+        if not avail npkunde then undo, throw new Progress.Lang.AppError('Fant ikke kunden med kundenr:' + string(npsptilbud.kundenr),1).
+        FILL-IN-KUNDENAVN = NPKUNDE.kundenavn.  
+    
+         UPDATE 
+          NPSPTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
+          NPSPTILBUD.rabatt% NPSPTILBUD.deres_ref NPSPTILBUD.vaar_ref
+          NPSPTILBUD.lev_bet NPSPTILBUD.bet_bet NPSPTILBUD.gyldighetstid
+          NPSPTILBUD.opplysninger
+          Btn_OK Btn_Cancel Btn_Help 
+          WITH FRAME TILBUD.
   
-       UPDATE 
-        NPSPTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
-        NPSPTILBUD.rabatt% NPSPTILBUD.deres_ref NPSPTILBUD.vaar_ref
-        NPSPTILBUD.lev_bet NPSPTILBUD.bet_bet NPSPTILBUD.gyldighetstid
-        NPSPTILBUD.opplysninger
-        Btn_OK Btn_Cancel Btn_Help 
-      WITH FRAME TILBUD.
-  END.
-  ELSE
-    DO:
-        MESSAGE 'Tabellen er opptatt. Prøv senere.' VIEW-AS ALERT-BOX TITLE 'STOPP'.
-        RETURN.
+          /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */
+          DEFINE VAR c_standardpris AS DECIMAL INITIAL 0.
+          DEFINE VAR c_pris AS DECIMAL INITIAL 0.
+          DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.
+  
+          FIND NPSPANLG  WHERE  NPSPANLG.anleggsnr = anleggsnrParam NO-WAIT NO-ERROR.
+          IF AVAILABLE NPSPANLG THEN
+            c_standardpris = NPSPANLG.standardpris.
+  
+          assign 
+            c_pris = c_standardpris
+            c_avgittpris = c_pris - ((c_pris *  NPSPTILBUD.rabatt%) / 100)
+            NPSPTILBUD.pris  = c_standardpris
+            NPSPTILBUD.avgittpris =  c_avgittpris
+            . 
+         
+  
     END.
-
+    ELSE
+      DO:
+          MESSAGE 'Tabellen er opptatt. Prøv senere.' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+          RETURN.
+      END.
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -556,57 +591,78 @@ PROCEDURE nyttTilbud :
 DEFINE VAR cAnleggsnr AS CHAR.
 
    iNextId = 0.
-
-/* Tilbudsnr må settes */
-  FIND LAST NPSPTILBUD  WHERE NPSPTILBUD.anleggsnr = anleggsnrParam 
-  USE-INDEX ndx_siste_tilbud NO-LOCK NO-WAIT NO-ERROR.
-  /* Dersom det er gitt tilbud på dette anlegget tidligere - øk teller */
-  IF AVAILABLE(NPSPTILBUD) THEN
-     iNextTilbudsnr = NPSPTILBUD.tilbudsid + 1.
-  ELSE
-    /* Andre gir tilbud på dette anlegget nå */
-    DO:
-      IF LOCKED NPSPTILBUD THEN
-         DO:
-             MESSAGE 'Andre gir tilbud på dette anlegget nå. Prøv igjen senere' VIEW-AS ALERT-BOX 
-                 TITLE 'STOPP'.
-            RETURN.
-         END.
-    ELSE            
-      /* Dette er første tilbud på dette anlegget */
-      iNextTilbudsnr = 1.
-  END.
-
-     create NPSPTILBUD.
-     NPSPTILBUD.tilbudsdato = TODAY.
-     NPSPTILBUD.anleggsnr = anleggsnrParam.
-     NPSPTILBUD.id = iNextId.
-     NPSPTILBUD.tilbudsid = iNextTilbudsnr.
-    /* Tilbudsnr har dette format: år Varegruppe Anleggsnr Tilbudsid */
-     /* Legg anleggsnr på riktig format */
+  do transaction:
+  /* Tilbudsnr må settes */
+    FIND LAST NPSPTILBUD  WHERE NPSPTILBUD.anleggsnr = anleggsnrParam USE-INDEX ndx_siste_tilbud NO-LOCK NO-WAIT NO-ERROR.
+    /* Dersom det er gitt tilbud på dette anlegget tidligere - øk teller */
+    IF AVAILABLE(NPSPTILBUD) THEN
+      iNextTilbudsnr = NPSPTILBUD.tilbudsid + 1.
+    ELSE do:    /* Andre gir tilbud på dette anlegget nå */
+      IF LOCKED NPSPTILBUD THEN DO:
+        MESSAGE 'Andre gir tilbud på dette anlegget nå. Prøv igjen senere' VIEW-AS ALERT-BOX 
+                TITLE 'STOPP'.
+        RETURN.
+      END.
+      ELSE            
+        /* Dette er første tilbud på dette anlegget */
+        iNextTilbudsnr = 1.
+    END.
+  
+    create NPSPTILBUD.
+    assign 
+      NPSPTILBUD.tilbudsdato = TODAY
+      NPSPTILBUD.anleggsnr = anleggsnrParam
+      NPSPTILBUD.id = iNextId
+      NPSPTILBUD.tilbudsid = iNextTilbudsnr
+     .
+      /* Tilbudsnr har dette format: år Varegruppe Anleggsnr Tilbudsid */
+       /* Legg anleggsnr på riktig format */
      cAnleggsnr = String(anleggsnrParam).
      CASE LENGTH(cAnleggsnr):
-        WHEN 1 THEN
-            cAnleggsnr = '000' + cAnleggsnr.
-        WHEN 2 THEN
-            cAnleggsnr = '00' + cAnleggsnr.
-        WHEN 3 THEN
-            cAnleggsnr = '0' + cAnleggsnr.
-      END CASE.
-     NPSPTILBUD.tilbudsnr = SUBSTRING(STRING(YEAR(Today)),3,2) + '.' +  '11.' + 
-         cAnleggsnr + '.' + STRING(iNextTilbudsnr).
-     DISPLAY NPSPTILBUD.anleggsnr 
-         NPSPTILBUD.tilbudsnr NPSPTILBUD.tilbudsdato 
-     WITH FRAME  TILBUD.
-
- UPDATE 
-        NPSPTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
-        NPSPTILBUD.rabatt%
-        NPSPTILBUD.deres_ref NPSPTILBUD.vaar_ref 
-        NPSPTILBUD.lev_bet NPSPTILBUD.bet_bet NPSPTILBUD.gyldighetstid
-        NPSPTILBUD.opplysninger
-        Btn_OK Btn_Cancel Btn_Help 
-      WITH FRAME TILBUD.
+       WHEN 1 THEN cAnleggsnr = '000' + cAnleggsnr.
+       WHEN 2 THEN cAnleggsnr = '00' + cAnleggsnr.
+       WHEN 3 THEN cAnleggsnr = '0' + cAnleggsnr.
+     END CASE.
+     NPSPTILBUD.tilbudsnr = SUBSTRING(STRING(YEAR(Today)),3,2) + '.' +  '11.' + cAnleggsnr + '.' + STRING(iNextTilbudsnr).
+     DISPLAY 
+       NPSPTILBUD.anleggsnr 
+       NPSPTILBUD.tilbudsnr NPSPTILBUD.tilbudsdato 
+       WITH FRAME  TILBUD.
+     UPDATE 
+       NPSPTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
+       NPSPTILBUD.rabatt%
+       NPSPTILBUD.deres_ref NPSPTILBUD.vaar_ref 
+       NPSPTILBUD.lev_bet NPSPTILBUD.bet_bet NPSPTILBUD.gyldighetstid
+       NPSPTILBUD.opplysninger
+       Btn_OK Btn_Cancel Btn_Help 
+       WITH FRAME TILBUD.
+             /* Opprett første record i oppfølging, og sett oppf.uke */
+      DEFINE VAR cUke LIKE NPSPANLG.oppf_uke.
+      DEFINE VAR cAar LIKE NPSPANLG.oppf_aar.
+  
+      FIND NPSPANLG WHERE NPSPANLG.anleggsnr = anleggsnrParam NO-WAIT NO-ERROR.
+      IF AVAILABLE NPSPANLG THEN
+        assign 
+          cUke = NPSPANLG.oppf_uke
+          cAar = NPSPANLG.oppf_aar
+          .
+      define var cp_tabell_navn as char.
+      define var ip_neste_id as integer.
+  
+      cp_tabell_navn  = 'npsptopp'.
+      run neste_id.p (input cp_tabell_navn, output ip_neste_id).
+      CREATE NPSPTOPP.
+      ASSIGN
+      NPSPTOPP.id = NPSPTILBUD.tilbudsid
+      NPSPTOPP.oppf_nr = ip_neste_id
+      NPSPTOPP.neste_oppf_uke = cUke.
+      NPSPTOPP.neste_oppf_aar = cAar.
+     /* Sett endringslås på anlegget */
+      npspanlg.endrings_laas = TRUE.
+  end.   
+  Current-Rec = ROWID(npshtilbud).
+  dynamic-function('setCurrentRec' in hParent,current-rec).
+  
  
 END PROCEDURE.
 

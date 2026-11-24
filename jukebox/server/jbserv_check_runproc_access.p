@@ -4,6 +4,7 @@ DEF INPUT  PARAM iiCompanyId AS INT  NO-UNDO.
 DEF INPUT  PARAM icUserId    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obAccess    AS LOG  NO-UNDO INIT YES.
 
+{incl/validatecaller.i}
 
 DEF VAR cUserLevel           AS CHAR   NO-UNDO.
 DEF VAR bOk                  AS LOG    NO-UNDO.

@@ -11,6 +11,7 @@ SUBSCRIBE TO "setChildToolbarObject" ANYWHERE. /* published from toolbar class *
 SUBSCRIBE TO "setPageQueryHandle" ANYWHERE. /* published from objlib.NewBrowse when dynamic browse */
 SUBSCRIBE TO "setParentContainer" ANYWHERE. /* published from container to assign parent container to a tab-page container */
 SUBSCRIBE TO "EmbedTabInChildForm" ANYWHERE.
+SUBSCRIBE TO "getTabAbsPosition" ANYWHERE.
 
 PROCEDURE ResizeTabWindows:
 /*------------------------------------------------------------------------------
@@ -27,6 +28,23 @@ IF ioTabs:PLACEHOLDER = ihPlaceHolder THEN
   ioTabs:resizeTabWindows(iiX,iiY,iiDeltaX,iiDeltaY).
 
 
+END PROCEDURE.
+
+PROCEDURE getTabAbsPosition:
+  DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
+  DEF OUTPUT PARAM oiX         AS INT    NO-UNDO.
+  DEF OUTPUT PARAM oiY         AS INT    NO-UNDO.
+  IF ihSourceProc = ioTabs:hSourceProc OR ioTabs:getProcIsPage(ihSourceProc) THEN DO:
+    ASSIGN oiX = ioTabs:Location:X
+           oiY = ioTabs:Location:Y.
+    IF VALID-OBJECT(ioTabs:PARENT-TAB-OBJECT) THEN DO:
+      ASSIGN oiX = oiX + ioTabs:PARENT-TAB-OBJECT:Location:X
+             oiY = oiY + ioTabs:PARENT-TAB-OBJECT:Location:Y.
+      IF VALID-OBJECT(ioTabs:PARENT-TAB-OBJECT:PARENT-TAB-OBJECT) THEN 
+        ASSIGN oiX = oiX + ioTabs:PARENT-TAB-OBJECT:PARENT-TAB-OBJECT:Location:X
+               oiY = oiY + ioTabs:PARENT-TAB-OBJECT:PARENT-TAB-OBJECT:Location:Y.
+    END.         
+  END.
 END PROCEDURE.
 
 PROCEDURE setChildBrowseObject:
@@ -125,6 +143,7 @@ FUNCTION setTabControlContainer RETURNS LOGICAL
  Notes:
 ------------------------------------------------------------------------------*/
   ioTabs:CONTAINER-OBJECT = ioContainer.
+  ioContainer:TABFOLDER-OBJECT = ioTabs.
 
   RETURN YES.
 

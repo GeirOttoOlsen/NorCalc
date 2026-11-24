@@ -13,6 +13,8 @@ DEF INPUT-OUTPUT PARAM ioiEventLogHdrId    AS INT  NO-UNDO.
 DEF VAR hBuffLogHeader  AS HANDLE NO-UNDO.
 DEF VAR hFldLogHeaderId AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 hFldLogHeaderId = BUFFER JBoxEventLog:BUFFER-FIELD("iJBoxEventLogHeaderId") NO-ERROR.
 
 FIND FIRST JBoxEventLogType NO-LOCK

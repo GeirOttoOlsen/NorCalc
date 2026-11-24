@@ -14,7 +14,6 @@ USING Progress.Windows.UserControl.
 USING Progress.Windows.Form.
 
 CLASS JBoxMsTabs INHERITS UserControl:
-  DEF VAR oForm              AS Progress.Windows.Form NO-UNDO.
   DEF VAR hTabFolder         AS HANDLE     NO-UNDO.
   DEF VAR bFirstPage         AS LOG        NO-UNDO INIT YES.
   DEF VAR oChildBrowse       AS JBoxBrowse NO-UNDO EXTENT 10.
@@ -26,13 +25,13 @@ CLASS JBoxMsTabs INHERITS UserControl:
   DEF VAR cDefaultLinkFields AS CHAR       NO-UNDO.
   DEF VAR bInitialRun        AS LOG        NO-UNDO INIT YES.
   DEF VAR hWindow            AS HANDLE     NO-UNDO.
-  DEF VAR iTab#              AS INT        NO-UNDO.
   DEF VAR hParentTab         AS HANDLE     NO-UNDO.
   DEF VAR bKeepFrozen        As LOG        NO-UNDO.
+  DEF VAR bStopTabChangedEvents AS LOG     NO-UNDO.
     
   DEFINE PRIVATE VARIABLE components  AS System.ComponentModel.IContainer NO-UNDO.
   DEFINE PRIVATE VARIABLE imageList1  AS System.Windows.Forms.ImageList NO-UNDO.
-  DEFINE PRIVATE VARIABLE tabControl1 AS System.Windows.Forms.TabControl NO-UNDO.
+//  DEFINE PRIVATE VARIABLE tabControl1 AS System.Windows.Forms.TabControl NO-UNDO.
 
   DEF TEMP-TABLE ttProgram NO-UNDO 
       FIELD hProgram     AS HANDLE
@@ -45,12 +44,15 @@ CLASS JBoxMsTabs INHERITS UserControl:
       FIELD oWinCont     AS Progress.Lang.Object
       FIELD hPageQuery   AS HANDLE /* handle for browse or query on tab-page - 1st come 1st serve */
       FIELD oContainer   AS Progress.Lang.Object /* JBoxContainer */
+      FIELD oTabPage     AS Progress.Lang.Object /* TabPage object */
       FIELD bInitialized AS LOG
       FIELD iDeltaX      AS INT
       FIELD iDeltaY      AS INT
       INDEX idxTab# IS PRIMARY UNIQUE iTab#
       .
       
+  DEF PUBLIC PROPERTY tabControl1 AS System.Windows.Forms.TabControl NO-UNDO GET. PRIVATE SET.
+  DEF PUBLIC PROPERTY FormObject  AS Progress.Windows.Form NO-UNDO GET. PRIVATE SET.
   DEF PUBLIC PROPERTY CONTAINER-OBJECT AS JBoxContainer GET. SET.
   DEF PUBLIC PROPERTY PARENT-BROWSE-OBJECT AS JBoxBrowse GET. SET.
   DEF PUBLIC PROPERTY PARENT-QUERY-OBJECT AS JBoxQuery GET. SET. 
@@ -58,6 +60,7 @@ CLASS JBoxMsTabs INHERITS UserControl:
   DEF PUBLIC PROPERTY PrevTabNum        AS INT  GET. PROTECTED SET.
   DEF PUBLIC PROPERTY CurrTabNum        AS INT  GET. SET(iiTab AS INT): PrevTabNum = CurrTabNum. CurrTabNum = iiTab. END SET.
   DEF PUBLIC PROPERTY CurrTabLabel      AS CHAR GET(): RETURN IF CurrTabNum > 0 THEN cTabLabels[CurrTabNum] ELSE "". END GET. PROTECTED SET.
+  DEF PUBLIC PROPERTY iTabNumber             AS INT NO-UNDO GET. SET.
 
   DEF PUBLIC PROPERTY PLACEHOLDER     AS HANDLE GET. PROTECTED SET. 
   DEF PUBLIC PROPERTY PublishForm     AS LOGICAL GET. SET. 
@@ -215,6 +218,7 @@ CLASS JBoxMsTabs INHERITS UserControl:
     THIS-OBJECT:tabControl1:TabIndex = 0.
     THIS-OBJECT:tabControl1:SelectedIndexChanged:Subscribe(THIS-OBJECT:testClick).
     THIS-OBJECT:tabControl1:TabIndexChanged:Subscribe(THIS-OBJECT:testClick).
+    THIS-OBJECT:tabControl1:Selecting:Subscribe(THIS-OBJECT:selectingTab).
     
     
     /* X and Y limits for move of widget are not yet set for the window. 
@@ -228,11 +232,11 @@ CLASS JBoxMsTabs INHERITS UserControl:
     /* MsTabForm */
     /*  */
 
-    oForm = CAST(DYNAMIC-FUNCTION("getWindowForm" IN hSourceProc),"Progress.Windows.Form").
+    FormObject = CAST(DYNAMIC-FUNCTION("getWindowForm" IN hSourceProc),"Progress.Windows.Form").
     
     FormIsChildForm = DYNAMIC-FUNCTION("getIsMDIchild" IN hSourceProc).
 
-    oForm:Controls:Add(THIS-OBJECT).
+    FormObject:Controls:Add(THIS-OBJECT).
 
 //    THIS-OBJECT:BringToFront().
 
@@ -271,6 +275,14 @@ CLASS JBoxMsTabs INHERITS UserControl:
 
   END METHOD.
 
+  METHOD PRIVATE VOID selectingTab( INPUT sender AS System.Object, INPUT e AS System.ComponentModel.CancelEventArgs ):
+    DEF VAR bOkTab       AS LOG    NO-UNDO.
+    IF CAN-DO(hSourceProc:INTERNAL-ENTRIES,"PreTabChanged") THEN DO:
+      RUN PreTabChanged IN hSourceProc (tabControl1:SelectedIndex + 1,OUTPUT bOkTab).
+      e:Cancel = NOT bOkTab.
+    END.  
+  END METHOD.
+
   METHOD PUBLIC VOID AddPage (icLabel          AS CHAR
                              ,icLaunch         AS CHAR
                              ,icImage          AS CHAR
@@ -307,14 +319,15 @@ CLASS JBoxMsTabs INHERITS UserControl:
     tabPage1:Controls:Add(ABLwinCont).
 
     CREATE ttProgram.
-    ASSIGN iTab# = iTab# + 1
-           ttProgram.iTab# = iTab#
+    ASSIGN iTabNumber = iTabNumber + 1
+           ttProgram.iTab# = iTabNumber
            ttProgram.oWinCont = CAST(ABLwinCont,"Progress.Lang.Object")
+           ttProgram.oTabPage = CAST(tabPage1,"Progress.Lang.Object")
            rttProgram = ROWID(ttProgram)
            .
-    CurrTabNum = iTab#.
+    CurrTabNum = iTabNumber.
         
-    IF SEARCH(icLaunch) = ? AND SEARCH(SUBSTR(icLaunch,1,LENGTH(icLaunch) - 1) + "r") = ? THEN DO:
+    IF icLaunch NE "" AND SEARCH(icLaunch) = ? AND SEARCH(SUBSTR(icLaunch,1,LENGTH(icLaunch) - 1) + "r") = ? THEN DO:
       cPPathCheck = REPLACE(icLaunch,"/","\").
       cPPathCheck = ENTRY(NUM-ENTRIES(cPPathCheck,"\"),cPPathCheck,"\").
       IF SEARCH(cPPathCheck) NE ? OR SEARCH(SUBSTR(cPPathCheck,1,LENGTH(cPPathCheck) - 1) + "r") NE ? THEN
@@ -341,13 +354,13 @@ CLASS JBoxMsTabs INHERITS UserControl:
       
       DYNAMIC-FUNCTION("CreateParentLink",ttProgram.hProgram,hHelper,"page" + STRING(ttProgram.iTab#)) NO-ERROR.
     
-      RUN CurrentTabFolderPage IN ttProgram.hProgram (hHelper,iTab#) NO-ERROR. /* target: JBoxWrapWindowInForm.p to assign user-control to tab-page  */
+      RUN CurrentTabFolderPage IN ttProgram.hProgram (hHelper,iTabNumber) NO-ERROR. /* target: JBoxWrapWindowInForm.p to assign user-control to tab-page  */
     
       IF PublishForm THEN DO:
         IF FormIsChildForm THEN
-          PUBLISH "SetChildWrapperForm" FROM hSourceProc(hProc,oForm).
+          PUBLISH "SetChildWrapperForm" FROM hSourceProc(hProc,FormObject).
         ELSE
-          PUBLISH "SetWrapperForm" FROM hSourceProc(hProc,oForm).
+          PUBLISH "SetWrapperForm" FROM hSourceProc(hProc,FormObject).
       END.          
     
       IF CAN-DO(ttProgram.hProgram:INTERNAL-ENTRIES,"setParent") THEN
@@ -369,11 +382,13 @@ CLASS JBoxMsTabs INHERITS UserControl:
              .
       DYNAMIC-FUNCTION("copyAttributes",hSourceProc:CURRENT-WINDOW,ttProgram.hProgram:CURRENT-WINDOW,"*").
       
-      IF iTab# = 1 OR NOT ibDelayInit THEN DO:        
-        RUN InitializeObject IN ttProgram.hProgram NO-ERROR.
-        IF ERROR-STATUS:ERROR THEN 
-          MESSAGE "Procedure 'InitializeObject' missing in tab-folder procedure for tab # " + STRING(ttProgram.iTab#)
-                  VIEW-AS ALERT-BOX ERROR.
+      IF iTabNumber = 1 OR NOT ibDelayInit THEN DO:
+        IF icLaunch NE "JBoxDataBrw.w" THEN DO:        
+          RUN InitializeObject IN ttProgram.hProgram NO-ERROR.
+          IF ERROR-STATUS:ERROR THEN 
+            MESSAGE "Procedure 'InitializeObject' missing in tab-folder procedure for tab # " + STRING(ttProgram.iTab#)
+                    VIEW-AS ALERT-BOX ERROR.
+        END.    
   
         IF NOT AVAIL ttProgram THEN FIND ttProgram WHERE ROWID(ttProgram) = rttProgram.
   
@@ -384,7 +399,8 @@ CLASS JBoxMsTabs INHERITS UserControl:
         
         DYNAMIC-FUNCTION("setMinXYmove",DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"X"),DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"Y")).
         
-        DYNAMIC-FUNCTION("DoWidgetResize",ttProgram.hWindow:FIRST-CHILD).
+        IF icLaunch NE "JBoxDataBrw.w" THEN         
+          DYNAMIC-FUNCTION("DoWidgetResize",ttProgram.hWindow:FIRST-CHILD).
           
         DYNAMIC-FUNCTION("NewObject",hSourceProc:CURRENT-WINDOW,ttProgram.hProgram,"procedure").
         DYNAMIC-FUNCTION("CreateObjectLink",ttProgram.hProgram,hSourceProc).
@@ -393,7 +409,7 @@ CLASS JBoxMsTabs INHERITS UserControl:
         PUBLISH "getContainerForProc" FROM hSourceProc (ttProgram.hProgram,hHelper,"setTabPageContainer"). /* find container for hSourceProc and call back to setTabPageContainer in hHelper */
     
 
-        IF iTab# = 1 THEN DO:
+        IF iTabNumber = 1 THEN DO:
           THIS-OBJECT:Visible = YES.
           THIS-OBJECT:tabControl1:Visible = YES.
           THIS-OBJECT:TabFolderChanged(1).
@@ -409,6 +425,19 @@ CLASS JBoxMsTabs INHERITS UserControl:
                ttProgram.iDeltaX = iDeltaX
                ttProgram.iDeltaY = iDeltaY
                .  
+    END.
+    ELSE IF icLaunch = "" THEN DO:
+      ttProgram.bInitialized = YES. /* Manage it.. */
+      IF iTabNumber = 1 THEN DO:
+        THIS-OBJECT:Visible = YES.
+        THIS-OBJECT:tabControl1:Visible = YES.
+        THIS-OBJECT:TabFolderChanged(1).
+        IF VALID-OBJECT(THIS-OBJECT:PARENT-TAB-OBJECT) AND THIS-OBJECT:PARENT-TAB-OBJECT:DelayBringToFront THEN .
+        ELSE THIS-OBJECT:BringToFront().
+      END.  
+      ELSE  
+        RUN ViewHideTabUserControl IN (IF VALID-HANDLE(ttProgram.hPlaceholder) THEN ttProgram.hPlaceholder ELSE ttProgram.hProgram)
+            (hHelper,-1) NO-ERROR.      
     END.
     ELSE 
       MESSAGE PROGRAM-NAME(1) SKIP
@@ -505,6 +534,26 @@ CLASS JBoxMsTabs INHERITS UserControl:
       
   END METHOD.
 
+  METHOD PUBLIC LOGICAL getProcIsPage (ihPageProc AS HANDLE):
+    /* Return the tab num for a page procedure handle */
+    FIND FIRST ttProgram 
+         WHERE ttProgram.hProgram = ihPageProc
+         NO-ERROR.
+    RETURN AVAIL ttProgram.     
+      
+  END METHOD.
+
+  METHOD PUBLIC INTEGER selectTab (icLabel AS CHAR):
+    /* select an existing tab folder programmatically (do the mouse-click) */
+    FIND FIRST ttProgram WHERE ttProgram.cLabel = icLabel NO-ERROR.
+    IF AVAIL ttProgram THEN DO:
+      THIS-OBJECT:tabControl1:SelectTab(icLabel).
+      THIS-OBJECT:TabFolderChanged(ttProgram.iTab#).
+/*      CurrTabNum = ttProgram.iTab#.   */
+/*      CurrTabLabel = ttProgram.cLabel.*/
+    END.  
+  END.  
+
   METHOD PUBLIC VOID selectPage (iiTab AS INT):
     /* Invokes also the TabChanged function (input iiTab as int) if it exists */
     THIS-OBJECT:TabFolderChanged(iiTab).
@@ -520,6 +569,117 @@ CLASS JBoxMsTabs INHERITS UserControl:
       ioTabContainer:PARENT-CONTAINER-OBJECT = THIS-OBJECT:CONTAINER-OBJECT.
       ttProgram.oContainer = CAST(ioTabContainer,"Progress.Lang.Object").
     END.                                                 
+  END METHOD.
+
+  /* For managed tab-pages */
+  METHOD PUBLIC VOID setTabWindowProc (iiTab          AS INT
+                                      ,ihWinProc      AS HANDLE):
+    DEF BUFFER ttProgram FOR ttProgram.
+    
+    FIND FIRST ttProgram WHERE ttProgram.iTab# = iiTab.
+    IF AVAIL ttProgram THEN DO:
+      ASSIGN ttProgram.hProgram = ihWinProc
+             ttProgram.hWindow  = ihWinProc:CURRENT-WINDOW
+             CAST(ttProgram.oWinCont,"Progress.Windows.WindowContainer"):EmbeddedWindow = ihWinProc:CURRENT-WINDOW
+             .
+    END.                                                 
+  END METHOD.
+
+  /* For managed tab-pages */
+  METHOD PUBLIC VOID resizeTabPage (iiTab          AS INT
+                                   ,iiDeltaX       AS INT
+                                   ,iiDeltaY       AS INT):
+                                     
+    DEF BUFFER ttProgram FOR ttProgram.
+    
+    FIND FIRST ttProgram WHERE ttProgram.iTab# = iiTab.
+    IF AVAIL ttProgram THEN DO:
+      DYNAMIC-FUNCTION("setDeltaX",iiDeltaX).
+      DYNAMIC-FUNCTION("setDeltaY",iiDeltaY).
+
+      DYNAMIC-FUNCTION("setMinXYmove",DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"X"),DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"Y")).
+      DYNAMIC-FUNCTION("DoWidgetResize",ttProgram.hWindow:FIRST-CHILD).
+    END.                                                 
+  END METHOD.
+
+  METHOD PUBLIC VOID resizeTabPage (iiTab       AS INT):
+    DEF VAR hFrame          AS HANDLE NO-UNDO.
+    DEF VAR iFrameHeight    AS INT NO-UNDO.
+    DEF VAR iFrameWidth     AS INT NO-UNDO.
+    DEF VAR iFrameY         AS INT NO-UNDO INIT 100000. 
+
+    DEF BUFFER ttProgram FOR ttProgram.
+    
+    FIND FIRST ttProgram WHERE ttProgram.iTab# = iiTab.
+    
+    IF AVAIL ttProgram THEN DO:
+      hFrame = ttProgram.hProgram:CURRENT-WINDOW:FIRST-CHILD.
+      REPEAT WHILE VALID-HANDLE(hFrame):
+        IF hFrame:Y < iFrameY THEN
+          ASSIGN iFrameHeight = hFrame:HEIGHT-PIXELS
+                 iFrameWidth  = hFrame:WIDTH-PIXELS.
+        hFrame = hFrame:NEXT-SIBLING.
+      END.
+        
+      DYNAMIC-FUNCTION("setDeltaX",ttProgram.hProgram:CURRENT-WINDOW:WIDTH-PIXELS - iFrameWidth).
+      DYNAMIC-FUNCTION("setDeltaY",ttProgram.hProgram:CURRENT-WINDOW:HEIGHT-PIXELS - iFrameHeight).
+      DYNAMIC-FUNCTION("setMinXYmove",DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"X"),DYNAMIC-FUNCTION("getWinMinXmove",ttProgram.hWindow,"Y")).
+      DYNAMIC-FUNCTION("DoWidgetResize",ttProgram.hWindow:FIRST-CHILD).
+    END.
+    
+  END.  
+
+  METHOD PUBLIC VOID removePage (iiTab          AS INT):
+    DEF BUFFER ttProgram FOR ttProgram.
+    DEF BUFFER bttProgram FOR ttProgram.
+            
+    bStopTabChangedEvents = YES.
+    
+    FIND FIRST ttProgram 
+         WHERE ttProgram.iTab# = iiTab
+         NO-ERROR.
+    IF AVAIL ttProgram THEN DO:
+      IF VALID-HANDLE(ttProgram.hProgram) THEN DO:
+        APPLY "close" TO ttProgram.hProgram.
+        DELETE PROCEDURE ttProgram.hProgram NO-ERROR.
+      END.  
+      THIS-OBJECT:tabControl1:TabPages:RemoveAt(iiTab - 1).
+      DELETE OBJECT ttProgram.oWinCont.
+      DELETE OBJECT ttProgram.oTabPage.
+      DELETE ttProgram.
+      iTabNumber = iTabNumber - 1.
+      FOR EACH bttProgram
+          WHERE bttProgram.iTab# > iiTab:
+        bttProgram.iTab# = bttProgram.iTab# - 1.
+      END. 
+      IF iTabNumber = 0 THEN DELETE OBJECT THIS-OBJECT.
+    END.
+    bStopTabChangedEvents = NO.
+  END METHOD.
+
+  METHOD PUBLIC VOID removePage (ihPageHandle  AS HANDLE):
+    FIND FIRST ttProgram
+         WHERE ttProgram.hProgram = ihPageHandle
+         NO-ERROR.
+    IF AVAIL ttProgram THEN
+      THIS-OBJECT:removePage(ttProgram.iTab#). 
+  END METHOD.  
+
+  METHOD PUBLIC VOID removeAllPages (INPUT ibStopTabChangedEvents AS LOG):
+    DEF BUFFER ttProgram FOR ttProgram.
+    
+    bStopTabChangedEvents = ibStopTabChangedEvents.
+    
+    FOR EACH ttProgram BY ttProgram.iTab# DESC: 
+      IF VALID-HANDLE(ttProgram.hProgram) THEN DO:
+        APPLY "close" TO ttProgram.hProgram.
+        DELETE PROCEDURE ttProgram.hProgram NO-ERROR.
+      END.  
+      THIS-OBJECT:tabControl1:TabPages:RemoveAt(ttProgram.iTab# - 1).
+      DELETE ttProgram.
+    END.                                                 
+    iTabNumber = 0.
+    bStopTabChangedEvents = NO.
   END METHOD.
 
   METHOD PUBLIC JBoxContainer getTabContainerObject (iiTab  AS INT):
@@ -573,6 +733,10 @@ CLASS JBoxMsTabs INHERITS UserControl:
 
   METHOD PUBLIC JBoxToolbar getPageToolbarObject (iiTab AS INT):
     RETURN oChildToolbar[iiTab].
+  END METHOD.
+
+  METHOD PUBLIC Progress.Lang.Object getPageFormObject (iiTab AS INT):
+    RETURN DYNAMIC-FUNCTION("getWindowForm" IN THIS-OBJECT:getPageHandle(iiTab)).
   END METHOD.
   
   METHOD PUBLIC VOID setLinkFields(icLinkFields AS CHAR):
@@ -759,15 +923,16 @@ CLASS JBoxMsTabs INHERITS UserControl:
                                       ,iiDeltaY AS INT):
                                         
     DEF VAR ABLwinCont      AS Progress.Windows.WindowContainer NO-UNDO.
-            
+
     FOR EACH ttProgram:
       RUN SetWinContainerXY IN ttProgram.hProgram (iiX + 5,iiY + 23) NO-ERROR.
       
       ASSIGN ABLwinCont = CAST(ttProgram.oWinCont,"Progress.Windows.WindowContainer")
              ABLwinCont:Size = NEW System.Drawing.Size(ABLwinCont:Width + iiDeltaX,ABLwinCont:Height + iiDeltaY)
-             ttProgram.hWindow:WIDTH-PIXELS = ttProgram.hWindow:WIDTH-PIXELS + iiDeltaX             
-             ttProgram.hWindow:HEIGHT-PIXELS = ttProgram.hWindow:HEIGHT-PIXELS + iiDeltaY
+/*             ttProgram.hWindow:WIDTH-PIXELS = ttProgram.hWindow:WIDTH-PIXELS + iiDeltaX  */
+/*             ttProgram.hWindow:HEIGHT-PIXELS = ttProgram.hWindow:HEIGHT-PIXELS + iiDeltaY*/
              NO-ERROR.
+             
       RUN ResizeFormComponents IN ttProgram.hProgram (ttProgram.hWindow) NO-ERROR.       
     END.
  
@@ -792,11 +957,12 @@ CLASS JBoxMsTabs INHERITS UserControl:
     DEF VAR iFrameY      AS INT    NO-UNDO INIT 100000.
     DEF VAR iFrameHeight AS INT    NO-UNDO.
     DEF VAR iFrameWidth  AS INT    NO-UNDO.
-            
+             
+    IF bStopTabChangedEvents THEN RETURN NO.             
+             
     IF NOT DYNAMIC-FUNCTION("SaveModified",getPageQuery(CurrTabNum)) 
        AND CAN-DO(hSourceProc:INTERNAL-ENTRIES,"UndoTabChanges") THEN
       DYNAMIC-FUNCTION("UndoTabChanges" IN hSourceProc,CurrTabNum).
-    
     
     IF iiTab = 0 THEN iiTab = CurrTabNum.
     
@@ -813,14 +979,14 @@ CLASS JBoxMsTabs INHERITS UserControl:
       LOG-MANAGER:LOGGING-LEVEL   = 4.
     END.  
     
-    IF CurrTabNum > 1 AND NOT ttProgram.bInitialized THEN DO:
+    IF CurrTabNum > 1 AND NOT ttProgram.bInitialized AND VALID-HANDLE(ttProgram.hProgram) THEN DO:
 //      DYNAMIC-FUNCTION("DoLockWindow",ttProgram.hProgram:CURRENT-WINDOW).
       DelayBringToFront = YES.
       RUN InitializeObject IN ttProgram.hProgram NO-ERROR.
       DelayBringToFront = NO.
-      IF ERROR-STATUS:ERROR THEN 
-        MESSAGE "Procedure 'InitializeObject' missing in tab-folder procedure for tab # " + STRING(ttProgram.iTab#)
-                VIEW-AS ALERT-BOX ERROR.
+/*      IF ERROR-STATUS:ERROR THEN                                                                                   */
+/*        MESSAGE "Procedure 'InitializeObject' missing in tab-folder procedure for tab # " + STRING(ttProgram.iTab#)*/
+/*                VIEW-AS ALERT-BOX ERROR.                                                                           */
 
       FIND ttProgram WHERE ROWID(ttProgram) = rTab.
       ttProgram.bInitialized = YES.
@@ -847,7 +1013,7 @@ CLASS JBoxMsTabs INHERITS UserControl:
       RUN ViewHideTabUserControl IN (IF VALID-HANDLE(ttProgram.hPlaceholder) THEN ttProgram.hPlaceholder ELSE ttProgram.hProgram)
           (hHelper,-1) NO-ERROR.      
     END.  
-            
+               
     IF CAN-DO(hSourceProc:INTERNAL-ENTRIES,"TabChanged") THEN 
       DYNAMIC-FUNCTION("TabChanged" IN hSourceProc,CurrTabNum).
     ELSE DO:
@@ -896,6 +1062,9 @@ CLASS JBoxMsTabs INHERITS UserControl:
     
     RUN MoveToTop IN THIS-OBJECT:getPageHandle(CurrTabNum) NO-ERROR.
 
+    IF CAN-DO(hSourceProc:INTERNAL-ENTRIES,"PostTabChanged") THEN
+      RUN PostTabChanged IN hSourceProc (CurrTabNum).
+    
     DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
     DYNAMIC-FUNCTION("DoLockWindow",?).
 
@@ -947,9 +1116,15 @@ CLASS JBoxMsTabs INHERITS UserControl:
     FOR EACH ttProgram:
       IF VALID-HANDLE(ttProgram.hPlaceholder) THEN
         APPLY "close" TO ttProgram.hPlaceholder.
-      ELSE IF VALID-HANDLE(ttProgram.hProgram) THEN
+      ELSE IF VALID-HANDLE(ttProgram.hProgram) THEN DO:
         APPLY "close" TO ttProgram.hProgram.
+        IF VALID-OBJECT(ttProgram.oContainer) THEN DELETE OBJECT ttProgram.oContainer NO-ERROR.
+      END.  
     END.
+    IF NOT hbUserControls:AVAIL THEN
+      hbUserControls:FIND-FIRST("WHERE STRING(hPlaceHolder) = '" + STRING(PLACEHOLDER) + "'") NO-ERROR.
+    IF hbUserControls:AVAIL THEN hbUserControls:BUFFER-DELETE() NO-ERROR.
+    FormObject:Controls:Remove(THIS-OBJECT).
   END DESTRUCTOR.
 
 END CLASS.

@@ -420,7 +420,7 @@ PROCEDURE DisplayRecord :
 ------------------------------------------------------------------------------*/
 RUN SUPER.
 
-DYNAMIC-FUNCTION("DoMyPublish" IN DYNAMIC-FUNCTION("getPageHandle" IN hTabFolder,1)).
+DYNAMIC-FUNCTION("DoMyPublish" IN DYNAMIC-FUNCTION("getPageHandle" IN hTabFolder,2)).
 
 END PROCEDURE.
 

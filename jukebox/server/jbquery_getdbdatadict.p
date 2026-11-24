@@ -5,6 +5,8 @@ DEF INPUT-OUTPUT PARAM ixFieldNum AS INT NO-UNDO.
 
 {incl/ttdatadict.i}
 
+{incl/validatecaller.i}
+
 FOR EACH dictdb._file 
     WHERE dictdb._file._tbl-type = 'T'
     NO-LOCK:

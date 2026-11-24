@@ -31,6 +31,9 @@
 CREATE WIDGET-POOL.
 
 /* ***************************  Definitions  ************************** */
+&IF "{1}" = "Developer_Studio_is_Running" &THEN
+  &SCOPED-DEFINE UIB_is_Running 1 
+&ENDIF   
 
 /* Parameters Definitions ---                                           */
 

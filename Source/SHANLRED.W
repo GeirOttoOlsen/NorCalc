@@ -295,7 +295,12 @@ DO:
         END.
 
     IF konsulentnrParam = '0' THEN    /* Ok trykket uten at konsulent er valgt -- ulovlig! */
-        APPLY 'CHOOSE' TO Btn_Cancel.
+    do:
+        MESSAGE 'Konsulent må velges'
+        VIEW-AS ALERT-BOX.
+        return.
+        //APPLY 'CHOOSE' TO Btn_Cancel.
+    end.
     ELSE DO:
       find first npkundedistrikt where NPkundedistrikt.kundedistriktNr = int(npshanlg.kundedistriktnr:screen-value) no-lock no-error.
       if avail npkundedistrikt then NPSHANLG.salgsdistrikt = string(npkundedistrikt.kundedistriktnr) + ' / ' + NPkundedistrikt.kundedistriktnavn.
@@ -505,11 +510,12 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   hParent = source-procedure.
   current-rec = dynamic-function('getCurrentRec' in hParent).
   nyRecord    = logical(dynamic-function('getNyRecord' in hParent)).
-  prosjektidparam = int(jboxSession:Instance:getJBoxAttribute('ProsjektId')).
-  prosjektNavnparam = jboxSession:Instance:getJBoxAttribute('ProsjektNavn').
+  prosjektidparam = int(jboxSession:Instance:getJBoxAttribute('ProsjektIdparam')).
+  prosjektNavnparam = jboxSession:Instance:getJBoxAttribute('ProsjektNavnParam').
    RUN fyll_combo.
   IF nyRecord THEN
       RUN nyttAnlegg.
+  
   ELSE
       RUN endreAnlegg.
 

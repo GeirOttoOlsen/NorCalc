@@ -23,6 +23,8 @@ ASSIGN iDragNode    = INT(ENTRY(1,icParam,"|"))
        cUserId      = DYNAMIC-FUNCTION("getAsUserId" IN SOURCE-PROCEDURE)
        .
 
+{incl/validatecaller.i}
+
 DO TRANSACTION ON ERROR UNDO,LEAVE:
   FIND JBoxMenuToMenu NO-LOCK
        WHERE JBoxMenuToMenu.iToMenuId   = iDragParent

@@ -127,8 +127,9 @@ NPSHTILLEGG.med_i_ordre
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS tbNPSHTILLEGG new_tbNPSHTILLEGG ~
 undo_tbNPSHTILLEGG save_tbNPSHTILLEGG delete_tbNPSHTILLEGG BrwNPSHTILLEGG ~
-artikkelnr artikkelnavn med_i_ordre antall kostpris paaslag_faktor pris 
-&Scoped-Define DISPLAYED-OBJECTS artikkelnr artikkelnavn med_i_ordre antall ~
+artikkelnr btnartikkelnr med_i_ordre artikkelnavn antall kostpris ~
+paaslag_faktor pris 
+&Scoped-Define DISPLAYED-OBJECTS artikkelnr med_i_ordre artikkelnavn antall ~
 kostpris paaslag_faktor pris 
 
 /* Custom List Definitions                                              */
@@ -142,43 +143,47 @@ kostpris paaslag_faktor pris
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
+DEFINE BUTTON btnartikkelnr 
+     LABEL "..." 
+     SIZE 4 BY 1.
+
 DEFINE BUTTON delete_tbNPSHTILLEGG 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Slett" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Slett (CTRL-D)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Slett (CTRL-D)".
 
 DEFINE BUTTON new_tbNPSHTILLEGG 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "Ny" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Ny (CTRL-N)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Ny (CTRL-N)".
 
 DEFINE BUTTON save_tbNPSHTILLEGG 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Lagre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Lagre (CTRL-S)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Lagre (CTRL-S)".
 
 DEFINE BUTTON undo_tbNPSHTILLEGG 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Angre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Angre (CTRL-Z)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Angre (CTRL-Z)".
 
 DEFINE VARIABLE antall AS INTEGER FORMAT ">>9" INITIAL 0 
      LABEL "Antall" 
      VIEW-AS FILL-IN 
-     SIZE 6.2 BY 1.
+     SIZE 6.25 BY 1.
 
 DEFINE VARIABLE artikkelnavn AS CHARACTER FORMAT "X(30)" 
      LABEL "Artikkelnavn" 
      VIEW-AS FILL-IN 
-     SIZE 32 BY 1.
+     SIZE 49 BY 1.
 
 DEFINE VARIABLE artikkelnr AS CHARACTER FORMAT "X(8)" 
      LABEL "Artikkelnr" 
      VIEW-AS FILL-IN 
-     SIZE 13.6 BY 1.
+     SIZE 13.63 BY 1.
 
 DEFINE VARIABLE kostpris AS DECIMAL FORMAT ">>>,>>9.99" INITIAL 0 
      LABEL "Kostpris" 
@@ -188,7 +193,7 @@ DEFINE VARIABLE kostpris AS DECIMAL FORMAT ">>>,>>9.99" INITIAL 0
 DEFINE VARIABLE paaslag_faktor AS DECIMAL FORMAT "9.99" INITIAL 0 
      LABEL "Påslag" 
      VIEW-AS FILL-IN 
-     SIZE 7.6 BY 1.
+     SIZE 7.63 BY 1.
 
 DEFINE VARIABLE pris AS DECIMAL FORMAT ">>>,>>9.99" INITIAL 0 
      LABEL "Pris" 
@@ -197,7 +202,7 @@ DEFINE VARIABLE pris AS DECIMAL FORMAT ">>>,>>9.99" INITIAL 0
 
 DEFINE RECTANGLE tbNPSHTILLEGG
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 126 BY 2.14.
+     SIZE 132 BY 2.13.
 
 DEFINE VARIABLE med_i_ordre AS LOGICAL INITIAL no 
      LABEL "Med i ordre" 
@@ -215,40 +220,47 @@ DEFINE BROWSE BrwNPSHTILLEGG
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNPSHTILLEGG C-Win _STRUCTURED
   QUERY BrwNPSHTILLEGG NO-LOCK DISPLAY
       NPSHTILLEGG.id COLUMN-LABEL "Tilbudsnr" FORMAT ">>>>>>":U
+            WIDTH 8.63
       NPSHTILLEGG.artikkelnr COLUMN-LABEL "Artikkelnr" FORMAT "X(8)":U
+            WIDTH 8.75
       NPSHTILLEGG.artikkelnavn COLUMN-LABEL "Artikkelnavn" FORMAT "X(30)":U
-      NPSHTILLEGG.antall COLUMN-LABEL "Antall" FORMAT ">>9":U
+      NPSHTILLEGG.antall COLUMN-LABEL "Antall" FORMAT ">>9":U WIDTH 5.25
       NPSHTILLEGG.kostpris COLUMN-LABEL "Kostpris" FORMAT ">>>,>>9.99":U
+            WIDTH 10.75
       NPSHTILLEGG.pris COLUMN-LABEL "Pris" FORMAT ">>>,>>9.99":U
+            WIDTH 10.75
       NPSHTILLEGG.paaslag_faktor COLUMN-LABEL "Påslag" FORMAT "9.99":U
+            WIDTH 6.38
       NPSHTILLEGG.med_i_ordre COLUMN-LABEL "Ordre" FORMAT "ja/nei":U
+            WIDTH 36.25
   ENABLE
       NPSHTILLEGG.id
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 127 BY 6.67 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 63 BY 8.13 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPSHTILLEGG AT ROW 1.1 COL 1.2 WIDGET-ID 18
-     undo_tbNPSHTILLEGG AT ROW 1.1 COL 9 WIDGET-ID 20
-     save_tbNPSHTILLEGG AT ROW 1.1 COL 17 WIDGET-ID 22
-     delete_tbNPSHTILLEGG AT ROW 1.1 COL 24.8 WIDGET-ID 24
+     new_tbNPSHTILLEGG AT ROW 1.09 COL 1.25 WIDGET-ID 18
+     undo_tbNPSHTILLEGG AT ROW 1.09 COL 9 WIDGET-ID 20
+     save_tbNPSHTILLEGG AT ROW 1.09 COL 17 WIDGET-ID 22
+     delete_tbNPSHTILLEGG AT ROW 1.09 COL 24.75 WIDGET-ID 24
      BrwNPSHTILLEGG AT ROW 3.38 COL 1 WIDGET-ID 200
-     artikkelnr AT ROW 10.76 COL 12 COLON-ALIGNED
-     artikkelnavn AT ROW 10.76 COL 41 COLON-ALIGNED
-     med_i_ordre AT ROW 10.76 COL 79 WIDGET-ID 26
-     antall AT ROW 11.95 COL 12 COLON-ALIGNED
-     kostpris AT ROW 13.14 COL 12 COLON-ALIGNED
-     paaslag_faktor AT ROW 14.33 COL 12 COLON-ALIGNED
-     pris AT ROW 15.52 COL 12 COLON-ALIGNED
+     artikkelnr AT ROW 3.75 COL 75 COLON-ALIGNED
+     btnartikkelnr AT ROW 3.75 COL 90.63 WIDGET-ID 28 NO-TAB-STOP 
+     med_i_ordre AT ROW 3.88 COL 111 WIDGET-ID 26
+     artikkelnavn AT ROW 4.88 COL 75 COLON-ALIGNED
+     antall AT ROW 6.13 COL 75 COLON-ALIGNED
+     kostpris AT ROW 7.38 COL 75 COLON-ALIGNED
+     paaslag_faktor AT ROW 8.53 COL 75 COLON-ALIGNED
+     pris AT ROW 9.63 COL 75 COLON-ALIGNED
      tbNPSHTILLEGG AT ROW 1 COL 1 WIDGET-ID 16
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 127 BY 16.33 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SIZE 132.13 BY 10.53 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -267,12 +279,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 16.29
-         WIDTH              = 127
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 127
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 127
+         HEIGHT             = 10.63
+         WIDTH              = 132.25
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 169.5
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 169.5
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -307,10 +319,6 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
    FRAME-NAME                                                           */
 /* BROWSE-TAB BrwNPSHTILLEGG delete_tbNPSHTILLEGG DEFAULT-FRAME */
 ASSIGN 
-       FRAME DEFAULT-FRAME:HEIGHT           = 16.33
-       FRAME DEFAULT-FRAME:WIDTH            = 127.
-
-ASSIGN 
        tbNPSHTILLEGG:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
                 "new;Ny,undo;Angre,save;Lagre,delete;Slettmaxborder".
 
@@ -328,21 +336,21 @@ THEN C-Win:HIDDEN = yes.
      _TblList          = "norcalc.NPSHTILLEGG"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _FldNameList[1]   > "_<CALC>"
-"NPSHTILLEGG.id" "Tilbudsnr" ">>>>>>" "integer" ? ? ? ? ? ? yes "" no no "8.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.id" "Tilbudsnr" ">>>>>>" "integer" ? ? ? ? ? ? yes "" no no "8.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
-"NPSHTILLEGG.artikkelnr" "Artikkelnr" "X(8)" "character" ? ? ? ? ? ? no "" no no "8.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.artikkelnr" "Artikkelnr" "X(8)" "character" ? ? ? ? ? ? no "" no no "8.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
 "NPSHTILLEGG.artikkelnavn" "Artikkelnavn" "X(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
-"NPSHTILLEGG.antall" "Antall" ">>9" "integer" ? ? ? ? ? ? no "" no no "5.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.antall" "Antall" ">>9" "integer" ? ? ? ? ? ? no "" no no "5.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > "_<CALC>"
-"NPSHTILLEGG.kostpris" "Kostpris" ">>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.kostpris" "Kostpris" ">>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[6]   > "_<CALC>"
-"NPSHTILLEGG.pris" "Pris" ">>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.pris" "Pris" ">>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[7]   > "_<CALC>"
-"NPSHTILLEGG.paaslag_faktor" "Påslag" "9.99" "decimal" ? ? ? ? ? ? no "" no no "6.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.paaslag_faktor" "Påslag" "9.99" "decimal" ? ? ? ? ? ? no "" no no "6.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[8]   > "_<CALC>"
-"NPSHTILLEGG.med_i_ordre" "Ordre" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "36.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPSHTILLEGG.med_i_ordre" "Ordre" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "36.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPSHTILLEGG */
 &ANALYZE-RESUME
@@ -373,6 +381,34 @@ DO:
   /* This event will close the window and terminate the procedure.  */
   APPLY "CLOSE":U TO THIS-PROCEDURE.
   RETURN NO-APPLY.
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&Scoped-define SELF-NAME btnartikkelnr
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnartikkelnr C-Win
+ON CHOOSE OF btnartikkelnr IN FRAME DEFAULT-FRAME /* ... */
+DO:
+  /* To manipulate the lookup query object add the callback procedure hook "myLookupObject" 
+     (probably use "WHERE false" as the initial query in this case) */
+  
+  JBoxServerAPI:Instance:Lookup("NPagart"
+                    + ";artikkelnr"
+                    + ";artikkelnavn"
+                   ,"WHERE true"
+                   ,"artikkelnr,artikkelnavn"   /* <- return values for these fields */
+                    ).
+
+  IF JBoxServerAPI:Instance:LookupOk THEN DO:
+    ASSIGN 
+      artikkelnr:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("NPagart.artikkelnr")
+      artikkelnavn:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("NPagart.artikkelnavn")      
+      .
+
+    APPLY "any-printable" TO artikkelnr.
+  END.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -469,12 +505,12 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY artikkelnr artikkelnavn med_i_ordre antall kostpris paaslag_faktor 
+  DISPLAY artikkelnr med_i_ordre artikkelnavn antall kostpris paaslag_faktor 
           pris 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE tbNPSHTILLEGG new_tbNPSHTILLEGG undo_tbNPSHTILLEGG save_tbNPSHTILLEGG 
-         delete_tbNPSHTILLEGG BrwNPSHTILLEGG artikkelnr artikkelnavn 
-         med_i_ordre antall kostpris paaslag_faktor pris 
+         delete_tbNPSHTILLEGG BrwNPSHTILLEGG artikkelnr btnartikkelnr 
+         med_i_ordre artikkelnavn antall kostpris paaslag_faktor pris 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -499,8 +535,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oBrwNPSHTILLEGG = NEW JBoxBrowse(brwNPSHTILLEGG:HANDLE).
 
   oFmNPSHTILLEGG = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmNPSHTILLEGG:updateFields = 'antall,artikkelnavn,artikkelnr,kostpris,med_i_ordre,paaslag_faktor,pris'.
-
+  oFmNPSHTILLEGG:updateFields = 'artikkelnavn,antall,kostpris,med_i_ordre,paaslag_faktor,pris'.
+  oFmNPSHTILLEGG:displayFields = 'artikkelnr'.
+  oFmNPSHTILLEGG:bufferExtraFields = 'id,artikkenr'.
   oFmNPSHTILLEGG:BROWSE-OBJECT = oBrwNPSHTILLEGG.
   otbNPSHTILLEGG = NEW JBoxToolbar(tbNPSHTILLEGG:HANDLE).
 
@@ -510,7 +547,28 @@ END.
 oBrwNPSHTILLEGG:OpenQuery().
 
 
-oContainer:initResize(500,200).
+oContainer:initResize(300,300).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE LeaveOfFieldHandle C-Win 
+PROCEDURE LeaveOfFieldHandle :
+/*------------------------------------------------------------------------------
+  Purpose:     Retrieve lookup values when a foreign key field is modified
+  Parameters:  Handle to foreign key field
+  Notes:       The FieldValues method is a short version of Find
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM ihField AS HANDLE NO-UNDO.
+
+IF ihField:MODIFIED THEN DO WITH FRAME {&FRAME-NAME}:
+  CASE ihField:NAME:
+    WHEN "artikkelnr" THEN artikkelnavn:SCREEN-VALUE = JBoxServerAPI:Instance:FieldValues("NPagart","WHERE artikkelnr = '" + ihField:SCREEN-VALUE + "'","artikkelnavn").
+  END CASE.
+
+END.
 
 END PROCEDURE.
 

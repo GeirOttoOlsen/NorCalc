@@ -129,7 +129,7 @@ DEF TEMP-TABLE NPSHORD
     FIELD RowCount AS INTEGER
     INDEX idxRowids  RowIdent1 RowIdent2 RowIdent3
     .
-DEFINE BUFFER v_NPSHORD FOR NPSHORD.
+DEFINE BUFFER v_NPSHORD FOR temp-table NPSHORD.
 
 FUNCTION getTableHandleQryNPSHORD RETURNS HANDLE().
   RETURN BUFFER NPSHORD:HANDLE:TABLE-HANDLE.
@@ -230,7 +230,7 @@ DEFINE BUTTON undo_tbNPSHORD
 DEFINE VARIABLE leveringsmaate AS CHARACTER FORMAT "X(20)" 
      LABEL "Lev. måte" 
      VIEW-AS COMBO-BOX INNER-LINES 25
-     LIST-ITEMS "Item 1" 
+     LIST-ITEM-PAIRS "Item 1","Item 1"
      DROP-DOWN-LIST
      SIZE 43 BY 1.
 
@@ -552,7 +552,7 @@ DO WITH FRAME {&FRAME-NAME}:
   
   assign 
     leveringsmaate:DELIMITER = '|'
-    leveringsmaate:LIST-ITEMs = JBoxServerAPI:Instance:FieldList("NPleveringsbetingelse;Leveringsbetingelsekortnavn|Leveringsbetingelse;Leveringsbetingelsekortnavn","WHERE true" + ' BY Leveringsbetingelsekortnavn')
+    leveringsmaate:list-item-pairs = JBoxServerAPI:Instance:FieldList("NPleveringsmaate;Leveringsmaatenavn;leveringsmaatenavn","WHERE true" + ' BY leveringsmaatenavn')
     .
  END.
 

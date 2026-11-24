@@ -26,8 +26,10 @@ ELSE
 CREATE BUFFER hBuffer FOR TABLE "JBoxUserSetting" NO-ERROR.
 IF ERROR-STATUS:ERROR THEN RETURN "No setting table".
 
-IF icSourceFile = "" AND icObjectName = "" AND icContext = "" AND icSettingName = "" THEN
+IF icSourceFile = "" AND icObjectName = "" AND icContext = "" AND icSettingName = "" THEN DO:
+  DELETE OBJECT hBuffer.
   RETURN "Invalid qualifier".
+END.  
 
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(hBuffer).

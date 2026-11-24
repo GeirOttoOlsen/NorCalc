@@ -61,9 +61,9 @@ DEF VAR hBrowseUser   AS HANDLE NO-UNDO.
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS btndStartBroadCast rectUpdTB rectWinTB ~
-btndEndBroadCast rectBrw rectBrwUser dStartBroadCast iStartBroadCastTime ~
-dEndBroadCast iEndBroadCastTime iJBoxCompanyId bAllUsers cBroadCastURL ~
-cBroadCastMessage 
+rectBrw btndEndBroadCast rectBrwUser dStartBroadCast iStartBroadCastTime ~
+dEndBroadCast iEndBroadCastTime iJBoxCompanyId bAllUsers btnFile ~
+cBroadCastURL cBroadCastMessage 
 &Scoped-Define DISPLAYED-OBJECTS dStartBroadCast iStartBroadCastTime ~
 dEndBroadCast iEndBroadCastTime iJBoxCompanyId bAllUsers cBroadCastURL ~
 cBroadCastMessage 
@@ -92,6 +92,10 @@ DEFINE BUTTON btndStartBroadCast
      LABEL "..." 
      SIZE 3.8 BY .81.
 
+DEFINE BUTTON btnFile 
+     LABEL "<<" 
+     SIZE 3.8 BY 1.
+
 DEFINE VARIABLE iEndBroadCastTime AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS COMBO-BOX INNER-LINES 25
      LIST-ITEMS "Item 1" 
@@ -115,10 +119,10 @@ DEFINE VARIABLE cBroadCastMessage AS CHARACTER
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
      SIZE 70 BY 4.86 NO-UNDO.
 
-DEFINE VARIABLE cBroadCastURL AS CHARACTER FORMAT "x(60)" 
+DEFINE VARIABLE cBroadCastURL AS CHARACTER FORMAT "x(200)" 
      LABEL "Document" 
      VIEW-AS FILL-IN 
-     SIZE 65 BY 1 TOOLTIP "Optional: Either a web-address or a document (drag-drop document here)" DROP-TARGET.
+     SIZE 61 BY 1 TOOLTIP "Optional: Either a web-address or a document (drag-drop document here)" DROP-TARGET.
 
 DEFINE VARIABLE dEndBroadCast AS DATE FORMAT "99/99/99" 
      LABEL "End date" 
@@ -172,6 +176,7 @@ DEFINE FRAME DEFAULT-FRAME
      iEndBroadCastTime AT ROW 2.67 COL 118.4 COLON-ALIGNED NO-LABEL
      iJBoxCompanyId AT ROW 3.76 COL 105 COLON-ALIGNED
      bAllUsers AT ROW 3.86 COL 66
+     btnFile AT ROW 4.81 COL 127.4 WIDGET-ID 2
      cBroadCastURL AT ROW 4.86 COL 64 COLON-ALIGNED HELP
           "Read more.."
      cBroadCastMessage AT ROW 6 COL 61 NO-LABEL
@@ -184,19 +189,19 @@ DEFINE FRAME DEFAULT-FRAME
          AT COL 1 ROW 1
          SCROLLABLE SIZE 130.8 BY 21.91.
 
-DEFINE FRAME frmSplitBarY
-     btnSplitBarY AT ROW 2.71 COL 1
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER 
-         THREE-D 
-         AT COL 54 ROW 9.1
-         SIZE 77 BY 6.19.
-
 DEFINE FRAME frmSplitBarX
      btnSplitBarX AT ROW 1 COL 13
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
          AT COL 40 ROW 2.43
          SCROLLABLE SIZE 23 BY 20.48.
+
+DEFINE FRAME frmSplitBarY
+     btnSplitBarY AT ROW 2.71 COL 1
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER 
+         THREE-D 
+         AT COL 54 ROW 9.1
+         SIZE 77 BY 6.19.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -351,6 +356,31 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define SELF-NAME btnFile
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnFile C-Win
+ON CHOOSE OF btnFile IN FRAME DEFAULT-FRAME /* << */
+DO:
+  def var returnFile as char no-undo.
+  def var bOk as log no-undo.
+  
+  SYSTEM-DIALOG GET-FILE returnFile 
+    TITLE   "Velg dokument ..."
+    FILTERS "Releasenote (*.pdf)"   "*.pdf"
+            
+    MUST-EXIST
+    USE-FILENAME
+    UPDATE bOk.
+
+  IF bOk THEN
+    cBroadCastURL:screen-value in frame {&Frame-name} = returnFile.
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 &Scoped-define FRAME-NAME frmSplitBarX
 &Scoped-define SELF-NAME btnSplitBarX
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL btnSplitBarX C-Win
@@ -457,10 +487,10 @@ DO WITH FRAME {&FRAME-NAME}:
                                   + ",FIRST JBoxUser NO-LOCK OF JBoxUserBroadCast").
   RUN JBoxSelector.w (THIS-PROCEDURE,0,
                       "JBoxUser;cJBoxUserId|UserId;cUserName|Name"
-                    + ";+UserCompanies|CHARACTER|x(256)|jbserv_usercompanies.p(ROWID"
-                        + (IF iJBoxCompanyId:SCREEN-VALUE NE ? THEN iJBoxCompanyId:SCREEN-VALUE ELSE "")
-                        + ")|Companies",
-                      "WHERE true",
+/*                    + ";+UserCompanies|CHARACTER|x(256)|jbserv_usercompanies.p(ROWID"                   */
+/*                        + (IF iJBoxCompanyId:SCREEN-VALUE NE ? THEN iJBoxCompanyId:SCREEN-VALUE ELSE "")*/
+/*                        + ")|Companies",*/
+                      ,"WHERE true",
                       INPUT-OUTPUT cUserRowIdList,
                       "cJBoxUserId",
                       INPUT-OUTPUT cUserIdList,
@@ -536,9 +566,9 @@ PROCEDURE enable_UI :
   DISPLAY dStartBroadCast iStartBroadCastTime dEndBroadCast iEndBroadCastTime 
           iJBoxCompanyId bAllUsers cBroadCastURL cBroadCastMessage 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE btndStartBroadCast rectUpdTB rectWinTB btndEndBroadCast rectBrw 
+  ENABLE btndStartBroadCast rectUpdTB rectWinTB rectBrw btndEndBroadCast 
          rectBrwUser dStartBroadCast iStartBroadCastTime dEndBroadCast 
-         iEndBroadCastTime iJBoxCompanyId bAllUsers cBroadCastURL 
+         iEndBroadCastTime iJBoxCompanyId bAllUsers btnFile cBroadCastURL 
          cBroadCastMessage 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
@@ -645,7 +675,7 @@ DO WITH FRAME {&FRAME-NAME}:
                    "JBoxUserBroadcast"
                    + ";cJBoxUserId|Userid"
                    + ";dReceived"
-                   + ";iReceived"
+                   + ";+Tid|CHARACTER|x(6)|jb_HHMM(iReceived)|Tid"
                    + ";!iJBoxBroadCastMessageId"
                  + ",JBoxUser"
                    + ";cUserName|Name"

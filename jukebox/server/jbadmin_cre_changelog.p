@@ -10,28 +10,40 @@ DEF INPUT  PARAM icFromValues        AS CHAR NO-UNDO.
 DEF INPUT  PARAM icToValues          AS CHAR NO-UNDO.
 DEF INPUT  PARAM icExtra             AS CHAR NO-UNDO.
 
-FIND FIRST JBoxChangeLogType NO-LOCK
-     WHERE JBoxChangeLogType.cChangeLogTypeId = icChangeType
-     NO-ERROR.
-IF NOT AVAIL JBoxChangeLogType THEN DO:
-  CREATE JBoxChangeLogType.
-  ASSIGN JBoxChangeLogType.cChangeLogTypeId   = icChangeType
-         JBoxChangeLogType.cChangeLogTypeText = icChangeType
-         JBoxChangeLogType.dCreated           = TODAY
-         JBoxChangeLogType.cCreatedBy         = icUserId
+DEF VAR hbJBoxChangeLogType AS HANDLE NO-UNDO.
+DEF VAR hbJBoxChangeLog     AS HANDLE NO-UNDO.
+DEF VAR bFound              AS LOG    NO-UNDO.
+
+{incl/validatecaller.i}
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxChangeLogType",OUTPUT hbJBoxChangeLogType) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxChangeLog",OUTPUT hbJBoxChangeLog) THEN RETURN.
+
+bFound = hbJBoxChangeLogType:FIND-FIRST("WHERE JBoxChangeLogType.cChangeLogTypeId = '" + icChangeType + "'",NO-LOCK) NO-ERROR.
+
+IF NOT bFound THEN DO:
+  hbJBoxChangeLogType:BUFFER-CREATE ().
+  ASSIGN hbJBoxChangeLogType::cChangeLogTypeId   = icChangeType
+         hbJBoxChangeLogType::cChangeLogTypeText = icChangeType
+         hbJBoxChangeLogType::dCreated           = TODAY
+         hbJBoxChangeLogType::cCreatedBy         = icUserId
          .
 END.
 
-CREATE JBoxChangeLog.
-ASSIGN JBoxChangeLog.iJBoxChangeLogHeaderId = iiChangeLogHeaderId
-       JBoxChangeLog.iJBoxCompanyId         = iiCompanyId
-       JBoxChangeLog.cChangeLogTypeId       = icChangeType
-       JBoxChangeLog.cEntityIdFields        = icEntityIdFields
-       JBoxChangeLog.cEntityIdValues        = icEntityIdValues
-       JBoxChangeLog.cTableChanged          = icTableName
-       JBoxChangeLog.cFieldsChanged         = icFieldsChanged
-       JBoxChangeLog.cFromValues            = icFromValues
-       JBoxChangeLog.cToValues              = icToValues
-       JBoxChangeLog.dCreated               = TODAY
+hbJBoxChangeLog:BUFFER-CREATE().
+ASSIGN hbJBoxChangeLog::iJBoxChangeLogHeaderId = iiChangeLogHeaderId
+       hbJBoxChangeLog::iJBoxCompanyId         = iiCompanyId
+       hbJBoxChangeLog::cChangeLogTypeId       = icChangeType
+       hbJBoxChangeLog::cEntityIdFields        = icEntityIdFields
+       hbJBoxChangeLog::cEntityIdValues        = icEntityIdValues
+       hbJBoxChangeLog::cTableChanged          = icTableName
+       hbJBoxChangeLog::cFieldsChanged         = icFieldsChanged
+       hbJBoxChangeLog::cFromValues            = icFromValues
+       hbJBoxChangeLog::cToValues              = icToValues
+       hbJBoxChangeLog::dCreated               = TODAY
        .
 
+FINALLY:
+  DELETE OBJECT hbJBoxChangeLog NO-ERROR.
+  DELETE OBJECT hbJBoxChangeLogType NO-ERROR.      
+END FINALLY.

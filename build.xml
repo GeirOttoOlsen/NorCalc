@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="MyProject">
+ <property environment="env" />
+  <taskdef resource="PCT.properties"   classpath="${env.DLC}/pct/PCT.jar" loaderRef="pct" />
+  <typedef resource="types.properties" classpath="${env.DLC}/pct/PCT.jar" loaderRef="pct"/>
+  <property name="schemafile" value="e:\db\norcalc12\dump\norcalc.df"/>
+  <property name="DLC" value="c:\progress\OE127x64"/>
+ <target name="build" description="Dump schema files">
+<echo message="${schemafile}" />
+  <PCTDumpSchema destFile="${schemafile}" dlcHome="${DLC}">
+    <DBConnection dbName="norcalc" singleUser="false" hostvi Name="10.12.0.20" dbPort="4000" userName="goo" password="knotto123"/>
+  </PCTDumpSchema> 
+  </target>
+</project>

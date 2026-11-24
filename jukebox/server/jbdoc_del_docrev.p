@@ -7,6 +7,8 @@ DEF VAR bOk             AS LOG    NO-UNDO.
 DEF VAR hBuffDocRev     AS HANDLE NO-UNDO.
 DEF VAR hQuery          AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 CREATE BUFFER hBuffDocRev FOR TABLE "JBoxDocRev" NO-ERROR.
 
 icDocIdList = TRIM(icDocIdList,",").

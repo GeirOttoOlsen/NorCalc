@@ -11,6 +11,8 @@ DEF VAR memFile     AS MEMPTR NO-UNDO.
 DEF VAR iBytes      AS INT NO-UNDO.
 DEF VAR cTargetFile AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 DO ix = 1 TO NUM-ENTRIES(cFileList,";"):
   cFileToMove = ENTRY(ix,cFileList,";").
   IF SEARCH(cFileToMove) NE ? THEN DO:

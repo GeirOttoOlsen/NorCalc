@@ -10,7 +10,6 @@
  ----------------------------------------------------------------------*/
 
 USING Progress.Lang.*.
-USING OpenEdge.DataAdmin.ISequence FROM PROPATH.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
 
@@ -18,14 +17,28 @@ CLASS JBoxCompile:
   DEFINE STREAM stIn.
       
   DEFINE TEMP-TABLE ttDirectory NO-UNDO
-    FIELD iDirectorySeq    AS INTEGER
-    FIELD cSourceDirectory AS CHARACTER 
-    FIELD cTargetDirectory AS CHARACTER 
-    INDEX iDirectorySeq IS PRIMARY UNIQUE iDirectorySeq
+    FIELD DirectorySeq    AS INTEGER
+    FIELD SourceDirectory AS CHARACTER 
+    field ShortSourceDirectory as char 
+    FIELD TargetDirectory AS CHARACTER 
+    INDEX DirectorySeq IS PRIMARY UNIQUE DirectorySeq
     .
+
+  DEFINE TEMP-TABLE Files NO-UNDO
+    FIELD iSeq          AS INTEGER
+    FIELD ShortFilename AS CHARACTER FORMAT "x(20)"
+    FIELD ShortPath     AS CHARACTER FORMAT "x(20)"
+    FIELD Filepath      AS CHARACTER FORMAT "x(50)"
+    FIELD FullFilename  AS CHARACTER FORMAT "x(50)"
+    FIELD FileModified  AS DATETIME
+    FIELD FileCreated   AS DATETIME
+    FIELD FileSize      AS int64
+    INDEX iSeq IS PRIMARY UNIQUE iSeq
+    .
+
   DEFINE TEMP-TABLE ttFile NO-UNDO 
     FIELD iFileSeq      AS INTEGER
-    FIELD iDirectorySeq AS INTEGER
+    FIELD DirectorySeq AS INTEGER
     FIELD cFileName     AS CHARACTER FORMAT 'X(72)'
     FIELD cFullFileName AS CHARACTER FORMAT 'X(72)'
     FIELD cFileExtent   AS CHARACTER  
@@ -33,12 +46,12 @@ CLASS JBoxCompile:
     FIELD cFileStatus   AS CHARACTER FORMAT "x(72)"
        
     INDEX iFileSeq IS PRIMARY UNIQUE iFileSeq
-    INDEX iDirectorySeq              iDirectorySeq
+    INDEX DirectorySeq              DirectorySeq
     .  
 
   DEFINE DATASET dsCompile 
     FOR ttDirectory, ttFile
-    DATA-RELATION relttDirectory FOR ttDirectory, ttFile RELATION-FIELDS(iDirectorySeq,iDirectorySeq).
+    DATA-RELATION relttDirectory FOR ttDirectory, ttFile RELATION-FIELDS(DirectorySeq,DirectorySeq).
 
   define temp-table ttLog no-undo
     field iLogSeq as int 
@@ -53,6 +66,7 @@ CLASS JBoxCompile:
 
   DEFINE VARIABLE iSequence AS INTEGER   NO-UNDO.
   DEFINE VARIABLE cTmp      AS CHARACTER NO-UNDO.
+  def public property ROOTDirectory as char no-undo get. private set.
     
   DEFINE PUBLIC PROPERTY TargetPath AS CHARACTER NO-UNDO 
     GET.
@@ -101,35 +115,23 @@ CLASS JBoxCompile:
     IF NOT SUBSTRING(ipValue,LENGTH(ipValue),1) = '\' THEN ipValue = ipValue + '\'.
     RCODEDIR = ipValue.
   end.
+  def property FilePattern as char no-undo 
+  get():
+    if FilePattern = '' or FilePattern = ? then return '*.cls,*.w,*.p'.
+    else return FilePattern.
+  end get. set.
+  def var oFileHelper as class JBoxFileHelper no-undo.
   /*------------------------------------------------------------------------------
    Purpose:
    Notes:
   ------------------------------------------------------------------------------*/
-		
-  CONSTRUCTOR PUBLIC JBoxCompile (INPUT icLogFile AS CHARACTER, INPUT iiLogLevel AS INTEGER  ):
-    SUPER ().
-		  
-    /*		LOG-MANAGER:LOGFILE-NAME  = icLogFile.       */
-    /*        log-manager:LOGGING-LEVEL = iiLogLevel.*/
+    
+  CONSTRUCTOR PUBLIC JBoxCompile (input ipROOTDirectory as char, INPUT icLogFile AS CHARACTER, INPUT iiLogLevel AS INTEGER  ):
+    
     THIS-OBJECT:LogFile = icLogFile.
-    CREATE ttFile.
-    ASSIGN
-      iSequence            = iSequence + 1 
-      ttFile.iFileSeq      = iSequence
-      ttFile.cFileName     = ''
-      ttFile.cFileExtent   = ''
-      ttFile.bCompiled     = ?
-      ttFile.iDirectorySeq = ?
-      .           
-		
-    CATCH e AS Progress.Lang.Error:
-
-    END CATCH.
-
-    FINALLY:
-
-    END FINALLY.
-
+    ROOTDirectory = ipROOTDirectory.
+    if not System.IO.Directory:Exists(ipROOTDirectory) then undo, throw new Progress.Lang.AppError('Fant ikke ROOT katalog:' + ipROOTDirectory).
+    
   END CONSTRUCTOR.
 
   /*------------------------------------------------------------------------------
@@ -137,22 +139,43 @@ CLASS JBoxCompile:
    Notes:
   ------------------------------------------------------------------------------*/
 
-  METHOD PUBLIC LOGICAL addDirectory( INPUT icSourceDirectory AS CHARACTER, INPUT icTargetDirectory AS CHARACTER ):
-    assign 
-      icTargetDirectory = REPLACE(icTargetDirectory,'/','\')
-      icTargetDirectory = replace(icTargetDirectory,'.\','')
-      icTargetDirectory = RCODEDIR + icTargetDirectory
-      .
+  METHOD PUBLIC LOGICAL addDirectory( INPUT icSourceDirectory AS CHARACTER):
+    addDirectory(icSourceDirectory,'').  
+  END METHOD.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD PUBLIC LOGICAL addDirectory( INPUT icSourceDirectory AS CHARACTER, input ipTargetDirectory as char):
+    def var oSourceDirectory as System.IO.DirectoryInfo no-undo.
+    def var oTargetDirectory as System.IO.DirectoryInfo no-undo.
+     
+    if RCODEDIR = ? or RCODEDIR = '' then undo, throw new Progress.Lang.AppError('RCODE Katalog må settes',1).
     
-    IF NOT SUBSTRING(icTargetDirectory,LENGTH(icTargetDirectory),1) = '\' THEN icTargetDirectory = icTargetDirectory + '\'.
+    assign 
+      icSourceDirectory = replace(icSourceDirectory,'/','\')
+      icSourceDirectory = replace(icSourceDirectory,'.\','')
+      .
+    if System.IO.Directory:Exists(icSourceDirectory) then 
+      oSourceDirectory = new System.IO.DirectoryInfo(icSourceDirectory).
+      
+    else oSourceDirectory = new System.IO.DirectoryInfo(ROOTDirectory + '\' + icSourceDirectory).
+    if not oSourceDirectory:Exists then undo, throw new Progress.Lang.AppError('Katalogen ' + icSourceDirectory + ' ble ikke funnet',1).
+
+    if not (ipTargetDirectory = '' or ipTargetDirectory = ?) and index(ipTargetDirectory,RCODEDIR) le 0 then ipTargetDirectory = RCODEDIR + ipTargetDirectory.
+    else  ipTargetDirectory = RCODEDIR + trim(replace(icSourceDirectory,ROOTDirectory,''),'\').
+    
+    oTargetDirectory = new System.IO.DirectoryInfo(ipTargetDirectory).
 
     CREATE ttDirectory.
     ASSIGN
-      iSequence                    = iSequence + 1 
-      ttDirectory.iDirectorySeq    = iSequence
-      ttDirectory.cSourceDirectory = icSourceDirectory
-      ttDirectory.cTargetDirectory = icTargetDirectory
-      .		
+      iSequence                        = iSequence + 1 
+      ttDirectory.DirectorySeq         = iSequence
+      ttDirectory.SourceDirectory      = oSourceDirectory:FullName
+      ttDirectory.TargetDirectory      = oTargetDirectory:FullName
+      ttDirectory.ShortSourceDirectory = trim(replace(oSourceDirectory:FullName,ROOTDirectory,''),'\') 
+      .   
     RETURN TRUE.  
     CATCH eAny AS Progress.Lang.Error :
       MESSAGE  quoter(eAny:GetMessage(1))
@@ -160,6 +183,30 @@ CLASS JBoxCompile:
       JBoxLogging:Instance:LOG('Error.....' + quoter(eAny:GetMessage(1))).
     END CATCH.
   END METHOD.
+
+    /*------------------------------------------------------------------------------
+     Purpose:
+     Notes:
+    ------------------------------------------------------------------------------*/
+
+    METHOD PUBLIC VOID addFile(input ipFileInfo as System.IO.FileInfo ):
+      
+      find first ttDirectory where ttDirectory.SourceDirectory = ipFileInfo:Directory:FullName no-error.
+      if not avail ttDirectory then do:
+        addDirectory(ipFileInfo:Directory:FullName).
+      end. 
+        
+      CREATE ttFile.
+      ASSIGN
+        iSequence            = iSequence + 1
+        ttFile.iFileSeq      = iSequence
+        ttFile.cFileName     = ipFileInfo:Name
+        ttFile.cFullFileName = ipFileInfo:FullName
+        ttFile.cFileExtent   = ipFileInfo:Extension
+        ttFile.bCompiled     = ?
+        ttFile.DirectorySeq  = ttDirectory.DirectorySeq
+        .
+    END METHOD.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -194,68 +241,26 @@ CLASS JBoxCompile:
     DEFINE VARIABLE oFileInfo AS CLASS     System.IO.FileInfo NO-UNDO.
     def var SourceDir as char no-undo.
     def var TargetDir as char no-undo.
-    
-    /*      cTmp = SESSION:TEMP-DIRECTORY.*/
-    INPUT stream stIn from os-dir(icSourceDirectory).
-    REPEAT:
-      IMPORT STREAM stIn cFilename cFullname cFileType.
-      IF cFileType = 'F' AND index(cFilename,'.') GT 0 THEN
-      DO:
-        IF CAN-DO('cls,p,w',ENTRY(2,cFileName,'.')) THEN 
-        DO:
-          cFileExtent = ENTRY(2,cFileName,'.').
-          CREATE ttFile.
-          ASSIGN
-            iSequence            = iSequence + 1 
-            ttFile.iFileSeq      = iSequence
-            cTmp                 = REPLACE(cFilename,'/','\')
-            cTmp                 = IF R-INDEX(cTmp,'\') GT 0 THEN SUBSTRING(cTmp,R-INDEX(cTmp,'\') + 1) ELSE cTmp
-            ttFile.cFileName     = cTmp
-            ttFile.cFullFileName = cFullname
-            ttFile.cFileExtent   = cFileExtent
-            ttFile.bCompiled     = ?
-            ttFile.iDirectorySeq = ttDirectory.iDirectorySeq
-            .  
-        END.  
-      END. 
-    END.
-    FOR EACH ttFile, FIRST ttDirectory OF ttFile:
-     
-      file-info:file-name = ttFile.cFullFileName.
-      oFileInfo = NEW System.IO.FileInfo(ttFile.cFullFileName).
 
-      IF NOT System.IO.Directory:Exists(ttDirectory.cTargetDirectory) THEN System.IO.Directory:CreateDirectory(ttDirectory.cTargetDirectory).
-      COMPILE value(ttFile.cFullFileName) SAVE INTO value(ttDirectory.cTargetDirectory) No-error.
-      IF ERROR-STATUS:ERROR THEN 
-      DO:
-        addLog(ttFile.cFullFileName,error-status:GET-MESSAGE (1)).
-        ASSIGN 
-          ttFile.cFileStatus = ERROR-STATUS:GET-MESSAGE (1)
-          ttFile.bCompiled   = FALSE
-          .
-        UNDO, NEXT.                 
-      END.
-      ELSE 
-      DO:
-        addLog(ttFile.cFullFileName,'').
-        THIS-OBJECT:Logg = THIS-OBJECT:Logg + chr(13) + chr(10) + FILE-INFO:FILENAME + " --> OK ".
-        IF copyToDirectory NE '' THEN 
-        DO:
-          assign 
-            SourceDir = REPLACE(FILE-INFO:FILE-NAME,oFileInfo:NAME,'')
-            SourceDir = REPLACE(SourceDir,'.\','')
-            .
-          assign
-            SourceDir = replace(SourceDir,System.IO.Directory:GetCurrentDirectory(),'')
-            SourceDir = substring(SourceDir,2)
-            TargetDir = copyToDirectory + SourceDir
-          . 
-          IF NOT System.IO.Directory:Exists(TargetDir) THEN System.IO.Directory:CreateDirectory(TargetDir).
-          System.IO.File:Copy(System.IO.Path:Combine(RCODEDIR,REPLACE(SourceDir + oFileInfo:name,oFileInfo:Extension,'.r')),System.IO.Path:Combine(TargetDir,REPLACE(FILE-INFO:FILE-NAME,oFileInfo:Extension,'.r')),TRUE).
-          THIS-OBJECT:Logg = THIS-OBJECT:Logg  +  " --> " + System.IO.Path:Combine(TargetDir,REPLACE(FILE-INFO:FILE-NAME,oFileInfo:Extension,'.r')).
-        END.
-        ttFile.bCompiled = TRUE.
-      END.
+    def var ix as int no-undo.
+    def var oDirectory as System.IO.DirectoryInfo no-undo.
+    def var SubDirectory as char no-undo.
+    oDirectory = new System.IO.DirectoryInfo(icSourceDirectory).
+    
+    oFileHelper = new JBoxFileHelper().
+    oFileHelper:ReadRecursive = false.
+    do ix = 1 to num-entries(FilePattern):
+      oFileHelper:ProcessDirectory(oDirectory,entry(ix,FilePattern),?,?).
+    end.    
+    temp-table Files:COPY-TEMP-TABLE (oFileHelper:bhFiles:table-handle).
+    for each Files:
+      oFileInfo = new System.IO.FileInfo(Files.FullFilename).
+      if oFileInfo:Exists then addFile(oFileInfo).
+    end.
+
+    FOR EACH ttFile, FIRST ttDirectory OF ttFile:
+      oFileInfo = NEW System.IO.FileInfo(ttFile.cFullFileName).
+      compileCommand(ttDirectory.ShortSourceDirectory + '\' + oFileInfo:Name,ttDirectory.TargetDirectory).
     END.
     CATCH eAny AS Progress.Lang.Error :
       if avail ttFile then addLog(ttFile.cFullFileName,eAny:GetMessage(1)).
@@ -263,60 +268,53 @@ CLASS JBoxCompile:
     END CATCH.
   END METHOD.
 
-  METHOD PUBLIC LOGICAL compileCommand( INPUT icSourceFile AS CHARACTER, INPUT icTargetDirectory AS CHARACTER  ):
+  METHOD PUBLIC LOGICAL compileCommand( INPUT icSourceFile AS CHARACTER):
+      compileCommand(icSourceFile,'').
+  END method.
+  
+  METHOD PUBLIC LOGICAL compileCommand( INPUT icSourceFile AS CHARACTER,input ipTargetDirectory as char):
     DEFINE VARIABLE cTmp      AS CHARACTER NO-UNDO.
     DEFINE VARIABLE oFileInfo AS CLASS     System.IO.FileInfo NO-UNDO.
+    def var oTargetDirectory as class System.IO.DirectoryInfo no-undo.
+        
     DEFINE VARIABLE SourceDir AS CHARACTER NO-UNDO.
-    def var TargetDir as char no-undo.
-    
-    icSourceFile = REPLACE(icSourceFile,'/','\').
-    icTargetDirectory = REPLACE(icTargetDirectory,'/','\').
-    
-    IF NOT SUBSTRING(icTargetDirectory,LENGTH(icTargetDirectory),1) = '\' THEN icTargetDirectory = icTargetDirectory + '\'.
 
-    FILE-INFO:FILE-NAME = search(icSourceFile).
-    oFileInfo = NEW System.IO.FileInfo(FILE-INFO:FILE-NAME).
     assign 
-      SourceDir = REPLACE(oFileInfo:FullName,oFileInfo:NAME,'')
-      SourceDir = REPLACE(SourceDir,'.\','')
-      SourceDir = replace(SourceDir,System.IO.Directory:GetCurrentDirectory(),'')
-      SourceDir = substring(SourceDir,2)
-      TargetDir = copyToDirectory + SourceDir
-    . 
-    if RCODEDIR ne '' then IF NOT System.IO.Directory:Exists(if oFileInfo:Extension = '.cls' then RCODEDIR else RCODEDIR + sourceDir) THEN System.IO.Directory:CreateDirectory(if oFileInfo:Extension = '.cls' then RCODEDIR else RCODEDIR + sourceDir).
-    IF FILE-INFO:FILE-SIZE NE ? THEN  COMPILE value(FILE-INFO:FILE-NAME) SAVE INTO value(if oFileInfo:Extension = '.cls' then RCODEDIR else RCODEDIR + sourceDir) no-error.
-    if error-status:error then do:
-      THIS-OBJECT:Logg = THIS-OBJECT:Logg + chr(13) + chr(10) + FILE-INFO:FILENAME + " --> ERROR " + error-status:get-message(1).
-      addLog(icSourceFile,FILE-INFO:FILE-NAME).
+      icSourceFile = REPLACE(icSourceFile,'/','\')
+      .
+    
+    oFileInfo = NEW System.IO.FileInfo(icSourceFile).
+    if not oFileInfo:Exists then undo, throw new Progress.Lang.AppError('Filen eksisterer ikke: ' + icSourceFile,1).
+    
+    find first ttFile where ttFile.cFullFileName = oFileInfo:FullName no-error.
+    if not avail ttFile then addFile(oFileInfo).
+
+    if ipTargetDirectory = '' then oTargetDirectory = new System.IO.DirectoryInfo(ttDirectory.TargetDirectory).
+    else oTargetDirectory = new System.IO.DirectoryInfo(ipTargetDirectory).
+    
+    if not oTargetDirectory:Exists then System.IO.Directory:CreateDirectory(oTargetDirectory:FullName).
+    
+    COMPILE value(oFileInfo:FullName) SAVE INTO value(oTargetDirectory:FullName) no-error.
+    if error-status:ERROR then do:
+      assign 
+        ttFile.bCompiled   = false 
+        ttFile.cFileStatus = error-status:GET-MESSAGE (1)
+        .
     end.
-    else do:
-      THIS-OBJECT:Logg = THIS-OBJECT:Logg + chr(13) + chr(10) + FILE-INFO:FILENAME + " --> OK ".
-      IF copyToDirectory NE '' THEN 
-      DO:
-        addLog(icSourceFile,'').
-  /*      System.IO.File:Copy(REPLACE(RCODEDIR + FILE-INFO:FILE-NAME,oFileInfo:Extension,'.r'),System.IO.Path:Combine(copyToDirectory,REPLACE(FILE-INFO:FILE-NAME,oFileInfo:Extension,'.r')),TRUE).*/
-        IF NOT System.IO.Directory:Exists(TargetDir) THEN System.IO.Directory:CreateDirectory(TargetDir).
-        System.IO.File:Copy(System.IO.Path:Combine(RCODEDIR,REPLACE(SourceDir + oFileInfo:name,oFileInfo:Extension,'.r')),System.IO.Path:Combine(TargetDir,REPLACE(oFileInfo:name,oFileInfo:Extension,'.r')),TRUE).
-        THIS-OBJECT:Logg = THIS-OBJECT:Logg  +  " --> " + System.IO.Path:Combine(TargetDir,REPLACE(oFileInfo:name,oFileInfo:Extension,'.r')).
-      END.
-    end.
+    else 
+      assign 
+        ttFile.bCompiled = true
+        ttFile.cFileStatus = 'OK'
+        .
+    
+/*        System.IO.File:Copy(System.IO.Path:Combine(RCODEDIR,REPLACE(SourceDir + oFileInfo:name,oFileInfo:Extension,'.r')),System.IO.Path:Combine(TargetDir,REPLACE(oFileInfo:name,oFileInfo:Extension,'.r')),TRUE).                                     */
+/*        THIS-OBJECT:Logg = THIS-OBJECT:Logg  +  " --> " + System.IO.Path:Combine(TargetDir,REPLACE(oFileInfo:name,oFileInfo:Extension,'.r')).                                                                                                           */
+/*      END.                                                                                                                                                                                                                                              */
+/*    end.                                                                                                                                                                                                                                                */
     RETURN TRUE.
 
     CATCH eAny AS Progress.Lang.Error :
       addLog(icSourceFile,eAny:GetMessage(1)).
-      THIS-OBJECT:Logg = THIS-OBJECT:Logg + chr(13) + chr(10) + icSourceFile + "-->" + eAny:GetMessage(1).
-      RETURN FALSE.
-    END CATCH.
-  END METHOD.
-
-  METHOD PUBLIC LOGICAL compileCommand( INPUT icSourceFile AS CHARACTER):
-    IF NOT RCODEDIR <> '' OR NOT RCODEDIR <> ? THEN NEW Progress.Lang.AppError('RCODEDIR er ikke satt',1).
-    IF NOT System.IO.Directory:Exists(RCODEDIR) THEN System.IO.Directory:CreateDirectory(RCODEDIR).
-    compileCommand(icSourceFile,RCODEDIR).
-
-    CATCH eAny AS Progress.Lang.Error :
-      MESSAGE eAny:GetMessage(1)
-      VIEW-AS ALERT-BOX.
       RETURN FALSE.
     END CATCH.
   END METHOD.
@@ -327,33 +325,24 @@ CLASS JBoxCompile:
   ------------------------------------------------------------------------------*/
   
   METHOD PUBLIC VOID startCompile ():
-    FOR EACH ttDirectory:
-      compileDirectory(ttDirectory.cSourceDirectory).
-    END.
     THIS-OBJECT:Logg = 'START kompilering:' + chr(13) + chr(10).
-/*    FOR EACH ttFile WHERE ttFile.bCompiled:                                                */
-/*      THIS-OBJECT:Logg = THIS-OBJECT:Logg + ttFile.cFileName + chr(13) + chr(10) + chr(10).*/
-/*    END.                                                                                   */
-    IF CAN-FIND(FIRST ttFile WHERE NOT ttFile.bCompiled) THEN THIS-OBJECT:Logg = THIS-OBJECT:Logg + 'Feil ved kompilering:' + chr(13) + chr(10).
-    FOR EACH ttFile WHERE NOT ttFile.bCompiled: 
-      THIS-OBJECT:Logg = THIS-OBJECT:Logg + ttFile.cFileName + ':' + chr(9) + ttFile.cFileStatus + chr(13) + chr(10).
+    FOR EACH ttDirectory:
+      compileDirectory(ttDirectory.SourceDirectory).
     END.
-    THIS-OBJECT:Logg = THIS-OBJECT:Logg + 'FERDIG:' + chr(13) + chr(10).       
   END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	DESTRUCTOR PUBLIC JBoxCompile ( ):
-	  def var errorlog as longchar no-undo.
-	  for each ttLog:
-	    errorlog = errorlog + ttLog.ErrorMessage.
-	  end.
-    this-object:logg = this-object:logg + errorlog.  
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  DESTRUCTOR PUBLIC JBoxCompile ( ):
+    for each ttFile by cFileName by bCompiled:
+        this-object:logg = this-object:logg + ttFile.cFileName + ':' + ttFile.cFileStatus + chr(13) + chr(10).  
+    end.
     COPY-LOB OBJECT THIS-OBJECT:Logg TO FILE THIS-OBJECT:LogFile.
     empty temp-table ttDirectory.
     empty temp-table ttFile.
-	END DESTRUCTOR.
+    empty temp-table Files.
+  END DESTRUCTOR.
 
 END CLASS.

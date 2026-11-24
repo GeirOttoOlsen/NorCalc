@@ -16,6 +16,8 @@ DEF VAR cAction     AS CHAR NO-UNDO.
 DEF VAR cUserId     AS CHAR NO-UNDO.
 DEF VAR bValidDrop  AS LOG  NO-UNDO INIT YES.
 
+{incl/validatecaller.i}
+
 ASSIGN iDragNode    = INT(ENTRY(1,icParam,"|"))
        iDragParent  = INT(ENTRY(2,icParam,"|"))
        iDropNode    = INT(ENTRY(3,icParam,"|"))

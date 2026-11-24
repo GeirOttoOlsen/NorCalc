@@ -23,6 +23,9 @@
 /*----------------------------------------------------------------------*/
 
 /* ***************************  Definitions  ************************** */
+&IF "{1}" = "Developer_Studio_is_Running" &THEN
+  &SCOPED-DEFINE UIB_is_Running 1 
+&ENDIF   
 
 /* Parameters Definitions ---                                           */
 &IF DEFINED(UIB_is_Running) NE 0 &THEN
@@ -172,7 +175,7 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel Dialog-Frame
 ON CHOOSE OF Btn_Cancel IN FRAME Dialog-Frame /* Avbryt */
 DO:
-  IF cmbFirma:SCREEN-VALUE = ? OR DYNAMIC-FUNCTION("getCompanyId") = 0 THEN RETURN NO-APPLY.
+  IF cmbFirma:SCREEN-VALUE = ? OR DYNAMIC-FUNCTION("getCompanyId") = 0 THEN QUIT. /* RETURN NO-APPLY. */
 END.
 
 /* _UIB-CODE-BLOCK-END */

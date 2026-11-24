@@ -126,7 +126,7 @@ FUNCTION ReadClip RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Menu Definitions                                                     */
 DEFINE MENU POPUP-MENU-cmbLookupType 
@@ -157,7 +157,7 @@ DEFINE VARIABLE cmbListType AS CHARACTER FORMAT "X(256)" INITIAL "COMMA"
 
 DEFINE VARIABLE cmbLookupType AS CHARACTER FORMAT "X(256)":U INITIAL "WINDOW w/LEAVE trg" 
      VIEW-AS COMBO-BOX INNER-LINES 25
-     LIST-ITEMS "DATE","DATE DIALOG","DIALOG","DIALOG w/LEAVE trg","SELECTOR","SELECTOR DIALOG","WINDOW","WINDOW w/LEAVE trg" 
+     LIST-ITEMS "DATE","DATE DIALOG","DIALOG","DIALOG w/LEAVE trg","SELECTOR","SELECTOR DIALOG","WINDOW","WINDOW w/LEAVE trg","SYSTEM-DIALOG GET-FILE" 
      DROP-DOWN-LIST
      SIZE 28 BY 1 TOOLTIP "Rigth-click on combo to open sample-code" NO-UNDO.
 
@@ -172,10 +172,11 @@ DEFINE VARIABLE rsConvClip AS CHARACTER
      RADIO-BUTTONS 
           "Add lookup buttons", "lookup",
 "Change type (ctrl-x)", "widget",
-"Separated field list", "list"
-     SIZE 21.8 BY 3.33 NO-UNDO.
+"Separated field list", "list",
+"Replace db-fields with variables in frame definition", "dbfields"
+     SIZE 50.8 BY 4.48 NO-UNDO.
 
-DEFINE VARIABLE tbAlwaysOnTop AS LOGICAL INITIAL yes 
+DEFINE VARIABLE tbAlwaysOnTop AS LOGICAL INITIAL no 
      LABEL "Always on top" 
      VIEW-AS TOGGLE-BOX
      SIZE 17 BY .81 TOOLTIP "Keep clipboard conversion always on top" NO-UNDO.
@@ -195,14 +196,14 @@ DEFINE FRAME DEFAULT-FRAME
      tbOO AT ROW 1.24 COL 51.6 WIDGET-ID 2
      cmbWidgetType AT ROW 2.19 COL 21.4 COLON-ALIGNED NO-LABEL
      cmbListType AT ROW 3.29 COL 21.4 COLON-ALIGNED NO-LABEL
-     tbAlwaysOnTop AT ROW 4.33 COL 3.4
-     btnOk AT ROW 4.33 COL 23
-     btnApply AT ROW 4.33 COL 34.8
-     btnCancel AT ROW 4.33 COL 46.6
+     tbAlwaysOnTop AT ROW 5.57 COL 3.4
+     btnOk AT ROW 5.57 COL 23
+     btnApply AT ROW 5.57 COL 34.8
+     btnCancel AT ROW 5.57 COL 46.6
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SIZE 57.8 BY 4.29
+         AT COLUMN 1 ROW 1
+         SIZE 57.8 BY 5.57
          DEFAULT-BUTTON btnOk CANCEL-BUTTON btnCancel.
 
 
@@ -222,7 +223,7 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Clipboard conversion for fill-in vars"
-         HEIGHT             = 4.29
+         HEIGHT             = 5.57
          WIDTH              = 57.6
          MAX-HEIGHT         = 16
          MAX-WIDTH          = 80
@@ -262,6 +263,10 @@ IF NOT C-Win:LOAD-SMALL-ICON("ico/blocks.ico":U) THEN
    FRAME-NAME                                                           */
 ASSIGN 
        cmbLookupType:POPUP-MENU IN FRAME DEFAULT-FRAME       = MENU POPUP-MENU-cmbLookupType:HANDLE.
+
+ASSIGN 
+       tbAlwaysOnTop:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
+                "no".
 
 ASSIGN 
        tbOO:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
@@ -487,6 +492,8 @@ DO WITH FRAME {&FRAME-NAME}:
       CreList(cmbListType).
       RETURN.
     END.
+    WHEN "dbfield" THEN 
+      RUN dbFormFldsToVar.p.
   END CASE.
 END.
 IF bOk THEN DO:
@@ -558,23 +565,33 @@ DEF INPUT  PARAM icFK    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocTable AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocDesc  AS CHAR NO-UNDO.
 
-DEF VAR hBuffer AS HANDLE NO-UNDO.
-DEF VAR iy      AS INT    NO-UNDO.
+DEF VAR hBuffer   AS HANDLE NO-UNDO.
+DEF VAR iy        AS INT    NO-UNDO.
+DEF VAR hb_field  AS HANDLE NO-UNDO.
+DEF VAR hb_file   AS HANDLE NO-UNDO.
+DEF VAR hqField   AS HANDLE NO-UNDO.
+DEF VAR cTable    AS CHAR NO-UNDO.
 
-FOR EACH _Field NO-LOCK
-    WHERE _Field._Field-Name = icFK
-   ,FIRST _File OF _Field NO-LOCK
-          WHERE _File._Tbl-Type = "T"
-    :
-  CREATE BUFFER hBuffer FOR TABLE _File._File-Name.
+CREATE BUFFER hb_field FOR TABLE "_field" NO-ERROR.
+IF NOT VALID-HANDLE(hb_field) THEN RETURN.
+CREATE BUFFER hb_file FOR TABLE "_file".
+
+CREATE QUERY hqField.
+hqField:SET-BUFFERS(hb_field,hb_file).
+hqField:QUERY-PREPARE ("FOR EACH _Field NO-LOCK WHERE _Field._Field-Name = '" + icFK + "'"
+                     + ",FIRST _File OF _Field NO-LOCK WHERE _File._Tbl-Type = 'T'").
+hqField:QUERY-OPEN ().
+REPEAT WHILE hqField:GET-NEXT():
+  cTable = hb_file::_File-Name.                      
+  CREATE BUFFER hBuffer FOR TABLE cTable.
   DO iy = 1 TO 100:
     IF hBuffer:INDEX-INFORMATION(iy) NE ? THEN DO:
-      IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = _Field._Field-Name AND
+      IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = hb_Field::_Field-Name AND
          ENTRY(2,hBuffer:INDEX-INFORMATION(iy)) = "1" AND
          ENTRY(3,hBuffer:INDEX-INFORMATION(iy)) = "1" 
          THEN DO:
              
-        ocTable = _File._File-Name.
+        ocTable = hb_file::_File-Name.
         LEAVE.
       END.
     END.
@@ -584,19 +601,17 @@ FOR EACH _Field NO-LOCK
   IF ocTable NE "" THEN LEAVE.
 END.
 
-IF ocTable = "" THEN
-  FOR EACH _Field NO-LOCK
-      WHERE _Field._Field-Name = icFK
-     ,FIRST _File OF _Field NO-LOCK
-            WHERE _File._Tbl-Type = "T"
-      :
-    CREATE BUFFER hBuffer FOR TABLE _File._File-Name.
+IF ocTable = "" THEN DO:
+  hqField:QUERY-OPEN ().
+  REPEAT WHILE hqField:GET-NEXT():
+    cTable = hb_file::_File-Name.                      
+    CREATE BUFFER hBuffer FOR TABLE cTable.
     DO iy = 1 TO 100:
       IF hBuffer:INDEX-INFORMATION(iy) NE ? THEN DO:
-        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = _Field._Field-Name AND
+        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = hb_field::_Field-Name AND
            ENTRY(2,hBuffer:INDEX-INFORMATION(iy)) = "1" 
            THEN DO:
-          ocTable = _File._File-Name.
+          ocTable = hb_file::_File-Name.
           LEAVE.
         END.
       END.
@@ -605,20 +620,18 @@ IF ocTable = "" THEN
     DELETE OBJECT hBuffer.
     IF ocTable NE "" THEN LEAVE.
   END.
-
-IF ocTable = "" THEN
-  FOR EACH _Field NO-LOCK
-      WHERE _Field._Field-Name = icFK
-     ,FIRST _File OF _Field NO-LOCK
-            WHERE _File._Tbl-Type = "T"
-      :
-    CREATE BUFFER hBuffer FOR TABLE _File._File-Name.
+END.
+IF ocTable = "" THEN DO:
+  hqField:QUERY-OPEN ().
+  REPEAT WHILE hqField:GET-NEXT():
+    cTable = hb_file::_File-Name.                      
+    CREATE BUFFER hBuffer FOR TABLE cTable.
     DO iy = 1 TO 100:
       IF hBuffer:INDEX-INFORMATION(iy) NE ? THEN DO:
-        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = _Field._Field-Name AND
-           ENTRY(1,hBuffer:INDEX-INFORMATION(iy)) MATCHES "*" + _File._File-Name + "*"
+        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = hb_Field::_Field-Name AND
+           ENTRY(1,hBuffer:INDEX-INFORMATION(iy)) MATCHES "*" + hb_File::_File-Name + "*"
            THEN DO:
-          ocTable = _File._File-Name.
+          ocTable = hb_File::_File-Name.
           LEAVE.
         END.
       END.
@@ -627,20 +640,19 @@ IF ocTable = "" THEN
     DELETE OBJECT hBuffer.
     IF ocTable NE "" THEN LEAVE.
   END.
+END.
 
-IF ocTable = "" THEN
-  FOR EACH _Field NO-LOCK
-      WHERE _Field._Field-Name = icFK
-     ,FIRST _File OF _Field NO-LOCK
-            WHERE _File._Tbl-Type = "T"
-      :
-    CREATE BUFFER hBuffer FOR TABLE _File._File-Name.
+IF ocTable = "" THEN DO:
+  hqField:QUERY-OPEN ().
+  REPEAT WHILE hqField:GET-NEXT():
+    cTable = hb_file::_File-Name.                      
+    CREATE BUFFER hBuffer FOR TABLE cTable.
     DO iy = 1 TO 100:
       IF hBuffer:INDEX-INFORMATION(iy) NE ? THEN DO:
-        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = _Field._Field-Name AND
-           ENTRY(1,hBuffer:INDEX-INFORMATION(iy)) MATCHES "*" + _Field._Field-Name + "*"
+        IF ENTRY(5,hBuffer:INDEX-INFORMATION(iy)) = hb_Field::_Field-Name AND
+           ENTRY(1,hBuffer:INDEX-INFORMATION(iy)) MATCHES "*" + hb_Field::_Field-Name + "*"
            THEN DO:
-          ocTable = _File._File-Name.
+          ocTable = hb_File::_File-Name.
           LEAVE.
         END.
       END.
@@ -649,26 +661,33 @@ IF ocTable = "" THEN
     DELETE OBJECT hBuffer.
     IF ocTable NE "" THEN LEAVE.
   END.
+END.
 
-
-FOR EACH _File NO-LOCK
-    WHERE _File._file-name = ocTable
-   ,EACH _Field OF _File NO-LOCK
-         WHERE _Field._Field-Name NE icFK
-           AND _Field._Data-Type = "character"
-    :
-  ocDesc = _Field._Field-Name.
+hqField:QUERY-CLOSE ().
+hqField:QUERY-PREPARE ("FOR EACH _File NO-LOCK WHERE _File._file-name = '" + ocTable + "'"
+                     + ",EACH _Field OF _File NO-LOCK WHERE _Field._Field-Name NE '" + icFK + "'"
+                     + " AND _Field._Data-Type = 'character'").
+hqField:QUERY-OPEN ().                     
+REPEAT WHILE hqField:GET-NEXT():
+  ocDesc = hb_Field::_Field-Name.
   LEAVE.
 END.
-IF ocDesc = "" THEN
-  FOR EACH _File NO-LOCK
-      WHERE _File._file-name = ocTable
-     ,EACH _Field OF _File NO-LOCK
-           WHERE _Field._Field-Name NE icFK
-      :
-    ocDesc = _Field._Field-Name.
+IF ocDesc = "" THEN DO:
+  hqField:QUERY-CLOSE ().
+  hqField:QUERY-PREPARE ("FOR EACH _File NO-LOCK WHERE _File._file-name = '" + ocTable + "'"
+                       + ",EACH _Field OF _File NO-LOCK WHERE _Field._Field-Name NE '" + icFK + "'").
+  hqField:QUERY-OPEN ().                     
+  REPEAT WHILE hqField:GET-NEXT():
+    ocDesc = hb_Field::_Field-Name.
     LEAVE.
   END.
+END.  
+
+FINALLY:
+  DELETE OBJECT hqField NO-ERROR.
+  DELETE OBJECT hb_field NO-ERROR.
+  DELETE OBJECT hb_file NO-ERROR.
+END FINALLY.
 
 END PROCEDURE.
 
@@ -1320,6 +1339,12 @@ FOR EACH ttClipText BY ttClipText.iLineNum:
       IF icLookupType BEGINS "date" THEN DO:
         CREATE bbttClipText.
         ASSIGN bbttClipText.cClipLine = '     IMAGE-UP FILE "gif/calendar.gif":U NO-FOCUS FLAT-BUTTON'
+               bbttClipText.iLineNum  = ttClipText.iLineNum + ix
+               ix = ix + 1.
+      END.
+      ELSE IF icLookupType BEGINS "system-dialog" THEN DO:
+        CREATE bbttClipText.
+        ASSIGN bbttClipText.cClipLine = '     IMAGE-UP FILE "bmp/folderopen.bmp":U NO-FOCUS FLAT-BUTTON'
                bbttClipText.iLineNum  = ttClipText.iLineNum + ix
                ix = ix + 1.
       END.

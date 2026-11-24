@@ -79,13 +79,26 @@ CLASS JBoxSession:
          END SET.
 
   DEFINE PUBLIC PROPERTY AppServerHandle AS HANDLE  
-         GET(): RETURN DYNAMIC-FUNCTION("getAppserviceHandle"). END GET.
+         GET():
+            DEF VAR hServer AS HANDLE NO-UNDO. 
+            hServer = DYNAMIC-FUNCTION("getAppserviceHandle").
+            IF hServer NE SESSION THEN DO:
+              IF NOT VALID-HANDLE(hServer) OR (VALID-HANDLE(hServer) AND NOT hServer:CONNECTED()) THEN DO:
+                IF DYNAMIC-FUNCTION("ReconnectServer") THEN
+                  RETURN DYNAMIC-FUNCTION("getAppserviceHandle").
+              END.
+              ELSE RETURN hServer.
+            END.       
+            ELSE RETURN hServer.
+          END GET.
          SET(ihAppServer AS HANDLE):
            DYNAMIC-FUNCTION("setAppserviceHandle",ihAppServer).
-           IF NUM-ENTRIES(ihAppServer:CLIENT-CONNECTION-ID,":") > 2 THEN
-             DYNAMIC-FUNCTION("setAppserviceId",ENTRY(3,ihAppServer:CLIENT-CONNECTION-ID,":")).
-           ELSE  
-             DYNAMIC-FUNCTION("setAppserviceId",ihAppServer:CLIENT-CONNECTION-ID).
+           IF ihAppServer NE SESSION THEN DO:
+             IF NUM-ENTRIES(ihAppServer:CLIENT-CONNECTION-ID,":") > 2 THEN
+               DYNAMIC-FUNCTION("setAppserviceId",ENTRY(3,ihAppServer:CLIENT-CONNECTION-ID,":")).
+             ELSE  
+               DYNAMIC-FUNCTION("setAppserviceId",ihAppServer:CLIENT-CONNECTION-ID).
+            END.   
          END SET.
           
   DEFINE PUBLIC PROPERTY Scandinavian AS LOG  
@@ -141,6 +154,10 @@ CLASS JBoxSession:
            RETURN (IF VALID-OBJECT(THIS-OBJECT:MainForm) THEN THIS-OBJECT:MainForm:Location:Y + 200 ELSE int(SESSION:HEIGHT-PIXELS / 4)). 
          END GET.
   PRIVATE SET.
+
+  DEFINE PUBLIC PROPERTY CurrentWidget AS HANDLE 
+        GET(): RETURN DYNAMIC-FUNCTION("getCurrentWidget"). END GET.
+        PRIVATE SET.
   
   CONSTRUCTOR PUBLIC JBoxSession ():
     SESSION:SUPPRESS-WARNINGS = YES.
@@ -150,7 +167,7 @@ CLASS JBoxSession:
     IF SESSION:DISPLAY-TYPE = "TTY" THEN
       RUN JBoxLoadLib.p ("JBoxASlib.p,JBoxUIlib.p,JBoxFUlib.p").
     ELSE 
-      RUN JBoxLoadLib.p ("ResizeLib.p,JBoxASlib.p,JBoxUIlib.p,JBoxFUlib.p" + (IF SEARCH("controls.dll") NE ? THEN ",controls.p" ELSE "")). 
+      RUN JBoxLoadLib.p ("ResizeLib.p,JBoxASlib.p,JBoxUIlib.p,JBoxFUlib.p" + (IF PROCESS-ARCHITECTURE = 32 AND SEARCH("controls.dll") NE ? THEN ",controls.p" ELSE "")). 
     
     DYNAMIC-FUNCTION("NewObject",SESSION,SESSION,"Session").
     DYNAMIC-FUNCTION("setEnableColor",NO) NO-ERROR.
@@ -159,6 +176,9 @@ CLASS JBoxSession:
     RUN SuspendJBoxTimer IN hFocusTimer (YES).
     
   END CONSTRUCTOR.
+                   
+  METHOD PUBLIC VOID Initiate().
+  END METHOD.                   
                              
   METHOD PUBLIC HANDLE StartTabWindow (icProcName     AS CHAR
                                       ,icTabTitle     AS CHAR
@@ -252,6 +272,10 @@ CLASS JBoxSession:
   METHOD PUBLIC LOGICAL ViewQuestionYesNo (icQuestion AS CHAR).
     RETURN DYNAMIC-FUNCTION("DoMessage",0,4,icQuestion,"","") = 6.
   END METHOD.
+  METHOD PUBLIC LOGICAL ViewQuestionYesNo (icQuestion AS CHAR
+                                          ,icTitle    AS CHAR).
+    RETURN DYNAMIC-FUNCTION("DoMessage",0,4,icQuestion,icTitle,"") = 6.
+  END METHOD.
   METHOD PUBLIC LOGICAL ViewQuestionYesNo (iiMsgNum   AS INT
                                           ,icQuestion AS CHAR).
     RETURN DYNAMIC-FUNCTION("DoMessage",iiMsgNum,4,icQuestion,"","") = 6.
@@ -265,6 +289,16 @@ CLASS JBoxSession:
   METHOD PUBLIC INTEGER ViewQuestionYesNoCancel (icQuestion AS CHAR).
     DEF VAR iReturn AS INT NO-UNDO. 
     iReturn = DYNAMIC-FUNCTION("DoMessage",0,3,icQuestion,"","").
+    CASE iReturn:
+      WHEN 6 THEN RETURN 1.
+      WHEN 7 THEN RETURN 2.
+      WHEN 2 THEN RETURN 3.
+    END CASE.  
+  END METHOD.
+  METHOD PUBLIC INTEGER ViewQuestionYesNoCancel (icQuestion AS CHAR
+                                                ,icTitle    AS CHAR).
+    DEF VAR iReturn AS INT NO-UNDO. 
+    iReturn = DYNAMIC-FUNCTION("DoMessage",0,3,icQuestion,icTitle,"").
     CASE iReturn:
       WHEN 6 THEN RETURN 1.
       WHEN 7 THEN RETURN 2.
@@ -296,6 +330,10 @@ CLASS JBoxSession:
   METHOD PUBLIC LOGICAL ViewQuestionOkCancel (icQuestion AS CHAR).
     RETURN DYNAMIC-FUNCTION("DoMessage",0,1,icQuestion,"","") = 1.
   END METHOD.
+  METHOD PUBLIC LOGICAL ViewQuestionOkCancel (icQuestion AS CHAR
+                                             ,icTitle    AS CHAR).
+    RETURN DYNAMIC-FUNCTION("DoMessage",0,2,icQuestion,icTitle,"") = 1.
+  END METHOD.
   METHOD PUBLIC LOGICAL ViewQuestionOkCancel (iiMsgNum   AS INT
                                           ,icQuestion AS CHAR).
     RETURN DYNAMIC-FUNCTION("DoMessage",iiMsgNum,1,icQuestion,"","") = 1.
@@ -305,6 +343,22 @@ CLASS JBoxSession:
                                           ,icTitle    AS CHAR).
     RETURN DYNAMIC-FUNCTION("DoMessage",iiMsgNum,2,icQuestion,icTitle,"") = 1.
   END METHOD.
+
+  METHOD PUBLIC JBoxContainer getContainerObject (INPUT ihProcedure AS HANDLE):
+    DEF VAR oObj       AS Progress.Lang.Object NO-UNDO.
+    DEF VAR oContainer AS JBoxContainer NO-UNDO.
+    
+    oObj = SESSION:LAST-OBJECT.
+    DO WHILE VALID-OBJECT(oObj):
+      IF TYPE-OF(oObj,JBoxContainer) THEN DO:
+        oContainer = CAST(oObj,JBoxContainer).
+        IF oContainer:CONTAINER-HANDLE = ihProcedure THEN LEAVE.
+      END.  
+      oObj = oObj:PREV-SIBLING.
+    END.
+    RETURN oContainer.
+  END METHOD.
+  
   METHOD PUBLIC CHARACTER getFiles (INPUT icFilterList       AS CHAR
                                    ,INPUT icInitialDirectory AS CHAR
                                    ,INPUT icDialogTitle      AS CHAR):
@@ -354,6 +408,15 @@ CLASS JBoxSession:
                                            ,icDelimiter AS CHAR
                                            ,ibMultiSelect AS LOG):
     DYNAMIC-FUNCTION("setAttribute",SESSION,"multiSimpleSelect",STRING(ibMultiSelect)).             
+    THIS-OBJECT:SimpleSelectListPairs(icList,?,icDelimiter).  
+  END.
+
+  METHOD PUBLIC VOID SimpleSelectListPairs (icList      AS CHAR
+                                           ,icDelimiter AS CHAR
+                                           ,ibMultiSelect AS LOG
+                                           ,icTitle       AS CHAR):
+    DYNAMIC-FUNCTION("setAttribute",SESSION,"multiSimpleSelect",STRING(ibMultiSelect)).             
+    setJBoxAttribute("SimpleSelectTitle",icTitle).             
     THIS-OBJECT:SimpleSelectListPairs(icList,?,icDelimiter).  
   END.
 
@@ -428,6 +491,16 @@ CLASS JBoxSession:
     DYNAMIC-FUNCTION("setAttribute",SESSION,"multiSimpleSelect",STRING(ibMultiSelect)).             
     THIS-OBJECT:SimpleSelectList(icList).  
   END.
+  
+  METHOD PUBLIC VOID SimpleSelectList (icList      AS CHAR
+                                      ,icDelimiter AS CHAR
+                                      ,ibMultiSelect AS LOG
+                                      ,icTitle     AS CHAR):
+    DYNAMIC-FUNCTION("setAttribute",SESSION,"multiSimpleSelect",STRING(ibMultiSelect)).
+    setJBoxAttribute("SimpleSelectTitle",icTitle).             
+    THIS-OBJECT:SimpleSelectList(icList,?,icDelimiter).  
+  END.
+  
   
   METHOD PUBLIC VOID PromptForValue (icMessage   AS CHAR
                                     ,icDataType  AS CHAR
@@ -526,6 +599,15 @@ CLASS JBoxSession:
     DYNAMIC-FUNCTION("AddColor","RowShade",iRed,iGreen,iBlue) NO-ERROR. /* 240,240,240 */
     /* Other colors added this way are available as session attributes: "Color_"<your name> */
     DYNAMIC-FUNCTION("setAttribute",SESSION,"shadedRows","yes").
+  END METHOD.
+  
+  METHOD PUBLIC VOID setJBoxAttribute(icAttribute AS CHAR
+                                     ,icValue AS CHAR):
+    DYNAMIC-FUNCTION("setAttribute",SESSION,icAttribute,icValue).
+  END METHOD.
+  
+  METHOD PUBLIC CHARACTER getJBoxAttribute(icAttribute AS CHAR):
+    RETURN  DYNAMIC-FUNCTION("getAttribute",SESSION,icAttribute).
   END METHOD.
                                
   DESTRUCTOR PUBLIC JBoxSession ( ):

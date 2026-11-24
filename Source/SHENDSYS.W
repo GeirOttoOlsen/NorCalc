@@ -82,26 +82,26 @@ NPSHKOBL.ventil_type NPSHKOBL.reguleringsventil
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-FIELDS NPSHSYST.systembetegnelse ~
 NPSHSYST.koblings_alternativ NPSHSYST.prim_effekt NPSHSYST.prim_temp_inn ~
-NPSHSYST.prim_temp_ut NPSHSYST.prim_kapasitet NPSHSYST.sek_effekt ~
-NPSHSYST.sek_temp_inn NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet ~
+NPSHSYST.prim_temp_ut NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn ~
+NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet ~
 NPSHSYST.beregnet_anvendelse NPSHSYST.type ~
 NPSHSYST.ms_shuntventil_i_leveranse 
 &Scoped-define ENABLED-TABLES NPSHSYST
 &Scoped-define FIRST-ENABLED-TABLE NPSHSYST
-&Scoped-Define ENABLED-OBJECTS BUTTON-reset COMBO-BOX-VENTILTYPE Btn_OK ~
-Btn_Cancel Btn_Help RECT-19 RECT-21 RECT-29 SHUNTTEGNING 
+&Scoped-Define ENABLED-OBJECTS lblType BUTTON-reset COMBO-BOX-VENTILTYPE ~
+Btn_OK Btn_Cancel Btn_Help RECT-19 RECT-21 RECT-29 SHUNTTEGNING 
 &Scoped-Define DISPLAYED-FIELDS NPSHSYST.systembetegnelse ~
 NPSHSYST.koblings_alternativ NPSHKOBL.betegnelse NPSHKOBL.anvendelse ~
 NPSHKOBL.prim_konst_var NPSHKOBL.sek_konst_var NPSHKOBL.ventil_type ~
 NPSHKOBL.reguleringsventil NPSHSYST.prim_effekt NPSHSYST.prim_temp_inn ~
-NPSHSYST.prim_temp_ut NPSHSYST.prim_kapasitet NPSHSYST.sek_effekt ~
-NPSHSYST.sek_temp_inn NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet ~
+NPSHSYST.prim_temp_ut NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn ~
+NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet ~
 NPSHSYST.beregnet_anvendelse NPSHSYST.ms_shuntventil_i_leveranse ~
 NPSHSYST.shunt_dimmensjon 
 &Scoped-define DISPLAYED-TABLES NPSHSYST NPSHKOBL
 &Scoped-define FIRST-DISPLAYED-TABLE NPSHSYST
 &Scoped-define SECOND-DISPLAYED-TABLE NPSHKOBL
-&Scoped-Define DISPLAYED-OBJECTS COMBO-BOX-VENTILTYPE 
+&Scoped-Define DISPLAYED-OBJECTS lblType COMBO-BOX-VENTILTYPE 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -142,6 +142,10 @@ DEFINE VARIABLE COMBO-BOX-VENTILTYPE AS CHARACTER FORMAT "X(256)":U
      SIZE 32.4 BY 1
      FONT 2 NO-UNDO.
 
+DEFINE VARIABLE lblType AS CHARACTER FORMAT "X(256)":U INITIAL "Ventil:" 
+      VIEW-AS TEXT 
+     SIZE 10.4 BY .62 NO-UNDO.
+
 DEFINE IMAGE SHUNTTEGNING
      FILENAME "bmp\kobling1":U
      SIZE 29.4 BY 9.62.
@@ -172,6 +176,7 @@ DEFINE FRAME ENDRE-SYSTEM
           VIEW-AS FILL-IN 
           SIZE 44.2 BY 1
           FONT 2
+     lblType AT ROW 15.52 COL 13 COLON-ALIGNED NO-LABEL
      NPSHSYST.koblings_alternativ AT ROW 1.95 COL 79 COLON-ALIGNED
           LABEL "Kobl.alt."
           VIEW-AS COMBO-BOX INNER-LINES 8
@@ -220,10 +225,6 @@ DEFINE FRAME ENDRE-SYSTEM
           VIEW-AS FILL-IN 
           SIZE 10 BY 1
           FONT 2
-     NPSHSYST.prim_kapasitet AT ROW 11.33 COL 19 COLON-ALIGNED
-          VIEW-AS FILL-IN 
-          SIZE 10 BY 1
-          FONT 2
      NPSHSYST.sek_effekt AT ROW 8.1 COL 33.4 COLON-ALIGNED NO-LABEL
           VIEW-AS FILL-IN 
           SIZE 10 BY 1
@@ -240,6 +241,10 @@ DEFINE FRAME ENDRE-SYSTEM
           VIEW-AS FILL-IN 
           SIZE 10 BY 1
           FONT 2
+     NPSHSYST.prim_kapasitet AT ROW 11.33 COL 19 COLON-ALIGNED
+          VIEW-AS FILL-IN 
+          SIZE 10 BY 1
+          FONT 2
      BUTTON-reset AT ROW 12.91 COL 43
      NPSHSYST.beregnet_anvendelse AT ROW 6.71 COL 58 NO-LABEL
           VIEW-AS RADIO-SET VERTICAL
@@ -251,28 +256,28 @@ DEFINE FRAME ENDRE-SYSTEM
 "Fryse", "Fryse":U,
 "Varmegjenvinning", "Varmegjenvinning":U
           SIZE 35.8 BY 7.38
-     NPSHSYST.type AT ROW 15.52 COL 7 NO-LABEL
-          VIEW-AS RADIO-SET VERTICAL
+     NPSHSYST.type AT ROW 15.29 COL 26 NO-LABEL
+          VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "FM", "FM":U,
 "MS", "MS":U
-          SIZE 9 BY 3.81
+          SIZE 29 BY 1.19
           BGCOLOR 8 FGCOLOR 0 
-     COMBO-BOX-VENTILTYPE AT ROW 17.71 COL 44 COLON-ALIGNED
     WITH VIEW-AS DIALOG-BOX 
          SIDE-LABELS THREE-D  SCROLLABLE 
          FONT 2.
 
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME ENDRE-SYSTEM
-     NPSHSYST.ms_shuntventil_i_leveranse AT ROW 17.95 COL 79.2
+     COMBO-BOX-VENTILTYPE AT ROW 16.95 COL 24 COLON-ALIGNED
+     NPSHSYST.ms_shuntventil_i_leveranse AT ROW 17.19 COL 61
           LABEL "MS - Shuntventil med i leveranse"
           VIEW-AS TOGGLE-BOX
           SIZE 49 BY .76
-     Btn_OK AT ROW 19.76 COL 54.2
-     Btn_Cancel AT ROW 19.76 COL 64.4
-     Btn_Help AT ROW 19.76 COL 76.2
-     NPSHSYST.shunt_dimmensjon AT ROW 16.76 COL 44 COLON-ALIGNED
+     Btn_OK AT ROW 19.81 COL 107
+     Btn_Cancel AT ROW 19.81 COL 117.2
+     Btn_Help AT ROW 19.81 COL 129
+     NPSHSYST.shunt_dimmensjon AT ROW 15.52 COL 83 COLON-ALIGNED
           LABEL "Shuntdimmensjon"
            VIEW-AS TEXT 
           SIZE 7.6 BY .62
@@ -289,8 +294,6 @@ DEFINE FRAME ENDRE-SYSTEM
           SIZE 5.6 BY .67 AT ROW 10.52 COL 47.6
      "l/s" VIEW-AS TEXT
           SIZE 6.2 BY .62 AT ROW 11.57 COL 47.6
-     "Ventil:" VIEW-AS TEXT
-          SIZE 8 BY .62 AT ROW 14.81 COL 7
      RECT-19 AT ROW 6.71 COL 3
      RECT-21 AT ROW 6.71 COL 96.8
      RECT-29 AT ROW 3.24 COL 3
@@ -328,6 +331,11 @@ ASSIGN
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR COMBO-BOX NPSHSYST.koblings_alternativ IN FRAME ENDRE-SYSTEM
    EXP-LABEL                                                            */
+ASSIGN 
+       lblType:READ-ONLY IN FRAME ENDRE-SYSTEM        = TRUE
+       lblType:PRIVATE-DATA IN FRAME ENDRE-SYSTEM     = 
+                "Ventil:".
+
 /* SETTINGS FOR TOGGLE-BOX NPSHSYST.ms_shuntventil_i_leveranse IN FRAME ENDRE-SYSTEM
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN NPSHKOBL.prim_konst_var IN FRAME ENDRE-SYSTEM
@@ -987,50 +995,51 @@ END.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL NPSHSYST.type ENDRE-SYSTEM
 ON LEAVE OF NPSHSYST.type IN FRAME ENDRE-SYSTEM /* Type */
 DO:
-    DEFINE VAR c_kapasitet  LIKE NPSHSYST.prim_kapasitet.
-    DEFINE VAR c_grunnlag AS CHARACTER.
-
-    ASSIGN
-      FRAME ENDRE-SYSTEM NPSHSYST.koblings_alternativ
-      FRAME ENDRE-SYSTEM  NPSHSYST.prim_kapasitet
-      FRAME ENDRE-SYSTEM  NPSHSYST.sek_kapasitet.
-    IF NPSHSYST.prim_kapasitet = 0 AND NPSHSYST.sek_kapasitet = 0 THEN
-        DO:
-            MESSAGE 'Shuntdimmensjon kan ikke beregnes når kapasitet er 0'.
-            APPLY "ENTRY" TO NPSHSYST.sek_effekt.
-            RETURN NO-APPLY.
-       END.
-    CASE koblings_alternativ:
-        WHEN '5' OR WHEN '6' OR WHEN '7'  THEN
-            DO:
-                c_kapasitet = DECIMAL(NPSHSYST.sek_kapasitet:SCREEN-VALUE).
-                c_grunnlag = 'Sekundærkrets'.
-            END.
-         OTHERWISE
-            DO:
-                c_kapasitet = DECIMAL(NPSHSYST.prim_kapasitet:SCREEN-VALUE).
-                c_grunnlag = 'Primærkrets'.
-            END.
-    END CASE.
-
-    CASE  NPSHSYST.type:SCREEN-VALUE:
-        WHEN  'FM' THEN
-               RUN VELGFMDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
-        WHEN  'MS' THEN
-               RUN VELGMSDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
-        WHEN  'MSE' THEN
-               RUN VELGMSEDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
-    END CASE.
-
-/*    def var hProc as handle no-undo.                                           */
-/*    run velgNPSHGruppe.w persistent set hProc.                                 */
-/*    subscribe to 'setValues' in hProc.                                         */
-/*    run setValues in hProc (NPSHSYST.type:screen-value,c_kapasitet,c_grunnlag).*/
-/*    run InitializeObject in hProc.                                             */
-/*    run MoveToTop in hProc.                                                    */
-    
-    ASSIGN NPSHSYST.shunt_dimmensjon = dimm_verdi.
-    DISPLAY NPSHSYST.shunt_dimmensjon WITH FRAME ENDRE-SYSTEM.
+  run onLeaveOf_type.
+/*    DEFINE VAR c_kapasitet  LIKE NPSHSYST.prim_kapasitet.                                      */
+/*    DEFINE VAR c_grunnlag AS CHARACTER.                                                        */
+/*                                                                                               */
+/*    ASSIGN                                                                                     */
+/*      FRAME ENDRE-SYSTEM NPSHSYST.koblings_alternativ                                          */
+/*      FRAME ENDRE-SYSTEM  NPSHSYST.prim_kapasitet                                              */
+/*      FRAME ENDRE-SYSTEM  NPSHSYST.sek_kapasitet.                                              */
+/*    IF NPSHSYST.prim_kapasitet = 0 AND NPSHSYST.sek_kapasitet = 0 THEN                         */
+/*        DO:                                                                                    */
+/*            MESSAGE 'Shuntdimmensjon kan ikke beregnes når kapasitet er 0'.                    */
+/*            APPLY "ENTRY" TO NPSHSYST.sek_effekt.                                              */
+/*            RETURN NO-APPLY.                                                                   */
+/*       END.                                                                                    */
+/*    CASE koblings_alternativ:                                                                  */
+/*        WHEN '5' OR WHEN '6' OR WHEN '7'  THEN                                                 */
+/*            DO:                                                                                */
+/*                c_kapasitet = DECIMAL(NPSHSYST.sek_kapasitet:SCREEN-VALUE).                    */
+/*                c_grunnlag = 'Sekundærkrets'.                                                  */
+/*            END.                                                                               */
+/*         OTHERWISE                                                                             */
+/*            DO:                                                                                */
+/*                c_kapasitet = DECIMAL(NPSHSYST.prim_kapasitet:SCREEN-VALUE).                   */
+/*                c_grunnlag = 'Primærkrets'.                                                    */
+/*            END.                                                                               */
+/*    END CASE.                                                                                  */
+/*                                                                                               */
+/*    CASE  NPSHSYST.type:SCREEN-VALUE:                                                          */
+/*        WHEN  'FM' THEN                                                                        */
+/*               RUN VELGFMDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag). */
+/*        WHEN  'MS' THEN                                                                        */
+/*               RUN VELGMSDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag). */
+/*        WHEN  'MSE' THEN                                                                       */
+/*               RUN VELGMSEDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).*/
+/*    END CASE.                                                                                  */
+/*                                                                                               */
+/*/*    def var hProc as handle no-undo.                                           */            */
+/*/*    run velgNPSHGruppe.w persistent set hProc.                                 */            */
+/*/*    subscribe to 'setValues' in hProc.                                         */            */
+/*/*    run setValues in hProc (NPSHSYST.type:screen-value,c_kapasitet,c_grunnlag).*/            */
+/*/*    run InitializeObject in hProc.                                             */            */
+/*/*    run MoveToTop in hProc.                                                    */            */
+/*                                                                                               */
+/*    ASSIGN NPSHSYST.shunt_dimmensjon = dimm_verdi.                                             */
+/*    DISPLAY NPSHSYST.shunt_dimmensjon WITH FRAME ENDRE-SYSTEM.                                 */
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1041,18 +1050,24 @@ END.
 ON VALUE-CHANGED OF NPSHSYST.type IN FRAME ENDRE-SYSTEM /* Type */
 DO:
     /* Dersom MS-Ventil er valgt, skal MS-Ventiltype enables, hvis ikke skal det som ligger i felt slettes */
-    IF SELF:SCREEN-VALUE = 'MS' or SELF:SCREEN-VALUE = 'MSE' THEN
-        DO WITH FRAME ENDRE-SYSTEM:
-            DISPLAY COMBO-BOX-VENTILTYPE.
-            ENABLE COMBO-BOX-VENTILTYPE.
-            ENABLE NPSHSYST.ms_shuntventil_i_leveranse.
+    IF SELF:SCREEN-VALUE = 'MS' or self:screen-value = 'MSE' THEN DO WITH FRAME ENDRE-SYSTEM:
+/*            DISPLAY COMBO-BOX-VENTILTYPE.*/
+          assign 
+            COMBO-BOX-VENTILTYPE:sensitive = true            
+            NPSHSYST.ms_shuntventil_i_leveranse:sensitive = true
+            .
+            COMBO-BOX-VENTILTYPE:MOVE-AFTER-TAB-ITEM (npshsyst.type:HANDLE).
+            NPSHSYST.ms_shuntventil_i_leveranse:MOVE-AFTER-TAB-ITEM (COMBO-BOX-VENTILTYPE:HANDLE).
+            
        END.
     ELSE
         DO WITH FRAME  ENDRE-SYSTEM:
-            DISABLE COMBO-BOX-VENTILTYPE.
-            NPSHSYST.ms_ventiltype = "".
-            NPSHSYST.ms_shuntventil_i_leveranse = FALSE.
-            DISABLE NPSHSYST.ms_shuntventil_i_leveranse.
+          assign
+            COMBO-BOX-VENTILTYPE:sensitive                = false            
+            NPSHSYST.ms_shuntventil_i_leveranse:sensitive = false
+            NPSHSYST.ms_ventiltype                        = ""
+            NPSHSYST.ms_shuntventil_i_leveranse           = FALSE
+            .
        END.
   
 END.
@@ -1092,6 +1107,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   SESSION:SET-WAIT-STATE("").
   /* Disse styrer MDI - simulering */
   IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = hParent:PRIVATE-DATA.
+  run enable_ui.
   RUN fyll_Objekt.
   IF AnleggLaast  THEN RUN visSystem.
   ELSE                 RUN endreSystem.
@@ -1244,7 +1260,7 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY COMBO-BOX-VENTILTYPE 
+  DISPLAY lblType COMBO-BOX-VENTILTYPE 
       WITH FRAME ENDRE-SYSTEM.
   IF AVAILABLE NPSHKOBL THEN 
     DISPLAY NPSHKOBL.betegnelse NPSHKOBL.anvendelse NPSHKOBL.prim_konst_var 
@@ -1253,15 +1269,15 @@ PROCEDURE enable_UI :
   IF AVAILABLE NPSHSYST THEN 
     DISPLAY NPSHSYST.systembetegnelse NPSHSYST.koblings_alternativ 
           NPSHSYST.prim_effekt NPSHSYST.prim_temp_inn NPSHSYST.prim_temp_ut 
-          NPSHSYST.prim_kapasitet NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn 
-          NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet 
+          NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn NPSHSYST.sek_temp_ut 
+          NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet 
           NPSHSYST.beregnet_anvendelse NPSHSYST.ms_shuntventil_i_leveranse 
           NPSHSYST.shunt_dimmensjon 
       WITH FRAME ENDRE-SYSTEM.
-  ENABLE NPSHSYST.systembetegnelse NPSHSYST.koblings_alternativ 
+  ENABLE NPSHSYST.systembetegnelse lblType NPSHSYST.koblings_alternativ 
          NPSHSYST.prim_effekt NPSHSYST.prim_temp_inn NPSHSYST.prim_temp_ut 
-         NPSHSYST.prim_kapasitet NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn 
-         NPSHSYST.sek_temp_ut NPSHSYST.sek_kapasitet BUTTON-reset 
+         NPSHSYST.sek_effekt NPSHSYST.sek_temp_inn NPSHSYST.sek_temp_ut 
+         NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet BUTTON-reset 
          NPSHSYST.beregnet_anvendelse NPSHSYST.type COMBO-BOX-VENTILTYPE 
          NPSHSYST.ms_shuntventil_i_leveranse Btn_OK Btn_Cancel Btn_Help RECT-19 
          RECT-21 RECT-29 SHUNTTEGNING 
@@ -1280,33 +1296,32 @@ PROCEDURE endreSystem :
   Parameters:  <none>
   Notes:       
 -------------------------------------------------------------*/
+
 DO TRANSACTION:
   FIND NPSHSYST WHERE ROWID(NPSHSYST) = current-rec EXCLUSIVE-LOCK
    NO-ERROR NO-WAIT.
-  IF AVAILABLE NPSHSYST THEN
-    DO:
-      DO WITH FRAME ENDRE-SYSTEM:
+  IF AVAILABLE NPSHSYST THEN DO:
+    DO WITH FRAME ENDRE-SYSTEM:
           DISPLAY NPSHSYST.koblings_alternativ.
           ENABLE  NPSHSYST.koblings_alternativ.
           APPLY "VALUE-CHANGED" TO NPSHSYST.koblings_alternativ.
           DISPLAY NPSHSYST.shunt_dimmensjon.
           ENABLE BUTTON-reset.
-      END.
+    END.
       /* Set combo-box til feltverdi for ventiltype */
-         IF NPSHSYST.type = 'MS' THEN
-            DO WITH FRAME ENDRE-SYSTEM:
-                if can-do(combo-box-ventiltype:list-items,NPSHSYST.ms_ventiltype) then 
-                  COMBO-BOX-VENTILTYPE:SCREEN-VALUE = NPSHSYST.ms_ventiltype.            
-                  DISPLAY  COMBO-BOX-VENTILTYPE.
-                  ENABLE COMBO-BOX-VENTILTYPE.
-                  DISPLAY NPSHSYST.ms_shuntventil_i_leveranse.
-                  ENABLE NPSHSYST.ms_shuntventil_i_leveranse.
-             END.
-      ELSE 
-      DO:
-              DISABLE COMBO-BOX-VENTILTYPE.
-              DISABLE NPSHSYST.ms_shuntventil_i_leveranse.
-     END.
+    IF NPSHSYST.type = 'MS' or NPSHSYST.type = 'MSE' THEN DO WITH FRAME ENDRE-SYSTEM:
+        if can-do(combo-box-ventiltype:list-items,NPSHSYST.ms_ventiltype) then 
+          COMBO-BOX-VENTILTYPE:SCREEN-VALUE = NPSHSYST.ms_ventiltype.            
+        DISPLAY NPSHSYST.ms_shuntventil_i_leveranse.
+        COMBO-BOX-VENTILTYPE:sensitive = true.
+        NPSHSYST.ms_shuntventil_i_leveranse:sensitive = true.
+        COMBO-BOX-VENTILTYPE:MOVE-AFTER-TAB-ITEM (npshsyst.type:HANDLE).
+        NPSHSYST.ms_shuntventil_i_leveranse:MOVE-AFTER-TAB-ITEM (COMBO-BOX-VENTILTYPE:HANDLE).
+      END.
+      ELSE DO:
+        COMBO-BOX-VENTILTYPE:sensitive = false.
+        NPSHSYST.ms_shuntventil_i_leveranse:sensitive = false.
+      END.
 
      UPDATE
         NPSHSYST.systembetegnelse NPSHSYST.koblings_alternativ 
@@ -1316,15 +1331,14 @@ DO TRANSACTION:
         NPSHSYST.prim_effekt 
         NPSHSYST.prim_temp_inn 
         NPSHSYST.prim_temp_ut 
-        NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet
+        NPSHSYST.sek_kapasitet 
+        NPSHSYST.prim_kapasitet
         NPSHSYST.beregnet_anvendelse                 
         NPSHSYST.type
         Btn_OK Btn_Cancel Btn_Help 
       WITH FRAME ENDRE-SYSTEM.
-     END.
-    ELSE
-      IF LOCKED NPSHSYST THEN
-         DO:
+  END.
+  ELSE IF LOCKED NPSHSYST THEN DO:
              MESSAGE 'Tabellen for shuntsystem er opptatt. Prøv senere' VIEW-AS ALERT-BOX 
                  TITLE 'Registrere nytt system'.
             RETURN.
@@ -1418,6 +1432,7 @@ PROCEDURE visSystem :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+
 DO TRANSACTION: 
   FIND NPSHSYST WHERE ROWID(NPSHSYST) = Current-Rec EXCLUSIVE-LOCK
    NO-ERROR NO-WAIT.
@@ -1431,17 +1446,23 @@ DO TRANSACTION:
           DISPLAY NPSHSYST.shunt_dimmensjon.
       END.
       /* Set combo-box til feltverdi for ventiltype */
-      IF NPSHSYST.type = 'MS' THEN
+      IF NPSHSYST.type begins 'MS' THEN
           DO WITH FRAME ENDRE-SYSTEM:
                 if can-do(combo-box-ventiltype:list-items,NPSHSYST.ms_ventiltype) then 
                   COMBO-BOX-VENTILTYPE:SCREEN-VALUE = NPSHSYST.ms_ventiltype.            
                 DISPLAY  COMBO-BOX-VENTILTYPE.
                 DISPLAY NPSHSYST.ms_shuntventil_i_leveranse.
+                assign 
+                  COMBO-BOX-VENTILTYPE:sensitive = true
+                  NPSHSYST.ms_shuntventil_i_leveranse:sensitive = true
+                  .
            END.
       ELSE 
       DO:
-              DISABLE COMBO-BOX-VENTILTYPE.
-              DISABLE NPSHSYST.ms_shuntventil_i_leveranse.
+                assign 
+                  COMBO-BOX-VENTILTYPE:sensitive = false
+                  NPSHSYST.ms_shuntventil_i_leveranse:sensitive = false
+                  .
      END.
 
     DISPLAY
@@ -1452,7 +1473,8 @@ DO TRANSACTION:
         NPSHSYST.prim_effekt 
         NPSHSYST.prim_temp_inn 
         NPSHSYST.prim_temp_ut 
-        NPSHSYST.sek_kapasitet NPSHSYST.prim_kapasitet
+        NPSHSYST.sek_kapasitet 
+        NPSHSYST.prim_kapasitet
         NPSHSYST.beregnet_anvendelse                 
         NPSHSYST.type
       WITH FRAME ENDRE-SYSTEM.
@@ -1475,3 +1497,103 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE onLeaveOf_type NYTT-SYSTEM 
+PROCEDURE onLeaveOf_type :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+    DEFINE VAR c_kapasitet  LIKE NPSHSYST.prim_kapasitet.
+    DEFINE VAR c_grunnlag AS CHARACTER.
+
+    ASSIGN
+      FRAME ENDRE-SYSTEM NPSHSYST.koblings_alternativ
+      FRAME ENDRE-SYSTEM  NPSHSYST.prim_kapasitet
+      FRAME ENDRE-SYSTEM  NPSHSYST.sek_kapasitet.
+    IF NPSHSYST.prim_kapasitet = 0 AND NPSHSYST.sek_kapasitet = 0 THEN
+        DO:
+            MESSAGE 'Shuntdimmensjon kan ikke beregnes når kapasitet er 0'.
+            APPLY "ENTRY" TO NPSHSYST.sek_effekt.
+            RETURN NO-APPLY.
+       END.
+    CASE koblings_alternativ:
+        WHEN '5' OR WHEN '6' OR WHEN '7'  THEN
+            DO:
+                c_kapasitet = DECIMAL(NPSHSYST.sek_kapasitet:SCREEN-VALUE).
+                c_grunnlag = 'Sekundærkrets'.
+            END.
+         OTHERWISE
+            DO:
+                c_kapasitet = DECIMAL(NPSHSYST.prim_kapasitet:SCREEN-VALUE).
+                c_grunnlag = 'Primærkrets'.
+            END.
+    END CASE.
+
+    CASE  NPSHSYST.type:SCREEN-VALUE:
+        WHEN  'FM' THEN
+               RUN VELGFMDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
+        WHEN  'MS' THEN
+               RUN VELGMSDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
+        WHEN  'MSE' THEN
+               RUN VELGMSEDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).
+    END CASE.
+
+/*    def var hProc as handle no-undo.                                           */
+/*    run velgNPSHGruppe.w persistent set hProc.                                 */
+/*    subscribe to 'setValues' in hProc.                                         */
+/*    run setValues in hProc (NPSHSYST.type:screen-value,c_kapasitet,c_grunnlag).*/
+/*    run InitializeObject in hProc.                                             */
+/*    run MoveToTop in hProc.                                                    */
+
+    ASSIGN NPSHSYST.shunt_dimmensjon = dimm_verdi.
+    DISPLAY NPSHSYST.shunt_dimmensjon WITH FRAME ENDRE-SYSTEM.
+
+
+
+/*DO WITH FRAME {&FRAME-NAME}:                                                               */
+/*    DEFINE VAR c_kapasitet  LIKE NPSHSYST.prim_kapasitet.                                  */
+/*    DEFINE VAR c_grunnlag AS CHARACTER.                                                    */
+/*                                                                                           */
+/*    ASSIGN                                                                                 */
+/*      FRAME NYTT-SYSTEM NPSHSYST.koblings_alternativ                                       */
+/*      FRAME NYTT-SYSTEM  NPSHSYST.prim_kapasitet                                           */
+/*      FRAME NYTT-SYSTEM  NPSHSYST.sek_kapasitet.                                           */
+/*    IF NPSHSYST.prim_kapasitet = 0 AND NPSHSYST.sek_kapasitet = 0 THEN                     */
+/*        DO:                                                                                */
+/*            MESSAGE 'Shuntdimmensjon kan ikke beregnes når kapasitet er 0'.                */
+/*            APPLY "ENTRY" TO NPSHSYST.sek_effekt.                                          */
+/*            RETURN NO-APPLY.                                                               */
+/*       END.                                                                                */
+/*    CASE koblings_alternativ:                                                              */
+/*        WHEN '5' OR WHEN '6' OR WHEN '7'  THEN                                             */
+/*            DO:                                                                            */
+/*                c_kapasitet = DECIMAL(NPSHSYST.sek_kapasitet:SCREEN-VALUE).                */
+/*                c_grunnlag = 'Sekundærkrets'.                                              */
+/*            END.                                                                           */
+/*         OTHERWISE                                                                         */
+/*            DO:                                                                            */
+/*                c_kapasitet = DECIMAL(NPSHSYST.prim_kapasitet:SCREEN-VALUE).               */
+/*                c_grunnlag = 'Primærkrets'.                                                */
+/*            END.                                                                           */
+/*    END CASE.                                                                              */
+/*    CASE  NPSHSYST.type:SCREEN-VALUE:                                                      */
+/*        WHEN  'FM' THEN                                                                    */
+/*           RUN VELGFMDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag). */
+/*        WHEN  'MS' /*or when 'MSE'*/ THEN                                                  */
+/*           RUN VELGMSDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag). */
+/*        WHEN  'MSE' THEN                                                                   */
+/*           RUN VELGMSEDM.W (INPUT-OUTPUT  dimm_verdi, INPUT c_kapasitet, INPUT c_grunnlag).*/
+/*    END CASE.                                                                              */
+/*                                                                                           */
+/*    ASSIGN                                                                                 */
+/*      NPSHSYST.shunt_dimmensjon = dimm_verdi.                                              */
+/*    DISPLAY NPSHSYST.shunt_dimmensjon WITH FRAME NYTT-SYSTEM.                              */
+/*      npshsyst.type:modified = true.                                                       */
+/*                                                                                           */
+/*                                                                                           */
+/*END.                                                                                       */
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME

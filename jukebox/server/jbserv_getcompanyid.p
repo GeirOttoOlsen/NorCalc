@@ -5,6 +5,8 @@
 DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocCompanyId AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 FIND FIRST JBoxLoginSession WHERE JBoxLoginSession.cSessionId = icSessionId NO-LOCK NO-ERROR.
 IF AVAIL JBoxLoginSession THEN 
   ocCompanyId = STRING(JBoxLoginSession.iJBoxCompanyId).

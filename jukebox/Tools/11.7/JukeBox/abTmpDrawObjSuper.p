@@ -74,6 +74,9 @@ DEF TEMP-TABLE ttFieldDef
     FIELD bTaken      AS LOG 
     INDEX idxField IS PRIMARY cField 
     .
+DEF VAR httFieldDef AS HANDLE NO-UNDO.
+httFieldDef = BUFFER ttFieldDef:HANDLE.
+
 DEF TEMP-TABLE ttObj 
     FIELD cObjectName    AS CHAR 
     FIELD cWidgetName    AS CHAR
@@ -132,6 +135,8 @@ DEF TEMP-TABLE ttObjTTfieldDef
     FIELD cSourceTable AS CHAR
     FIELD cDbField     AS CHAR
     FIELD cMandatory   AS CHAR /* for calculation */
+    FIELD bDistinct    AS LOG
+    FIELD bAccumulate  AS LOG
     .
 DEF VAR hbttObjTTfieldDef AS HANDLE NO-UNDO.
 hbttObjTTfieldDef = BUFFER ttObjTTfieldDef:HANDLE.
@@ -196,6 +201,18 @@ FUNCTION creFillInDefFromDb RETURNS CHARACTER
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD creFunction Procedure 
 FUNCTION creFunction RETURNS CHARACTER
   ( INPUT icCode AS CHAR )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ENDIF
+
+&IF DEFINED(EXCLUDE-creInitValueForLogical) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD creInitValueForLogical Procedure 
+FUNCTION creInitValueForLogical RETURNS CHARACTER
+  (INPUT icFormat    AS CHAR,
+   INPUT icInitValue AS CHAR )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -897,7 +914,7 @@ FUNCTION updateTtObj RETURNS LOGICAL
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW Procedure ASSIGN
          HEIGHT             = 41.05
-         WIDTH              = 68.
+         WIDTH              = 58.4.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
@@ -1029,25 +1046,28 @@ END PROCEDURE.
 PROCEDURE findTablesAndFieldsInUse :
 /* Purpose:    Read code from Definitions, display-triggers and InitializeObject */
 
-DEF VAR cDefLine       AS CHAR NO-UNDO.
-DEF VAR ix             AS INT  NO-UNDO.
-DEF VAR iy             AS INT  NO-UNDO.
-DEF VAR iz             AS INT  NO-UNDO.
-DEF VAR bReadView      AS LOG  NO-UNDO.
-DEF VAR cCurrDb        AS CHAR NO-UNDO.
-DEF VAR cCurrTable     AS CHAR NO-UNDO.
-DEF VAR cCurrField     AS CHAR NO-UNDO.
-DEF VAR cFieldProp     AS CHAR NO-UNDO.
-DEF VAR cPropVal       AS CHAR NO-UNDO.
-DEF VAR bReadTTdef     AS LOG  NO-UNDO.
-DEF VAR cTtName        AS CHAR NO-UNDO.
-DEF VAR cCodeLine      AS CHAR NO-UNDO.
-DEF VAR bReadLine      AS LOG  NO-UNDO.
-DEF VAR bReadJoin      AS LOG  NO-UNDO.
-DEF VAR cOrgDecFormat  AS CHAR NO-UNDO.
-DEF VAR bReadCalcProc  AS LOG  NO-UNDO.
-DEF VAR cCalcProcFuncs AS CHAR NO-UNDO.
-DEF VAR cDbFld         AS CHAR NO-UNDO.
+DEF VAR cDefLine        AS CHAR NO-UNDO.
+DEF VAR ix              AS INT  NO-UNDO.
+DEF VAR iy              AS INT  NO-UNDO.
+DEF VAR iz              AS INT  NO-UNDO.
+DEF VAR bReadView       AS LOG  NO-UNDO.
+DEF VAR cCurrDb         AS CHAR NO-UNDO.
+DEF VAR cCurrTable      AS CHAR NO-UNDO.
+DEF VAR cCurrField      AS CHAR NO-UNDO.
+DEF VAR cFieldProp      AS CHAR NO-UNDO.
+DEF VAR cPropVal        AS CHAR NO-UNDO.
+DEF VAR bReadTTdef      AS LOG  NO-UNDO.
+DEF VAR cTtName         AS CHAR NO-UNDO.
+DEF VAR cCodeLine       AS CHAR NO-UNDO.
+DEF VAR bReadLine       AS LOG  NO-UNDO.
+DEF VAR bReadJoin       AS LOG  NO-UNDO.
+DEF VAR cOrgDecFormat   AS CHAR NO-UNDO.
+DEF VAR bReadCalcProc   AS LOG  NO-UNDO.
+DEF VAR cCalcProcFuncs  AS CHAR NO-UNDO.
+DEF VAR cDbFld          AS CHAR NO-UNDO.
+DEF VAR cCurrWidgetName AS CHAR NO-UNDO.
+DEF VAR bDistinct       AS LOG  NO-UNDO.
+DEF VAR bAccumulate     AS LOG  NO-UNDO.
 
 ASSIGN cTablesInUse      = ""
        cFieldsInUse      = ""
@@ -1077,7 +1097,9 @@ IF AVAIL _P THEN DO:
     /* Find all objects and their table and field references based on code in definitions: */
     DO ix = 1 TO NUM-ENTRIES(_TRG._tCODE,CHR(10)):
       ASSIGN cDefLine  = TRIM(ENTRY(ix,_TRG._tCODE,CHR(10)))
-             cCodeLine = ENTRY(ix,_TRG._tCODE,CHR(10)).
+             cCodeLine = ENTRY(ix,_TRG._tCODE,CHR(10))
+             bDistinct = NO
+             bAccumulate = NO.
       REPEAT WHILE INDEX(cDefLine,"  ") > 0:
         cDefLine = REPLACE(cDefLine,"  "," ").
       END.
@@ -1103,10 +1125,23 @@ IF AVAIL _P THEN DO:
         ASSIGN ttObjCalcProcDef.cCode = ttObjCalcProcDef.cCode + CHR(10) + cCodeLine 
                bReadCalcProc = NO.
 
-      IF bReadView THEN 
+      IF bReadView THEN DO:
+        IF NUM-ENTRIES(cDefLine,";") > 1 AND ENTRY(2,cDefLine,";") BEGINS "distinct " THEN
+          ASSIGN bDistinct = YES
+                 ENTRY(2,cDefLine,";") = SUBSTR(ENTRY(2,cDefLine,";"),10).
+        ELSE IF NUM-ENTRIES(cDefLine,";") > 1 AND ENTRY(2,cDefLine,";") BEGINS "+distinct " THEN
+          ASSIGN bDistinct = YES
+                 ENTRY(2,cDefLine,";") = "+" + SUBSTR(ENTRY(2,cDefLine,";"),11).
+        ELSE IF NUM-ENTRIES(cDefLine,";") > 1 AND ENTRY(2,cDefLine,";") BEGINS "accum " THEN
+          ASSIGN bAccumulate = YES
+                 ENTRY(2,cDefLine,";") = SUBSTR(ENTRY(2,cDefLine,";"),7).
+        ELSE IF NUM-ENTRIES(cDefLine,";") > 1 AND ENTRY(2,cDefLine,";") BEGINS "+accum " THEN
+          ASSIGN bAccumulate = YES
+                 ENTRY(2,cDefLine,";") = "+" + SUBSTR(ENTRY(2,cDefLine,";"),8).
         ASSIGN cDefLine = REPLACE(REPLACE(cDefLine,'"',"'")," ","")
                ttObjViewDef.cCode = ttObjViewDef.cCode + CHR(10) + cCodeLine.
-
+      END.
+      /* table line in view def: */  
       IF bReadView AND (cDefLine BEGINS "'" OR cDefLine BEGINS "+',") THEN DO:
         cDefLine = REPLACE(cDefLine,"'","").
         cCurrTable = ENTRY(NUM-ENTRIES(cDefLine),cDefLine).
@@ -1133,22 +1168,32 @@ IF AVAIL _P THEN DO:
             cTablesInUse = cTablesInUse + (IF cTablesInUse NE "" THEN "," ELSE "") + cCurrTable. 
         END.
       END.
-      /* Find available fields for browse from view-definition */
+      /* column line in view def: */
       ELSE IF bReadView AND (cDefLine BEGINS "+';") THEN DO:
         cDefLine = REPLACE(cDefLine,"+';","").
         cDefLine = REPLACE(cDefLine,"'","").
         cDefLine = REPLACE(cDefLine,".","").
+
         /* Calculated field - add procedure name to field properties for temp-table */
         IF cDefLine BEGINS "+" THEN DO:
           cDefLine = SUBSTR(cDefLine,2).
           FIND FIRST ttObjTtFieldDef 
-               WHERE ttObjTtFieldDef.cFieldName = ENTRY(1,cDefLine,"|")
+               WHERE ttObjTTfieldDef.cFieldName = ENTRY(1,cDefLine,"|")
+                 AND ttObjTTfieldDef.cTableName = cCurrTable
                  AND ttObjTtFieldDef.hWindow = _h_win
                NO-ERROR.
+          IF NOT AVAIL ttObjTtFieldDef THEN
+            FIND LAST ttObjTtFieldDef 
+                 WHERE ttObjTTfieldDef.cFieldName = ENTRY(1,cDefLine,"|")
+                   AND ttObjTtFieldDef.hWindow = _h_win
+                 NO-ERROR.
           IF AVAIL ttObjTtFieldDef THEN
-            ASSIGN ttObjTtFieldDef.cProcName   = TRIM(ENTRY(4,cCodeLine,"|"),"'") /* to keep spaces in expressions */
-                   ttObjTtFieldDef.cCalcSrcTbl = cCurrTable
-                   ttObjTtFieldDef.cMandatory  = IF ENTRY(NUM-ENTRIES(cDefLine,"|"),cDefLine,"|") = "mandatory" THEN "mandatory" ELSE ""
+            ASSIGN ttObjTtFieldDef.cProcName    = TRIM(ENTRY(4,cCodeLine,"|"),"'") /* to keep spaces in expressions */
+                   ttObjTtFieldDef.cCalcSrcTbl  = cCurrTable
+                   ttObjTtFieldDef.cMandatory   = IF ENTRY(NUM-ENTRIES(cDefLine,"|"),cDefLine,"|") = "mandatory" THEN "mandatory" ELSE ""
+                   ttObjTtFieldDef.bDistinct    = bDistinct
+                   ttObjTtFieldDef.bAccumulate  = bAccumulate
+                   ttObjTtFieldDef.cSourceTable = cCurrTable
                    .
           ELSE cDefLine = "".
           cDefLine = ENTRY(1,cDefLine,"|").
@@ -1158,13 +1203,14 @@ IF AVAIL _P THEN DO:
             ASSIGN cDbFld   = cDefLine
                    cDefLine = SUBSTR(REPLACE(cDefLine,"[","_"),1,LENGTH(cDefLine) - 1).
           ELSE cDbFld = getDbFieldName ("",cCurrTable,cDefLine).
-
+               
           FIND FIRST ttObjTtFieldDef 
                WHERE ttObjTtFieldDef.cFieldName  = ENTRY(1,cDefLine,"|")
                  AND ttObjTTfieldDef.cTableName  = cCurrTable
                  AND ttObjTtFieldDef.cSourceTable = ""
                  AND ttObjTtFieldDef.cDbField = ""
                  AND ttObjTtFieldDef.hWindow  = _h_win
+                 AND ttObjTtFieldDef.cWidgetName = cCurrWidgetName
                NO-ERROR.
           IF NOT AVAIL ttObjTtFieldDef THEN
             FIND FIRST ttObjTtFieldDef 
@@ -1173,6 +1219,7 @@ IF AVAIL _P THEN DO:
                    AND ttObjTtFieldDef.cSourceTable = ""
                    AND ttObjTtFieldDef.cDbField = ""
                    AND ttObjTtFieldDef.hWindow  = _h_win
+                   AND ttObjTtFieldDef.cWidgetName = cCurrWidgetName
                  NO-ERROR.
           IF NOT AVAIL ttObjTtFieldDef THEN 
             FIND FIRST ttObjTtFieldDef 
@@ -1180,6 +1227,7 @@ IF AVAIL _P THEN DO:
                    AND ttObjTtFieldDef.cSourceTable = ""
                    AND ttObjTtFieldDef.cDbField = ""
                    AND ttObjTtFieldDef.hWindow = _h_win
+                   AND ttObjTtFieldDef.cWidgetName = cCurrWidgetName
                  NO-ERROR.
           IF NOT AVAIL ttObjTtFieldDef THEN 
             FIND FIRST ttObjTtFieldDef 
@@ -1187,10 +1235,15 @@ IF AVAIL _P THEN DO:
                    AND ttObjTtFieldDef.cSourceTable = ""
                    AND ttObjTtFieldDef.cDbField = ""
                    AND ttObjTtFieldDef.hWindow = _h_win
+                   AND ttObjTtFieldDef.cWidgetName = cCurrWidgetName
                  NO-ERROR.
+
           IF AVAIL ttObjTtFieldDef THEN DO:
             ASSIGN ttObjTtFieldDef.cSourceTable = cCurrTable
-                   ttObjTtFieldDef.cDbField = cDbFld.
+                   ttObjTtFieldDef.cDbField     = cDbFld
+                   ttObjTtFieldDef.bDistinct    = bDistinct
+                   ttObjTtFieldDef.bAccumulate  = bAccumulate
+                   .
             IF cActiveWidget = "" OR CAN-DO(cTablesInUse,cCurrTable) THEN
               cFieldsInUse = cFieldsInUse + (IF cFieldsInUse NE "" THEN CHR(10) ELSE "") + cCurrTable + "." + cDbFld.
           END.
@@ -1217,7 +1270,9 @@ IF AVAIL _P THEN DO:
                  ttObjTTfieldDef.cDataType  = ENTRY(4,cDefLine," ")
                  ttObjTTfieldDef.iFieldSeq  = ix
                  cPropVal = ""
+                 ttObjTTfieldDef.cWidgetName = cCurrWidgetName
                  .
+
           DO iz = NUM-ENTRIES(cDefLine," ") TO 2 BY -1:
             IF SUBSTR(ENTRY(iz,cDefLine," "),LENGTH(ENTRY(iz,cDefLine," "))) = "/" THEN
               cPropVal = ENTRY(iz,cDefLine," ").
@@ -1315,7 +1370,8 @@ IF AVAIL _P THEN DO:
       END.
 
       IF (cDefLine MATCHES "*AS* JBoxQuery*" OR cDefLine MATCHES "*AS* JBoxBrowse *") AND NOT CAN-DO(cQryObjectsInUse,ENTRY(3,cDefLine," ")) THEN
-        cQryObjectsInUse = cQryObjectsInUse + (IF cQryObjectsInUse NE "" THEN "," ELSE "") + ENTRY(3,cDefLine," ").
+        ASSIGN cQryObjectsInUse = cQryObjectsInUse + (IF cQryObjectsInUse NE "" THEN "," ELSE "") + ENTRY(3,cDefLine," ")
+               cCurrWidgetName = SUBSTR(ENTRY(3,cDefLine," "),2).
       ELSE IF cDefLine MATCHES "*AS* JBoxFieldMap*" AND NOT CAN-DO(cFmObjectsInUse,ENTRY(3,cDefLine," ")) THEN
         cFmObjectsInUse = cFmObjectsInUse + (IF cFmObjectsInUse NE "" THEN "," ELSE "") + ENTRY(3,cDefLine," ").
       ELSE IF cDefLine MATCHES "*AS* JBoxToolbar*" AND NOT CAN-DO(cTbObjectsInUse,ENTRY(3,cDefLine," ")) THEN
@@ -1372,7 +1428,7 @@ SESSION:NUMERIC-FORMAT = cOrgDecFormat.
 
 /* DEF VAR hbttObjTable AS HANDLE NO-UNDO.   */
 /* hbttObjTable =  BUFFER ttObjTable:HANDLE. */
-/* RUN toexcelviafile.p (hbttObjTable,0).    */
+// RUN toexcelviafile.p (hbttObjTTfieldDef,0).    
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1388,7 +1444,7 @@ PROCEDURE genBrowseDisplay :
   Purpose:   (re)creates the display trigger for a browse if fields have been modified
               as well as the temp-table and view definition
   Parameters:  <none>
-  Notes:      LEGACY 
+  Notes:      
 ------------------------------------------------------------------------------*/
   DEF INPUT PARAM icBrowseName AS CHAR NO-UNDO.
 
@@ -1429,7 +1485,6 @@ PROCEDURE genBrowseDisplay :
 /*   h_bc = BUFFER ttObj:HANDLE.   */
 /*   RUN TOexcelviafile.p(h_bc,-1).   */
   
-
   FIND _P WHERE _P._WINDOW-HANDLE = _h_win NO-ERROR.
   FIND _U WHERE RECID(_U) = _query-u-rec NO-ERROR.
   FIND _C WHERE RECID(_C) = _U._x-recid NO-ERROR.
@@ -1466,7 +1521,11 @@ PROCEDURE genBrowseDisplay :
           WHERE _BC._x-recid = RECID(_U)
             AND _BC._TABLE   = cTbl
           BY _BC._SEQUENCE:
-        cViewDef = cViewDef + CHR(10) + "     + ';" + _BC._NAME + "'". 
+        cViewDef = cViewDef + CHR(10) + "     + ';" 
+                 + (IF _BC._DISABLE-AUTO-ZAP THEN "distinct " 
+                    ELSE IF _BC._COLUMN-READ-ONLY THEN "accum " 
+                    ELSE "") 
+                 + _BC._NAME + "'". 
         IF CAN-DO(cFldList,_BC._NAME) THEN 
           ASSIGN _BC._DEF-VALEXP = _BC._NAME + STRING(ix)
                  _BC._DISP-NAME  = _BC._DISP-NAME + STRING(ix).
@@ -1497,10 +1556,16 @@ PROCEDURE genBrowseDisplay :
         END.
         cCalcFld = ENTRY(NUM-ENTRIES(cCalcFld,"|"),cCalcFld,"|").
 
-        cViewDef = cViewDef + CHR(10) + "     + ';+" + ENTRY(NUM-ENTRIES(ENTRY(1,_BC._DISP-NAME),"."),ENTRY(1,_BC._DISP-NAME," "),".")
+
+        cViewDef = cViewDef + CHR(10) + "     + ';+" 
+                 + (IF _BC._DISABLE-AUTO-ZAP THEN "distinct " 
+                    ELSE IF _BC._COLUMN-READ-ONLY THEN "accum "
+                    ELSE "")
+                 + ENTRY(NUM-ENTRIES(ENTRY(1,_BC._DISP-NAME),"."),ENTRY(1,_BC._DISP-NAME," "),".")
                  + "|" + (IF _BC._DATA-TYPE NE ? THEN _BC._DATA-TYPE ELSE "CHARACTER")
                  + "||" + cCalcFld + "|" + _BC._LABEL + cMandatory + "'"
                  . 
+
       END.
     END.
     cViewDef = cViewDef + CHR(10) + "     ." + CHR(10) + "END FUNCTION.".
@@ -1527,7 +1592,7 @@ PROCEDURE genBrowseDisplay :
                cTtExt   = ""
                .
 
-      IF _BC._VISIBLE THEN
+      IF _BC._VISIBLE THEN 
         cDisplTrg = cDisplTrg + (IF cDisplTrg NE '' THEN CHR(10) ELSE '')
                   + ttObj.cFirstTable + '.' + cFldName + cTtExt
                   + (IF _BC._FORMAT NE "" AND _BC._FORMAT NE ? THEN ' FORMAT "' + _BC._FORMAT + '"' 
@@ -2883,7 +2948,10 @@ FOR EACH ttFieldDef
                        + creViewASPhrase(h_fieldBuf:BUFFER-FIELD("_data-type"):BUFFER-VALUE)
                        + (IF h_fieldBuf:BUFFER-FIELD("_initial"):BUFFER-VALUE NE "" AND h_fieldBuf:BUFFER-FIELD("_initial"):BUFFER-VALUE NE ? THEN
                             (' INITIAL ' + (IF h_fieldBuf:BUFFER-FIELD("_data-type"):BUFFER-VALUE = "CHARACTER" THEN '"' ELSE "")
-                            + h_fieldBuf:BUFFER-FIELD("_initial"):BUFFER-VALUE
+                            + (IF h_fieldBuf:BUFFER-FIELD("_data-type"):BUFFER-VALUE = "LOGICAL" THEN 
+                                 creInitValueForLogical(h_fieldBuf::_format,h_fieldBuf::_initial) 
+                               ELSE 
+                                 h_fieldBuf:BUFFER-FIELD("_initial"):BUFFER-VALUE)
                             + (IF h_fieldBuf:BUFFER-FIELD("_data-type"):BUFFER-VALUE = "CHARACTER" THEN '"' ELSE ""))
                           ELSE "")
 /*                          + ' LABEL "' + (IF h_fieldBuf:BUFFER-FIELD("_label"):BUFFER-VALUE NE ? THEN h_fieldBuf:BUFFER-FIELD("_label"):BUFFER-VALUE ELSE "") + '"' */
@@ -2911,6 +2979,7 @@ FOR EACH ttFieldDef
 /*     DELETE OBJECT h_fileBuf.  */
 /*   END. */
 END.
+/* RUN toexcelviafile.p (httFieldDef,0). */
          
 IF cFieldMapName NE "" THEN DO:
   ASSIGN cDefSection = "DEF VAR " + cFieldMapName + " AS JBoxFieldMap NO-UNDO.".
@@ -3054,6 +3123,34 @@ OUTPUT STREAM JBoxStream CLOSE.
 RUN adeuib/_qssuckr.p (cFileName, "", "IMPORT":U, NO).
 
 RETURN "".   /* Function return value. */
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ENDIF
+
+&IF DEFINED(EXCLUDE-creInitValueForLogical) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION creInitValueForLogical Procedure 
+FUNCTION creInitValueForLogical RETURNS CHARACTER
+  (INPUT icFormat    AS CHAR,
+   INPUT icInitValue AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR cInit AS CHAR NO-UNDO.
+
+IF NUM-ENTRIES(icFormat,"/") = 2 THEN
+  cInit = IF icInitValue = ENTRY(1,icFormat,"/") THEN "yes"
+          ELSE IF icInitValue = ENTRY(2,icFormat,"/") THEN "no"
+          ELSE icInitValue.
+ELSE
+  cInit = icInitValue.
+
+RETURN cInit.   /* Function return value. */
 
 END FUNCTION.
 
@@ -3724,8 +3821,15 @@ ELSE DO:
          WHERE ttObjTTfieldDef.hWindow     = _P._WINDOW-HANDLE
            AND ttObjTTfieldDef.cWidgetName = ttObj.cWidgetName
            AND ttObjTTfieldDef.cFieldName  = cTtField
+           AND ttObjTTfieldDef.cDbField    NE ""
         NO-ERROR.
+    
+        
     IF AVAIL ttObjTTfieldDef THEN DO:
+      
+      _BC._DISABLE-AUTO-ZAP = ttObjTTfieldDef.bDistinct.
+      _BC._COLUMN-READ-ONLY = ttObjTTfieldDef.bAccumulate.
+
       IF ttObjTTfieldDef.cProcName NE "" THEN DO:
         ASSIGN _BC._DBNAME     = "_<CALC>"
                _BC._TABLE      = ?
@@ -3740,6 +3844,12 @@ ELSE DO:
              WHERE ttObjTable.cWidgetName  = ttObjTTfieldDef.cWidgetName
                AND ttObjTable.cObjectTable = ttObjTTfieldDef.cSourceTable
              NO-ERROR.
+   
+        IF ibModify AND ttObjTTfieldDef.cDbField = "" THEN
+          MESSAGE "OBS - source table for field " cTtField " could not be determined" SKIP
+                  "Due to a bug the field is probably missing from the view-definition" SKIP 
+                  "Until this is fixed add the field manually to the view and you should be fine"
+              VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
 
         ASSIGN _BC._DBNAME    = IF ibModify AND AVAIL ttObjTable THEN ttObjTable.cObjectDb ELSE cCurrDb
                _BC._TABLE     = (IF ibModify THEN ttObjTTfieldDef.cSourceTable ELSE ttObjTTfieldDef.cTableName)
@@ -3763,6 +3873,26 @@ ELSE DO:
                        + ttObjTTfieldDef.cSourceTable + "." + ttObjTTfieldDef.cDbField
                        .
       END.
+    END.
+    ELSE IF _BC._DEF-VALEXP = "" THEN DO:
+      FIND FIRST ttObjTTfieldDef
+           WHERE ttObjTTfieldDef.hWindow     = _P._WINDOW-HANDLE
+             AND ttObjTTfieldDef.cWidgetName = ttObj.cWidgetName
+             AND ttObjTTfieldDef.cFieldName  = cTtField
+             AND ttObjTTfieldDef.cDbField    = ""
+          NO-ERROR.
+      IF AVAIL ttObjTTfieldDef AND ttObjTTfieldDef.cCalcFldProc = "" THEN /* JukeBox std (internal) calc proc */
+        _BC._DEF-VALEXP = "|" + ttObjTTfieldDef.cProcName.
+      ELSE IF AVAIL ttObjTTfieldDef THEN
+        _BC._DEF-VALEXP = ttObjTTfieldDef.cCalcFldProc + "|" + ttObjTTfieldDef.cProcName.
+
+      _BC._DEF-VALEXP = _BC._DEF-VALEXP + (IF ttObjTtFieldDef.cMandatory NE "" THEN "|mandatory" ELSE "").
+      _BC._DISABLE-AUTO-ZAP = ttObjTTfieldDef.bDistinct.
+      _BC._COLUMN-READ-ONLY = ttObjTTfieldDef.bAccumulate.
+
+      IF NUM-ENTRIES(_BC._DISP-NAME,".") = 2 AND ENTRY(1,_BC._DISP-NAME,".") NE ttObjTTfieldDef.cSourceTable THEN
+        ENTRY(1,_BC._DISP-NAME,".") = ttObjTTfieldDef.cSourceTable.
+
     END.
   END.
 END.

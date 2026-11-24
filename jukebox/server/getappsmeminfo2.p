@@ -135,7 +135,7 @@ hBuffer:RECORD-LENGTH.
    CREATE t-info.
    ASSIGN t-info.iLevel = 65
           t-info.ninfo = SUBSTITUTE("Dynamic temp-table &1: &2 records",
-                                    hTt:NAME,
+                                    hTt:NAME + " (" + STRING(hTt) + ")",
                                     iRecords).
    IF SESSION:CLIENT-TYPE = "AppServer" AND iRecordLength NE 0 THEN
      ASSIGN t-info.iLevel = 15
@@ -253,7 +253,7 @@ cDatabase)).
  /* In this VST we always get lots of records */
  /* make sure we stop reading when hUsr = ? */
 
- DO WHILE hUsr:BUFFER-VALUE NE ?:
+ DO WHILE hLock:AVAIL AND hUsr:BUFFER-VALUE NE ?:
 
    ASSIGN iLock = iLock + 1.
 

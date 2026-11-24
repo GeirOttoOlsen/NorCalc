@@ -11,6 +11,8 @@ DEF VAR iMainDoc        AS INT    NO-UNDO.
 DEF TEMP-TABLE ttSort
     FIELD iDocId AS INT.
 
+{incl/validatecaller.i}
+
 cUserid = DYNAMIC-FUNCTION("getAsUserId" IN SOURCE-PROCEDURE) NO-ERROR.
 
 CREATE BUFFER hBuffDocLink FOR TABLE "JBoxDocLink" NO-ERROR.

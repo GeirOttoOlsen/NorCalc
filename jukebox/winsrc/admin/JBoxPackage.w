@@ -31,6 +31,9 @@
 CREATE WIDGET-POOL.
 
 /* ***************************  Definitions  ************************** */
+&IF "{1}" = "Developer_Studio_is_Running" &THEN
+  &SCOPED-DEFINE UIB_is_Running 1 
+&ENDIF   
 
 /* Parameters Definitions ---                                           */
 
@@ -371,9 +374,22 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   &IF DEFINED(UIB_is_Running) NE 0 &THEN
     RUN InitializeObject.
     RUN MoveToTop.
+    IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"advGuiWin") = "YES" THEN
+      RUN WaitForForm NO-ERROR.
   &ENDIF
-  IF NOT THIS-PROCEDURE:PERSISTENT THEN
-    WAIT-FOR CLOSE OF THIS-PROCEDURE.
+
+  IF NOT THIS-PROCEDURE:PERSISTENT THEN DO:
+    &IF DEFINED(UIB_is_Running) = 0 &THEN
+    RUN InitializeObject.
+    RUN MoveToTop.
+    APPLY "WINDOW-RESIZED" TO {&WINDOW-NAME}.
+    SESSION:SET-WAIT-STATE("").
+    IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"advGuiWin") = "YES" THEN
+      RUN WaitForForm NO-ERROR.
+    ELSE 
+    &ENDIF
+      WAIT-FOR CLOSE OF THIS-PROCEDURE.
+  END.  
 END.
 
 /* ON 'drop-file-notify' OF hBtnDropDoc DO:                        */
@@ -463,6 +479,60 @@ IF cDir NE "" THEN DO ix = 1 TO hBrwFiles:NUM-SELECTED-ROWS:
   END.
 END.
 DYNAMIC-FUNCTION("RefreshRowids",hBrwFiles,cRowIdList).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE CompareFileSizeRecord C-Win 
+PROCEDURE CompareFileSizeRecord :
+/*------------------------------------------------------------------------------
+  Purpose:     
+  Parameters:  <none>
+  Notes:       
+------------------------------------------------------------------------------*/
+DEF VAR cDir AS CHAR NO-UNDO.
+DEF VAR cDiskFile AS CHAR NO-UNDO.
+DEF VAR cDbFile   AS CHAR NO-UNDO.
+DEF VAR cMessage AS CHAR NO-UNDO.
+DEF VAR iDiskSize AS INT NO-UNDO.
+DEF VAR iDbSize   AS INT NO-UNDO.
+DEF VAR cFileName AS CHAR NO-UNDO.
+
+IF NOT hFMPackage:AVAIL THEN RETURN.
+
+SYSTEM-DIALOG GET-DIR cDir.
+
+IF cDir NE "" THEN DO ix = 1 TO hBrwFiles:NUM-SELECTED-ROWS:
+  IF hBrwFiles:FETCH-SELECTED-ROW(ix) THEN DO:
+    cFileName = RIGHT-TRIM(ENTRY(NUM-ENTRIES(hBuffer::cFileName,"\/"),hBuffer::cFileName,"\/"),".gz").
+    cDiskFile = TRIM(cDir,"\/") + "\" + cFileName.
+    IF SEARCH(cDiskFile) NE ? THEN DO:
+      DYNAMIC-FUNCTION("ViewDocs",hFMPackage:NAME,
+                       STRING(hFMPackage:BUFFER-FIELD("iJBoxPackageId"):BUFFER-VALUE) + "|" +
+                       hBrwFiles:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD("cFileName"):BUFFER-VALUE
+                      ,FALSE,SESSION:TEMP-DIR).
+
+      FILE-INFO:FILE-NAME = cDiskFile.
+      iDiskSize = FILE-INFO:FILE-SIZE.
+
+      FILE-INFO:FILE-NAME = SESSION:TEMP-DIR + cFileName.
+      iDbSize = FILE-INFO:FILE-SIZE.
+
+      cMessage = cMessage + (IF cMessage NE "" THEN CHR(10) ELSE "") + cDiskFile + ": ".
+      IF iDiskSize = iDbSize THEN
+        cMessage = cMessage + "Same size".
+      ELSE IF iDiskSize > iDbSize THEN
+        cMessage = cMessage + "File on disk LARGER".
+      ELSE
+        cMessage = cMessage + "File on disk SMALLER".
+    END.
+    ELSE cMessage = cMessage + (IF cMessage NE "" THEN CHR(10) ELSE "") + cDiskFile + ": Not found".
+  END.
+END.
+MESSAGE cMessage
+    VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
 
 END PROCEDURE.
 
@@ -1141,6 +1211,7 @@ END.
 
 DYNAMIC-FUNCTION("NewMenuBand",hBrwFiles
                 ,"MultiSortBrowse;" + (IF bEnglish THEN "Sort on multiple columns" ELSE "Sorter på flere kolonner")
+              + ",CompareFileSize;Compare file size"
               + ",CheckOut;" + (IF bEnglish THEN "Check out file(s)" ELSE "Sjekk ut fil(er)")
               + (IF cVersionMenu NE "" THEN 
                   ",|" + (IF bEnglish THEN "Older versions" ELSE "Tidligere versjoner")

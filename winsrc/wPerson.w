@@ -176,31 +176,31 @@ filter_tbPerson excel_tbPerson BrwPerson
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON excel_tbPerson 
      IMAGE-UP FILE "gif/afexcel.gif":U
      LABEL "Excel" 
-     SIZE 6 BY 1.52 TOOLTIP "Excel (ALT-E)".
+     SIZE 6 BY 1.53 TOOLTIP "Excel (ALT-E)".
 
 DEFINE BUTTON filter_tbPerson 
      IMAGE-UP FILE "gif/filter.gif":U
      LABEL "Filter" 
-     SIZE 6 BY 1.52 TOOLTIP "Filter (CTRL-F)".
+     SIZE 6 BY 1.53 TOOLTIP "Filter (CTRL-F)".
 
 DEFINE BUTTON refresh_tbPerson 
      IMAGE-UP FILE "gif/refresh.gif":U
      LABEL "Refresh" 
-     SIZE 6 BY 1.52 TOOLTIP "Refresh (F5)".
+     SIZE 6 BY 1.53 TOOLTIP "Refresh (F5)".
 
 DEFINE RECTANGLE TabPerson
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 114 BY 11.
+     SIZE 114 BY 9.88.
 
 DEFINE RECTANGLE tbPerson
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 113 BY 1.71.
+     SIZE 113 BY 1.72.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -213,18 +213,23 @@ DEFINE BROWSE BrwPerson
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwPerson C-Win _STRUCTURED
   QUERY BrwPerson NO-LOCK DISPLAY
       Person.iPersonId COLUMN-LABEL "Person id" FORMAT "->,>>>,>>9":U
+            WIDTH 10.2
       Person.cNavn COLUMN-LABEL "Navn" FORMAT "x(40)":U
       Person.iAnsattnr COLUMN-LABEL "Ansattnr" FORMAT "->>>>>>9":U
+            WIDTH 9
       Person.iAvdelingNr COLUMN-LABEL "Avdelingsnr" FORMAT "->>>>9":U
+            WIDTH 11
       Person.cMob COLUMN-LABEL "Mob" FORMAT "x(12)":U
       Person.cEpost COLUMN-LABEL "Epost" FORMAT "x(50)":U
-      Person.bAktiv COLUMN-LABEL "Aktiv" FORMAT "ja/nei":U
+      Person.bAktiv COLUMN-LABEL "Aktiv" FORMAT "ja/nei":U WIDTH 4.8
       Person.cInitialer COLUMN-LABEL "Initialer" FORMAT "x(4)":U
+            WIDTH 6.6
       Person.cKontonr COLUMN-LABEL "Kontonr" FORMAT "x(13)":U
       Person.cLand COLUMN-LABEL "Land" FORMAT "x(20)":U
       Person.cMerknad COLUMN-LABEL "Merknad" FORMAT "x(50)":U
       Person.cPostAdresse FORMAT "x(40)":U
       Person.cPostPnr COLUMN-LABEL "Postnummer" FORMAT "x(8)":U
+            WIDTH 11.6
       Person.cPostSted COLUMN-LABEL "Poststed" FORMAT "x(40)":U
       Person.cRolle COLUMN-LABEL "Rolle" FORMAT "x(20)":U
       Person.cStilling COLUMN-LABEL "Stilling" FORMAT "x(50)":U
@@ -232,30 +237,34 @@ DEFINE BROWSE BrwPerson
       Person.cTlf COLUMN-LABEL "Tlf" FORMAT "x(12)":U
       Person.cVarenr COLUMN-LABEL "Varenr" FORMAT "x(13)":U
       Person.dCreated COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
+            WIDTH 11.6
       Person.cCreatedBy COLUMN-LABEL "Av" FORMAT "X(8)":U
       Person.cModifiedBy COLUMN-LABEL "Av" FORMAT "X(8)":U
       Person.dModified COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
+            WIDTH 11.6
       Person.iJBoxCompanyId COLUMN-LABEL "CompanyId" FORMAT "->,>>>,>>9":U
+            WIDTH 10.6
       Person.iVareId COLUMN-LABEL "VareId" FORMAT "->,>>>,>>9":U
+            WIDTH 10.2
   ENABLE
       Person.iPersonId
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 113 BY 5.24 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 113 BY 6.34 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     refresh_tbPerson AT ROW 1.1 COL 2.2 WIDGET-ID 14
-     filter_tbPerson AT ROW 1.1 COL 8.4 WIDGET-ID 16
-     excel_tbPerson AT ROW 1.1 COL 14.4 WIDGET-ID 18
-     BrwPerson AT ROW 2.67 COL 2 WIDGET-ID 300
+     refresh_tbPerson AT ROW 1.09 COL 2.25 WIDGET-ID 14
+     filter_tbPerson AT ROW 1.09 COL 8.38 WIDGET-ID 16
+     excel_tbPerson AT ROW 1.09 COL 14.38 WIDGET-ID 18
+     BrwPerson AT ROW 2.66 COL 2 WIDGET-ID 300
      tbPerson AT ROW 1 COL 2 WIDGET-ID 2
-     TabPerson AT ROW 8.38 COL 1 WIDGET-ID 20
+     TabPerson AT ROW 9.5 COL 1 WIDGET-ID 20
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SCROLLABLE SIZE 114 BY 18.38 WIDGET-ID 100.
 
 
@@ -277,10 +286,10 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          TITLE              = "<Insert window title>"
          HEIGHT             = 18.38
          WIDTH              = 114
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 114.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 114.2
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 114.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 114.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -345,7 +354,7 @@ THEN C-Win:HIDDEN = yes.
      _TblList          = "norcalc.Person"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _FldNameList[1]   > "_<CALC>"
-"Person.iPersonId" "Person id" "->,>>>,>>9" "integer" ? ? ? ? ? ? yes "" no no "10.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.iPersonId" "Person id" "->,>>>,>>9" "integer" ? ? ? ? ? ? yes "" no no "10.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
 "Person.cNavn" "Navn" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
@@ -357,9 +366,9 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[6]   > "_<CALC>"
 "Person.cEpost" "Epost" "x(50)" "character" ? ? ? ? ? ? no "" no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[7]   > "_<CALC>"
-"Person.bAktiv" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "4.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.bAktiv" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "4.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[8]   > "_<CALC>"
-"Person.cInitialer" "Initialer" "x(4)" "character" ? ? ? ? ? ? no "" no no "6.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.cInitialer" "Initialer" "x(4)" "character" ? ? ? ? ? ? no "" no no "6.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[9]   > "_<CALC>"
 "Person.cKontonr" "Kontonr" "x(13)" "character" ? ? ? ? ? ? no "" no no "13" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[10]   > "_<CALC>"
@@ -369,7 +378,7 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[12]   > "_<CALC>"
 "Person.cPostAdresse" "" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[13]   > "_<CALC>"
-"Person.cPostPnr" "Postnummer" "x(8)" "character" ? ? ? ? ? ? no "" no no "11.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.cPostPnr" "Postnummer" "x(8)" "character" ? ? ? ? ? ? no "" no no "11.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[14]   > "_<CALC>"
 "Person.cPostSted" "Poststed" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[15]   > "_<CALC>"
@@ -383,17 +392,17 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[19]   > "_<CALC>"
 "Person.cVarenr" "Varenr" "x(13)" "character" ? ? ? ? ? ? no "" no no "13" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[20]   > "_<CALC>"
-"Person.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[21]   > "_<CALC>"
 "Person.cCreatedBy" "Av" "X(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[22]   > "_<CALC>"
 "Person.cModifiedBy" "Av" "X(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[23]   > "_<CALC>"
-"Person.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[24]   > "_<CALC>"
-"Person.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[25]   > "_<CALC>"
-"Person.iVareId" "VareId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.2" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Person.iVareId" "VareId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.25" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwPerson */
 &ANALYZE-RESUME

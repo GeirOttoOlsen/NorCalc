@@ -102,11 +102,15 @@ DEF TEMP-TABLE NPSHSYST
     FIELD tegning_bmp AS character
     FIELD trykk_for_shunt_ventil AS decimal
     FIELD type AS character
+    FIELD anlegg AS character
+    FIELD betegnelse AS character
     FIELD RowIdent1 AS CHARACTER 
+    FIELD RowIdent2 AS CHARACTER 
+    FIELD RowIdent3 AS CHARACTER 
     FIELD RowCount AS INTEGER
     FIELD jbCountDistinct AS INTEGER FORMAT '>>>,>>>,>>9' INIT 1
     FIELD jbAverage AS DECIMAL FORMAT '->>>,>>>,>>9.99'
-    INDEX idxRowids  RowIdent1
+    INDEX idxRowids  RowIdent1 RowIdent2 RowIdent3
     .
 DEF BUFFER v_NPSHSYST FOR TEMP-TABLE NPSHSYST.
 
@@ -160,10 +164,14 @@ FUNCTION getBuffersAndFieldsBrwNPSHSYST RETURNS CHARACTER():
      + ';tegning_bmp'
      + ';trykk_for_shunt_ventil'
      + ';type'
+  + ',NPSHANLG'
+     + ';anlegg'
+  + ',NPSHKOBL'
+     + ';betegnelse'
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNPSHSYST RETURNS CHARACTER():
-  RETURN ''.
+  RETURN 'FIRST NPSHANLG OF NPSHSYST NO-LOCK,FIRST NPSHKOBL  WHERE NPSHKOBL.koblingsalternativ = NPSHSYST.koblings_alternativ NO-LOCK'.
 END FUNCTION.
 DEF VAR otbNPSHSYST AS JBoxToolbar NO-UNDO.
 
@@ -203,11 +211,18 @@ NPSHSYST.sek_kapasitet NPSHSYST.sek_temp_inn NPSHSYST.sek_temp_ut ~
 NPSHSYST.shunthus_varenr NPSHSYST.shuntkvs_varenr NPSHSYST.shunt_dimmensjon ~
 NPSHSYST.shunt_dimmensjon_num NPSHSYST.sikkerhet ~
 NPSHSYST.strupe_dimmensjon_prim NPSHSYST.strupe_dimmensjon_sek ~
-NPSHSYST.tegning_bmp NPSHSYST.trykk_for_shunt_ventil NPSHSYST.type 
+NPSHSYST.tegning_bmp NPSHSYST.trykk_for_shunt_ventil NPSHSYST.type ~
+NPSHSYST.anlegg NPSHSYST.betegnelse 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNPSHSYST NPSHSYST.anleggsnr ~
 NPSHSYST.systemnr 
-&Scoped-define QUERY-STRING-BrwNPSHSYST FOR EACH NPSHSYST NO-LOCK INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-BrwNPSHSYST OPEN QUERY BrwNPSHSYST FOR EACH NPSHSYST NO-LOCK INDEXED-REPOSITION.
+&Scoped-define ENABLED-TABLES-IN-QUERY-BrwNPSHSYST NPSHSYST
+&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BrwNPSHSYST NPSHSYST
+&Scoped-define QUERY-STRING-BrwNPSHSYST FOR EACH NPSHSYST NO-LOCK, ~
+    FIRST NPSHANLG OF NPSHSYST NO-LOCK, ~
+    FIRST NPSHKOBL WHERE NPSHKOBL.koblingsalternativ = NPSHSYST.koblings_alternativ NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BrwNPSHSYST OPEN QUERY BrwNPSHSYST FOR EACH NPSHSYST NO-LOCK, ~
+    FIRST NPSHANLG OF NPSHSYST NO-LOCK, ~
+    FIRST NPSHKOBL WHERE NPSHKOBL.koblingsalternativ = NPSHSYST.koblings_alternativ NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BrwNPSHSYST NPSHSYST
 &Scoped-define FIRST-TABLE-IN-QUERY-BrwNPSHSYST NPSHSYST
 
@@ -229,34 +244,34 @@ refresh_tbNPSHSYST excel_tbNPSHSYST BrwNPSHSYST
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON edit_tbNPSHSYST 
      IMAGE-UP FILE "bmp/edit16e.bmp":U
      LABEL "Edit" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Edit (CTRL-E)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Edit (CTRL-E)".
 
 DEFINE BUTTON excel_tbNPSHSYST 
      IMAGE-UP FILE "img/ico/excel.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/excel_disabled.gif":U
      LABEL "Excel" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Excel (ALT-E)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Excel (ALT-E)".
 
 DEFINE BUTTON new_tbNPSHSYST 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "Ny" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Ny (CTRL-N)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Ny (CTRL-N)".
 
 DEFINE BUTTON refresh_tbNPSHSYST 
      IMAGE-UP FILE "img/ico/document_refresh.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_refresh_disabled.gif":U
      LABEL "Refresh" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Refresh (F5)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Refresh (F5)".
 
 DEFINE RECTANGLE tbNPSHSYST
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 148 BY 2.14.
+     SIZE 148 BY 2.13.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -269,72 +284,112 @@ DEFINE BROWSE BrwNPSHSYST
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNPSHSYST C-Win _STRUCTURED
   QUERY BrwNPSHSYST NO-LOCK DISPLAY
       NPSHSYST.anleggsnr COLUMN-LABEL "Anleggsnr" FORMAT ">>>>>9":U
+            WIDTH 9.38
       NPSHSYST.systemnr COLUMN-LABEL "Systemnr" FORMAT ">>>>>9":U
+            WIDTH 8.63
       NPSHSYST.systembetegnelse COLUMN-LABEL "Syst.bet." FORMAT "X(30)":U
             WIDTH 20
       NPSHSYST.system_kode COLUMN-LABEL "Kode" FORMAT "X(60)":U
       NPSHSYST.koblings_alternativ COLUMN-LABEL "Kobl.alt." FORMAT "X(2)":U
+            WIDTH 7.63
       NPSHSYST.standardpris COLUMN-LABEL "Standardpris" FORMAT ">>,>>>,>>9.99":U
+            WIDTH 13.75
       NPSHSYST.med_i_ordre COLUMN-LABEL "Ordre" FORMAT "ja/nei":U
+            WIDTH 5.25
       NPSHSYST.prim_hastighet COLUMN-LABEL "prim_hastighet" FORMAT ">>9.999999":U
+            WIDTH 13.63
       NPSHSYST.sek_hastighet COLUMN-LABEL "sek_hastighet" FORMAT ">>9.999999":U
+            WIDTH 13.25
       NPSHSYST.autoritet COLUMN-LABEL "Autoritet" FORMAT ">.9999":U
+            WIDTH 7.75
       NPSHSYST.beregnet_anvendelse COLUMN-LABEL "Anvendelse" FORMAT "X(18)":U
       NPSHSYST.fabrikat COLUMN-LABEL "fabrikat" FORMAT "X(2)":U
+            WIDTH 7
       NPSHSYST.forhaands_struping COLUMN-LABEL "Struping" FORMAT ">>9.99":U
+            WIDTH 7.75
       NPSHSYST.forhaands_struping_prim COLUMN-LABEL "Struping" FORMAT ">>9.99":U
+            WIDTH 7.75
       NPSHSYST.forhaands_struping_sek COLUMN-LABEL "Struping" FORMAT ">>9.99":U
+            WIDTH 7.75
       NPSHSYST.glykol COLUMN-LABEL "Glykol" FORMAT "X(10)":U
       NPSHSYST.inngaende_trykk COLUMN-LABEL "Inng. trykk" FORMAT ">>9.99":U
+            WIDTH 10
       NPSHSYST.konsentrasjon COLUMN-LABEL "Kons." FORMAT "X(2)":U
+            WIDTH 5.38
       NPSHSYST.kvs_hovedport COLUMN-LABEL "KVS Hovedport" FORMAT ">>9.99":U
+            WIDTH 14.75
       NPSHSYST.kvs_shuntport COLUMN-LABEL "KVS Shuntport" FORMAT ">>9.99":U
+            WIDTH 14
       NPSHSYST.ledig_drivtrykk_prim COLUMN-LABEL "Ledig drivtrykk" FORMAT ">>9.99":U
+            WIDTH 13.75
       NPSHSYST.maks_pumpetrykk COLUMN-LABEL "Maks trykk" FORMAT ">>9.99":U
+            WIDTH 10.38
       NPSHSYST.minste_pumpetrykk COLUMN-LABEL "Min. pump." FORMAT ">>9.99":U
+            WIDTH 10.38
       NPSHSYST.minste_pumpetrykk_prim COLUMN-LABEL "Min. pump." FORMAT ">>9.99":U
+            WIDTH 10.38
       NPSHSYST.ms_automatikk_fabrikat COLUMN-LABEL "Aut.fabr." FORMAT "X(3)":U
+            WIDTH 8
       NPSHSYST.ms_shuntventil_i_leveranse COLUMN-LABEL "Shuntventil med" FORMAT "ja/nei":U
+            WIDTH 15.25
       NPSHSYST.ms_ventiltype COLUMN-LABEL "Ventiltype" FORMAT "X(20)":U
       NPSHSYST.prim_effekt COLUMN-LABEL "Effekt" FORMAT ">>>>>>9":U
+            WIDTH 8.38
       NPSHSYST.prim_kapasitet COLUMN-LABEL "Kapasitet" FORMAT "->>9.999":U
+            WIDTH 8.75
       NPSHSYST.prim_temp_inn COLUMN-LABEL "Temp. inn" FORMAT "->>9.99":U
+            WIDTH 9.38
       NPSHSYST.prim_temp_ut COLUMN-LABEL "Temp. ut" FORMAT "->>9.99":U
+            WIDTH 8.38
       NPSHSYST.prod_nr COLUMN-LABEL "Prod.nr." FORMAT "X(18)":U
       NPSHSYST.sek_effekt COLUMN-LABEL "Effekt" FORMAT ">>>>>>9":U
+            WIDTH 8.38
       NPSHSYST.sek_kapasitet COLUMN-LABEL "Kapasitet" FORMAT "->>9.999":U
+            WIDTH 8.75
       NPSHSYST.sek_temp_inn COLUMN-LABEL "Temp. inn" FORMAT "->>9.99":U
+            WIDTH 9.38
       NPSHSYST.sek_temp_ut COLUMN-LABEL "Temp. ut" FORMAT "->>9.99":U
+            WIDTH 8.38
       NPSHSYST.shunthus_varenr COLUMN-LABEL "Vnr.shunthus" FORMAT "X(8)":U
+            WIDTH 12.38
       NPSHSYST.shuntkvs_varenr COLUMN-LABEL "Vnr.shuntkvs" FORMAT "X(8)":U
+            WIDTH 12.38
       NPSHSYST.shunt_dimmensjon COLUMN-LABEL "Shunt-dimm." FORMAT "X(3)":U
+            WIDTH 11.63
       NPSHSYST.shunt_dimmensjon_num COLUMN-LABEL "shunt_dimmensjon_num" FORMAT ">99":U
+            WIDTH 22.63
       NPSHSYST.sikkerhet COLUMN-LABEL "Sikkerhet" FORMAT ">>9.99":U
+            WIDTH 9
       NPSHSYST.strupe_dimmensjon_prim COLUMN-LABEL "strupe_dimmensjon_prim" FORMAT "X(8)":U
+            WIDTH 23
       NPSHSYST.strupe_dimmensjon_sek COLUMN-LABEL "strupe_dimmensjon_sek" FORMAT "X(8)":U
+            WIDTH 22.63
       NPSHSYST.tegning_bmp COLUMN-LABEL "tegning_bmp" FORMAT "X(30)":U
       NPSHSYST.trykk_for_shunt_ventil COLUMN-LABEL "Trykk før shuntventil" FORMAT ">>9.99":U
-      NPSHSYST.type COLUMN-LABEL "Type" FORMAT "X(2)":U
+            WIDTH 19.25
+      NPSHSYST.type COLUMN-LABEL "Type" FORMAT "X(2)":U WIDTH 4.75
+      NPSHSYST.anlegg COLUMN-LABEL "Anlegg" FORMAT "X(45)":U
+      NPSHSYST.betegnelse COLUMN-LABEL "Betegnelse" FORMAT "X(25)":U
   ENABLE
       NPSHSYST.anleggsnr
       NPSHSYST.systemnr
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 149 BY 15.67 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 149 BY 15.66 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPSHSYST AT ROW 1.1 COL 1.2 WIDGET-ID 12
-     edit_tbNPSHSYST AT ROW 1.1 COL 9.2 WIDGET-ID 14
-     refresh_tbNPSHSYST AT ROW 1.1 COL 17 WIDGET-ID 4
-     excel_tbNPSHSYST AT ROW 1.1 COL 24.8 WIDGET-ID 10
-     BrwNPSHSYST AT ROW 3.14 COL 1 WIDGET-ID 200
+     new_tbNPSHSYST AT ROW 1.09 COL 1.25 WIDGET-ID 12
+     edit_tbNPSHSYST AT ROW 1.09 COL 9.25 WIDGET-ID 14
+     refresh_tbNPSHSYST AT ROW 1.09 COL 17 WIDGET-ID 4
+     excel_tbNPSHSYST AT ROW 1.09 COL 24.75 WIDGET-ID 10
+     BrwNPSHSYST AT ROW 3.13 COL 1 WIDGET-ID 200
      tbNPSHSYST AT ROW 1 COL 1 WIDGET-ID 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SCROLLABLE SIZE 149 BY 17.81 WIDGET-ID 100.
 
 
@@ -356,9 +411,9 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          TITLE              = "<Insert window title>"
          HEIGHT             = 17.81
          WIDTH              = 149
-         MAX-HEIGHT         = 23.52
+         MAX-HEIGHT         = 23.53
          MAX-WIDTH          = 149
-         VIRTUAL-HEIGHT     = 23.52
+         VIRTUAL-HEIGHT     = 23.53
          VIRTUAL-WIDTH      = 149
          RESIZE             = yes
          SCROLL-BARS        = no
@@ -417,98 +472,103 @@ THEN C-Win:HIDDEN = yes.
 /* Query rebuild information for BROWSE BrwNPSHSYST
      _TblList          = "norcalc.NPSHSYST"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _FldNameList[1]   > "_<CALC>"
-"NPSHSYST.anleggsnr" "Anleggsnr" ">>>>>9" "integer" ? ? ? ? ? ? yes "" no no "9.4" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[2]   > "_<CALC>"
-"NPSHSYST.systemnr" "Systemnr" ">>>>>9" "integer" ? ? ? ? ? ? yes "" no no "8.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[3]   > "_<CALC>"
+     _TblOptList       = ", FIRST, FIRST"
+     _FldNameList[1]   > NPSHSYST.anleggsnr
+"NPSHSYST.anleggsnr" "Anleggsnr" ">>>>>9" "integer" ? ? ? ? ? ? yes "" no no "9.38" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[2]   > NPSHSYST.systemnr
+"NPSHSYST.systemnr" "Systemnr" ">>>>>9" "integer" ? ? ? ? ? ? yes "" no no "8.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[3]   > NPSHSYST.systembetegnelse
 "NPSHSYST.systembetegnelse" "Syst.bet." "X(30)" "character" ? ? ? ? ? ? no "" no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[4]   > "_<CALC>"
+     _FldNameList[4]   > NPSHSYST.system_kode
 "NPSHSYST.system_kode" "Kode" "X(60)" "character" ? ? ? ? ? ? no "" no no "60" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[5]   > "_<CALC>"
-"NPSHSYST.koblings_alternativ" "Kobl.alt." "X(2)" "character" ? ? ? ? ? ? no "" no no "7.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[6]   > "_<CALC>"
-"NPSHSYST.standardpris" "Standardpris" ">>,>>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "13.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[7]   > "_<CALC>"
-"NPSHSYST.med_i_ordre" "Ordre" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "5.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[8]   > "_<CALC>"
-"NPSHSYST.prim_hastighet" "prim_hastighet" ">>9.999999" "decimal" ? ? ? ? ? ? no "" no no "13.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[9]   > "_<CALC>"
-"NPSHSYST.sek_hastighet" "sek_hastighet" ">>9.999999" "decimal" ? ? ? ? ? ? no "" no no "13.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[10]   > "_<CALC>"
-"NPSHSYST.autoritet" "Autoritet" ">.9999" "decimal" ? ? ? ? ? ? no "" no no "7.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[11]   > "_<CALC>"
+     _FldNameList[5]   > NPSHSYST.koblings_alternativ
+"NPSHSYST.koblings_alternativ" "Kobl.alt." "X(2)" "character" ? ? ? ? ? ? no "" no no "7.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[6]   > NPSHSYST.standardpris
+"NPSHSYST.standardpris" "Standardpris" ">>,>>>,>>9.99" "decimal" ? ? ? ? ? ? no "" no no "13.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[7]   > NPSHSYST.med_i_ordre
+"NPSHSYST.med_i_ordre" "Ordre" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "5.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[8]   > NPSHSYST.prim_hastighet
+"NPSHSYST.prim_hastighet" "prim_hastighet" ">>9.999999" "decimal" ? ? ? ? ? ? no "" no no "13.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[9]   > NPSHSYST.sek_hastighet
+"NPSHSYST.sek_hastighet" "sek_hastighet" ">>9.999999" "decimal" ? ? ? ? ? ? no "" no no "13.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[10]   > NPSHSYST.autoritet
+"NPSHSYST.autoritet" "Autoritet" ">.9999" "decimal" ? ? ? ? ? ? no "" no no "7.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[11]   > NPSHSYST.beregnet_anvendelse
 "NPSHSYST.beregnet_anvendelse" "Anvendelse" "X(18)" "character" ? ? ? ? ? ? no "Velg anvendelsesområde" no no "18" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[12]   > "_<CALC>"
+     _FldNameList[12]   > NPSHSYST.fabrikat
 "NPSHSYST.fabrikat" "fabrikat" "X(2)" "character" ? ? ? ? ? ? no "" no no "7" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[13]   > "_<CALC>"
-"NPSHSYST.forhaands_struping" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[14]   > "_<CALC>"
-"NPSHSYST.forhaands_struping_prim" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[15]   > "_<CALC>"
-"NPSHSYST.forhaands_struping_sek" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[16]   > "_<CALC>"
+     _FldNameList[13]   > NPSHSYST.forhaands_struping
+"NPSHSYST.forhaands_struping" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[14]   > NPSHSYST.forhaands_struping_prim
+"NPSHSYST.forhaands_struping_prim" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[15]   > NPSHSYST.forhaands_struping_sek
+"NPSHSYST.forhaands_struping_sek" "Struping" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "7.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[16]   > NPSHSYST.glykol
 "NPSHSYST.glykol" "Glykol" "X(10)" "character" ? ? ? ? ? ? no "Velg glykoltype" no no "10" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[17]   > "_<CALC>"
+     _FldNameList[17]   > NPSHSYST.inngaende_trykk
 "NPSHSYST.inngaende_trykk" "Inng. trykk" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[18]   > "_<CALC>"
-"NPSHSYST.konsentrasjon" "Kons." "X(2)" "character" ? ? ? ? ? ? no "Oppgi glykol konsentrasjon" no no "5.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[19]   > "_<CALC>"
-"NPSHSYST.kvs_hovedport" "KVS Hovedport" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "14.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[20]   > "_<CALC>"
+     _FldNameList[18]   > NPSHSYST.konsentrasjon
+"NPSHSYST.konsentrasjon" "Kons." "X(2)" "character" ? ? ? ? ? ? no "Oppgi glykol konsentrasjon" no no "5.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[19]   > NPSHSYST.kvs_hovedport
+"NPSHSYST.kvs_hovedport" "KVS Hovedport" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "14.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[20]   > NPSHSYST.kvs_shuntport
 "NPSHSYST.kvs_shuntport" "KVS Shuntport" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "14" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[21]   > "_<CALC>"
-"NPSHSYST.ledig_drivtrykk_prim" "Ledig drivtrykk" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "13.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[22]   > "_<CALC>"
-"NPSHSYST.maks_pumpetrykk" "Maks trykk" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[23]   > "_<CALC>"
-"NPSHSYST.minste_pumpetrykk" "Min. pump." ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[24]   > "_<CALC>"
-"NPSHSYST.minste_pumpetrykk_prim" "Min. pump." ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[25]   > "_<CALC>"
+     _FldNameList[21]   > NPSHSYST.ledig_drivtrykk_prim
+"NPSHSYST.ledig_drivtrykk_prim" "Ledig drivtrykk" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "13.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[22]   > NPSHSYST.maks_pumpetrykk
+"NPSHSYST.maks_pumpetrykk" "Maks trykk" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[23]   > NPSHSYST.minste_pumpetrykk
+"NPSHSYST.minste_pumpetrykk" "Min. pump." ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[24]   > NPSHSYST.minste_pumpetrykk_prim
+"NPSHSYST.minste_pumpetrykk_prim" "Min. pump." ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "10.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[25]   > NPSHSYST.ms_automatikk_fabrikat
 "NPSHSYST.ms_automatikk_fabrikat" "Aut.fabr." "X(3)" "character" ? ? ? ? ? ? no "" no no "8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[26]   > "_<CALC>"
-"NPSHSYST.ms_shuntventil_i_leveranse" "Shuntventil med" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "15.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[27]   > "_<CALC>"
+     _FldNameList[26]   > NPSHSYST.ms_shuntventil_i_leveranse
+"NPSHSYST.ms_shuntventil_i_leveranse" "Shuntventil med" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "15.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[27]   > NPSHSYST.ms_ventiltype
 "NPSHSYST.ms_ventiltype" "Ventiltype" "X(20)" "character" ? ? ? ? ? ? no "" no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[28]   > "_<CALC>"
-"NPSHSYST.prim_effekt" "Effekt" ">>>>>>9" "integer" ? ? ? ? ? ? no "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[29]   > "_<CALC>"
-"NPSHSYST.prim_kapasitet" "Kapasitet" "->>9.999" "decimal" ? ? ? ? ? ? no "" no no "8.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[30]   > "_<CALC>"
-"NPSHSYST.prim_temp_inn" "Temp. inn" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "9.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[31]   > "_<CALC>"
-"NPSHSYST.prim_temp_ut" "Temp. ut" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[32]   > "_<CALC>"
+     _FldNameList[28]   > NPSHSYST.prim_effekt
+"NPSHSYST.prim_effekt" "Effekt" ">>>>>>9" "integer" ? ? ? ? ? ? no "" no no "8.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[29]   > NPSHSYST.prim_kapasitet
+"NPSHSYST.prim_kapasitet" "Kapasitet" "->>9.999" "decimal" ? ? ? ? ? ? no "" no no "8.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[30]   > NPSHSYST.prim_temp_inn
+"NPSHSYST.prim_temp_inn" "Temp. inn" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "9.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[31]   > NPSHSYST.prim_temp_ut
+"NPSHSYST.prim_temp_ut" "Temp. ut" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[32]   > NPSHSYST.prod_nr
 "NPSHSYST.prod_nr" "Prod.nr." "X(18)" "character" ? ? ? ? ? ? no "" no no "18" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[33]   > "_<CALC>"
-"NPSHSYST.sek_effekt" "Effekt" ">>>>>>9" "integer" ? ? ? ? ? ? no "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[34]   > "_<CALC>"
-"NPSHSYST.sek_kapasitet" "Kapasitet" "->>9.999" "decimal" ? ? ? ? ? ? no "" no no "8.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[35]   > "_<CALC>"
-"NPSHSYST.sek_temp_inn" "Temp. inn" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "9.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[36]   > "_<CALC>"
-"NPSHSYST.sek_temp_ut" "Temp. ut" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[37]   > "_<CALC>"
-"NPSHSYST.shunthus_varenr" "Vnr.shunthus" "X(8)" "character" ? ? ? ? ? ? no "" no no "12.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[38]   > "_<CALC>"
-"NPSHSYST.shuntkvs_varenr" "Vnr.shuntkvs" "X(8)" "character" ? ? ? ? ? ? no "" no no "12.4" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[39]   > "_<CALC>"
-"NPSHSYST.shunt_dimmensjon" "Shunt-dimm." "X(3)" "character" ? ? ? ? ? ? no "" no no "11.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[40]   > "_<CALC>"
-"NPSHSYST.shunt_dimmensjon_num" "shunt_dimmensjon_num" ">99" "integer" ? ? ? ? ? ? no "" no no "22.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[41]   > "_<CALC>"
+     _FldNameList[33]   > NPSHSYST.sek_effekt
+"NPSHSYST.sek_effekt" "Effekt" ">>>>>>9" "integer" ? ? ? ? ? ? no "" no no "8.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[34]   > NPSHSYST.sek_kapasitet
+"NPSHSYST.sek_kapasitet" "Kapasitet" "->>9.999" "decimal" ? ? ? ? ? ? no "" no no "8.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[35]   > NPSHSYST.sek_temp_inn
+"NPSHSYST.sek_temp_inn" "Temp. inn" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "9.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[36]   > NPSHSYST.sek_temp_ut
+"NPSHSYST.sek_temp_ut" "Temp. ut" "->>9.99" "decimal" ? ? ? ? ? ? no "" no no "8.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[37]   > NPSHSYST.shunthus_varenr
+"NPSHSYST.shunthus_varenr" "Vnr.shunthus" "X(8)" "character" ? ? ? ? ? ? no "" no no "12.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[38]   > NPSHSYST.shuntkvs_varenr
+"NPSHSYST.shuntkvs_varenr" "Vnr.shuntkvs" "X(8)" "character" ? ? ? ? ? ? no "" no no "12.38" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[39]   > NPSHSYST.shunt_dimmensjon
+"NPSHSYST.shunt_dimmensjon" "Shunt-dimm." "X(3)" "character" ? ? ? ? ? ? no "" no no "11.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[40]   > NPSHSYST.shunt_dimmensjon_num
+"NPSHSYST.shunt_dimmensjon_num" "shunt_dimmensjon_num" ">99" "integer" ? ? ? ? ? ? no "" no no "22.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[41]   > NPSHSYST.sikkerhet
 "NPSHSYST.sikkerhet" "Sikkerhet" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "9" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[42]   > "_<CALC>"
+     _FldNameList[42]   > NPSHSYST.strupe_dimmensjon_prim
 "NPSHSYST.strupe_dimmensjon_prim" "strupe_dimmensjon_prim" "X(8)" "character" ? ? ? ? ? ? no "" no no "23" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[43]   > "_<CALC>"
-"NPSHSYST.strupe_dimmensjon_sek" "strupe_dimmensjon_sek" "X(8)" "character" ? ? ? ? ? ? no "" no no "22.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[44]   > "_<CALC>"
+     _FldNameList[43]   > NPSHSYST.strupe_dimmensjon_sek
+"NPSHSYST.strupe_dimmensjon_sek" "strupe_dimmensjon_sek" "X(8)" "character" ? ? ? ? ? ? no "" no no "22.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[44]   > NPSHSYST.tegning_bmp
 "NPSHSYST.tegning_bmp" "tegning_bmp" "X(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[45]   > "_<CALC>"
-"NPSHSYST.trykk_for_shunt_ventil" "Trykk før shuntventil" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "19.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[46]   > "_<CALC>"
-"NPSHSYST.type" "Type" "X(2)" "character" ? ? ? ? ? ? no "" no no "4.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[45]   > NPSHSYST.trykk_for_shunt_ventil
+"NPSHSYST.trykk_for_shunt_ventil" "Trykk før shuntventil" ">>9.99" "decimal" ? ? ? ? ? ? no "" no no "19.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[46]   > NPSHSYST.type
+"NPSHSYST.type" "Type" "X(2)" "character" ? ? ? ? ? ? no "" no no "4.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[47]   > NPSHSYST.anlegg
+"NPSHSYST.anlegg" "Anlegg" "X(45)" "character" ? ? ? ? ? ? no "Anleggets navn (oppdragssted)" no no "45" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[48]   > NPSHSYST.betegnelse
+"NPSHSYST.betegnelse" "Betegnelse" "X(25)" "character" ? ? ? ? ? ? no "" no no "25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPSHSYST */
 &ANALYZE-RESUME
@@ -624,6 +684,39 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE EditRecord C-Win 
+PROCEDURE EditRecord :
+  
+  def var oParam as oo.parameter no-undo.
+  def var hChild as handle no-undo.
+  def var oChildContainer as JBoxContainer no-undo.
+  def var currentRowid as rowid no-undo.
+
+  currentRowid = oBrwNPSHSYST:BUFFER-HANDLE:rowid.
+  
+  oParam = new oo.parameter().
+  oParam:addParameter('prosjektid','').
+  hChild = JBoxMainMenu:Instance:StartChildWindow("wshSystemDetalj.w",'System vedlikehold',no).
+  if valid-handle(hChild) then do:
+    //oChildContainer = JBoxMainMenu:Instance:getContainerObject(hChild).    
+    run getContainer in hChild (output oChildContainer).
+    oChildContainer:BROWSE-OBJECT:setParentBrowseObject(oBrwNPSHSYST:PARENT-BROWSE-OBJECT,'anleggsnr').    
+    
+    oBrwNPSHSYST:PARENT-BROWSE-OBJECT:displayRecord().
+    oBrwNPSHSYST:QUERY-HANDLE:reposition-to-rowid(currentRowid).
+    
+    oChildContainer:BROWSE-OBJECT:BUFFER-HANDLE:find-first(subst('where anleggsnr=&1 and systemnr=&2',NPSHSYST.anleggsnr,NPSHSYST.systemnr)).
+    
+    oChildContainer:BROWSE-OBJECT:QUERY-HANDLE:reposition-to-rowid(oChildContainer:BROWSE-OBJECT:BUFFER-HANDLE:rowid).
+    oChildContainer:BROWSE-OBJECT:displayRecord().
+        
+    oChildContainer:TOOLBAR-OBJECT:applyTool('Edit').
+  end.
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI C-Win  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
 /*------------------------------------------------------------------------------
@@ -659,7 +752,7 @@ oContainer:addStatusBar().
 DO WITH FRAME {&FRAME-NAME}:
 
   oBrwNPSHSYST = NEW JBoxBrowse(brwNPSHSYST:HANDLE).
-  dynamic-function('setAttribute',oBrwNPSHSYST:BROWSE-HANDLE,'ExcelColumToText','trykk_for_shunt_ventil').
+  //dynamic-function('setAttribute',oBrwNPSHSYST:BROWSE-HANDLE,'ExcelColumToText','trykk_for_shunt_ventil').
   otbNPSHSYST = NEW JBoxToolbar(tbNPSHSYST:HANDLE).
 
   oBrwNPSHSYST:TOOLBAR-OBJECT = otbNPSHSYST.
@@ -695,8 +788,20 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE NewRecord C-Win 
 PROCEDURE NewRecord :
+def var oParam as oo.parameter no-undo.
   def var hChild as handle no-undo.
-  hChild = JBoxMainMenu:Instance:StartChildWindow("shendsys.w",'Nytt system',yes).
+  def var oChildContainer as JBoxContainer no-undo.
+  
+  oParam = new oo.parameter().
+  oParam:addParameter('prosjektid','').
+  hChild = JBoxMainMenu:Instance:StartChildWindow("wshSystemDetalj.w",'System vedlikehold',no).
+  if valid-handle(hChild) then do:
+    //oChildContainer = JBoxMainMenu:Instance:getContainerObject(hChild).    
+    run getContainer in hChild (output oChildContainer).
+    oChildContainer:BROWSE-OBJECT:setParentBrowseObject(oBrwNPSHSYST:PARENT-BROWSE-OBJECT,'anleggsnr').    
+    oBrwNPSHSYST:PARENT-BROWSE-OBJECT:displayRecord().    
+    oChildContainer:TOOLBAR-OBJECT:applyTool('New').
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */

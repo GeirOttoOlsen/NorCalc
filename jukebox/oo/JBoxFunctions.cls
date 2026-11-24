@@ -204,6 +204,20 @@ CLASS JBoxFunctions:
     
   END METHOD.
 
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD PUBLIC CHARACTER toBase64( INPUT icString AS CHAR ):
+    
+    DEFINE VARIABLE ByteStreng    AS "System.Byte[]"      NO-UNDO.
+
+    ByteStreng = System.Text.ASCIIEncoding:ASCII:GetBytes(icString).
+    RETURN System.Convert:ToBase64String(ByteStreng).
+
+  END METHOD.
+
   METHOD PUBLIC CHAR ViewFile (icFileName AS CHAR).
     RETURN DYNAMIC-FUNCTION("setWebDoc","open",icFileName).
   END METHOD.

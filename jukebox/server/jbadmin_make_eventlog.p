@@ -47,6 +47,8 @@ DEF VAR hSourceTabFld  AS HANDLE NO-UNDO.
 DEF VAR hKeyFldListFld AS HANDLE NO-UNDO.
 DEF VAR iEventLogHdrId AS INT    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DO ix = 1 TO NUM-ENTRIES(icParam,"|"):
   CASE ix:
     WHEN 1 THEN cEventType     = ENTRY(ix,icParam,"|") NO-ERROR.

@@ -5,6 +5,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOk        AS LOG  NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR cASuserid      AS CHAR NO-UNDO.
 
 DEF VAR hBuffLoginSess AS HANDLE NO-UNDO.

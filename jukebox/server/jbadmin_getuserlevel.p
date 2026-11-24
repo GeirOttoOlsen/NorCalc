@@ -20,7 +20,7 @@ IF NOT ERROR-STATUS:ERROR THEN DO:
     ELSE DO:          
       CREATE BUFFER hCompUserBuffer FOR TABLE "JBoxCompanyUser" NO-ERROR.
       IF NOT ERROR-STATUS:ERROR THEN DO:
-        bOk = hCompUserBuffer:FIND-FIRST("cJBoxUserId = '" + cCurrUserId + "' AND iJBoxCompanyId = " + STRING(iiJBoxCompanyId)) NO-ERROR.
+        bOk = hCompUserBuffer:FIND-FIRST("WHERE cJBoxUserId = '" + cCurrUserId + "' AND iJBoxCompanyId = " + STRING(iiJBoxCompanyId)) NO-ERROR.
         IF bOk THEN DO:
           IF hCompUserBuffer:BUFFER-FIELD("bSuperUserCompany"):BUFFER-VALUE THEN
             ASSIGN ocUserLevel = "companysuper"

@@ -43,6 +43,16 @@ END.
 <CODE>    
 <CODE>  END.
        
+<NAME>DropFileNotifyBrowse
+<TYPE>Tool
+<DESC>DROP-TARGET property for browse-handle must be set to TRUE:
+<DESC>oBrw..:BROWSE-HANDLE:DROP-TARGET = YES.
+<CODE>  DEF VAR ix AS INT NO-UNDO.
+<CODE>  DO ix = 1 TO oBrw<..>:BROWSE-HANDLE:NUM-DROPPED-FILES:
+<CODE>    DYNAMIC-FUNCTION("LoadDocs",oBrw<..>:BROWSE-HANDLE:GET-DROPPED-FILE(ix),<"Context",<"EntityId","cDocDescription").
+<CODE>  END.
+
+
 <NAME>EditRecord
 <TYPE>Tool
 <DESC>EditRecord is automatically invoked by the tool EDIT.
@@ -193,10 +203,21 @@ CODE oJBoxEmail = NEW JBoxEmailViaDefaultClient(cSubject,cBody,cDocDownloadList)
 <DESC>Also you might need to know wether the save operation is for a new (or copy of a) record.
 <DESC>To add additional fields and data use the property bufferExtraFields (comma-sep list)"
 <DESC>with corresponding values set using the bufferExtraValues (pipe-separated)."
+<DESC>If multiple toolbars in the container you can check which save-button was pressed by using
+<DESC>IF <toolbarObject>:isCurrent THEN..
 <DESC>To determine if it's a new record check the toolbar-state (before RUN SUPER):"
 <DESC>cTbState = <toolbarObject>:objectState.
 <CODE>  DO WITH FRAME {&FRAME-NAME}:
-<CODE>    
+<CODE>    /* Typical.. (if dtCreated and dtModified are not added as standard fields to be populated by jbserv_getautoassigncrevalues.p/jbserv_getautoassignupdvalues.p)
+<CODE>    IF <toolbarObject>:isCurrent THEN DO:
+<CODE>      IF <toolbarObject>:objectState = "new" THEN
+<CODE>        <fieldmapObject>:bufferExtraFields = "dtCreated".
+<CODE>      ELSE  
+<CODE>        <fieldmapObject>:bufferExtraFields = "dtModified".
+<CODE>        
+<CODE>      <fieldmapObject>:bufferExtraValues = STRING(NOW).
+<CODE>    END.
+<CODE> 	  */ 
 <CODE>  END.
 <CODE>  RUN SUPER.
 <CODE>  DO WITH FRAME {&FRAME-NAME}:
@@ -439,3 +460,37 @@ oBrwFillIn:queryCriteria = "WHERE salesrep = '" + Customer.SalesRep + "'".
 
 <CODE>
 RUN SUPER.
+
+<NAME>ExcelRecord
+<TYPE>Browse
+<DESC>Export browse content
+Extra formatting options:
+  SUBSCRIBE PROCEDURE THIS-PROCEDURE TO "ExcelPreLoadParams" ANYWHERE.
+  SUBSCRIBE PROCEDURE THIS-PROCEDURE TO "ExcelSheetParams" ANYWHERE.  
+
+See "Hooks" for sample code for formatting
+<CODE>
+  RUN SUPER.
+
+<NAME>LeaveBrowseFillIn
+<TYPE>Browse
+<DESC>Leave of browse overlay fill-in. If the fill-in is defined explicit use the IsCurrent to determine the overlay object.
+If the fill-in is implicit (oBrw..:enabled-columns) then use JBoxSession:Instance:CurrentWidget to find the field-handle
+<CODE>
+RUN SUPER.
+// IF oFillIn..:IsCurrent..
+
+<NAME>LeaveBrowseToggle
+<TYPE>Browse
+<DESC>Leave of browse overlay toggle. If the explicit is defined explicit use the IsCurrent to determine the overlay object.
+If the toggle is implicit (oBrw..:enabled-columns) then use JBoxSession:Instance:CurrentWidget to find the field-handle
+<CODE>
+RUN SUPER.
+// IF oToggle..:IsCurrent..
+
+<NAME>LeaveBrowseDropDown
+<TYPE>Browse
+<DESC>Leave of browse overlay drop-down. Use IsCurrent to determine the drop-down object.
+<CODE>
+RUN SUPER.
+// IF oDropDown..:IsCurrent..

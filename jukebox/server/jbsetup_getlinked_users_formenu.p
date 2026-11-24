@@ -18,6 +18,8 @@ DEF VAR hBuffJBoxUser      AS HANDLE NO-UNDO.
 DEF VAR hQuery             AS HANDLE NO-UNDO.
 DEF VAR hWriteAccess       AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 iMenuId = INT(ENTRY(1,icParam,";")).
 
 CREATE BUFFER hBuffJBoxUserMenu FOR TABLE "JBoxUserMenu" NO-ERROR.

@@ -4,6 +4,8 @@ DEF INPUT  PARAM icValues        AS CHAR NO-UNDO.
 DEF INPUT  PARAM icSessionId     AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR hDocRelBuff AS HANDLE NO-UNDO.
 DEF VAR bOK         AS LOG    NO-UNDO.
 DEF VAR ix          AS INT    NO-UNDO.

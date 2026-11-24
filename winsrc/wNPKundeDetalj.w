@@ -109,7 +109,7 @@ DEF TEMP-TABLE NPKUNDE
     FIELD RowCount AS INTEGER
     INDEX idxRowids  RowIdent1
     .
-DEFINE BUFFER v_NPKUNDE FOR NPKUNDE.
+DEFINE BUFFER v_NPKUNDE FOR temp-table NPKUNDE.
 
 FUNCTION getTableHandleQryNPKUNDE RETURNS HANDLE().
   RETURN BUFFER NPKUNDE:HANDLE:TABLE-HANDLE.
@@ -121,6 +121,7 @@ FUNCTION getBuffersAndFieldsQryNPKUNDE RETURNS CHARACTER().
 END FUNCTION.
 FUNCTION getQueryJoinQryNPKUNDE RETURNS CHARACTER().
   RETURN ' first Postnummer where cPostnr = NPKunde.PostNr outer-join, first kommune of Postnummer outer-join, first Distrikt of kommune outer-join, first Land outer-join where Land.cLandKode = NPKunde.land'.
+/*  RETURN ' first Postnummer where cPostnr = NPKunde.PostNr outer-join, first kommune of Postnummer outer-join, first Distrikt of kommune outer-join, first Land outer-join where Land.cLandKode = NPKunde.land'.*/
 END FUNCTION.
 /*** End instance property settings for JBoxQuery object oQryNPKUNDE ***/
 
@@ -157,13 +158,13 @@ DEF VAR otbNPKUNDE AS JBoxToolbar NO-UNDO.
 &Scoped-Define ENABLED-OBJECTS er_konsulent Tilbudsmottager rabatt%_1 ~
 rabatt%_2 lblOrganisasjon organisasjon kundenr konsulentnr kundenavn ~
 adresse1 adresse2 postnr Land kundedistriktnr new_tbNPKUNDE undo_tbNPKUNDE ~
-save_tbNPKUNDE delete_tbNPKUNDE kontor_type kundekategori poststed ~
-btnPostnummer telefon KommuneNavn mobil DistriktNavn fax cLand ~
-sist_oppdatert btnLand tbNPKUNDE 
+save_tbNPKUNDE delete_tbNPKUNDE kontor_type kundekategori Poststed ~
+btnPostnummer telefon mobil kommunenavn fax cLand sist_oppdatert btnLand ~
+fylke tbNPKUNDE 
 &Scoped-Define DISPLAYED-OBJECTS er_konsulent Tilbudsmottager rabatt%_1 ~
 rabatt%_2 lblOrganisasjon organisasjon kundenr konsulentnr kundenavn ~
 adresse1 adresse2 postnr Land kundedistriktnr kontor_type kundekategori ~
-poststed telefon KommuneNavn mobil DistriktNavn fax cLand sist_oppdatert 
+Poststed telefon mobil kommunenavn fax cLand sist_oppdatert fylke 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -176,7 +177,7 @@ poststed telefon KommuneNavn mobil DistriktNavn fax cLand sist_oppdatert
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON btnLand 
@@ -191,25 +192,25 @@ DEFINE BUTTON delete_tbNPKUNDE
      IMAGE-UP FILE "img/ico/document_delete.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_delete_disabled.gif":U
      LABEL "Slett" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Slett (CTRL-D)".
+     SIZE 6 BY 1.53 TOOLTIP "Slett (CTRL-D)".
 
 DEFINE BUTTON new_tbNPKUNDE 
      IMAGE-UP FILE "img/ico/document_add.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_add_disabled.gif":U
      LABEL "Ny" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Ny (CTRL-N)".
+     SIZE 6 BY 1.53 TOOLTIP "Ny (CTRL-N)".
 
 DEFINE BUTTON save_tbNPKUNDE 
      IMAGE-UP FILE "img/ico/floppy_disk.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/floppy_disk_disabled.gif":U
      LABEL "Lagre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Lagre (CTRL-S)".
+     SIZE 6 BY 1.53 TOOLTIP "Lagre (CTRL-S)".
 
 DEFINE BUTTON undo_tbNPKUNDE 
      IMAGE-UP FILE "img/ico/undo.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/undo_disabled.gif":U
      LABEL "Angre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Angre (CTRL-Z)".
+     SIZE 6 BY 1.53 TOOLTIP "Angre (CTRL-Z)".
 
 DEFINE VARIABLE kontor_type AS CHARACTER FORMAT "X(15)" INITIAL "Hovedkontor" 
      LABEL "Kontortype" 
@@ -239,19 +240,14 @@ DEFINE VARIABLE organisasjon AS CHARACTER
 DEFINE VARIABLE adresse1 AS CHARACTER FORMAT "X(30)" 
      LABEL "Adresse 1" 
      VIEW-AS FILL-IN 
-     SIZE 45 BY 1.
+     SIZE 49 BY 1.
 
 DEFINE VARIABLE adresse2 AS CHARACTER FORMAT "X(30)" 
      LABEL "Adresse 2" 
      VIEW-AS FILL-IN 
-     SIZE 45 BY 1.
+     SIZE 49 BY 1.
 
 DEFINE VARIABLE cLand AS CHARACTER FORMAT "X(20)" 
-     VIEW-AS FILL-IN 
-     SIZE 30 BY 1.
-
-DEFINE VARIABLE DistriktNavn AS CHARACTER FORMAT "X(18)" 
-     LABEL "Fylke" 
      VIEW-AS FILL-IN 
      SIZE 30 BY 1.
 
@@ -260,7 +256,12 @@ DEFINE VARIABLE fax AS CHARACTER FORMAT "X(15)"
      VIEW-AS FILL-IN 
      SIZE 17 BY 1.
 
-DEFINE VARIABLE KommuneNavn AS CHARACTER FORMAT "X(18)" 
+DEFINE VARIABLE fylke AS CHARACTER FORMAT "X(18)" 
+     LABEL "Fylke" 
+     VIEW-AS FILL-IN 
+     SIZE 30 BY 1.
+
+DEFINE VARIABLE kommunenavn AS CHARACTER FORMAT "X(18)" 
      LABEL "Kommune" 
      VIEW-AS FILL-IN 
      SIZE 30 BY 1.
@@ -268,26 +269,26 @@ DEFINE VARIABLE KommuneNavn AS CHARACTER FORMAT "X(18)"
 DEFINE VARIABLE konsulentnr AS INTEGER FORMAT ">>>>>>>9" INITIAL 0 
      LABEL "Konsulentnr" 
      VIEW-AS FILL-IN 
-     SIZE 13.2 BY 1.
+     SIZE 17 BY 1.
 
 DEFINE VARIABLE kundenavn AS CHARACTER FORMAT "X(30)" 
      LABEL "Kundenavn" 
      VIEW-AS FILL-IN 
-     SIZE 45 BY 1.
+     SIZE 49 BY 1.
 
 DEFINE VARIABLE kundenr AS CHARACTER FORMAT "X(8)" 
      LABEL "Kundenr" 
      VIEW-AS FILL-IN 
-     SIZE 13.6 BY 1.
+     SIZE 13.63 BY 1.
 
 DEFINE VARIABLE Land AS CHARACTER FORMAT "X(2)" 
      LABEL "Land" 
      VIEW-AS FILL-IN 
-     SIZE 13.6 BY 1.
+     SIZE 13.63 BY 1.
 
 DEFINE VARIABLE lblOrganisasjon AS CHARACTER FORMAT "X(256)":U INITIAL "Organisasjon:" 
       VIEW-AS TEXT 
-     SIZE 14 BY .62 NO-UNDO.
+     SIZE 14 BY .63 NO-UNDO.
 
 DEFINE VARIABLE mobil AS CHARACTER FORMAT "x(15)" 
      LABEL "Mobil" 
@@ -297,9 +298,9 @@ DEFINE VARIABLE mobil AS CHARACTER FORMAT "x(15)"
 DEFINE VARIABLE postnr AS CHARACTER FORMAT "X(8)" 
      LABEL "Postnr." 
      VIEW-AS FILL-IN 
-     SIZE 13.6 BY 1.
+     SIZE 13.63 BY 1.
 
-DEFINE VARIABLE poststed AS CHARACTER FORMAT "X(22)" 
+DEFINE VARIABLE Poststed AS CHARACTER FORMAT "X(22)" 
      VIEW-AS FILL-IN 
      SIZE 30 BY 1.
 
@@ -325,17 +326,17 @@ DEFINE VARIABLE telefon AS CHARACTER FORMAT "X(15)"
 
 DEFINE RECTANGLE tbNPKUNDE
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 148 BY 2.14.
+     SIZE 148 BY 1.72.
 
 DEFINE VARIABLE er_konsulent AS LOGICAL INITIAL no 
      LABEL "Konsulent" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 DEFINE VARIABLE Tilbudsmottager AS LOGICAL INITIAL no 
      LABEL "Tilbud" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -346,40 +347,40 @@ DEFINE QUERY QUERY-2 FOR
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     er_konsulent AT ROW 9.33 COL 107 WIDGET-ID 54
-     Tilbudsmottager AT ROW 10.05 COL 107 WIDGET-ID 56
+     er_konsulent AT ROW 9.34 COL 107 WIDGET-ID 54
+     Tilbudsmottager AT ROW 10.06 COL 107 WIDGET-ID 56
      rabatt%_1 AT ROW 7.19 COL 105 COLON-ALIGNED
-     rabatt%_2 AT ROW 8.14 COL 105 COLON-ALIGNED
-     lblOrganisasjon AT ROW 3.14 COL 121 NO-LABEL
-     organisasjon AT ROW 3.86 COL 121 NO-LABEL WIDGET-ID 52
-     kundenr AT ROW 3.14 COL 13 COLON-ALIGNED
-     konsulentnr AT ROW 3.14 COL 45 COLON-ALIGNED
-     kundenavn AT ROW 4.1 COL 13 COLON-ALIGNED
-     adresse1 AT ROW 5.05 COL 13 COLON-ALIGNED
+     rabatt%_2 AT ROW 8.13 COL 105 COLON-ALIGNED
+     lblOrganisasjon AT ROW 3.13 COL 121 NO-LABEL
+     organisasjon AT ROW 3.88 COL 121 NO-LABEL WIDGET-ID 52
+     kundenr AT ROW 3.13 COL 13 COLON-ALIGNED
+     konsulentnr AT ROW 3.13 COL 45 COLON-ALIGNED
+     kundenavn AT ROW 4.09 COL 13 COLON-ALIGNED
+     adresse1 AT ROW 5.06 COL 13 COLON-ALIGNED
      adresse2 AT ROW 6 COL 13 COLON-ALIGNED
-     postnr AT ROW 6.95 COL 13 COLON-ALIGNED
-     Land AT ROW 10 COL 13 COLON-ALIGNED
-     kundedistriktnr AT ROW 11.43 COL 13 COLON-ALIGNED WIDGET-ID 48
-     new_tbNPKUNDE AT ROW 1.1 COL 1.2 WIDGET-ID 36
-     undo_tbNPKUNDE AT ROW 1.1 COL 17 WIDGET-ID 38
-     save_tbNPKUNDE AT ROW 1.1 COL 9.2 WIDGET-ID 40
-     delete_tbNPKUNDE AT ROW 1.1 COL 24.8 WIDGET-ID 42
-     kontor_type AT ROW 3.86 COL 75 COLON-ALIGNED WIDGET-ID 44
+     postnr AT ROW 6.94 COL 13 COLON-ALIGNED
+     Land AT ROW 10.53 COL 13 COLON-ALIGNED
+     kundedistriktnr AT ROW 11.47 COL 13 COLON-ALIGNED WIDGET-ID 48
+     new_tbNPKUNDE AT ROW 1.09 COL 1.25 WIDGET-ID 36
+     undo_tbNPKUNDE AT ROW 1.09 COL 13.38 WIDGET-ID 38
+     save_tbNPKUNDE AT ROW 1.09 COL 7.38 WIDGET-ID 40
+     delete_tbNPKUNDE AT ROW 1.09 COL 19.38 WIDGET-ID 42
+     kontor_type AT ROW 3.88 COL 75 COLON-ALIGNED WIDGET-ID 44
      kundekategori AT ROW 4.91 COL 75 COLON-ALIGNED WIDGET-ID 46
-     poststed AT ROW 7 COL 32 COLON-ALIGNED NO-LABEL
-     btnPostnummer AT ROW 7 COL 28.6 WIDGET-ID 32 NO-TAB-STOP 
+     Poststed AT ROW 7 COL 32 COLON-ALIGNED NO-LABEL
+     btnPostnummer AT ROW 7 COL 28.63 WIDGET-ID 32 NO-TAB-STOP 
      telefon AT ROW 7.19 COL 75 COLON-ALIGNED
-     KommuneNavn AT ROW 8 COL 32 COLON-ALIGNED
-     mobil AT ROW 8.14 COL 75 COLON-ALIGNED
-     DistriktNavn AT ROW 9 COL 32 COLON-ALIGNED
-     fax AT ROW 9.1 COL 75 COLON-ALIGNED
-     cLand AT ROW 10 COL 32 COLON-ALIGNED NO-LABEL
-     sist_oppdatert AT ROW 11.48 COL 75 COLON-ALIGNED
-     btnLand AT ROW 10 COL 28.6 WIDGET-ID 50 NO-TAB-STOP 
+     mobil AT ROW 8.13 COL 75 COLON-ALIGNED
+     kommunenavn AT ROW 8.13 COL 32 COLON-ALIGNED
+     fax AT ROW 9.09 COL 75 COLON-ALIGNED
+     cLand AT ROW 10.53 COL 32 COLON-ALIGNED NO-LABEL
+     sist_oppdatert AT ROW 11.47 COL 75 COLON-ALIGNED
+     btnLand AT ROW 10.53 COL 28.63 WIDGET-ID 50 NO-TAB-STOP 
+     fylke AT ROW 9.34 COL 32 COLON-ALIGNED
      tbNPKUNDE AT ROW 1 COL 1 WIDGET-ID 34
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SCROLLABLE SIZE 148 BY 12.19 WIDGET-ID 100.
 
 
@@ -399,11 +400,11 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 12.1
+         HEIGHT             = 12.09
          WIDTH              = 148
-         MAX-HEIGHT         = 23.52
+         MAX-HEIGHT         = 23.53
          MAX-WIDTH          = 148
-         VIRTUAL-HEIGHT     = 23.52
+         VIRTUAL-HEIGHT     = 23.53
          VIRTUAL-WIDTH      = 148
          RESIZE             = yes
          SCROLL-BARS        = no
@@ -547,11 +548,11 @@ DO:
   IF JBoxServerAPI:Instance:LookupOk THEN DO:
     ASSIGN 
       Postnr:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("cPostnr")
-      poststed:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("cPostSted")
+      Poststed:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("cPostSted")
       Kommunenavn:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("Kommunenavn")
-      distriktnavn:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("Distriktnavn")
+      fylke:SCREEN-VALUE = JBoxServerAPI:Instance:LookupValue("Distriktnavn")
       .
-      if distriktnavn:screen-value ne '' then 
+      if fylke:screen-value ne '' then 
         assign 
           Land:screen-value = 'NO'
           cLand:screen-value = 'Norge'.
@@ -642,6 +643,22 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DisplayRecord C-Win 
+PROCEDURE DisplayRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  run super.
+  do with frame {&frame-name}:
+      
+  end.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI C-Win  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
 /*------------------------------------------------------------------------------
@@ -655,15 +672,15 @@ PROCEDURE enable_UI :
 ------------------------------------------------------------------------------*/
   DISPLAY er_konsulent Tilbudsmottager rabatt%_1 rabatt%_2 lblOrganisasjon 
           organisasjon kundenr konsulentnr kundenavn adresse1 adresse2 postnr 
-          Land kundedistriktnr kontor_type kundekategori poststed telefon 
-          KommuneNavn mobil DistriktNavn fax cLand sist_oppdatert 
+          Land kundedistriktnr kontor_type kundekategori Poststed telefon mobil 
+          kommunenavn fax cLand sist_oppdatert fylke 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE er_konsulent Tilbudsmottager rabatt%_1 rabatt%_2 lblOrganisasjon 
          organisasjon kundenr konsulentnr kundenavn adresse1 adresse2 postnr 
          Land kundedistriktnr new_tbNPKUNDE undo_tbNPKUNDE save_tbNPKUNDE 
-         delete_tbNPKUNDE kontor_type kundekategori poststed btnPostnummer 
-         telefon KommuneNavn mobil DistriktNavn fax cLand sist_oppdatert 
-         btnLand tbNPKUNDE 
+         delete_tbNPKUNDE kontor_type kundekategori Poststed btnPostnummer 
+         telefon mobil kommunenavn fax cLand sist_oppdatert btnLand fylke 
+         tbNPKUNDE 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -688,8 +705,8 @@ DO WITH FRAME {&FRAME-NAME}:
    oQryNPKUNDE = NEW JBoxQuery('NPKUNDE').
 
   oFmNPKUNDE = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmNPKUNDE:updateFields = 'Kundenr,kundenavn,adresse1,adresse2,fax,konsulentnr,kontor_type,kundedistriktnr,kundekategori,mobil,postnr,telefon,land,Organisasjon,rabatt%_1,rabatt%_2,er_konsulent,tilbudsmottager'.
-  oFmNPKUNDE:DisplayFields = 'sist_oppdatert,poststed,Distriktnavn,cLand,kommunenavn'.
+  oFmNPKUNDE:updateFields = 'Kundenr,kundenavn,adresse1,adresse2,fax,konsulentnr,kontor_type,kundedistriktnr,kundekategori,mobil,postnr,poststed,telefon,land,Organisasjon,rabatt%_1,rabatt%_2,er_konsulent,tilbudsmottager'.
+  oFmNPKUNDE:DisplayFields = 'sist_oppdatert,Fylke,kommunenavn,cLand'.
 
   oFmNPKUNDE:QUERY-OBJECT = oQryNPKUNDE.
   otbNPKUNDE = NEW JBoxToolbar(tbNPKUNDE:HANDLE).
@@ -707,7 +724,7 @@ DO WITH FRAME {&FRAME-NAME}:
 END.
 
 
-oContainer:initResize(600,300).
+oContainer:initResize(1200,300).
 
 END PROCEDURE.
 
@@ -724,20 +741,28 @@ PROCEDURE LeaveOfFieldHandle :
   def var cKkode as char no-undo.
   def var cDkode as char no-undo.
   def var cLandkode as char no-undo.
+  def var tPostnr as char no-undo.
+  def var tPoststed as char no-undo.
+  def var tFylke as char no-undo.
+  def var tLandKode as char no-undo.
+  def var tLand as char no-undo.
   
   IF ihField:MODIFIED THEN DO WITH FRAME {&FRAME-NAME}:
     CASE ihField:NAME:
       WHEN "postnr" THEN
       do: 
         assign 
-          postnr:SCREEN-VALUE = JBoxServerAPI:Instance:FieldValues("PostNummer","WHERE cPostnr = '" + ihField:SCREEN-VALUE + "'","cPostNr")
-          Poststed:Screen-value = JBoxServerAPI:Instance:FieldValues("PostNummer","WHERE cPostnr = '" + ihField:SCREEN-VALUE + "'","cPoststed")
+          tPostnr   = JBoxServerAPI:Instance:FieldValues("PostNummer","WHERE cPostnr = '" + ihField:SCREEN-VALUE + "'","cPostNr")
+          tPoststed = JBoxServerAPI:Instance:FieldValues("PostNummer","WHERE cPostnr = '" + ihField:SCREEN-VALUE + "'","cPoststed")
+          postnr:SCREEN-VALUE = if tPostnr = ? then postnr:screen-value else tPostnr
+          Poststed:Screen-value = if tPoststed = ? then Poststed:screen-value else tPoststed
           cKKode = JBoxServerAPI:Instance:FieldValues("PostNummer","WHERE cPostnr = '" + ihField:SCREEN-VALUE + "'","Kommunekode")
           cDKode = JBoxServerAPI:Instance:FieldValues("kommune","WHERE kommunekode = '" + cKKode + "'","Distriktkode")
           Kommunenavn:Screen-value = JBoxServerAPI:Instance:FieldValues("kommune","WHERE kommunekode = '" + cKKode + "'","KommuneNavn")
-          Distriktnavn:Screen-value = JBoxServerAPI:Instance:FieldValues("Distrikt","WHERE Distriktkode = '" + cDKode + "'","DistriktNavn")
+          tFylke = JBoxServerAPI:Instance:FieldValues("Distrikt","WHERE Distriktkode = '" + cDKode + "'","DistriktNavn")
+          Fylke:Screen-value = if tFylke = ? then Fylke:screen-value else tFylke
           .
-        if distriktnavn:screen-value ne '' then 
+        if Fylke:screen-value ne '' then 
         assign 
           Land:screen-value = 'NO'
           cLand:Screen-value = JBoxServerAPI:Instance:FieldValues("Land","WHERE cLandKode = '" + "NO" + "'","cLand")
@@ -746,8 +771,10 @@ PROCEDURE LeaveOfFieldHandle :
       end.
       WHEN "land" THEN 
         assign 
-          land:SCREEN-VALUE = JBoxServerAPI:Instance:FieldValues("Land","WHERE clandkode = '" + ihField:SCREEN-VALUE + "'","cLandkode")
-          cLand:Screen-value = JBoxServerAPI:Instance:FieldValues("Land","WHERE cLandKode = '" + ihField:SCREEN-VALUE + "'","cLand")
+          tLandKode = JBoxServerAPI:Instance:FieldValues("Land","WHERE clandkode = '" + ihField:SCREEN-VALUE + "'","cLandkode")
+          tLand     = JBoxServerAPI:Instance:FieldValues("Land","WHERE cLandKode = '" + ihField:SCREEN-VALUE + "'","cLand")
+          land:SCREEN-VALUE  = if tLandKode = ? then Land:screen-value else tLandKode
+          cLand:Screen-value = if tLand = ? then cLand:screen-value else tLand 
           .
     END CASE.
     if ihField:screen-value = ? then return no-apply.
@@ -785,9 +812,12 @@ PROCEDURE SaveRecord :
 ------------------------------------------------------------------------------*/
 if avail NPKUNDE and (NPKUNDE.kundenr = '' or NPKUNDE.kundenavn = '') then 
 do:
-  MESSAGE 'Kundenr og kundenavn må ha verdi'
+  MESSAGE 'Kundenr og kundenavn mï¿½ ha verdi'
   VIEW-AS ALERT-BOX.
   undo, return.
+end.
+do with frame {&Frame-name}:
+  oFmNPKUNDE:bufferExtraValues = Fylke:screen-value + '|' + poststed:screen-value.
 end.
 run super.
 

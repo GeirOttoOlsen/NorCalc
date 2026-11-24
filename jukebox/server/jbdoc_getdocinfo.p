@@ -14,6 +14,7 @@ DEF VAR hBufferDocument AS HANDLE NO-UNDO.
 DEF VAR httBuffer       AS HANDLE NO-UNDO.
 DEF VAR hQuery          AS HANDLE NO-UNDO.
 DEF VAR hBuffDocRev     AS HANDLE NO-UNDO.
+DEF VAR iDocId          AS INT    NO-UNDO.
 
 {incl/validatesession.i}
 
@@ -23,17 +24,12 @@ IF icParam BEGINS "JBoxPackage," THEN
   icParam = ENTRY(1,icParam) + "|" + ENTRY(2,icParam).
 /* ------------ end suffering.. */
 
-CREATE BUFFER hBufferDocRel FOR TABLE "JBoxDocRel" NO-ERROR.
-CREATE BUFFER hBufferDocument FOR TABLE "JBoxDocument" NO-ERROR.
-/*hBufferDocRel   = BUFFER JBoxDocRel:HANDLE NO-ERROR.  */
-/*hBufferDocument = BUFFER JBoxDocument:HANDLE NO-ERROR.*/
-
-IF ERROR-STATUS:ERROR THEN RETURN.
-
 CREATE TEMP-TABLE hTempTable.
 hTempTable:CREATE-LIKE("JBoxDocument").
 hTempTable:TEMP-TABLE-PREPARE("ttDocInfo").
 
+hBufferDocRel   = BUFFER JBoxDocRel:HANDLE.
+hBufferDocument = BUFFER JBoxDocument:HANDLE.
 
 httBuffer = hTempTable:DEFAULT-BUFFER-HANDLE.
 
@@ -74,18 +70,21 @@ IF ENTRY(1,icParam,"|") NE "JBoxDocument" AND ENTRY(1,icParam,"|") NE "JBoxDocRe
     hQuery:GET-NEXT().
   END.
 END.
-ELSE IF ENTRY(1,icParam,"|") = "JBoxDocument" THEN DO:
-  CREATE QUERY hQuery.
-  hQuery:SET-BUFFERS(hBufferDocument).
-
-  hQuery:QUERY-PREPARE("FOR EACH JBoxDocument NO-LOCK WHERE iJBoxDocumentId = " 
-                          + ENTRY(2,icParam,"|")).
-  hQuery:QUERY-OPEN().
-  hQuery:GET-FIRST().
-
-  IF hBufferDocument:AVAIL THEN DO:
-    httBuffer:BUFFER-CREATE().
-    httBuffer:BUFFER-COPY(hBufferDocument,"blDocument").
+ELSE IF ENTRY(1,icParam,"|") = "JBoxDocument" AND ENTRY(2,icParam,"|") NE "" THEN DO:
+  iDocId = INT(ENTRY(2,icParam,"|")) NO-ERROR.
+  IF NOT ERROR-STATUS:ERROR THEN DO:
+    CREATE QUERY hQuery.
+    hQuery:SET-BUFFERS(hBufferDocument).
+  
+    hQuery:QUERY-PREPARE("FOR EACH JBoxDocument NO-LOCK WHERE iJBoxDocumentId = " 
+                            + ENTRY(2,icParam,"|")).
+    hQuery:QUERY-OPEN().
+    hQuery:GET-FIRST().
+  
+    IF hBufferDocument:AVAIL THEN DO:
+      httBuffer:BUFFER-CREATE().
+      httBuffer:BUFFER-COPY(hBufferDocument,"blDocument").
+    END.
   END.
 END.
 ELSE IF ENTRY(1,icParam,"|") = "JBoxDocRev" THEN DO:
@@ -112,8 +111,6 @@ ELSE IF ENTRY(1,icParam,"|") = "JBoxDocRev" THEN DO:
   DELETE OBJECT hBuffDocRev NO-ERROR.
 END.
 
-FINALLY:
-  DELETE OBJECT hTempTable NO-ERROR.
-  DELETE OBJECT hQuery NO-ERROR.
-END.  
+DELETE OBJECT hTempTable.
+DELETE OBJECT hQuery NO-ERROR.
 

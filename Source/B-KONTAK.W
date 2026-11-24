@@ -56,11 +56,11 @@ CREATE WIDGET-POOL.
 
 /* Definitions for BROWSE br_table                                      */
 &Scoped-define FIELDS-IN-QUERY-br_table NPKONTAKT.kontaktperson ~
-NPKONTAKT.id 
+NPKONTAKT.iNPKontaktid 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-br_table 
 &Scoped-define FIELD-PAIRS-IN-QUERY-br_table
 &Scoped-define OPEN-QUERY-br_table OPEN QUERY br_table FOR EACH NPKONTAKT NO-LOCK ~
-    BY NPKONTAKT.id.
+    BY NPKONTAKT.iNPKontaktid.
 &Scoped-define TABLES-IN-QUERY-br_table NPKONTAKT
 &Scoped-define FIRST-TABLE-IN-QUERY-br_table NPKONTAKT
 
@@ -93,7 +93,7 @@ DEFINE BROWSE br_table
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS br_table B-table-Win _STRUCTURED
   QUERY br_table NO-LOCK DISPLAY
       NPKONTAKT.kontaktperson COLUMN-LABEL "Kontaktperson"
-      NPKONTAKT.id COLUMN-LABEL "Id"
+      NPKONTAKT.iNPKontaktid COLUMN-LABEL "Id"
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
     WITH NO-ASSIGN SEPARATORS SIZE 46.4 BY 6.29
@@ -165,11 +165,11 @@ ASSIGN
 /* Query rebuild information for BROWSE br_table
      _TblList          = "norcalc.NPKONTAKT"
      _Options          = "NO-LOCK"
-     _OrdList          = "norcalc.NPKONTAKT.id|yes"
+     _OrdList          = "norcalc.NPKONTAKT.iNPKontaktid|yes"
      _FldNameList[1]   > norcalc.NPKONTAKT.kontaktperson
 "NPKONTAKT.kontaktperson" "Kontaktperson" ? "character" ? ? ? ? ? ? no ?
-     _FldNameList[2]   > norcalc.NPKONTAKT.id
-"NPKONTAKT.id" "Id" ? "integer" ? ? ? ? ? ? no ?
+     _FldNameList[2]   > norcalc.NPKONTAKT.iNPKontaktid
+"NPKONTAKT.iNPKontaktid" "Id" ? "integer" ? ? ? ? ? ? no ?
      _Query            is NOT OPENED
 */  /* BROWSE br_table */
 &ANALYZE-RESUME

@@ -59,6 +59,7 @@ DEF TEMP-TABLE NPLeveringsbetingelse
     FIELD iNPLeveringsbetingelseId AS integer
     FIELD LeveringsBetingelseKortnavn AS character
     FIELD Leveringsbetingelse AS character
+    FIELD LeveringsBetingelseAktiv AS logical
     FIELD RowIdent1 AS CHARACTER 
     FIELD RowCount AS INTEGER
     FIELD jbCountDistinct AS INTEGER FORMAT '>>>,>>>,>>9' INIT 1
@@ -74,6 +75,7 @@ FUNCTION getBuffersAndFieldsBrwNPLeveringsbetingelse RETURNS CHARACTER():
      + ';iNPLeveringsbetingelseId'
      + ';LeveringsBetingelseKortnavn'
      + ';Leveringsbetingelse'
+     + ';LeveringsBetingelseAktiv'
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNPLeveringsbetingelse RETURNS CHARACTER():
@@ -104,7 +106,8 @@ DEF VAR otbNPLeveringsbetingelse AS JBoxToolbar NO-UNDO.
 &Scoped-define FIELDS-IN-QUERY-BrwNPLeveringsbetingelse ~
 NPLeveringsbetingelse.iNPLeveringsbetingelseId ~
 NPLeveringsbetingelse.LeveringsBetingelseKortnavn ~
-NPLeveringsbetingelse.Leveringsbetingelse 
+NPLeveringsbetingelse.Leveringsbetingelse ~
+NPLeveringsbetingelse.LeveringsBetingelseAktiv 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNPLeveringsbetingelse ~
 NPLeveringsbetingelse.iNPLeveringsbetingelseId 
 &Scoped-define ENABLED-TABLES-IN-QUERY-BrwNPLeveringsbetingelse ~
@@ -124,10 +127,10 @@ NPLeveringsbetingelse
 new_tbNPLeveringsbetingelse copy_tbNPLeveringsbetingelse ~
 undo_tbNPLeveringsbetingelse save_tbNPLeveringsbetingelse ~
 delete_tbNPLeveringsbetingelse refresh_tbNPLeveringsbetingelse ~
-BrwNPLeveringsbetingelse iNPLeveringsbetingelseId ~
+BrwNPLeveringsbetingelse iNPLeveringsbetingelseId LeveringsBetingelseAktiv ~
 LeveringsBetingelseKortnavn Leveringsbetingelse 
 &Scoped-Define DISPLAYED-OBJECTS iNPLeveringsbetingelseId ~
-LeveringsBetingelseKortnavn Leveringsbetingelse 
+LeveringsBetingelseAktiv LeveringsBetingelseKortnavn Leveringsbetingelse 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -192,6 +195,11 @@ DEFINE RECTANGLE tbNPLeveringsbetingelse
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
      SIZE 131 BY 1.71.
 
+DEFINE VARIABLE LeveringsBetingelseAktiv AS LOGICAL INITIAL no 
+     LABEL "Aktiv" 
+     VIEW-AS TOGGLE-BOX
+     SIZE 16 BY .81 NO-UNDO.
+
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
 DEFINE QUERY BrwNPLeveringsbetingelse FOR 
@@ -205,6 +213,8 @@ DEFINE BROWSE BrwNPLeveringsbetingelse
       NPLeveringsbetingelse.iNPLeveringsbetingelseId COLUMN-LABEL "Lev.bet.Id" FORMAT ">>>9":U
       NPLeveringsbetingelse.LeveringsBetingelseKortnavn COLUMN-LABEL "Kortnavn" FORMAT "x(10)":U
       NPLeveringsbetingelse.Leveringsbetingelse COLUMN-LABEL "Lev.betingelse" FORMAT "x(100)":U
+            WIDTH 100
+      NPLeveringsbetingelse.LeveringsBetingelseAktiv COLUMN-LABEL "Aktiv" FORMAT "yes/no":U
   ENABLE
       NPLeveringsbetingelse.iNPLeveringsbetingelseId
 /* _UIB-CODE-BLOCK-END */
@@ -223,6 +233,7 @@ DEFINE FRAME DEFAULT-FRAME
      refresh_tbNPLeveringsbetingelse AT ROW 1.1 COL 31.6 WIDGET-ID 20
      BrwNPLeveringsbetingelse AT ROW 2.91 COL 1 WIDGET-ID 200
      iNPLeveringsbetingelseId AT ROW 3 COL 77 COLON-ALIGNED
+     LeveringsBetingelseAktiv AT ROW 3 COL 95 WIDGET-ID 22
      LeveringsBetingelseKortnavn AT ROW 4 COL 77 COLON-ALIGNED
      Leveringsbetingelse AT ROW 5.05 COL 77 COLON-ALIGNED
      tbNPLeveringsbetingelse AT ROW 1 COL 1 WIDGET-ID 8
@@ -314,6 +325,8 @@ THEN C-Win:HIDDEN = yes.
 "NPLeveringsbetingelse.LeveringsBetingelseKortnavn" "Kortnavn" "x(10)" "character" ? ? ? ? ? ? no "" no no "10" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > NPLeveringsbetingelse.Leveringsbetingelse
 "NPLeveringsbetingelse.Leveringsbetingelse" "Lev.betingelse" "x(100)" "character" ? ? ? ? ? ? no "" no no "100" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[4]   > NPLeveringsbetingelse.LeveringsBetingelseAktiv
+"NPLeveringsbetingelse.LeveringsBetingelseAktiv" "Aktiv" "yes/no" "logical" ? ? ? ? ? ? no "" no no "23.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNPLeveringsbetingelse */
 &ANALYZE-RESUME
@@ -440,15 +453,15 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY iNPLeveringsbetingelseId LeveringsBetingelseKortnavn 
-          Leveringsbetingelse 
+  DISPLAY iNPLeveringsbetingelseId LeveringsBetingelseAktiv 
+          LeveringsBetingelseKortnavn Leveringsbetingelse 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE tbNPLeveringsbetingelse new_tbNPLeveringsbetingelse 
          copy_tbNPLeveringsbetingelse undo_tbNPLeveringsbetingelse 
          save_tbNPLeveringsbetingelse delete_tbNPLeveringsbetingelse 
          refresh_tbNPLeveringsbetingelse BrwNPLeveringsbetingelse 
-         iNPLeveringsbetingelseId LeveringsBetingelseKortnavn 
-         Leveringsbetingelse 
+         iNPLeveringsbetingelseId LeveringsBetingelseAktiv 
+         LeveringsBetingelseKortnavn Leveringsbetingelse 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -474,7 +487,7 @@ DO WITH FRAME {&FRAME-NAME}:
   oBrwNPLeveringsbetingelse:setQuerySort("iNPLeveringsbetingelseId").
   
   oFmNPLeveringsbetingelse = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmNPLeveringsbetingelse:updateFields = 'LeveringsBetingelseKortnavn,Leveringsbetingelse'.
+  oFmNPLeveringsbetingelse:updateFields = 'LeveringsBetingelseKortnavn,Leveringsbetingelse,LeveringsbetingelseAktiv'.
   oFmNPLeveringsbetingelse:DisplayFields = 'iNPLeveringsbetingelseId'.
   
   oFmNPLeveringsbetingelse:BROWSE-OBJECT = oBrwNPLeveringsbetingelse.

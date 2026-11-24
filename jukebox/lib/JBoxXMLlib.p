@@ -1,5 +1,8 @@
 &ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12
 &ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DECLARATIONS Procedure
+USING System.Security.Cryptography.CngAlgorithm FROM ASSEMBLY.
+&ANALYZE-RESUME
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Procedure 
 /*------------------------------------------------------------------------
     File        : mypage_lib.p
@@ -32,9 +35,12 @@ DEF VAR iLogHeaderId    AS INT    NO-UNDO.
 DEF VAR iEventLogId     AS INT    NO-UNDO.
 DEF VAR cSessionId      AS CHAR   NO-UNDO.
 DEF VAR iLoginSessionId AS INT    NO-UNDO.
+DEF VAR iElementCnt     AS INT    NO-UNDO.
+DEF VAR iParentNodeIdx  AS INT    NO-UNDO.
 
 DEFINE VARIABLE mb64Data AS MEMPTR NO-UNDO.
 DEF VAR bUseMptr         AS LOG NO-UNDO.
+DEF VAR cDumpFilter      AS CHAR NO-UNDO.
 
 {ttXML.i}
 
@@ -44,22 +50,24 @@ DEF TEMP-TABLE ttDoc
     .
 
 DEF TEMP-TABLE ttNodes
-    FIELD hDoc          AS HANDLE
-    FIELD hNode         AS HANDLE
-    FIELD hParentNode   AS HANDLE
-    FIELD iLevel        AS INT
-    FIELD cElement      AS CHAR
-    FIELD cViewType     AS CHAR /* block / line */
-    FIELD cNodeValue    AS CHAR
-    FIELD iNodeIdx      AS INT
+    FIELD hDoc           AS HANDLE
+    FIELD hNode          AS HANDLE
+    FIELD hParentNode    AS HANDLE
+    FIELD iLevel         AS INT
+    FIELD cElement       AS CHAR
+    FIELD cViewType      AS CHAR /* block / line */
+    FIELD cNodeValue     AS CHAR
+    FIELD iNodeIdx       AS INT
+    FIELD iParentNodeIdx AS INT
     .
 
 DEF TEMP-TABLE ttDumpNodes
-    FIELD iLevel        AS INT
-    FIELD cElement      AS CHAR
-    FIELD cViewType     AS CHAR /* block / line */
-    FIELD cNodeValue    AS CHAR
-    FIELD iNodeIdx      AS INT
+    FIELD iLevel         AS INT
+    FIELD cElement       AS CHAR
+    FIELD cViewType      AS CHAR /* block / line */
+    FIELD cNodeValue     AS CHAR
+    FIELD iNodeIdx       AS INT
+    FIELD iParentNodeIdx AS INT
     .
 DEF VAR httDumpNodes AS HANDLE NO-UNDO.
 httDumpNodes = BUFFER ttDumpNodes:HANDLE.
@@ -113,6 +121,19 @@ FUNCTION getLoginSessionId RETURNS INTEGER
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-setDumpFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setDumpFilter Procedure
+FUNCTION setDumpFilter RETURNS LOGICAL 
+  (INPUT icDumpFilter AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ENDIF
 
@@ -284,12 +305,14 @@ DEFINE INPUT PARAMETER charData AS LONGCHAR NO-UNDO.
 DEFINE INPUT PARAMETER numChars AS INTEGER NO-UNDO.
 
 CREATE ttNodes.
-ASSIGN ttNodes.hDoc         = hSax
-       ttNodes.cElement     = cActiveNode
-       ttNodes.cNodeValue   = IF LENGTH(charData) < 32000 THEN charData ELSE ""
-       iNodeIdx             = iNodeIdx + 1
-       ttNodes.iNodeIdx     = iNodeIdx       
-       ttNodes.iLevel       = iLevel
+ASSIGN ttNodes.hDoc           = hSax
+       ttNodes.cElement       = cActiveNode
+       ttNodes.cNodeValue     = IF LENGTH(charData) < 32000 THEN charData ELSE ""
+       iNodeIdx               = iNodeIdx + 1
+       ttNodes.iNodeIdx       = iNodeIdx       
+       ttNodes.iLevel         = iLevel
+       ttNodes.iParentNodeIdx = iParentNodeIdx
+       iElementCnt            = iElementCnt + 1
        .
 
 END PROCEDURE.
@@ -435,6 +458,8 @@ PROCEDURE dumpXmlNodes :
 ------------------------------------------------------------------------------*/
 DEF INPUT  PARAM icDocName AS CHAR NO-UNDO.
 
+DEF VAR fNumber AS DEC NO-UNDO.
+
 FIND FIRST ttDoc 
      WHERE ttDoc.cDocName = icDocName
      NO-ERROR.
@@ -443,6 +468,19 @@ IF AVAIL ttDoc THEN DO:
   FOR EACH ttNodes
       WHERE ttNodes.hDoc = ttDoc.hDoc
       :
+    IF cDumpFilter NE "" THEN
+      CASE cDumpFilter:
+        WHEN "numeric" THEN DO:
+          fNumber = DEC(ttNodes.cNodeValue) NO-ERROR.
+          IF ERROR-STATUS:ERROR THEN NEXT.
+        END.
+        OTHERWISE DO:
+          IF INDEX(cDumpFilter,"*") > 0 THEN DO:
+            IF NOT ttNodes.cElement MATCHES cDumpFilter THEN NEXT.
+          END.
+          ELSE IF NOT ttNodes.cElement BEGINS cDumpFilter THEN NEXT.
+        END.  
+      END CASE.         
     CREATE ttDumpNodes.
     BUFFER-COPY ttNodes TO ttDumpNodes.
   END.
@@ -476,7 +514,11 @@ DEFINE INPUT PARAMETER namespaceURI AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER localName AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER qName AS CHARACTER NO-UNDO.
 
-iLevel = iLevel - 1.
+ASSIGN iElementCnt = iElementCnt + 1
+       iLevel      = iLevel - 1.
+
+IF qName = cActiveNode AND AVAIL ttNodes THEN
+  ttNodes.cViewType = "FIELD". 
 
 END PROCEDURE.
 
@@ -728,6 +770,13 @@ DEFINE INPUT PARAMETER localName AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER qName AS CHARACTER NO-UNDO.
 DEFINE INPUT PARAMETER attributes AS HANDLE NO-UNDO.
 
+IF qName NE cActiveNode THEN DO:
+  IF iElementCnt = 2 AND AVAIL ttNodes THEN 
+    ASSIGN ttNodes.cViewType = "TABLE"
+           iParentNodeIdx    = ttNodes.iNodeIdx.
+  iElementCnt = 1.
+END.  
+
 ASSIGN cActiveNode = qName
        iLevel      = iLevel + 1.
 
@@ -904,6 +953,27 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ENDIF
+
+&IF DEFINED(EXCLUDE-setDumpFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setDumpFilter Procedure
+FUNCTION setDumpFilter RETURNS LOGICAL 
+  ( INPUT icDumpFilter AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+cDumpFilter = icDumpFilter.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 
 &ENDIF
 

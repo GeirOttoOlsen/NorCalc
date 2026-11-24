@@ -8,6 +8,8 @@ DEF INPUT   PARAM icFirstKeyString AS CHAR   NO-UNDO.
 DEF INPUT   PARAM icLastKeyString  AS CHAR   NO-UNDO.
 DEF OUTPUT  PARAM oiImportLogId    AS INT    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR cUserid AS CHAR NO-UNDO.
 cUserid = DYNAMIC-FUNCTION("getAsUserId" IN SOURCE-PROCEDURE) NO-ERROR.
 

@@ -146,6 +146,13 @@ FUNCTION getCurrentRec RETURNS ROWID
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getEditModus System-Window 
+FUNCTION getEditModus RETURNS integer
+  () FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getNyRecord System-Window 
 FUNCTION getNyRecord RETURNS LOGICAL
   () FORWARD.
@@ -191,13 +198,13 @@ DEFINE MENU MENU-BAR-System-Window MENUBAR
 
 
 /* Definitions of the field level widgets                               */
+DEFINE VARIABLE lblType AS CHARACTER FORMAT "X(256)":U INITIAL "Ventil:" 
+      VIEW-AS TEXT 
+     SIZE 10 BY .62 NO-UNDO.
+
 DEFINE IMAGE SHUNTTEGNING
      FILENAME "bmp\kobling1":U
      SIZE 29 BY 9.95.
-
-DEFINE RECTANGLE RECT-13
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 85.6 BY 3.67.
 
 DEFINE RECTANGLE RECT-19
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -281,43 +288,41 @@ DEFINE FRAME Detalj-Frame
           VIEW-AS FILL-IN 
           SIZE 12.8 BY 1.24
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHSYST.type AT ROW 9.29 COL 4.2 NO-LABEL
-          VIEW-AS RADIO-SET VERTICAL
+     NPSHSYST.type AT ROW 8.38 COL 24 NO-LABEL
+          VIEW-AS RADIO-SET HORIZONTAL
           RADIO-BUTTONS 
                     "FM", "FM":U,
 "MS", "MS":U
-          SIZE 10 BY 2.38
+          SIZE 30.8 BY 1.24
           BGCOLOR 8 FGCOLOR 0 
      NPSHSYST.system_kode AT ROW 11.95 COL 2 NO-LABEL
           VIEW-AS EDITOR SCROLLBAR-VERTICAL
           SIZE 128 BY 3.57
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHSYST.shunt_dimmensjon AT ROW 8.67 COL 73.4 COLON-ALIGNED
+     NPSHSYST.shunt_dimmensjon AT ROW 8.67 COL 77.2 COLON-ALIGNED
           LABEL "Shuntdimmensjon"
            VIEW-AS TEXT 
           SIZE 10.6 BY .76
           BGCOLOR 8 FGCOLOR 1 FONT 2
-     NPSHSYST.ms_ventiltype AT ROW 9.76 COL 54.2 COLON-ALIGNED
+     lblType AT ROW 8.71 COL 9.4 COLON-ALIGNED NO-LABEL WIDGET-ID 2
+     NPSHSYST.ms_ventiltype AT ROW 10.05 COL 21 COLON-ALIGNED
           LABEL "MS-Ventiltype"
            VIEW-AS TEXT 
           SIZE 30 BY .76
           FGCOLOR 1 FONT 2
      "°C" VIEW-AS TEXT
           SIZE 3.6 BY .81 AT ROW 3.57 COL 47.8
-     "W" VIEW-AS TEXT
-          SIZE 4 BY .81 AT ROW 2.33 COL 47.8
-     " Sekundær" VIEW-AS TEXT
-          SIZE 14.2 BY .81 AT ROW 1.48 COL 34.2
-     "°C" VIEW-AS TEXT
-          SIZE 3.6 BY .81 AT ROW 5.1 COL 47.4
-     "Ventil:" VIEW-AS TEXT
-          SIZE 8.4 BY .76 AT ROW 8.43 COL 4.2
-     " Primær" VIEW-AS TEXT
-          SIZE 11.2 BY .81 AT ROW 1.48 COL 19.2
      "l/s" VIEW-AS TEXT
           SIZE 5.6 BY .76 AT ROW 6.43 COL 47.6
+     " Primær" VIEW-AS TEXT
+          SIZE 11.2 BY .81 AT ROW 1.48 COL 19.2
+     "°C" VIEW-AS TEXT
+          SIZE 3.6 BY .81 AT ROW 5.1 COL 47.4
+     " Sekundær" VIEW-AS TEXT
+          SIZE 14.2 BY .81 AT ROW 1.48 COL 34.2
+     "W" VIEW-AS TEXT
+          SIZE 4 BY .81 AT ROW 2.33 COL 47.8
      SHUNTTEGNING AT ROW 1.71 COL 94
-     RECT-13 AT ROW 8.24 COL 3
      RECT-19 AT ROW 1 COL 3
      RECT-21 AT ROW 1.48 COL 93
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
@@ -327,7 +332,7 @@ DEFINE FRAME Detalj-Frame
          FONT 2.
 
 DEFINE FRAME Browser-Frame
-     System-Browse AT ROW 1.24 COL 4
+     System-Browse AT ROW 1.24 COL 2.6
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS THREE-D 
          AT COL 1 ROW 1
@@ -398,6 +403,11 @@ IF NOT System-Window:LOAD-SMALL-ICON("adeicon\progress":U) THEN
                                                                         */
 /* SETTINGS FOR RADIO-SET NPSHSYST.beregnet_anvendelse IN FRAME Detalj-Frame
    NO-ENABLE                                                            */
+ASSIGN 
+       lblType:READ-ONLY IN FRAME Detalj-Frame        = TRUE
+       lblType:PRIVATE-DATA IN FRAME Detalj-Frame     = 
+                "Ventil:".
+
 /* SETTINGS FOR FILL-IN NPSHSYST.ms_ventiltype IN FRAME Detalj-Frame
    NO-ENABLE EXP-LABEL                                                  */
 /* SETTINGS FOR FILL-IN NPSHSYST.prim_effekt IN FRAME Detalj-Frame
@@ -508,8 +518,6 @@ DO:
     SESSION:SET-WAIT-STATE("GENERAL").
     valgtKobling = NPSHSYST.koblings_alternativ.
     systemnrParam = NPSHSYST.systemnr.
-    MESSAGE NPSHSYST.anleggsnr
-    VIEW-AS ALERT-BOX.
     IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = hParent:PRIVATE-DATA + "," + STRING(NPSHSYST.anleggsnr).
    CASE valgtKobling:
         WHEN '1' THEN
@@ -1195,6 +1203,8 @@ PROCEDURE enable_UI :
   ENABLE System-Browse 
       WITH FRAME Browser-Frame IN WINDOW System-Window.
   {&OPEN-BROWSERS-IN-QUERY-Browser-Frame}
+  DISPLAY lblType 
+      WITH FRAME Detalj-Frame IN WINDOW System-Window.
   IF AVAILABLE NPSHSYST THEN 
     DISPLAY NPSHSYST.beregnet_anvendelse NPSHSYST.prim_effekt NPSHSYST.sek_effekt 
           NPSHSYST.prim_temp_inn NPSHSYST.sek_temp_inn NPSHSYST.prim_temp_ut 
@@ -1202,7 +1212,7 @@ PROCEDURE enable_UI :
           NPSHSYST.type NPSHSYST.system_kode NPSHSYST.shunt_dimmensjon 
           NPSHSYST.ms_ventiltype 
       WITH FRAME Detalj-Frame IN WINDOW System-Window.
-  ENABLE RECT-13 RECT-19 RECT-21 NPSHSYST.system_kode 
+  ENABLE RECT-19 RECT-21 NPSHSYST.system_kode lblType 
       WITH FRAME Detalj-Frame IN WINDOW System-Window.
   {&OPEN-BROWSERS-IN-QUERY-Detalj-Frame}
 END PROCEDURE.
@@ -1945,19 +1955,6 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNyRecord System-Window 
-FUNCTION getNyRecord RETURNS LOGICAL
-  ():
-/*------------------------------------------------------------------------------
- Purpose:
- Notes:
-------------------------------------------------------------------------------*/
-    return nyRecord.
-END FUNCTION.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getEditModus System-Window 
 FUNCTION getEditModus RETURNS integer
   ():
@@ -1966,6 +1963,19 @@ FUNCTION getEditModus RETURNS integer
  Notes:
 ------------------------------------------------------------------------------*/
     return EditModus.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNyRecord System-Window 
+FUNCTION getNyRecord RETURNS LOGICAL
+  ():
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+    return nyRecord.
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */

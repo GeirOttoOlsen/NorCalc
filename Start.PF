@@ -1,0 +1,8 @@
+ -assemblies assemblies
+-E
+-s 1000
+-mmax 8000
+-d dmy
+-rand 2
+#-db norcalc -H localhost -N TCP -S 4000 -U goo -P knotto123
+-db norcalc -H 10.12.0.5 -N TCP -S 4000 -U goo -P knotto123

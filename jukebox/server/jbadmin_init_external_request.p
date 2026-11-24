@@ -12,27 +12,36 @@ DEF OUTPUT PARAM obOk                AS LOG  NO-UNDO INIT YES.
 DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.
 DEF OUTPUT PARAM oiRequestId         AS INT  NO-UNDO.
 
-FIND FIRST JBoxExternalPartner NO-LOCK
-     WHERE JBoxExternalPartner.cExternalPartnerName = icPartnerName
-     NO-ERROR.
+DEF VAR hbJBoxExternalPartner     AS HANDLE NO-UNDO.
+DEF VAR hbJBoxExternalRequestType AS HANDLE NO-UNDO.
+DEF VAR hbJBoxExternalRequest     AS HANDLE NO-UNDO.
 
-FIND FIRST JBoxExternalRequestType NO-LOCK
-     WHERE JBoxExternalRequestType.cExternalRequestType = icRequestType
-     NO-ERROR.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxExternalPartner",OUTPUT hbJBoxExternalPartner) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxExternalRequestType",OUTPUT hbJBoxExternalRequestType) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxExternalRequest",OUTPUT hbJBoxExternalRequest) THEN RETURN.
+
+hbJBoxExternalPartner:FIND-FIRST("WHERE JBoxExternalPartner.cExternalPartnerName = '" + icPartnerName + "'",NO-LOCK) NO-ERROR.
+
+hbJBoxExternalRequestType:FIND-FIRST("WHERE JBoxExternalRequestType.cExternalRequestType = '" + icRequestType + "'",NO-LOCK) NO-ERROR.
 
 RUN jbadmin_validate_external_request.p (icPartnerName,icRequestPassPhrase,OUTPUT obOk).
 
-CREATE JBoxExternalRequest.
-ASSIGN JBoxExternalRequest.cRequestInputParam   = icRequestParam
-       JBoxExternalRequest.dtRequest            = NOW
-       JBoxExternalRequest.bRequestOk           = obOk
+hbJBoxExternalRequest:BUFFER-CREATE().
+ASSIGN hbJBoxExternalRequest::cRequestInputParam   = icRequestParam
+       hbJBoxExternalRequest::dtRequest            = NOW
+       hbJBoxExternalRequest::bRequestOk           = obOk
        .
 
-oiRequestId = JBoxExternalRequest.iJBoxExternalRequestId.
+oiRequestId = hbJBoxExternalRequest::iJBoxExternalRequestId.
 
-IF AVAIL JBoxExternalRequestType THEN
-  JBoxExternalRequest.iJBoxExternalRequestTypeId = JBoxExternalRequestType.iJBoxExternalRequestTypeId.
+IF hbJBoxExternalRequestType:AVAIL THEN
+  hbJBoxExternalRequest::iJBoxExternalRequestTypeId = hbJBoxExternalRequestType::iJBoxExternalRequestTypeId.
 
-IF AVAIL JBoxExternalPartner THEN
-  JBoxExternalRequest.iJBoxExternalPartnerId = JBoxExternalPartner.iJBoxExternalPartnerId.
+IF hbJBoxExternalPartner:AVAIL THEN
+  hbJBoxExternalRequest::iJBoxExternalPartnerId = hbJBoxExternalPartner::iJBoxExternalPartnerId.
 
+FINALLY:
+  DELETE OBJECT hbJBoxExternalPartner NO-ERROR.
+  DELETE OBJECT hbJBoxExternalRequestType NO-ERROR.      
+  DELETE OBJECT hbJBoxExternalRequest NO-ERROR.
+END FINALLY.

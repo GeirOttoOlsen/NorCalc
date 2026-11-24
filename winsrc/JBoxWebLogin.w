@@ -82,6 +82,7 @@ END PROCEDURE.
 DEFINE VARIABLE hABLWindow AS HANDLE NO-UNDO. 
 DEFINE VARIABLE hFrame AS HANDLE NO-UNDO. 
 DEFINE  VARIABLE hPopUpForm_ABLContainer AS Progress.Windows.WindowContainer NO-UNDO.
+def var logoFil as char no-undo.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -121,28 +122,28 @@ FUNCTION PasswordChanged RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE VARIABLE fi-cPassword AS CHARACTER FORMAT "X(256)":U 
      LABEL "Password" 
      VIEW-AS FILL-IN 
-     SIZE 31.8 BY .91 NO-UNDO.
+     SIZE 31.75 BY .91 NO-UNDO.
 
 DEFINE VARIABLE fi-cUserId AS CHARACTER FORMAT "X(256)":U 
      LABEL "User id" 
      VIEW-AS FILL-IN 
-     SIZE 31.8 BY .91 NO-UNDO.
+     SIZE 31.75 BY .91 NO-UNDO.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     fi-cUserId AT ROW 1.24 COL 12 COLON-ALIGNED
-     fi-cPassword AT ROW 2.19 COL 3.6 BLANK 
+     fi-cUserId AT ROW 1.25 COL 12 COLON-ALIGNED
+     fi-cPassword AT ROW 2.19 COL 4.62 BLANK 
     WITH 1 DOWN KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 85.8 ROW 5.14
+         AT COLUMN 85.8 ROW 5.14
          SIZE 48.6 BY 2.81.
 
 
@@ -162,8 +163,8 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "JBox login"
-         COLUMN             = 3
-         ROW                = 1.48
+         COLUMN             = 2.25
+         ROW                = 1.31
          HEIGHT             = 9.91
          WIDTH              = 143
          MAX-HEIGHT         = 47.91
@@ -259,11 +260,15 @@ END.
 
 
 /* ***************************  Main Block  *************************** */
+def var oBtnOk as class System.Windows.Forms.Button no-undo.
+def var oBtnExit as class System.Windows.Forms.Button no-undo.
+def var oLogo as System.IO.FileInfo no-undo.
+
+logofil = search('img/logo.jpg').
+oLogo = new System.IO.FileInfo(logoFil).
 
 hABLWindow = {&WINDOW-NAME}:HANDLE . 
 hFrame     = FRAME {&FRAME-NAME}:HANDLE. 
-def var oBtnOk as class System.Windows.Forms.Button no-undo.
-def var oBtnExit as class System.Windows.Forms.Button no-undo.
 
 ASSIGN
 hABLWindow:TITLE        = "Win1" 
@@ -292,7 +297,6 @@ ASSIGN
     form1:FormBorderStyle = System.Windows.Forms.FormBorderStyle:FixedToolwindow
     */
     form1:StartPosition   = System.Windows.Forms.FormStartPosition:CenterScreen
-    form1:BackgroundImage = System.Drawing.Image:FromFile(SEARCH(".\img\logo.jpg")) 
     form1:Size            = NEW System.Drawing.Size(hABLWindow:WIDTH-PIXELS,hABLWindow:HEIGHT-PIXELS)
     form1:ControlBox      = FALSE /* remove close buttons / max min */          
     form1:AutoSize        = FALSE       
@@ -301,7 +305,9 @@ ASSIGN
     form1:ShowInTaskbar   = FALSE
     form1:FormBorderStyle = FormBorderStyle:FixedSingle.
     .
-    
+ if oLogo:Exists then 
+   form1:BackgroundImage = System.Drawing.Image:FromFile(oLogo:FullName).
+           
     oBtnOk = new System.Windows.Forms.Button().
     oBtnOk:Text = 'OK'.
     oBtnOk:Location = new System.Drawing.Point(530,147).
@@ -450,7 +456,7 @@ DO WITH FRAME {&FRAME-NAME}:
 
       IF NOT bOkUser THEN DO:
         IF DYNAMIC-FUNCTION("getLanguageCode") = "NO" THEN
-          MESSAGE "Bruker må aktiveres for å kunne logge inn" VIEW-AS ALERT-BOX.
+          MESSAGE "Bruker mï¿½ aktiveres for ï¿½ kunne logge inn" VIEW-AS ALERT-BOX.
         ELSE 
           MESSAGE "User must be activated to proceed login" VIEW-AS ALERT-BOX.
         QUIT.  
@@ -470,7 +476,7 @@ DO WITH FRAME {&FRAME-NAME}:
           IF ENTRY(2,cUserStatus,"|") NE "" THEN
             bChangePwd = DYNAMIC-FUNCTION("DoMessage",0,4,
                                           IF DYNAMIC-FUNCTION("Scandinavian") THEN 
-                                            "Passordet ditt utløper om " + ENTRY(2,cUserStatus,"|") + " dager." + CHR(10) + "Endre nå?"
+                                            "Passordet ditt utlï¿½per om " + ENTRY(2,cUserStatus,"|") + " dager." + CHR(10) + "Endre nï¿½?"
                                           ELSE
                                             "Your password expires in " + ENTRY(2,cUserStatus,"|") + " days." + CHR(10) + "Change it now?"
                                          ,"","") = 6.

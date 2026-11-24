@@ -65,7 +65,6 @@ DEF TEMP-TABLE NORPROSJEKT
     FIELD reg_dato AS date
     FIELD aktivt AS logical
     FIELD shuntgrupper AS character
-    FIELD spirovent AS character
     FIELD RowIdent1 AS CHARACTER 
     FIELD RowCount AS INTEGER
     FIELD jbCountDistinct AS INTEGER FORMAT '>>>,>>>,>>9' INIT 1
@@ -83,7 +82,6 @@ FUNCTION getBuffersAndFieldsBrwNORPROSJEKT RETURNS CHARACTER():
      + ';reg_dato'
      + ';aktivt'
      + ';shuntgrupper'
-     + ';spirovent'
      .
 END FUNCTION.
 FUNCTION getQueryJoinBrwNORPROSJEKT RETURNS CHARACTER():
@@ -91,6 +89,9 @@ FUNCTION getQueryJoinBrwNORPROSJEKT RETURNS CHARACTER():
 END FUNCTION.
 DEF VAR oFmNORPROSJEKT AS JBoxFieldMap NO-UNDO.
 DEF VAR otbNORPROSJEKT AS JBoxToolbar NO-UNDO.
+
+
+DEF VAR opopupNORPROSJEKT AS JBoxPopupMenu NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -113,7 +114,7 @@ DEF VAR otbNORPROSJEKT AS JBoxToolbar NO-UNDO.
 /* Definitions for BROWSE BrwNORPROSJEKT                                */
 &Scoped-define FIELDS-IN-QUERY-BrwNORPROSJEKT NORPROSJEKT.prosjektid ~
 NORPROSJEKT.prosjekt_navn NORPROSJEKT.reg_dato NORPROSJEKT.aktivt ~
-NORPROSJEKT.shuntgrupper NORPROSJEKT.spirovent 
+NORPROSJEKT.shuntgrupper 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwNORPROSJEKT ~
 NORPROSJEKT.prosjektid 
 &Scoped-define QUERY-STRING-BrwNORPROSJEKT FOR EACH NORPROSJEKT NO-LOCK INDEXED-REPOSITION
@@ -128,11 +129,10 @@ NORPROSJEKT.prosjektid
 &Scoped-Define ENABLED-OBJECTS tbNORPROSJEKT new_tbNORPROSJEKT ~
 edit_tbNORPROSJEKT copy_tbNORPROSJEKT save_tbNORPROSJEKT undo_tbNORPROSJEKT ~
 delete_tbNORPROSJEKT refresh_tbNORPROSJEKT filter_tbNORPROSJEKT ~
-excel_tbNORPROSJEKT SPanlegg_tbNORPROSJEKT SHAnlegg_tbNORPROSJEKT fiSearch ~
-BrwNORPROSJEKT prosjektid aktivt prosjekt_navn reg_dato shuntgrupper ~
-spirovent 
+excel_tbNORPROSJEKT SHAnlegg_tbNORPROSJEKT fiSearch BrwNORPROSJEKT ~
+prosjektid aktivt prosjekt_navn reg_dato 
 &Scoped-Define DISPLAYED-OBJECTS fiSearch prosjektid aktivt prosjekt_navn ~
-reg_dato shuntgrupper spirovent 
+reg_dato 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -145,86 +145,67 @@ reg_dato shuntgrupper spirovent
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON copy_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/documents.ico":U
      IMAGE-INSENSITIVE FILE "gif/documents_disabled.gif":U
      LABEL "Kopier" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Kopier (ALT-K)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Kopier (ALT-K)".
 
 DEFINE BUTTON delete_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/document_delete.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_delete_disabled.gif":U
      LABEL "Slett" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Slett (CTRL-D)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Slett (CTRL-D)".
 
 DEFINE BUTTON edit_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/document_edit.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_edit_disabled.gif":U
      LABEL "Edit" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Edit (CTRL-E)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Edit (CTRL-E)".
 
 DEFINE BUTTON excel_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/excel.ico":U
      IMAGE-INSENSITIVE FILE "gif/excel_disabled.gif":U
      LABEL "Eksporter til E&xcel" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Eksporter til E&xcel (ALT-X)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Eksporter til E&xcel (ALT-X)".
 
 DEFINE BUTTON filter_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/document_find.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_find_disabled.gif":U
      LABEL "Filter" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Filter (CTRL-F)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Filter (CTRL-F)".
 
 DEFINE BUTTON new_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/document_add.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_add_disabled.gif":U
      LABEL "Ny" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Ny (CTRL-N)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Ny (CTRL-N)".
 
 DEFINE BUTTON refresh_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/document_refresh.ico":U
      IMAGE-INSENSITIVE FILE "gif/document_refresh_disabled.gif":U
      LABEL "Refresh" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Refresh (F5)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Refresh (F5)".
 
 DEFINE BUTTON save_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/floppy_disk.ico":U
      IMAGE-INSENSITIVE FILE "gif/floppy_disk_disabled.gif":U
      LABEL "Lagre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Lagre (CTRL-S)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Lagre (CTRL-S)".
 
 DEFINE BUTTON SHAnlegg_tbNORPROSJEKT 
      IMAGE-UP FILE "ico\index.ico":U
      LABEL "Shunt anlegg" 
-     SIZE 7.8 BY 1.95.
-
-DEFINE BUTTON SPanlegg_tbNORPROSJEKT 
-     IMAGE-UP FILE "ico\index.ico":U
-     LABEL "Spirovent anlegg" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Spirovent anlegg".
+     SIZE 7.75 BY 1.94 TOOLTIP "Shuntanlegg".
 
 DEFINE BUTTON undo_tbNORPROSJEKT 
      IMAGE-UP FILE "ico/undo.ico":U
      IMAGE-INSENSITIVE FILE "gif/undo_disabled.gif":U
      LABEL "Angre" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Angre (CTRL-Z)".
-
-DEFINE VARIABLE shuntgrupper AS CHARACTER FORMAT "X(8)" INITIAL "Nei" 
-     LABEL "Shuntgrupper" 
-     VIEW-AS COMBO-BOX INNER-LINES 25
-     LIST-ITEMS "Item 1" 
-     DROP-DOWN-LIST
-     SIZE 36 BY 1.
-
-DEFINE VARIABLE spirovent AS CHARACTER FORMAT "X(8)" INITIAL "Nei" 
-     LABEL "Spirovent" 
-     VIEW-AS COMBO-BOX INNER-LINES 25
-     LIST-ITEMS "Item 1" 
-     DROP-DOWN-LIST
-     SIZE 36 BY 1.
+     SIZE 7.75 BY 1.94 TOOLTIP "Angre (CTRL-Z)".
 
 DEFINE VARIABLE fiSearch AS CHARACTER FORMAT "X(256)":U 
      VIEW-AS FILL-IN 
@@ -233,7 +214,7 @@ DEFINE VARIABLE fiSearch AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE prosjektid AS INTEGER FORMAT ">>>>>>>9" INITIAL 0 
      LABEL "Id" 
      VIEW-AS FILL-IN 
-     SIZE 13.2 BY 1.
+     SIZE 13.25 BY 1.
 
 DEFINE VARIABLE prosjekt_navn AS CHARACTER FORMAT "X(45)" 
      LABEL "Prosjektnavn" 
@@ -247,7 +228,7 @@ DEFINE VARIABLE reg_dato AS DATE FORMAT "99.99.9999"
 
 DEFINE RECTANGLE tbNORPROSJEKT
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 150 BY 2.14.
+     SIZE 135 BY 2.13.
 
 DEFINE VARIABLE aktivt AS LOGICAL INITIAL no 
      LABEL "Aktivt" 
@@ -265,48 +246,45 @@ DEFINE BROWSE BrwNORPROSJEKT
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwNORPROSJEKT C-Win _STRUCTURED
   QUERY BrwNORPROSJEKT NO-LOCK DISPLAY
       NORPROSJEKT.prosjektid COLUMN-LABEL "prosjektid" FORMAT ">>>>>>>9":U
+            WIDTH 9.63
       NORPROSJEKT.prosjekt_navn COLUMN-LABEL "Prosjektnavn" FORMAT "X(45)":U
             WIDTH 30
       NORPROSJEKT.reg_dato COLUMN-LABEL "Reg.dato" FORMAT "99.99.9999":U
-      NORPROSJEKT.aktivt COLUMN-LABEL "Aktivt" FORMAT "ja/nei":U
-            WIDTH 10.6
-      NORPROSJEKT.shuntgrupper COLUMN-LABEL "SH" FORMAT "X(7)":U
-            WIDTH 5
-      NORPROSJEKT.spirovent COLUMN-LABEL "SP" FORMAT "X(7)":U
+            WIDTH 10.75
+      NORPROSJEKT.aktivt COLUMN-LABEL "Aktivt" FORMAT "Ja/Nei":U
+            WIDTH 10.63
+      NORPROSJEKT.shuntgrupper COLUMN-LABEL "Shuntgrupper" FORMAT "X(8)":U
   ENABLE
       NORPROSJEKT.prosjektid
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 83 BY 9.95 ROW-HEIGHT-CHARS .57 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 63 BY 10.44 ROW-HEIGHT-CHARS .52.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNORPROSJEKT AT ROW 1.1 COL 1.2 WIDGET-ID 12
-     edit_tbNORPROSJEKT AT ROW 1.1 COL 9.2 WIDGET-ID 26
-     copy_tbNORPROSJEKT AT ROW 1.1 COL 17 WIDGET-ID 14
-     save_tbNORPROSJEKT AT ROW 1.1 COL 24.8 WIDGET-ID 18
-     undo_tbNORPROSJEKT AT ROW 1.1 COL 32.6 WIDGET-ID 16
-     delete_tbNORPROSJEKT AT ROW 1.1 COL 40.4 WIDGET-ID 20
-     refresh_tbNORPROSJEKT AT ROW 1.1 COL 48.2 WIDGET-ID 22
-     filter_tbNORPROSJEKT AT ROW 1.1 COL 56 WIDGET-ID 24
-     excel_tbNORPROSJEKT AT ROW 1.1 COL 63.8 WIDGET-ID 42
-     SPanlegg_tbNORPROSJEKT AT ROW 1.1 COL 71.6 WIDGET-ID 44
-     SHAnlegg_tbNORPROSJEKT AT ROW 1.1 COL 79.4 WIDGET-ID 46
-     fiSearch AT ROW 3.76 COL 2 NO-LABEL
-     BrwNORPROSJEKT AT ROW 4.81 COL 2 WIDGET-ID 200
-     prosjektid AT ROW 5.05 COL 101 COLON-ALIGNED
-     aktivt AT ROW 5.05 COL 118 WIDGET-ID 8
-     prosjekt_navn AT ROW 6.05 COL 101 COLON-ALIGNED
-     reg_dato AT ROW 7.05 COL 101 COLON-ALIGNED
-     shuntgrupper AT ROW 8.05 COL 101 COLON-ALIGNED WIDGET-ID 36
-     spirovent AT ROW 9.05 COL 101 COLON-ALIGNED WIDGET-ID 38
+     new_tbNORPROSJEKT AT ROW 1.09 COL 1.25 WIDGET-ID 12
+     edit_tbNORPROSJEKT AT ROW 1.09 COL 9.13 WIDGET-ID 26
+     copy_tbNORPROSJEKT AT ROW 1.09 COL 17 WIDGET-ID 14
+     save_tbNORPROSJEKT AT ROW 1.09 COL 24.75 WIDGET-ID 18
+     undo_tbNORPROSJEKT AT ROW 1.09 COL 32.5 WIDGET-ID 16
+     delete_tbNORPROSJEKT AT ROW 1.09 COL 40.38 WIDGET-ID 20
+     refresh_tbNORPROSJEKT AT ROW 1.09 COL 48.13 WIDGET-ID 22
+     filter_tbNORPROSJEKT AT ROW 1.09 COL 56 WIDGET-ID 24
+     excel_tbNORPROSJEKT AT ROW 1.09 COL 63.75 WIDGET-ID 42
+     SHAnlegg_tbNORPROSJEKT AT ROW 1.09 COL 71.5 WIDGET-ID 46
+     fiSearch AT ROW 3.28 COL 2 NO-LABEL
+     BrwNORPROSJEKT AT ROW 4.56 COL 2 WIDGET-ID 200
+     prosjektid AT ROW 5 COL 78 COLON-ALIGNED
+     aktivt AT ROW 5 COL 95 WIDGET-ID 8
+     prosjekt_navn AT ROW 6 COL 78 COLON-ALIGNED
+     reg_dato AT ROW 7 COL 78 COLON-ALIGNED
      tbNORPROSJEKT AT ROW 1 COL 1 WIDGET-ID 10
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SIZE 150.2 BY 14.1 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SIZE 135.13 BY 14.09 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -325,12 +303,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Prosjekt vedlikehold"
-         HEIGHT             = 14.1
-         WIDTH              = 150.2
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 150.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 150.2
+         HEIGHT             = 14.09
+         WIDTH              = 135.13
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 150.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 150.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -364,11 +342,18 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
 /* BROWSE-TAB BrwNORPROSJEKT fiSearch DEFAULT-FRAME */
+ASSIGN 
+       BrwNORPROSJEKT:PRIVATE-DATA IN FRAME DEFAULT-FRAME           = 
+                "sub-menu|;BrwMenue".
+
+ASSIGN 
+       NORPROSJEKT.shuntgrupper:VISIBLE IN BROWSE BrwNORPROSJEKT = FALSE.
+
 /* SETTINGS FOR FILL-IN fiSearch IN FRAME DEFAULT-FRAME
    ALIGN-L                                                              */
 ASSIGN 
        tbNORPROSJEKT:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
-                "new;Ny,edit;Edit,copy;Kopier,save;Lagre,undo;Angre,delete;Slett,refresh;Refresh,filter;Filter,excel;Eksporter til E&xcel,SPanlegg;Spirovent anlegg,SHAnlegg;Shunt anleggmaxborder".
+                "new;Ny,edit;Edit,copy;Kopier,save;Lagre,undo;Angre,delete;Slett,refresh;Refresh,filter;Filter,excel;Eksporter til E&xcel,SHAnlegg;Shunt anleggmaxborder".
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -384,17 +369,15 @@ THEN C-Win:HIDDEN = yes.
      _TblList          = "norcalc.NORPROSJEKT"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _FldNameList[1]   > "_<CALC>"
-"NORPROSJEKT.prosjektid" "prosjektid" ">>>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "9.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NORPROSJEKT.prosjektid" "prosjektid" ">>>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "9.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
 "NORPROSJEKT.prosjekt_navn" "Prosjektnavn" "X(45)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
-"NORPROSJEKT.reg_dato" "Reg.dato" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NORPROSJEKT.reg_dato" "Reg.dato" "99.99.9999" "date" ? ? ? ? ? ? no "" no no "10.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[4]   > "_<CALC>"
-"NORPROSJEKT.aktivt" "Aktivt" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "10.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NORPROSJEKT.aktivt" "Aktivt" "Ja/Nei" "logical" ? ? ? ? ? ? no "" no no "10.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > "_<CALC>"
-"NORPROSJEKT.shuntgrupper" "SH" "X(7)" "character" ? ? ? ? ? ? no "" no no "5" yes yes no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[6]   > "_<CALC>"
-"NORPROSJEKT.spirovent" "SP" "X(7)" "character" ? ? ? ? ? ? no "" no no "8.4" yes yes no "U" "" "" "" "" "" "" 0 no 0 no no
+"NORPROSJEKT.shuntgrupper" "Shuntgrupper" "X(8)" "character" ? ? ? ? ? ? no "" no no "12.25" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwNORPROSJEKT */
 &ANALYZE-RESUME
@@ -578,14 +561,13 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY fiSearch prosjektid aktivt prosjekt_navn reg_dato shuntgrupper 
-          spirovent 
+  DISPLAY fiSearch prosjektid aktivt prosjekt_navn reg_dato 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE tbNORPROSJEKT new_tbNORPROSJEKT edit_tbNORPROSJEKT copy_tbNORPROSJEKT 
          save_tbNORPROSJEKT undo_tbNORPROSJEKT delete_tbNORPROSJEKT 
          refresh_tbNORPROSJEKT filter_tbNORPROSJEKT excel_tbNORPROSJEKT 
-         SPanlegg_tbNORPROSJEKT SHAnlegg_tbNORPROSJEKT fiSearch BrwNORPROSJEKT 
-         prosjektid aktivt prosjekt_navn reg_dato 
+         SHAnlegg_tbNORPROSJEKT fiSearch BrwNORPROSJEKT prosjektid aktivt 
+         prosjekt_navn reg_dato 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -602,14 +584,14 @@ DO WITH FRAME {&FRAME-NAME}:
   
   assign 
     hbtnSH = otbNORPROSJEKT:getButtonHandle('AddSHAnlegg')
-    hbtnSP = otbNORPROSJEKT:getButtonHandle('AddSPAnlegg')
+/*    hbtnSP = otbNORPROSJEKT:getButtonHandle('AddSPAnlegg')*/
   .
-  assign 
-    shuntgrupper:DELIMITER = '|'
-    shuntgrupper:LIST-ITEMS = DYNAMIC-FUNCTION("getFieldList","JBoxGenCode;cCodeValue","WHERE cCodeType = 'DropListDM' AND iJBoxCompanyId = " + DYNAMIC-FUNCTION("getCompany") + " BY JBoxGenCode.cCodeValue")
-    spirovent:DELIMITER = '|'
-    spirovent:LIST-ITEMS = DYNAMIC-FUNCTION("getFieldList","JBoxGenCode;cCodeValue","WHERE cCodeType = 'DropListDM' AND iJBoxCompanyId = " + DYNAMIC-FUNCTION("getCompany") + " BY JBoxGenCode.cCodeValue")
-  .
+/*  assign                                                                                                                                                                                                      */
+/*    shuntgrupper:DELIMITER = '|'                                                                                                                                                                              */
+/*    shuntgrupper:LIST-ITEMS = DYNAMIC-FUNCTION("getFieldList","JBoxGenCode;cCodeValue","WHERE cCodeType = 'DropListDM' AND iJBoxCompanyId = " + DYNAMIC-FUNCTION("getCompany") + " BY JBoxGenCode.cCodeValue")*/
+/*    spirovent:DELIMITER = '|'                                                                                                                                                                                 */
+/*    spirovent:LIST-ITEMS = DYNAMIC-FUNCTION("getFieldList","JBoxGenCode;cCodeValue","WHERE cCodeType = 'DropListDM' AND iJBoxCompanyId = " + DYNAMIC-FUNCTION("getCompany") + " BY JBoxGenCode.cCodeValue")   */
+/*  .                                                                                                                                                                                                           */
 END.
 
 END PROCEDURE.
@@ -631,15 +613,15 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
   oBrwNORPROSJEKT = NEW JBoxBrowse(brwNORPROSJEKT:HANDLE).
-  oBrwNORPROSJEKT:setFilter('aktivt = true').
+  oBrwNORPROSJEKT:setFilter('aktivt,shuntgrupper','=,=','true|ja').
   oBrwNORPROSJEKT:setSearchField(fiSearch:handle).
   oBrwNORPROSJEKT:setQuerySort("reg_dato;DESC").
-  oBrwNORPROSJEKT:setNoResizeX().
+  //oBrwNORPROSJEKT:setNoResizeX().
   
   oFmNORPROSJEKT = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmNORPROSJEKT:updateFields = 'prosjekt_navn,reg_dato,aktivt,shuntgrupper,spirovent'.
+  oFmNORPROSJEKT:updateFields = 'prosjekt_navn,reg_dato,aktivt'.
   oFmNORPROSJEKT:DisplayFields = 'prosjektid'.
-
+  oFmNORPROSJEKT:customCreateProc = 'prosjekt_add.p'.
   oFmNORPROSJEKT:BROWSE-OBJECT = oBrwNORPROSJEKT.
   otbNORPROSJEKT = NEW JBoxToolbar(tbNORPROSJEKT:HANDLE).
 
@@ -647,11 +629,16 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNORPROSJEKT:TOOLBAR-OBJECT = otbNORPROSJEKT.
   
   RUN InitializeComponents.
+  
+  opopupNORPROSJEKT = NEW JBoxPopupMenu().
+  opopupNORPROSJEKT:AddToolGroup('sub-menu|;BrwMenue').
+
+  oBrwNORPROSJEKT:POPUP-MENU-OBJECT = opopupNORPROSJEKT.
 END.
 oBrwNORPROSJEKT:OpenQuery().
 
 
-oContainer:initResize(800,400).
+oContainer:initResize(600,200).
 
 END PROCEDURE.
 
@@ -704,8 +691,10 @@ END PROCEDURE.
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SHAnleggRecord C-Win 
 PROCEDURE SHAnleggRecord :
 def var hChild as handle no-undo.
-/*  hChild = JBoxMainMenu:Instance:StartTabWindow("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,yes,no).*/
-  hChild = JBoxMainMenu:Instance:StartChildTab("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,no,no).
+  hChild = JBoxMainMenu:Instance:StartTabWindow("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,no,no).
+  
+  /*Åpner ny gruppe*/
+/*  hChild = JBoxMainMenu:Instance:StartChildTab("wSHanlegg.w","Shunt anlegg",THIS-PROCEDURE,no,no).*/ 
   dynamic-function('setParentBrowse' in hChild ,input oBrwNORPROSJEKT).
 
 

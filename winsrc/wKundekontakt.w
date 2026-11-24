@@ -142,10 +142,8 @@ KundeKontakt.cCreatedBy KundeKontakt.cModifiedBy KundeKontakt.dCreated ~
 KundeKontakt.dModified KundeKontakt.iKundeId 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-BrwKundeKontakt ~
 KundeKontakt.iKundeKontaktId 
-&Scoped-define ENABLED-TABLES-IN-QUERY-BrwKundeKontakt KundeKontakt
-&Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-BrwKundeKontakt KundeKontakt
-&Scoped-define QUERY-STRING-BrwKundeKontakt FOR EACH KundeKontakt NO-LOCK, INDEXED-REPOSITION
-&Scoped-define OPEN-QUERY-BrwKundeKontakt OPEN QUERY BrwKundeKontakt FOR EACH KundeKontakt NO-LOCK, INDEXED-REPOSITION.
+&Scoped-define QUERY-STRING-BrwKundeKontakt FOR EACH KundeKontakt NO-LOCK INDEXED-REPOSITION
+&Scoped-define OPEN-QUERY-BrwKundeKontakt OPEN QUERY BrwKundeKontakt FOR EACH KundeKontakt NO-LOCK INDEXED-REPOSITION.
 &Scoped-define TABLES-IN-QUERY-BrwKundeKontakt KundeKontakt
 &Scoped-define FIRST-TABLE-IN-QUERY-BrwKundeKontakt KundeKontakt
 
@@ -153,9 +151,9 @@ KundeKontakt.iKundeKontaktId
 /* Definitions for FRAME DEFAULT-FRAME                                  */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS tbKundeKontakt new_tbKundeKontakt ~
-copy_tbKundeKontakt undo_tbKundeKontakt save_tbKundeKontakt ~
-delete_tbKundeKontakt refresh_tbKundeKontakt filter_tbKundeKontakt ~
+&Scoped-Define ENABLED-OBJECTS new_tbKundeKontakt copy_tbKundeKontakt ~
+undo_tbKundeKontakt save_tbKundeKontakt delete_tbKundeKontakt ~
+tbKundeKontakt refresh_tbKundeKontakt filter_tbKundeKontakt ~
 excel_tbKundeKontakt BrwKundeKontakt iKundeKontaktId cKontaktNavn cRolle ~
 cStilling cTlf cMob cEmail cMerknad lblMerknad 
 &Scoped-Define DISPLAYED-OBJECTS iKundeKontaktId cKontaktNavn cRolle ~
@@ -172,52 +170,52 @@ cStilling cTlf cMob cEmail cMerknad lblMerknad
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON copy_tbKundeKontakt 
      IMAGE-UP FILE "bmp/copy.bmp":U
      LABEL "Copy" 
-     SIZE 6 BY 1.52 TOOLTIP "Copy (ALT-C)".
+     SIZE 6 BY 1.53 TOOLTIP "Copy (ALT-C)".
 
 DEFINE BUTTON delete_tbKundeKontakt 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Delete" 
-     SIZE 6 BY 1.52 TOOLTIP "Delete (CTRL-D)".
+     SIZE 6 BY 1.53 TOOLTIP "Delete (CTRL-D)".
 
 DEFINE BUTTON excel_tbKundeKontakt 
      IMAGE-UP FILE "gif/afexcel.gif":U
      LABEL "Excel" 
-     SIZE 6 BY 1.52 TOOLTIP "Excel (ALT-E)".
+     SIZE 6 BY 1.53 TOOLTIP "Excel (ALT-E)".
 
 DEFINE BUTTON filter_tbKundeKontakt 
      IMAGE-UP FILE "gif/filter.gif":U
      LABEL "Filter" 
-     SIZE 6 BY 1.52 TOOLTIP "Filter (CTRL-F)".
+     SIZE 6 BY 1.53 TOOLTIP "Filter (CTRL-F)".
 
 DEFINE BUTTON new_tbKundeKontakt 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "New" 
-     SIZE 6 BY 1.52 TOOLTIP "New (CTRL-N)".
+     SIZE 6 BY 1.53 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON refresh_tbKundeKontakt 
      IMAGE-UP FILE "gif/refresh.gif":U
      LABEL "Refresh" 
-     SIZE 6 BY 1.52 TOOLTIP "Refresh (F5)".
+     SIZE 6 BY 1.53 TOOLTIP "Refresh (F5)".
 
 DEFINE BUTTON save_tbKundeKontakt 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Save" 
-     SIZE 6 BY 1.52 TOOLTIP "Save (CTRL-S)".
+     SIZE 6 BY 1.53 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbKundeKontakt 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Undo" 
-     SIZE 6 BY 1.52 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 6 BY 1.53 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE cMerknad AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 37 BY 2.14 NO-UNDO.
+     SIZE 37 BY 2.13 NO-UNDO.
 
 DEFINE VARIABLE cEmail AS CHARACTER FORMAT "x(40)" 
      LABEL "Epost" 
@@ -232,7 +230,7 @@ DEFINE VARIABLE cKontaktNavn AS CHARACTER FORMAT "x(40)"
 DEFINE VARIABLE cMob AS CHARACTER FORMAT "x(12)" 
      LABEL "Mob" 
      VIEW-AS FILL-IN 
-     SIZE 17.6 BY 1.
+     SIZE 17.63 BY 1.
 
 DEFINE VARIABLE cRolle AS CHARACTER FORMAT "x(20)" 
      LABEL "Rolle" 
@@ -247,7 +245,7 @@ DEFINE VARIABLE cStilling AS CHARACTER FORMAT "x(50)"
 DEFINE VARIABLE cTlf AS CHARACTER FORMAT "x(12)" 
      LABEL "Tlf" 
      VIEW-AS FILL-IN 
-     SIZE 17.6 BY 1.
+     SIZE 17.63 BY 1.
 
 DEFINE VARIABLE iKundeKontaktId AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0 
      LABEL "Kundekontakt id" 
@@ -256,11 +254,11 @@ DEFINE VARIABLE iKundeKontaktId AS INTEGER FORMAT "->,>>>,>>9" INITIAL 0
 
 DEFINE VARIABLE lblMerknad AS CHARACTER FORMAT "X(256)":U INITIAL "Merknad:" 
       VIEW-AS TEXT 
-     SIZE 14 BY .62 NO-UNDO.
+     SIZE 14 BY .63 NO-UNDO.
 
 DEFINE RECTANGLE tbKundeKontakt
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 100 BY 1.71.
+     SIZE 100 BY 1.72.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -273,6 +271,7 @@ DEFINE BROWSE BrwKundeKontakt
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwKundeKontakt C-Win _STRUCTURED
   QUERY BrwKundeKontakt NO-LOCK DISPLAY
       KundeKontakt.iKundeKontaktId COLUMN-LABEL "Kundekontakt id" FORMAT "->,>>>,>>9":U
+            WIDTH 15.6
       KundeKontakt.cKontaktNavn COLUMN-LABEL "Kontaktnavn" FORMAT "x(40)":U
       KundeKontakt.cRolle COLUMN-LABEL "Rolle" FORMAT "x(20)":U
       KundeKontakt.cStilling COLUMN-LABEL "Stilling" FORMAT "x(50)":U
@@ -281,48 +280,53 @@ DEFINE BROWSE BrwKundeKontakt
       KundeKontakt.cTlf COLUMN-LABEL "Tlf" FORMAT "x(12)":U
       KundeKontakt.cMerknad COLUMN-LABEL "Merknad" FORMAT "x(50)":U
       KundeKontakt.cPostPnr COLUMN-LABEL "Postnummer" FORMAT "x(8)":U
+            WIDTH 11.6
       KundeKontakt.cPostSted COLUMN-LABEL "Poststed" FORMAT "x(40)":U
       KundeKontakt.cPostAdresse FORMAT "x(40)":U
       KundeKontakt.cLand COLUMN-LABEL "Land" FORMAT "x(20)":U
       KundeKontakt.bActive COLUMN-LABEL "Aktiv" FORMAT "ja/nei":U
+            WIDTH 4.8
       KundeKontakt.cCreatedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       KundeKontakt.cModifiedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       KundeKontakt.dCreated COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
+            WIDTH 11.6
       KundeKontakt.dModified COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
+            WIDTH 11.6
       KundeKontakt.iKundeId COLUMN-LABEL "KundeId" FORMAT "->,>>>,>>9":U
+            WIDTH 10.2
   ENABLE
       KundeKontakt.iKundeKontaktId
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 43 BY 10.71 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 50 BY 10.72 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbKundeKontakt AT ROW 1.1 COL 1.2 WIDGET-ID 20
-     copy_tbKundeKontakt AT ROW 1.1 COL 7.2 WIDGET-ID 22
-     undo_tbKundeKontakt AT ROW 1.1 COL 13.4 WIDGET-ID 24
-     save_tbKundeKontakt AT ROW 1.1 COL 19.4 WIDGET-ID 26
-     delete_tbKundeKontakt AT ROW 1.1 COL 25.6 WIDGET-ID 28
-     refresh_tbKundeKontakt AT ROW 1.1 COL 31.6 WIDGET-ID 30
-     filter_tbKundeKontakt AT ROW 1.1 COL 37.8 WIDGET-ID 32
-     excel_tbKundeKontakt AT ROW 1.1 COL 43.8 WIDGET-ID 34
+     new_tbKundeKontakt AT ROW 1.09 COL 1.25 WIDGET-ID 20
+     copy_tbKundeKontakt AT ROW 1.09 COL 7.25 WIDGET-ID 22
+     undo_tbKundeKontakt AT ROW 1.09 COL 13.38 WIDGET-ID 24
+     save_tbKundeKontakt AT ROW 1.09 COL 19.38 WIDGET-ID 26
+     delete_tbKundeKontakt AT ROW 1.09 COL 25.63 WIDGET-ID 28
+     refresh_tbKundeKontakt AT ROW 1.09 COL 31.63 WIDGET-ID 30
+     filter_tbKundeKontakt AT ROW 1.09 COL 37.75 WIDGET-ID 32
+     excel_tbKundeKontakt AT ROW 1.09 COL 43.75 WIDGET-ID 34
      BrwKundeKontakt AT ROW 2.91 COL 1 WIDGET-ID 200
-     iKundeKontaktId AT ROW 3.14 COL 60 COLON-ALIGNED
-     cKontaktNavn AT ROW 4.14 COL 60 COLON-ALIGNED
-     cRolle AT ROW 5.14 COL 60 COLON-ALIGNED
-     cStilling AT ROW 6.14 COL 60 COLON-ALIGNED
-     cTlf AT ROW 7.14 COL 60 COLON-ALIGNED
-     cMob AT ROW 8.14 COL 60 COLON-ALIGNED
-     cEmail AT ROW 9.14 COL 60 COLON-ALIGNED
-     cMerknad AT ROW 11 COL 62 NO-LABEL WIDGET-ID 16
-     lblMerknad AT ROW 10.29 COL 60 COLON-ALIGNED NO-LABEL
+     iKundeKontaktId AT ROW 3.25 COL 67 COLON-ALIGNED
+     cKontaktNavn AT ROW 4.25 COL 67 COLON-ALIGNED
+     cRolle AT ROW 5.25 COL 67 COLON-ALIGNED
+     cStilling AT ROW 6.25 COL 67 COLON-ALIGNED
+     cTlf AT ROW 7.25 COL 67 COLON-ALIGNED
+     cMob AT ROW 8.25 COL 67 COLON-ALIGNED
+     cEmail AT ROW 9.25 COL 67 COLON-ALIGNED
+     cMerknad AT ROW 11.13 COL 69 NO-LABEL WIDGET-ID 16
+     lblMerknad AT ROW 10.41 COL 67 COLON-ALIGNED NO-LABEL
      tbKundeKontakt AT ROW 1 COL 1 WIDGET-ID 18
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 100 BY 12.67 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SCROLLABLE SIZE 108.13 BY 12.66 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -341,12 +345,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 12.67
-         WIDTH              = 99.6
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 139.2
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 139.2
+         HEIGHT             = 12.66
+         WIDTH              = 108.13
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 139.25
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 139.25
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -381,8 +385,8 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
    FRAME-NAME                                                           */
 /* BROWSE-TAB BrwKundeKontakt excel_tbKundeKontakt DEFAULT-FRAME */
 ASSIGN 
-       FRAME DEFAULT-FRAME:HEIGHT           = 12.67
-       FRAME DEFAULT-FRAME:WIDTH            = 100.
+       FRAME DEFAULT-FRAME:HEIGHT           = 12.66
+       FRAME DEFAULT-FRAME:WIDTH            = 108.13.
 
 ASSIGN 
        KundeKontakt.iKundeKontaktId:VISIBLE IN BROWSE BrwKundeKontakt = FALSE
@@ -413,42 +417,42 @@ THEN C-Win:HIDDEN = yes.
 /* Query rebuild information for BROWSE BrwKundeKontakt
      _TblList          = "norcalc.KundeKontakt"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _FldNameList[1]   > KundeKontakt.iKundeKontaktId
-"KundeKontakt.iKundeKontaktId" "Kundekontakt id" "->,>>>,>>9" "integer" ? ? ? ? ? ? yes "" no no "15.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[2]   > KundeKontakt.cKontaktNavn
+     _FldNameList[1]   > "_<CALC>"
+"KundeKontakt.iKundeKontaktId" "Kundekontakt id" "->,>>>,>>9" "integer" ? ? ? ? ? ? yes "" no no "15.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[2]   > "_<CALC>"
 "KundeKontakt.cKontaktNavn" "Kontaktnavn" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[3]   > KundeKontakt.cRolle
+     _FldNameList[3]   > "_<CALC>"
 "KundeKontakt.cRolle" "Rolle" "x(20)" "character" ? ? ? ? ? ? no "" no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[4]   > KundeKontakt.cStilling
+     _FldNameList[4]   > "_<CALC>"
 "KundeKontakt.cStilling" "Stilling" "x(50)" "character" ? ? ? ? ? ? no "" no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[5]   > KundeKontakt.cEmail
+     _FldNameList[5]   > "_<CALC>"
 "KundeKontakt.cEmail" "Epost" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[6]   > KundeKontakt.cMob
+     _FldNameList[6]   > "_<CALC>"
 "KundeKontakt.cMob" "Mob" "x(12)" "character" ? ? ? ? ? ? no "" no no "12" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[7]   > KundeKontakt.cTlf
+     _FldNameList[7]   > "_<CALC>"
 "KundeKontakt.cTlf" "Tlf" "x(12)" "character" ? ? ? ? ? ? no "" no no "12" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[8]   > KundeKontakt.cMerknad
+     _FldNameList[8]   > "_<CALC>"
 "KundeKontakt.cMerknad" "Merknad" "x(50)" "character" ? ? ? ? ? ? no "" no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[9]   > KundeKontakt.cPostPnr
-"KundeKontakt.cPostPnr" "Postnummer" "x(8)" "character" ? ? ? ? ? ? no "" no no "11.6" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[10]   > KundeKontakt.cPostSted
+     _FldNameList[9]   > "_<CALC>"
+"KundeKontakt.cPostPnr" "Postnummer" "x(8)" "character" ? ? ? ? ? ? no "" no no "11.63" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[10]   > "_<CALC>"
 "KundeKontakt.cPostSted" "Poststed" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[11]   > KundeKontakt.cPostAdresse
+     _FldNameList[11]   > "_<CALC>"
 "KundeKontakt.cPostAdresse" "" "x(40)" "character" ? ? ? ? ? ? no "" no no "40" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[12]   > KundeKontakt.cLand
+     _FldNameList[12]   > "_<CALC>"
 "KundeKontakt.cLand" "Land" "x(20)" "character" ? ? ? ? ? ? no "" no no "20" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[13]   > KundeKontakt.bActive
-"KundeKontakt.bActive" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "4.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[14]   > KundeKontakt.cCreatedBy
+     _FldNameList[13]   > "_<CALC>"
+"KundeKontakt.bActive" "Aktiv" "ja/nei" "logical" ? ? ? ? ? ? no "" no no "4.75" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[14]   > "_<CALC>"
 "KundeKontakt.cCreatedBy" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[15]   > KundeKontakt.cModifiedBy
+     _FldNameList[15]   > "_<CALC>"
 "KundeKontakt.cModifiedBy" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[16]   > KundeKontakt.dCreated
-"KundeKontakt.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[17]   > KundeKontakt.dModified
-"KundeKontakt.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[18]   > KundeKontakt.iKundeId
-"KundeKontakt.iKundeId" "KundeId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.2" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[16]   > "_<CALC>"
+"KundeKontakt.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[17]   > "_<CALC>"
+"KundeKontakt.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[18]   > "_<CALC>"
+"KundeKontakt.iKundeId" "KundeId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.25" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwKundeKontakt */
 &ANALYZE-RESUME
@@ -592,8 +596,8 @@ PROCEDURE enable_UI :
   DISPLAY iKundeKontaktId cKontaktNavn cRolle cStilling cTlf cMob cEmail 
           cMerknad lblMerknad 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE tbKundeKontakt new_tbKundeKontakt copy_tbKundeKontakt 
-         undo_tbKundeKontakt save_tbKundeKontakt delete_tbKundeKontakt 
+  ENABLE new_tbKundeKontakt copy_tbKundeKontakt undo_tbKundeKontakt 
+         save_tbKundeKontakt delete_tbKundeKontakt tbKundeKontakt 
          refresh_tbKundeKontakt filter_tbKundeKontakt excel_tbKundeKontakt 
          BrwKundeKontakt iKundeKontaktId cKontaktNavn cRolle cStilling cTlf 
          cMob cEmail cMerknad lblMerknad 
@@ -636,7 +640,7 @@ oBrwKundeKontakt:OpenQuery().
 
 oContainer:setNoResizeX('cMerknad').
 oContainer:setAddMoveX("iKundeKontaktId,cKontaktNavn,cRolle,cStilling,cTlf,cMob,cEmail,cMerknad,lblMerknad").
-oContainer:initResize(350,300).
+oContainer:initResize(520,300).
 
 END PROCEDURE.
 

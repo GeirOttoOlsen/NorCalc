@@ -17,19 +17,18 @@ IF VALID-HANDLE(hWrapperProc) THEN DO:
     ioContainer:WrapperForm = oWrapperForm.
 END.
 
-/*
-PROCEDURE setContainerForMsTabObject:
-/*------------------------------------------------------------------------------
- Purpose: receive message from browse in tab-program to be assigned to the tab folder class 
- Notes:
-------------------------------------------------------------------------------*/
-DEF INPUT PARAM ihContainerSourceProc AS HANDLE NO-UNDO.
-DEF INPUT PARAM ioMsTabObject         AS JBoxMsTabs NO-UNDO.
+/*PROCEDURE unFreeze:                                                                        */
+/*/*------------------------------------------------------------------------------           */
+/* Purpose: receive message from browse in tab-program to be assigned to the tab folder class*/
+/* Notes:                                                                                    */
+/*------------------------------------------------------------------------------*/           */
+/*IF VALID-HANDLE(ioContainer:myCURRENT-WINDOW) THEN                                         */
+/*  DYNAMIC-FUNCTION("DoRedrawWindow",ioContainer:myCURRENT-WINDOW).                         */
+/*ELSE                                                                                       */
+/*  DYNAMIC-FUNCTION("DoLockWindow",?).                                                      */
+/*                                                                                           */
+/*END PROCEDURE.                                                                             */
 
-IF ihContainerSourceProc = ioContainer:CONTAINER-HANDLE THEN
-  ioMsTabObject:CONTAINER-OBJECT = ioContainer.
-END PROCEDURE.
-*/
 PROCEDURE getContainerForProc:
 /*------------------------------------------------------------------------------
  Purpose: receive message from browse in tab-program to be assigned to the tab folder class 
@@ -47,6 +46,7 @@ SUBSCRIBE TO "setContainerBrowseObject" ANYWHERE. /* published from browse class
 SUBSCRIBE TO "setContainerQueryObject" ANYWHERE. /* published from query class */
 SUBSCRIBE TO "setContainerToolbarObject" ANYWHERE. /* published from toolbar class */
 SUBSCRIBE TO "setContainerFieldMapObject" ANYWHERE. /* published from fieldMap class */
+SUBSCRIBE TO "setContainerMsTreeViewObject" ANYWHERE. /* published from uc.JboxMsTreeView class */
 
 PROCEDURE setContainerBrowseObject:
 /*------------------------------------------------------------------------------
@@ -56,8 +56,11 @@ PROCEDURE setContainerBrowseObject:
 DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
 DEF INPUT PARAM ioBrowseObject  AS JBoxBrowse NO-UNDO.
 
-IF ioContainer:CONTAINER-HANDLE = ihSourceProc AND NOT VALID-OBJECT(ioContainer:BROWSE-OBJECT) THEN
-  ioContainer:BROWSE-OBJECT = ioBrowseObject.
+IF ioContainer:CONTAINER-HANDLE = ihSourceProc THEN DO:
+  IF NOT VALID-OBJECT(ioContainer:BROWSE-OBJECT) THEN
+    ioContainer:BROWSE-OBJECT = ioBrowseObject.
+  ioBrowseObject:CONTAINER-OBJECT = ioContainer.  
+END.    
 
 END PROCEDURE.
 
@@ -70,8 +73,11 @@ PROCEDURE setContainerQueryObject:
 DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
 DEF INPUT PARAM ioQueryObject   AS JBoxQuery NO-UNDO.
 
-IF ioContainer:CONTAINER-HANDLE = ihSourceProc AND NOT VALID-OBJECT(ioContainer:QUERY-OBJECT) THEN
-  ioContainer:QUERY-OBJECT = ioQueryObject.
+IF ioContainer:CONTAINER-HANDLE = ihSourceProc THEN DO:
+  IF NOT VALID-OBJECT(ioContainer:QUERY-OBJECT) THEN
+    ioContainer:QUERY-OBJECT = ioQueryObject.
+  ioQueryObject:CONTAINER-OBJECT = ioContainer.
+END.    
 
 END PROCEDURE.
 
@@ -83,8 +89,11 @@ PROCEDURE setContainerToolbarObject:
 DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
 DEF INPUT PARAM ioToolbarObject AS JBoxToolbar NO-UNDO.
 
-IF ioContainer:CONTAINER-HANDLE = ihSourceProc AND NOT VALID-OBJECT(ioContainer:TOOLBAR-OBJECT) THEN
-  ioContainer:TOOLBAR-OBJECT = ioToolbarObject.
+IF ioContainer:CONTAINER-HANDLE = ihSourceProc THEN DO:
+  IF NOT VALID-OBJECT(ioContainer:TOOLBAR-OBJECT) THEN 
+    ioContainer:TOOLBAR-OBJECT = ioToolbarObject.
+  ioToolbarObject:CONTAINER-OBJECT = ioContainer.   
+END.    
 
 
 END PROCEDURE.
@@ -97,8 +106,37 @@ PROCEDURE setContainerFieldMapObject:
 DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
 DEF INPUT PARAM ioFieldMapObject AS JBoxFieldMap NO-UNDO.
 
-IF ioContainer:CONTAINER-HANDLE = ihSourceProc AND NOT VALID-OBJECT(ioContainer:FIELDMAP-OBJECT) THEN
-  ioContainer:FIELDMAP-OBJECT = ioFieldMapObject.
-
+IF ioContainer:CONTAINER-HANDLE = ihSourceProc THEN DO:
+  IF NOT VALID-OBJECT(ioContainer:FIELDMAP-OBJECT) THEN
+    ioContainer:FIELDMAP-OBJECT = ioFieldMapObject.
+  ioFieldMapObject:CONTAINER-OBJECT = ioContainer.  
+END.
 
 END PROCEDURE.
+
+PROCEDURE setContainerMsTreeViewObject:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM ihSourceProc AS HANDLE NO-UNDO.
+DEF INPUT PARAM ioMsTreeViewObject AS uc.JBoxMsTreeView NO-UNDO.
+
+IF ioContainer:CONTAINER-HANDLE = ihSourceProc THEN DO:
+  IF NOT VALID-OBJECT(ioContainer:TREEVIEW-OBJECT) THEN
+    ioContainer:TREEVIEW-OBJECT = ioMsTreeViewObject.
+  ioMsTreeViewObject:CONTAINER-OBJECT = ioContainer.
+END.
+
+END PROCEDURE.
+
+PROCEDURE InvalidateHandle:
+  DEF INPUT PARAM ihParentProc AS HANDLE NO-UNDO.
+
+  DEF VAR hContainer AS HANDLE NO-UNDO.
+
+  hContainer = ioContainer:CONTAINER-HANDLE.
+
+  IF ioContainer:PARENT-CONTAINER-OBJECT:CONTAINER-HANDLE = ihParentProc AND VALID-HANDLE(hContainer) THEN
+    APPLY "CLOSE" TO hContainer.   
+END.  

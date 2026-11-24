@@ -473,3 +473,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE PreTabChanged C-Win
+PROCEDURE PreTabChanged:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM iTabNum AS INT NO-UNDO.
+DEF OUTPUT PARAM obOk   AS LOG NO-UNDO INIT YES.
+
+IF iTabNum = 3 THEN DO:
+  MESSAGE "Access this tab?" 
+  VIEW-AS ALERT-BOX QUESTION BUTTONS OK-CANCEL UPDATE obOk.
+END.
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+

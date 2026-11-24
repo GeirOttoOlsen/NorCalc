@@ -74,6 +74,12 @@ DEF VAR cCurrOperator         AS CHAR   NO-UNDO.
 DEF VAR cLogicalDropDown      AS CHAR   NO-UNDO.
 DEF VAR cLogDropDownVal       AS CHAR   NO-UNDO INIT "||yes|yes|no|no".
 DEF VAR bDeleteUserFilter     AS LOG    NO-UNDO INIT YES.
+DEF VAR cExtFields            AS CHAR   NO-UNDO.
+DEF VAR cParentSrcFile        AS CHAR   NO-UNDO.
+DEF VAR hDateLookupBtn        AS HANDLE NO-UNDO.
+DEF VAR cDateFunctionList     AS CHAR   NO-UNDO.
+DEF VAR iOrgWidth             AS INT    NO-UNDO.
+DEF VAR hQryBuffer            AS HANDLE NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -108,6 +114,13 @@ FUNCTION FillFromCopy RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLookupTarget C-Win 
+FUNCTION getLookupTarget RETURNS HANDLE
+  (  )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ReduceFilter C-Win 
 FUNCTION ReduceFilter RETURNS CHARACTER
   ( INPUT icFilterFields AS CHAR )  FORWARD.
@@ -122,16 +135,24 @@ FUNCTION setDuplicateGroups RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setGridFilterCombo C-Win
+FUNCTION setGridFilterCombo RETURNS LOGICAL 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE RECTANGLE rectBrowse
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 70 BY 18.1.
+     SIZE 74 BY 18.1.
 
 DEFINE RECTANGLE rectToolbar
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -145,13 +166,13 @@ DEFINE RECTANGLE rectWinToolbar
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     rectWinToolbar AT ROW 1.33 COL 57.2
+     rectWinToolbar AT ROW 1.33 COL 60.6
      rectToolbar AT ROW 1.33 COL 2
      rectBrowse AT ROW 2.67 COL 2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 71.6 BY 19.81.
+         AT COLUMN 1 ROW 1
+         SCROLLABLE SIZE 75.8 BY 19.81.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -171,7 +192,7 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          HIDDEN             = YES
          TITLE              = "Filter"
          HEIGHT             = 19.81
-         WIDTH              = 71.8
+         WIDTH              = 75.8
          MAX-HEIGHT         = 52.38
          MAX-WIDTH          = 142.6
          VIRTUAL-HEIGHT     = 52.38
@@ -200,7 +221,7 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
    FRAME-NAME                                                           */
 ASSIGN 
        FRAME DEFAULT-FRAME:HEIGHT           = 19.81
-       FRAME DEFAULT-FRAME:WIDTH            = 71.6.
+       FRAME DEFAULT-FRAME:WIDTH            = 75.8.
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -278,7 +299,7 @@ ASSIGN CURRENT-WINDOW                = {&WINDOW-NAME}
 /* The CLOSE event can be used from inside or outside the procedure to  */
 /* terminate it.                                                        */
 ON CLOSE OF THIS-PROCEDURE DO:
-  DELETE OBJECT hNewBuff.
+  DELETE OBJECT hNewBuff NO-ERROR.
   DYNAMIC-FUNCTION("DoCleanUpObjects",THIS-PROCEDURE:CURRENT-WINDOW).
   DYNAMIC-FUNCTION("SetCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
   RUN disable_UI.
@@ -306,6 +327,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   
   RUN enable_UI.
   DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
+  cParentSrcFile = ENTRY(NUM-ENTRIES(ihParent:FILE-NAME,"\"),ihParent:FILE-NAME,"\").
   RUN InitializeObject.
   IF ibDialog THEN
     ihParent:CURRENT-WINDOW:SENSITIVE = NO.
@@ -335,12 +357,14 @@ PROCEDURE AdvancedFilterRecord :
 DYNAMIC-FUNCTION("DoLockWindow",THIS-PROCEDURE:CURRENT-WINDOW).
 DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","yes").
 
-IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"advancedfilter") = "on" THEN
+IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"advancedfilter") = "on" THEN DO:
   DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"advancedfilter","").
+  THIS-PROCEDURE:CURRENT-WINDOW:WIDTH-PIXELS = iOrgWidth.
+END.  
 ELSE DO:
   DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"advancedfilter","on").
   IF THIS-PROCEDURE:CURRENT-WINDOW:WIDTH-PIXELS LE 405 THEN
-    THIS-PROCEDURE:CURRENT-WINDOW:WIDTH-PIXELS = 510.
+    THIS-PROCEDURE:CURRENT-WINDOW:WIDTH-PIXELS = 600.
 END.
 
 httCopy:DEFAULT-BUFFER-HANDLE:EMPTY-TEMP-TABLE().
@@ -379,22 +403,45 @@ DEF VAR ix               AS INT  NO-UNDO.
 DEF VAR cContElement     AS CHAR NO-UNDO.
 DEF VAR bContElementCorr AS LOG  NO-UNDO.
 DEF VAR cContString      AS CHAR NO-UNDO.
+DEF VAR dtDate           AS DATETIME NO-UNDO.
+DEF VAR dtDateTZ         AS DATETIME-TZ NO-UNDO.
+DEF VAR dDate            AS DATE NO-UNDO.
 
 IF hOperatorOverlay:SCREEN-VALUE = ? OR hOperatorOverlay:SCREEN-VALUE = "" THEN DO:
   CASE ihFillIn:DATA-TYPE:
-    WHEN "character" THEN
+    WHEN "character" THEN DO:
+      ihFillIn:INPUT-VALUE = REPLACE(ihFillIn:INPUT-VALUE,'%','*').
+      IF ihFillIn:INPUT-VALUE = "*" THEN ihFillIn:INPUT-VALUE = "".
       IF ihFillIn:INPUT-VALUE NE "" THEN DO:
         cFilterOperator = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOperator_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE).
         IF cFilterOperator NE "" THEN 
           hOperatorOverlay:SCREEN-VALUE = cFilterOperator.
+        ELSE IF ihFillIn:INPUT-VALUE = ? THEN  
+          ASSIGN hOperatorOverlay:LIST-ITEM-PAIRS = "||=|=|<>|<>"
+                 hOperatorOverlay:SCREEN-VALUE = "=".
         ELSE IF INDEX(ihFillIn:INPUT-VALUE,"*") > 0 THEN
           hOperatorOverlay:SCREEN-VALUE = "MATCHES".
         ELSE
           hOperatorOverlay:SCREEN-VALUE = "BEGINS".
       END.
-    WHEN "date" OR WHEN "datetime" OR WHEN "datetime-tz" THEN
+    END.  
+    WHEN "date" THEN
       IF DATE(ihFillIn:SCREEN-VALUE) = ? THEN ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
       ELSE hOperatorOverlay:SCREEN-VALUE = "=".
+    WHEN "datetime" THEN DO:
+      dtDate = DATETIME(ihFillIn:SCREEN-VALUE) NO-ERROR.
+      IF ERROR-STATUS:ERROR THEN
+        dDate = DATE(ihFillin:SCREEN-VALUE) NO-ERROR.
+      IF ERROR-STATUS:ERROR THEN ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
+      ELSE IF dtDate NE ? OR dDate NE ? THEN hOperatorOverlay:SCREEN-VALUE = "=".
+    END.  
+    WHEN "datetime-tz" THEN DO:
+      dtDateTZ = DATETIME-TZ(ihFillIn:SCREEN-VALUE) NO-ERROR.
+      IF ERROR-STATUS:ERROR THEN
+        dDate = DATE(ihFillin:SCREEN-VALUE) NO-ERROR.
+      IF DATETIME-TZ(ihFillIn:SCREEN-VALUE) = ? THEN ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
+      ELSE IF dtDateTZ NE ? OR dDate NE ? THEN hOperatorOverlay:SCREEN-VALUE = "=".
+    END.  
     WHEN "decimal" THEN
       IF DEC(ihFillIn:SCREEN-VALUE) = 0 THEN ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
       ELSE hOperatorOverlay:SCREEN-VALUE = "=".
@@ -408,9 +455,12 @@ IF hOperatorOverlay:SCREEN-VALUE = ? OR hOperatorOverlay:SCREEN-VALUE = "" THEN 
     ihBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE = hOperatorOverlay:SCREEN-VALUE.
   hOperatorOverlay:MODIFIED = FALSE.
 END.
-ELSE IF ihFillIn:DATA-TYPE = "DATE" AND 
-        DATE(ihFillIn:SCREEN-VALUE) = ? THEN 
-  ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
+ELSE IF ihFillIn:DATA-TYPE = "DATE" THEN DO:
+  IF DATE(ihFillIn:SCREEN-VALUE) = ? THEN 
+    ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = "".
+  ELSE  
+    ihBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = STRING(DATE(ihFillIn:SCREEN-VALUE),"99/99/9999") NO-ERROR.
+END.
   
 IF hOperatorOverlay:SCREEN-VALUE = "contains" THEN DO:
   DO ix = 1 TO NUM-ENTRIES(ihFillIn:SCREEN-VALUE," "):
@@ -439,14 +489,19 @@ PROCEDURE BrowseColumnLookup :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+
 RUN SUPER.
-IF hOperatorOverlay:SCREEN-VALUE = "IN" AND DYNAMIC-FUNCTION("getAttribute",hValueOverlay,"lastlookupreturnvalues") NE "" THEN DO:
+
+IF CAN-DO("IN,NOT IN",hOperatorOverlay:SCREEN-VALUE) AND DYNAMIC-FUNCTION("getAttribute",hValueOverlay,"lastlookupreturnvalues") NE "" THEN DO:
   hValueOverlay:SCREEN-VALUE = REPLACE(DYNAMIC-FUNCTION("getAttribute",hValueOverlay,"lastlookupreturnvalues"),"¤",","). 
 
   DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"last-event","tab").
   APPLY "tab" TO hValueOverlay.  
   APPLY "entry" TO hValueOverlay.
 END.
+
+//setGridFilterCombo().
+
 THIS-PROCEDURE:CURRENT-WINDOW:TOP-ONLY = YES.
 END PROCEDURE.
 
@@ -534,9 +589,9 @@ PROCEDURE DeleteFilterRecord :
 ------------------------------------------------------------------------------*/
 DEF VAR cUserFilterList AS CHAR NO-UNDO.
 DEF VAR cCurrentFilter  AS CHAR NO-UNDO.
- 
+
 cUserFilterList = DYNAMIC-FUNCTION("getUserSettingContextList",
-                  ihParent:FILE-NAME,
+                  cParentSrcFile,
                   DYNAMIC-FUNCTION("getObjectName",ihQueryObject),
                   "userfilter").
 IF NUM-ENTRIES(cUserFilterList,"|") > 1 THEN DO:
@@ -551,7 +606,7 @@ DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"currentUserFilter",cCurrentFilter
 DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"usersettingcontext",cCurrentFilter).
 
 DYNAMIC-FUNCTION("setUserSetting",
-                 ihParent:FILE-NAME,
+                 cParentSrcFile,
                  DYNAMIC-FUNCTION("getObjectName",ihQueryObject),
                  DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"usersettingcontext"),
                  "filtervaluelist,operatorinuselist,groupoperatorlist,fieldgrouplist,fieldoperatorlist,hiddengroupoperatorlist,queryfilter,advancedfilter,calcfieldfilter,prescanqueryfilter,userfilter",
@@ -604,6 +659,8 @@ DEF VAR cLookupTable     AS CHAR NO-UNDO.
 DEF VAR cLookupReturnFld AS CHAR NO-UNDO.
 DEF VAR iMousePos        AS INT  NO-UNDO.
 DEF VAR cFilterOperator  AS CHAR NO-UNDO.
+DEF VAR bCheckNull       AS LOG  NO-UNDO.
+DEF VAR cDropDownQueryResult AS CHAR NO-UNDO.
 
 DYNAMIC-FUNCTION("setCurrentObject",hBrowse).
 
@@ -622,12 +679,16 @@ IF bAdv AND
                     "FieldOperator",            
                     "",                         
                     "",                         
-                    "AND|AND|OR|OR").  
+                    "AND|AND|AND NOT|AND NOT|OR|OR").  
   DYNAMIC-FUNCTION("CreateOverlayLink",hBrowse,hFieldOpOverlay,"FieldOperator"). 
 END.
 
-IF hBuffer:AVAIL AND cCurrOperator = "IN" AND hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE NE "IN" THEN
+IF hBuffer:AVAIL AND CAN-DO("IN,NOT IN",cCurrOperator) AND NOT CAN-DO("IN,NOT IN",hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE) THEN
   hBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = ENTRY(1,hBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE) NO-ERROR.
+
+bCheckNull = CAN-DO("IS NULL,NE NULL",hBuffer::Operator).
+
+IF bCheckNull AND VALID-HANDLE(hValueOverlay) THEN DYNAMIC-FUNCTION("DeleteObject",hValueOverlay).
 
 DYNAMIC-FUNCTION ("setAttribute",hBrowse,"disabledActions",
                  IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOperator_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) = "CONTAINS" THEN "duplicate" ELSE "").
@@ -639,100 +700,137 @@ IF hBuffer:AVAIL THEN DO:
   hOldValueOverlay = hValueOverlay.
 
   IF hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE NE "logical" THEN DO:
-    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" OR
-       DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" THEN DO:
-      hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
-                      hBrowse,
-                      "ColumnValue",
-                      "ColumnValue",
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)                    /* Query to get drop-down values */
-                      ).   
-      hOperatorOverlay:LIST-ITEM-PAIRS = "||=|=|>|>|<|<|>=|>=|<=|<=|<>|<>".
-      hValueOverlay:LIST-ITEM-PAIRS = "||" + hValueOverlay:LIST-ITEM-PAIRS.
-      hOperatorOverlay:LIST-ITEM-PAIRS = REPLACE(hOperatorOverlay:LIST-ITEM-PAIRS,"|BEGINS|BEGINS|MATCHES|MATCHES","").
+    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) = "" THEN DO:
+      IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" AND 
+         DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"sqldbname") NE "" THEN
+        cDropDownQueryResult = JBoxServerAPI:Instance:FieldList(
+                                  DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)
+                                 ,DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)
+                                 ,"|"
+                                 ,DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"sqldbname")).
+      ELSE IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" THEN
+        cDropDownQueryResult = JBoxServerAPI:Instance:FieldList(
+                                  DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)
+                                 ,DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)
+                                 ,"|").
+    END.
+    IF (cDropDownQueryResult NE "" OR
+        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "") 
+       AND DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) = "" 
+       THEN DO:
+      IF NOT bCheckNull THEN DO:   
+
+
+        hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
+                        hBrowse,
+                        "ColumnValue",
+                        "ColumnValue",
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
+                        IF cDropDownQueryResult NE "" THEN cDropDownQueryResult ELSE DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)                    /* Query to get drop-down values */
+                        ).
+        hValueOverlay:LIST-ITEM-PAIRS = "||" + hValueOverlay:LIST-ITEM-PAIRS.
+      END.  
+      cFilterOperator = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOperator_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE).
+      IF cFilterOperator NE "" THEN
+        hOperatorOverlay:LIST-ITEM-PAIRS = "||" + cFilterOperator + "|" + cFilterOperator.
+      ELSE 
+        hOperatorOverlay:LIST-ITEM-PAIRS = "||=|=|>|>|<|<|>=|>=|<=|<=|<>|<>|IS NULL|IS NULL|NE NULL|NE NULL".
     END.
     ELSE DO:
-      hValueOverlay = DYNAMIC-FUNCTION("NewPropertyFillIn",
-                      hBrowse,
-                      "ColumnValue",
-                      "ColumnValue",
-                      IF hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE = "IN" THEN
-                         "CHARACTER"
-                      ELSE
-                        hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE,
-                      IF hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE = "IN" THEN
-                        "x(256)"
-                      ELSE
-                        hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE,
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupreturnfield_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
-                      "").   
+      IF NOT bCheckNull THEN DO:    
+        hValueOverlay = DYNAMIC-FUNCTION("NewPropertyFillIn",
+                        hBrowse,
+                        "ColumnValue",
+                        "ColumnValue",
+                        IF CAN-DO("IN,NOT IN",hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE) THEN
+                           "CHARACTER"
+                        ELSE
+                          hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE,
+                        IF CAN-DO("IN,NOT IN",hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE) THEN
+                          "x(256)"
+                        ELSE IF hBuffer::DataType = "date" THEN
+                          "99/99/9999"  
+                        ELSE
+                          hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE,
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupreturnfield_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
+                        "").   
+
+        DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"queryObject",STRING(ihQueryObject)).
+      END.
       cFilterOperator = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOperator_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE).
       IF cFilterOperator NE "" THEN
         hOperatorOverlay:LIST-ITEM-PAIRS = cFilterOperator + "|" + cFilterOperator.
       ELSE IF hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE = "character" THEN
-        hOperatorOverlay:LIST-ITEM-PAIRS = "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>|BEGINS|BEGINS|MATCHES|MATCHES".
-      ELSE hOperatorOverlay:LIST-ITEM-PAIRS = "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>".
+        hOperatorOverlay:LIST-ITEM-PAIRS = "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>|BEGINS|BEGINS|MATCHES|MATCHES|IS NULL|IS NULL|NE NULL|NE NULL".
+      ELSE hOperatorOverlay:LIST-ITEM-PAIRS = "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>|IS NULL|IS NULL|NE NULL|NE NULL".
+      
       IF CAN-DO(cAllowCanDoOperator,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN
-        hOperatorOverlay:LIST-ITEM-PAIRS = "||IN|IN|" + hOperatorOverlay:LIST-ITEM-PAIRS.
+        hOperatorOverlay:LIST-ITEM-PAIRS = "||IN|IN|NOT IN|NOT IN|" + hOperatorOverlay:LIST-ITEM-PAIRS.
       ELSE
         hOperatorOverlay:LIST-ITEM-PAIRS = "||" + hOperatorOverlay:LIST-ITEM-PAIRS.
-
+  
+      IF NOT bCheckNull AND hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE BEGINS "date" THEN DO:
+        hDateLookupBtn = DYNAMIC-FUNCTION("getEventWidget",hValueOverlay,"choose","browse-lookup").
+        hDateLookupBtn:TOOLTIP = (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Høyreklikk for å velge datofunksjon" ELSE "Right-click to select date function").
+        DYNAMIC-FUNCTION("NewMenuBand",
+                         hDateLookupBtn,
+                         "SelectDateFunction;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Velg datofunksjon" ELSE "Select date function")
+                         ,"").
+      END.               
+      
     END.
     IF DYNAMIC-FUNCTION("Scandinavian") THEN
       hOperatorOverlay:TOOLTIP = "> - større enn" + CHR(10) + "< - mindre enn".
   END.
   ELSE DO:
-    hOperatorOverlay:LIST-ITEM-PAIRS = "||=|=|<>|<>".
-    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" OR
-       DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" THEN DO:
-      hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
-                      hBrowse,
-                      "ColumnValue",
-                      "ColumnValue",
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
-                      DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)                    /* Query to get drop-down values */
-                      ).   
-      hValueOverlay:LIST-ITEM-PAIRS = "||" + hValueOverlay:LIST-ITEM-PAIRS.
-    END.
-    ELSE 
-      hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
-                      hBrowse,
-                      "ColumnValue",
-                      "ColumnValue",
-                      "",    
-                      "",  
-                      IF hBuffer::CharValueTrue NE "" THEN 
-                        "||" + hBuffer::CharValueTrue + "|yes" /* + hBuffer::CharValueTrue */
-                      + "|" + hBuffer::CharValueFalse + "|no" /* + hBuffer::CharValueFalse */
-                      ELSE cLogicalDropDown
-                      ).   
-    
-    /*
-      hValueOverlay = DYNAMIC-FUNCTION("NewBrowseToggle",
+    hOperatorOverlay:LIST-ITEM-PAIRS = "||=|=|<>|<>|IS NULL|IS NULL|NE NULL|NE NULL".
+    IF NOT bCheckNull THEN DO: 
+      IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" OR
+         DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) NE "" THEN DO:
+        hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
                         hBrowse,
                         "ColumnValue",
                         "ColumnValue",
-                        "").
-                        */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownfields_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                          /* Query to get drop-down values */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownquery_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE),                    /* Query to get drop-down values */
+                        DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE)                    /* Query to get drop-down values */
+                        ).   
+        hValueOverlay:LIST-ITEM-PAIRS = "||" + hValueOverlay:LIST-ITEM-PAIRS.
+      END.
+      ELSE 
+        hValueOverlay = DYNAMIC-FUNCTION("NewBrowseDropDown",
+                        hBrowse,
+                        "ColumnValue",
+                        "ColumnValue",
+                        "",    
+                        "",  
+                        IF hBuffer::CharValueTrue NE "" THEN 
+                          "||" + hBuffer::CharValueTrue + "|yes" /* + hBuffer::CharValueTrue */
+                        + "|" + hBuffer::CharValueFalse + "|no" /* + hBuffer::CharValueFalse */
+                        ELSE cLogicalDropDown
+                        ).   
+    END.    
   END.
+  //IF CAN-DO(cExtFields,hBuffer::ColumnName) THEN hOperatorOverlay:LIST-ITEM-PAIRS = REPLACE(hOperatorOverlay:LIST-ITEM-PAIRS,"|<>|<>","").
+
   hOperatorOverlay:SCREEN-VALUE = hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE.
+  
 
   DYNAMIC-FUNCTION("DeleteObject",hOldValueOverlay).
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"currentoverlaywidget",STRING(hValueOverlay)).
 
-  DYNAMIC-FUNCTION("CreateOverlayLink",hBrowse,hValueOverlay,"ColumnValue").
-  
-  hValueOverlay:SCREEN-VALUE = hBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE NO-ERROR.
-  
-  ASSIGN hValueOverlay:MODIFIED = FALSE
-         hOperatorOverlay:MODIFIED = FALSE.
-
-  hValueOverlay:TAB-STOP = YES.
+  IF VALID-HANDLE(hValueOverlay) THEN DO:  
+    DYNAMIC-FUNCTION("CreateOverlayLink",hBrowse,hValueOverlay,"ColumnValue").
+    hValueOverlay:SCREEN-VALUE = hBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE NO-ERROR.
+    
+    ASSIGN hValueOverlay:MODIFIED = FALSE
+           hValueOverlay:TAB-STOP = YES
+           hValueOverlay:HIDDEN   = bCheckNull.
+  END.  
+  hOperatorOverlay:MODIFIED = FALSE.
 
   hColumn = hBrowse:GET-BROWSE-COLUMN(1) NO-ERROR.
   IF VALID-HANDLE(hColumn) THEN
@@ -740,15 +838,17 @@ IF hBuffer:AVAIL THEN DO:
 
   iMousePos = DYNAMIC-FUNCTION("getMousePosition",FRAME {&FRAME-NAME}:HANDLE,"x").
 
-  IF iMousePos > hValueOverlay:X THEN
+  IF VALID-HANDLE(hValueOverlay) AND iMousePos > hValueOverlay:X THEN
     DYNAMIC-FUNCTION("setWidgetEnter",hValueOverlay).
   ELSE IF iMousePos > hOperatorOverlay:X THEN
     DYNAMIC-FUNCTION("setWidgetEnter",hOperatorOverlay).
 
-  IF hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE = "IN" THEN
-    DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"lookup_multiselect","yes").
-  ELSE 
-    DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"lookup_multiselect","").
+  IF VALID-HANDLE(hValueOverlay) THEN DO:
+    IF CAN-DO("IN,NOT IN",hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE) THEN
+      DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"lookup_multiselect","yes").
+    ELSE 
+      DYNAMIC-FUNCTION("setAttribute",hValueOverlay,"lookup_multiselect","").
+  END.    
 
   DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
   DYNAMIC-FUNCTION("DoLockWindow",?).
@@ -829,9 +929,8 @@ PROCEDURE FetchFilterRecord :
 ------------------------------------------------------------------------------*/
 DEF VAR cUserFilterList AS CHAR NO-UNDO.
 DEF VAR cCurrentFilter  AS CHAR NO-UNDO.
- 
 cUserFilterList = DYNAMIC-FUNCTION("getUserSettingContextList",
-                  ihParent:FILE-NAME,
+                  cParentSrcFile,
                   DYNAMIC-FUNCTION("getObjectName",ihQueryObject),
                   "userfilter").
 IF NUM-ENTRIES(cUserFilterList,"|") > 1 THEN DO:
@@ -854,6 +953,51 @@ DYNAMIC-FUNCTION("LoadUserFilter",ihQueryObject,?).
 RUN InitFilter.
 DYNAMIC-FUNCTION("setAttribute",SESSION,"userkeepswindowlocked","").
 DYNAMIC-FUNCTION("DoLockWindow",?).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE getLookupFilter C-Win 
+PROCEDURE getLookupFilter :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT  PARAM icLookupReturnField AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocFilterFields      AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocFilterOperList    AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocFilterValueList   AS CHAR NO-UNDO.
+
+DEF VAR cLookupFilterFields AS CHAR NO-UNDO.
+DEF VAR hBuff               AS HANDLE NO-UNDO.
+DEF VAR hQ                  AS HANDLE NO-UNDO.
+DEF VAR ix                  AS INT    NO-UNDO.
+
+IF NOT hBuffer:AVAIL THEN RETURN.
+
+IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupReturnfield_" + hBuffer::ColumnName) = icLookupReturnField THEN DO: 
+  cLookupFilterFields = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterlookupFilter_" + hBuffer::ColumnName).
+  IF cLookupFilterFields NE "" THEN DO:
+    CREATE BUFFER hBuff FOR TABLE hBuffer.
+    CREATE QUERY hQ.
+    hQ:SET-BUFFERS(hBuff).
+    hQ:QUERY-PREPARE ("FOR EACH " + hBuff:NAME + " WHERE CAN-DO('" + cLookupFilterFields + "',ColumnName) AND Operator NE '' AND Operator NE 'IN'").
+    hQ:QUERY-OPEN ().
+    hQ:GET-FIRST().
+    REPEAT WHILE NOT hQ:QUERY-OFF-END:
+      ASSIGN ix = ix + 1
+             ocFilterFields    = ocFilterFields + (IF ocFilterFields NE "" THEN "," ELSE "") + hBuff::ColumnName
+             ocFilterOperList  = ocFilterOperList + (IF ocFilterOperList NE "" THEN "," ELSE "") + hBuff::Operator
+             ocFilterValueList = ocFilterValueList + (IF ix > 1 THEN "|" ELSE "") + (IF hBuff::ColumnValue NE ? THEN hBuff::ColumnValue ELSE "")
+             .
+      hQ:GET-NEXT().
+    END.
+    DELETE OBJECT hQ.
+    DELETE OBJECT hBuff.
+  END.  
+END.
 
 END PROCEDURE.
 
@@ -898,7 +1042,7 @@ DO ix = 1 TO hBrowse:NUM-SELECTED-ROWS:
       RUN MoveToTop.
       RETURN.
     END.
-    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"uselocaldata") NE "yes" THEN DO:
+    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"uselocaldata") NE "yes" OR DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"accumfields") NE "" THEN DO:
       IF cFirstBuffer = "" THEN cFirstBuffer = hBuffer:BUFFER-FIELD("BufferName"):BUFFER-VALUE.
       ELSE IF hBuffer:BUFFER-FIELD("BufferName"):BUFFER-VALUE NE cFirstBuffer THEN DO:
         DYNAMIC-FUNCTION("DoMessage",0,0,
@@ -929,6 +1073,8 @@ END.
 RUN JBoxDFilterGroupOperator.w (INPUT-OUTPUT cOper,
                                 OUTPUT bOK).
 
+IF NOT bOk THEN RETURN.
+
 IF iCurrGroup = 0 THEN iCurrGroup = iMaxGroup + 1.
 DO ix = 1 TO hBrowse:NUM-SELECTED-ROWS:
   IF hBrowse:FETCH-SELECTED-ROW(ix) THEN DO:
@@ -958,7 +1104,6 @@ DEF VAR cKeepFilterOpen AS CHAR   NO-UNDO.
 DEF VAR hFieldMap       AS HANDLE NO-UNDO.
 DEF VAR cExtFilter      AS CHAR   NO-UNDO.
 DEF VAR cExtBuffers     AS CHAR   NO-UNDO.
-DEF VAR cExtFields      AS CHAR   NO-UNDO.
 DEF VAR cExtFieldDef    AS CHAR   NO-UNDO.
 DEF VAR cExtFieldLab  AS CHAR   NO-UNDO.
 DEF VAR cExtFieldForm AS CHAR   NO-UNDO.
@@ -969,6 +1114,7 @@ DEF VAR cFormat       AS CHAR   NO-UNDO.
 DEF VAR hColumn       AS HANDLE NO-UNDO.
 DEF VAR cValue        AS CHAR   NO-UNDO. 
 DEF VAR bValue        AS LOG    NO-UNDO.
+DEF VAR cNoDispFlds   AS CHAR   NO-UNDO.
 
 DO WITH FRAME {&FRAME-NAME}:
   cKeepFilterOpen = DYNAMIC-FUNCTION("getAttribute",hFilter,"keepfilteropen").
@@ -980,16 +1126,19 @@ DO WITH FRAME {&FRAME-NAME}:
   DELETE OBJECT hNewBuff NO-ERROR.
   rRepos = ?.
 
+  hQryBuffer = IF ihQueryObject:TYPE = "browse" THEN ihQueryObject:QUERY:GET-BUFFER-HANDLE (1)
+               ELSE ihQueryObject:GET-BUFFER-HANDLE(1).
+
   bAdv = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"advancedfilter") = "on".
 
   hBrowse = DYNAMIC-FUNCTION("NewBrowse",rectBrowse:HANDLE,1,(IF bAdv THEN "MULTIPLE" ELSE ""),
                              "temp-table"
                            + ";+BufferName|CHARACTER|x(30)||"      + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Tabell" ELSE "Table") 
-                           + ";+GroupOperator|CHARACTER|x(5)||"    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "GrpOp" ELSE "GroupOp") 
+                           + ";+GroupOperator|CHARACTER|x(5)||"    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "GrpOp" ELSE "GroupOper") 
                            + ";+FieldGroup|INTEGER|>9||"           + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "FeltGrp" ELSE "FieldGr")
-                           + ";+FieldOperator|CHARACTER|x(5)||"    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "FeltOp" ELSE "FieldOp") 
+                           + ";+FieldOperator|CHARACTER|x(10)||"   + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "FeltOp" ELSE "FieldOper") 
                            + ";+ColumnLabel|CHARACTER|x(50)||"     + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Felt" ELSE "Field") 
-                           + ";+Operator|CHARACTER|x(8)||Operator" 
+                           + ";+Operator|CHARACTER|x(12)||Operator" 
                            + ";+ColumnValue|CHARACTER|x(256)||"     + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Verdi" ELSE "Value")  
                            + ";+!ColumnName|CHARACTER" 
                            + ";+!DataType|CHARACTER" 
@@ -1002,10 +1151,10 @@ DO WITH FRAME {&FRAME-NAME}:
                              ,
                              "where false",
                              "").
-  ASSIGN hBrowse:GET-BROWSE-COLUMN(1):WIDTH-PIXELS = 40
+  ASSIGN hBrowse:GET-BROWSE-COLUMN(1):WIDTH-PIXELS = 50
          hBrowse:GET-BROWSE-COLUMN(2):WIDTH-PIXELS = 40
          hBrowse:GET-BROWSE-COLUMN(3):WIDTH-PIXELS = 40
-         hBrowse:GET-BROWSE-COLUMN(4):WIDTH-PIXELS = 45
+         hBrowse:GET-BROWSE-COLUMN(4):WIDTH-PIXELS = 55
          hFieldGroup = hBrowse:GET-BROWSE-COLUMN(3)
          hBrowse:GET-BROWSE-COLUMN(5):WIDTH-PIXELS = 100
          .
@@ -1038,6 +1187,9 @@ DO WITH FRAME {&FRAME-NAME}:
       cFilterFields = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"allviewfields").
     ELSE
       cFilterFields = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"allviewfields").
+    IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOnNoDisplayFields") = "yes" THEN 
+      ASSIGN cNoDispFlds = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"nodisplayfields")
+             cFilterFields = TRIM(cFilterFields + "," + cNoDispFlds,",").
   END.
   ELSE IF cFilterFields = "" THEN DO:
     hFieldMap = DYNAMIC-FUNCTION("GetLinkedObject",ihQueryObject,"fieldMap","from").
@@ -1145,8 +1297,8 @@ DO WITH FRAME {&FRAME-NAME}:
       ELSE DO:  
         IF ihQueryObject:TYPE = "browse" THEN DO:
           hColumn = DYNAMIC-FUNCTION("getBrowseColumn",ihQueryObject,ENTRY(ix,cFilterFields)).
-          IF NOT VALID-HANDLE(hColumn) THEN
-            hColumn = ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)) NO-ERROR. 
+          IF NOT VALID-HANDLE(hColumn) THEN 
+            hColumn = ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)) NO-ERROR.
         END.  
         ELSE
           hColumn = ihQueryObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)) NO-ERROR.         
@@ -1194,10 +1346,12 @@ DO WITH FRAME {&FRAME-NAME}:
              hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE = 
                      IF CAN-DO(cExtFields,ENTRY(ix,cFilterFields)) THEN
                        ENTRY(3,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtFields),cExtFieldAttr,";"),"|")
+                     ELSE IF CAN-DO(cNoDispFlds,ENTRY(ix,cFilterFields)) THEN  
+                       hQryBuffer:BUFFER-FIELD(ENTRY(ix,cFilterFields)):LABEL
                      ELSE IF ihQueryObject:TYPE = "browse" THEN
                        DYNAMIC-FUNCTION("getBrowseColumnLabel",ihQueryObject,ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):NAME)
                      ELSE
-                       ihQueryObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):LABEL
+                       hQryBuffer:BUFFER-FIELD(ENTRY(ix,cFilterFields)):LABEL
              hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = ix + 100 * ix
              hBuffer:BUFFER-FIELD("HiddenGroupOperator"):BUFFER-VALUE =            
                      IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"HiddenGroupOperator_" + ENTRY(ix,cFilterFields)) NE "" THEN
@@ -1233,7 +1387,10 @@ DO WITH FRAME {&FRAME-NAME}:
               hBuffer::ColumnValue = "no". /* hBuffer::CharValueFalse. */
           END.
         END.
-      END.  
+      END.
+      
+      IF hBuffer::DataType BEGINS "date" AND LOOKUP(hBuffer::ColumnValue,cDateFunctionList,"|") > 0 THEN
+        DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer::ColumnName,cDateFunctionList).
 
 
       DO iy = 1 TO 100:
@@ -1337,9 +1494,33 @@ IF cDefaultFrameFont NE "" THEN
   FRAME {&FRAME-NAME}:FONT = INTEGER(cDefaultFrameFont) NO-ERROR.
 
 IF DYNAMIC-FUNCTION("Scandinavian") THEN
-  cLogicalDropDown = "||Ja|Ja|Nei|Nei".
+  ASSIGN cLogicalDropDown = "||Ja|Ja|Nei|Nei"
+         cDateFunctionList = "Dagens dato|TODAY" 
+                           + "|I morgen|getTOMORROW"
+                           + "|Første dag i inneværende måned|getFirstDayOfMonth"
+                           + "|Første dag i foregående måned|getFirstDayOfPriorMonth"
+                           + "|Første dag i neste måned|getFirstDayOfNextMonth"
+                           + "|Første dag i inneværende kvartal|getFirstDayOfQuarter"
+                           + "|Første dag i foregående kvartal|getFirstDayOfPriorQuarter"
+                           + "|Første dag i neste kvartal|getFirstDayOfNextQuarter"
+                           + "|Første dag i inneværende år|getFirstDayOfYear"
+                           + "|Første dag i foregående år|getFirstDayOfPriorYear"
+                           + "|Første dag i neste år|getFirstDayOfNextYear"
+         .
 ELSE 
-  cLogicalDropDown = "||Yes|Yes|No|No".
+  ASSIGN cLogicalDropDown = "||Yes|Yes|No|No"
+         cDateFunctionList = "Today|TODAY"
+                           + "|Tomorrow|getTOMORROW"
+                           + "|First day of this Month|getFirstDayOfMonth"
+                           + "|First day of prior Month|getFirstDayOfPriorMonth"
+                           + "|First day of next Month|getFirstDayOfNextMonth"
+                           + "|First day of this Quarter|getFirstDayOfQuarter"
+                           + "|First day of prior Quarter|getFirstDayOfPriorQuarter"
+                           + "|First day of next Quarter|getFirstDayOfNextQuarter"
+                           + "|First day of this Year|getFirstDayOfYear"
+                           + "|First day of prior Year|getFirstDayOfPriorYear"
+                           + "|First day of next Year|getFirstDayOfNextYear"
+         .
 
 DO WITH FRAME {&FRAME-NAME}:
   ASSIGN cActivePinButton      = DYNAMIC-FUNCTION("getAttribute",SESSION,"ActivePinButton")
@@ -1348,11 +1529,13 @@ DO WITH FRAME {&FRAME-NAME}:
          cDuplicateLabel       = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Dupliser rad" ELSE "Duplicate"
          cGroupSelectedLabel   = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Gruppér markerte felter" ELSE "Group selected fields"
          cDeGroupSelectedLabel = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Fjern markerte felter fra gruppe" ELSE "Remove selected fields from group"
+         iOrgWidth             = THIS-PROCEDURE:CURRENT-WINDOW:WIDTH-PIXELS 
          .
   IF cActivePinButton  = "" THEN cActivePinButton = "gif\pushout.gif".
   IF cPassivePinButton = "" THEN cPassivePinButton = "gif\pushin.gif".
 
   SUBSCRIBE TO "InitStringTranslation" ANYWHERE.
+  SUBSCRIBE TO "getLookupFilter" ANYWHERE. /* published from jboxdlookup.w */
 
   hToolbar = DYNAMIC-FUNCTION("NewToolbar",
                              rectToolbar:HANDLE,
@@ -1365,7 +1548,8 @@ DO WITH FRAME {&FRAME-NAME}:
                                + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Lagre filter" ELSE "Save filter") + "¤menu,"
                               ELSE "")
                            + (IF DYNAMIC-FUNCTION("getUserSetting",
-                                                  DYNAMIC-FUNCTION("getObjectSourceFile",ihQueryObject),
+                                                   cParentSrcFile,
+//                                                  DYNAMIC-FUNCTION("getObjectSourceFile",ihQueryObject),
                                                   DYNAMIC-FUNCTION("getObjectName",ihQueryObject),
                                                   "*", 
                                                   "userfilter"
@@ -1402,11 +1586,16 @@ DO WITH FRAME {&FRAME-NAME}:
                  + ",ViewQuery;"
                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Vis spørring" ELSE "View query")
                    + ";ViewQueryRecord;toggle"
+                 + ",QueryStopAfter;"
+                   + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Angi maks-tid spørring" ELSE "Set time-out for query")
+                   + ";QueryStopAfterRecord"
                    ,"").
   ASSIGN hMenuItemAdv   = DYNAMIC-FUNCTION("getEventWidget",hToolbar,"AdvancedFilter","menu-item")
          hMenuItemViewQ = DYNAMIC-FUNCTION("getEventWidget",hToolbar,"ViewQuery","menu-item")
          hPinButton     = DYNAMIC-FUNCTION("getEventWidget",hWinToolbar,"Pin","").
 
+  IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"advancedfilterdisabled") = "yes" THEN
+    hMenuItemAdv:SENSITIVE = NO.
   IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"advancedfilter") = "on" THEN
     hMenuItemAdv:CHECKED = TRUE.
   IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"viewqueryfilter") = "on" THEN 
@@ -1514,6 +1703,32 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE QueryStopAfterRecord C-Win 
+PROCEDURE QueryStopAfterRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cTimeOut AS CHAR NO-UNDO.
+cTimeOut = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"queryStopAfter").
+
+IF DYNAMIC-FUNCTION("getIsUserSettingInstalled") AND cTimeOut = "" THEN 
+  cTimeOut = JBoxServerApi:Instance:getUserSetting(DYNAMIC-FUNCTION("getObjectSourceFile",ihQueryObject),ihQueryObject:NAME,"query","queryStopAfter").
+IF cTimeOut = "" THEN cTimeOut = DYNAMIC-FUNCTION("getAttribute",SESSION,"queryStopAfter").
+IF cTimeOut = "" THEN cTimeOut = "60".
+
+JBoxSession:Instance:PromptForValue(IF JBoxSession:Instance:Scandinavian THEN "Angi max-tid spørring (sekunder)" ELSE "Time-out (sec)","CHARACTER","x(3)",cTimeOut).
+IF JBoxSession:Instance:PromptValueOK THEN DO:
+  DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"queryStopAfter",JBoxSession:Instance:PromptValue).
+  IF DYNAMIC-FUNCTION("getIsUserSettingInstalled") THEN
+    JBoxServerApi:Instance:setUserSetting(DYNAMIC-FUNCTION("getObjectSourceFile",ihQueryObject),ihQueryObject:NAME,"query","queryStopAfter",JBoxSession:Instance:PromptValue).
+END.  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE RowDisplayBrowse C-Win 
 PROCEDURE RowDisplayBrowse :
 /*------------------------------------------------------------------------------
@@ -1569,8 +1784,38 @@ DYNAMIC-FUNCTION("SetDynFilter",
                  "Save", 
                  hFilter,
                  ihQueryObject,
-                 ihParent:FILE-NAME,
+                 cParentSrcFile,
                  "").
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SelectDateFunctionRecord C-Win 
+PROCEDURE SelectDateFunctionRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cSelectValue AS CHAR NO-UNDO.
+
+JBoxSession:Instance:SimpleSelectListPairs(cDateFunctionList).
+
+IF JBoxSession:Instance:SelectListOk THEN DO:
+  DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer::ColumnName,cDateFunctionList).
+  cSelectValue = JBoxSession:Instance:SelectListValue.
+  hBuffer::ColumnValue = cSelectValue.
+  RUN DisplayRecord.
+  IF hOperatorOverlay:SCREEN-VALUE = " " OR hOperatorOverlay:SCREEN-VALUE = ? THEN DO:
+    CASE cSelectValue:
+      WHEN "TODAY"              THEN hOperatorOverlay:SCREEN-VALUE = "=".
+      WHEN "getFirstDayOfMonth" THEN hOperatorOverlay:SCREEN-VALUE = "<".
+      OTHERWISE hOperatorOverlay:SCREEN-VALUE = ">=".
+    END.
+    APPLY "value-changed" TO hOperatorOverlay.   
+  END.  
+END.  
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1584,10 +1829,10 @@ PROCEDURE StartDynFilterRecord :
   Notes:       
 ------------------------------------------------------------------------------*/
 setDuplicateGroups("set").
+
 RUN SUPER.
 
 setDuplicateGroups("clear").
-
 PUBLISH "RefreshAccumTotals" (ihQueryObject).
 
 IF NOT DYNAMIC-FUNCTION("getAttribute",hFilter,"keepfilteropen") = "yes" OR NOT ihParent:CURRENT-WINDOW:SENSITIVE THEN DO:    
@@ -1629,8 +1874,11 @@ RUN SUPER.
 
 IF DYNAMIC-FUNCTION("getCurrentObject") = hValueOverlay THEN DO:
   IF hValueOverlay:TYPE = "combo-box" THEN DO: 
-    IF hValueOverlay:SCREEN-VALUE = ? OR hValueOverlay:SCREEN-VALUE = "" THEN
+    IF hValueOverlay:SCREEN-VALUE = ? OR hValueOverlay:SCREEN-VALUE = "" THEN DO:
       hOperatorOverlay:SCREEN-VALUE = " ".
+      IF hBuffer::DataType BEGINS "date" THEN
+        DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"filterdropdownvaluelist_" + hBuffer::ColumnName,"").
+    END.  
     ELSE IF hOperatorOverlay:SCREEN-VALUE = ? OR hOperatorOverlay:SCREEN-VALUE = "" THEN
       hOperatorOverlay:SCREEN-VALUE = "=".
     APPLY "value-changed" TO hOperatorOverlay.
@@ -1654,9 +1902,11 @@ ELSE IF DYNAMIC-FUNCTION("getCurrentObject") = hOperatorOverlay THEN DO:
       RUN DisplayRecord.
     END.
   END.
-
-  IF CAN-DO(cAllowCanDoOperator,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN
-/*   IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"allowCAN-DOfilterOperator_" + hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) = "yes" THEN */
+  ELSE IF CAN-DO("IS NULL,NE NULL",hOperatorOverlay:SCREEN-VALUE) THEN DO:
+    hBuffer::ColumnValue = "".
+    RUN InvokeMethod(hBrowse,"DisplayRecord").
+  END.  
+  ELSE IF CAN-DO(cAllowCanDoOperator,hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE) THEN
     RUN InvokeMethod(hBrowse,"DisplayRecord").
 END.
 
@@ -1734,6 +1984,20 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLookupTarget C-Win 
+FUNCTION getLookupTarget RETURNS HANDLE
+  (  ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+
+RETURN hValueOverlay.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ReduceFilter C-Win 
 FUNCTION ReduceFilter RETURNS CHARACTER
   ( INPUT icFilterFields AS CHAR ) :
@@ -1744,11 +2008,16 @@ FUNCTION ReduceFilter RETURNS CHARACTER
 DEF VAR cNewList     AS CHAR NO-UNDO.
 DEF VAR cExcludeList AS CHAR NO-UNDO.
 DEF VAR hColumn      AS HANDLE NO-UNDO.
+DEF VAR bInclNoDisp  AS LOG  NO-UNDO.
+DEF VAR cNoDispList  AS CHAR NO-UNDO.
 
 cExcludeList = TRIM(REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterexcludefields"),"+","") 
                     + ",iJBoxCompanyId"
                     ,",")
                     .
+bInclNoDisp = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterOnNoDisplayFields") = "yes".
+IF bInclNoDisp THEN
+  cNoDispList = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"noDisplayFields").
 
 IF ihQueryObject:TYPE = "browse" THEN DO ix = 1 TO ihQueryObject:NUM-COLUMNS:
   IF CAN-DO(icFilterFields,ihQueryObject:GET-BROWSE-COLUMN(ix):NAME)
@@ -1760,6 +2029,10 @@ ELSE DO ix = 1 TO NUM-ENTRIES(icFilterFields):
   IF NOT CAN-DO(cExcludeList,ENTRY(ix,icFilterFields)) AND VALID-HANDLE(hColumn) THEN 
     cNewList = cNewList + ENTRY(ix,icFilterFields) + ",".
 END.
+DO ix = 1 TO NUM-ENTRIES (cNoDispList):
+  IF NOT CAN-DO(cExcludeList,ENTRY(ix,cNoDispList)) THEN 
+    cNewList = cNewList + ENTRY(ix,cNoDispList) + ",".
+END.  
 RETURN TRIM(cNewList,","). 
 
 END FUNCTION.
@@ -1778,7 +2051,7 @@ DEF VAR hDuplQuery AS HANDLE NO-UNDO.
 DEF VAR hDuplBuff  AS HANDLE NO-UNDO.
 DEF VAR iGrp       AS INT    NO-UNDO INIT 50.
 DEF VAR cPrevCol   AS CHAR   NO-UNDO.
-DEF VAR cSetRows   AS CHAR   NO-UNDO EXTENT 100.
+DEF VAR cSetRows   AS CHAR   NO-UNDO EXTENT 200.
 DEF VAR iSetIdx    AS INT    NO-UNDO INIT 1.
 
 CREATE BUFFER hDuplBuff FOR TABLE hBuffer.
@@ -1808,7 +2081,7 @@ REPEAT WHILE NOT hDuplQuery:QUERY-OFF-END:
 END.
 
 IF icAction = "set" THEN
-  DO ix = 1 TO 100:
+  DO ix = 1 TO 200:
     IF NUM-ENTRIES(cSetRows[ix]) > 1 AND NOT CAN-DO(cSetRows[ix],"n/a") THEN DO:
       DO iSetIdx = 1 TO NUM-ENTRIES(cSetRows[ix]):
         hDuplBuff:FIND-BY-ROWID(TO-ROWID(ENTRY(iSetIdx,cSetRows[ix]))).
@@ -1828,4 +2101,30 @@ END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setGridFilterCombo C-Win
+FUNCTION setGridFilterCombo RETURNS LOGICAL 
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hGridFilter      AS HANDLE NO-UNDO.
+DEF VAR hGridFilterField AS HANDLE NO-UNDO.
+DEF VAR ix               AS INT NO-UNDO.
+
+hGridFilter = DYNAMIC-FUNCTION("getLinkedObject",ihQueryObject,"gridFilter","from").
+IF VALID-HANDLE(hGridFilter) THEN DO:
+  hGridFilterField = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hGridFilter,"filterfield_search_" + hBuffer::ColumnName)).
+  IF VALID-HANDLE(hGridFilterField) AND hGridFilterField:TYPE = "COMBO-BOX" THEN DO:
+    IF hValueOverlay:SCREEN-VALUE = "" THEN DO:
+    END.      
+  END.
+END.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 

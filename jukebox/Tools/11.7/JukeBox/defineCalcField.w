@@ -509,7 +509,6 @@ DO:
       iocParamField  = "(" + cmbParamField:SCREEN-VALUE + ")".
     ELSE iocParamField = "".
 
-    iocMandatory = IF tbMandatory:CHECKED THEN "mandatory" ELSE "".
   END.
 
   ELSE DO:
@@ -546,6 +545,7 @@ DO:
          iocFormat      = fiFormat:SCREEN-VALUE 
          iocLabel       = fiLabel:SCREEN-VALUE 
          iocCalcProc    = cmbCalcProc:SCREEN-VALUE 
+         iocMandatory   = IF tbMandatory:CHECKED THEN "mandatory" ELSE ""
          obOk           = YES
          .
 END.
@@ -1210,6 +1210,9 @@ DO WITH FRAME {&FRAME-NAME}:
     cmbCalcProc:SCREEN-VALUE = iocCalcProc NO-ERROR.
 
   APPLY "value-changed" TO cmbCalcProc. 
+
+  IF iocFormat NE "" THEN
+    fiFormat:SCREEN-VALUE = iocFormat.
 
   IF iocParamField NE "" THEN DO:
     IF CAN-DO(cBuiltInWithCode,iocCalcProc) THEN

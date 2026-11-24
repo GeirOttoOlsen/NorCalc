@@ -19,7 +19,6 @@ ROUTINE-LEVEL ON ERROR UNDO, THROW.
 
 CLASS uc.JboxInternetExplorer INHERITS uc.JBoxUCbase: 
 
-
 	DEFINE PRIVATE VARIABLE components AS System.ComponentModel.IContainer NO-UNDO.
   DEFINE PRIVATE VARIABLE webBrowser1 AS System.Windows.Forms.WebBrowser NO-UNDO.
 
@@ -65,7 +64,7 @@ METHOD PUBLIC OVERRIDE VOID InitializeComponent(  ):
         THIS-OBJECT:webBrowser1:Location = NEW System.Drawing.Point(0, 0).
         THIS-OBJECT:webBrowser1:MinimumSize = NEW System.Drawing.Size(20, 20).
         THIS-OBJECT:webBrowser1:Name = "webBrowser1".
-        THIS-OBJECT:webBrowser1:Size = NEW System.Drawing.Size(ihPlaceHolder:width-pixels, ihPlaceHolder:height-pixels).
+        THIS-OBJECT:webBrowser1:Size = NEW System.Drawing.Size(667, 329).
         THIS-OBJECT:webBrowser1:TabIndex = 0.
 /*        THIS-OBJECT:webBrowser1:Url = NEW System.Uri("http:\\www.chemistry.no", System.UriKind:Absolute).*/
         /*
@@ -74,12 +73,13 @@ METHOD PUBLIC OVERRIDE VOID InitializeComponent(  ):
         THIS-OBJECT:webBrowser1:ScriptErrorsSuppressed     = TRUE.
         THIS-OBJECT:webBrowser1:WebBrowserShortcutsEnabled = FALSE.
         THIS-OBJECT:webBrowser1:DocumentCompleted:Subscribe(THIS-OBJECT:webBrowser1_DocumentCompleted).
+        THIS-OBJECT:webBrowser1:Navigating:Subscribe(THIS-OBJECT:webBrowser1_Navigating).
      
      
         /*  */
         /* WebBrowser */
         /*  */
-        THIS-OBJECT:ClientSize = NEW System.Drawing.Size(ihPlaceHolder:width-pixels, ihPlaceHolder:height-pixels).
+        THIS-OBJECT:ClientSize = NEW System.Drawing.Size(667, 329).
         THIS-OBJECT:Controls:Add(THIS-OBJECT:webBrowser1).
         THIS-OBJECT:Name = "WebBrowser".
         THIS-OBJECT:Text = "WebBrowser".
@@ -99,6 +99,12 @@ METHOD PUBLIC OVERRIDE VOID InitializeComponent(  ):
         DYNAMIC-FUNCTION('WebDocumentLoaded') NO-ERROR. 
 		RETURN.
 	END METHOD.
+
+  METHOD PRIVATE VOID webBrowser1_Navigating( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.WebBrowserNavigatingEventArgs ):
+/*    MESSAGE sender e:URL VIEW-AS ALERT-BOX.*/
+    DYNAMIC-FUNCTION('WebNavigating' IN hWinProc) NO-ERROR. 
+    RETURN.
+  END METHOD.
 
 
 	METHOD PUBLIC VOID setURI(INPUT ipcURI AS CHAR ):

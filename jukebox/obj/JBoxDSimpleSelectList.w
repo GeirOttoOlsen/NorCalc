@@ -30,6 +30,7 @@ DEF INPUT  PARAM ihPosWidget     AS HANDLE NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO INIT ?.
 
 /* Local Variable Definitions ---                                       */
+DEF VAR bMultiSelect AS LOG NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -195,12 +196,20 @@ MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
 
-  IF LOGICAL(DYNAMIC-FUNCTION("getAttribute",SESSION,"multiSimpleSelect")) THEN             
+
+  bMultiSelect = LOGICAL(DYNAMIC-FUNCTION("getAttribute",SESSION,"multiSimpleSelect")) NO-ERROR.
+  IF bMultiSelect THEN             
     selSelection:MULTIPLE = YES.
      
   RUN enable_UI.
 
   RUN InitWindow.
+
+  DEF VAR cTitle AS CHAR NO-UNDO.
+  cTitle = JBoxSession:Instance:getJBoxAttribute("SimpleSelectTitle").
+  IF cTitle NE "" THEN
+    FRAME {&FRAME-NAME}:TITLE = cTitle.
+  JBoxSession:Instance:setJBoxAttribute("SimpleSelectTitle","").   
 
   IF CAN-DO(SOURCE-PROCEDURE:INTERNAL-ENTRIES,"setSimpleSelectAttributes") THEN
     RUN setSimpleSelectAttributes IN SOURCE-PROCEDURE(selSelection:HANDLE).

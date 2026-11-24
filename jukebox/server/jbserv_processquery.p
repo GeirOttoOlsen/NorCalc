@@ -17,10 +17,11 @@ DEF OUTPUT PARAM obOk                   AS LOG NO-UNDO.
 
 DEF VAR hTempTable AS HANDLE NO-UNDO.
 DEF VAR hBuffer    AS HANDLE NO-UNDO.
-DEF VAR hJbAPI     AS HANDLE NO-UNDO.
+/* DEF VAR hJbAPI     AS HANDLE NO-UNDO. */
 
 {incl/validatesession.i}
 
+/*
 FUNCTION getASuserId     RETURNS CHARACTER FORWARD.
 FUNCTION getCompanyId    RETURNS INTEGER   FORWARD.
 FUNCTION getCodeMaster   RETURNS INTEGER   FORWARD.
@@ -33,6 +34,7 @@ FUNCTION getSysParam     RETURNS CHARACTER
 FUNCTION getGenCode RETURNS CHARACTER
   ( INPUT icCodeType  AS CHAR,
     INPUT icValueDesc AS CHAR ) FORWARD.
+*/
 
 RUN jbserv_gettemptablejoin.p
    (icSessionId,
@@ -68,6 +70,7 @@ ELSE ocReturn = "Couldn't find " + icRunProc + " on server".
 
 IF VALID-HANDLE(hTempTable) THEN DELETE OBJECT hTempTable.
 
+/*
 FUNCTION getASuserId RETURNS CHARACTER
   ( /* parameter-definitions */ ) :
 /*------------------------------------------------------------------------------
@@ -176,3 +179,4 @@ FUNCTION startASlib RETURNS HANDLE ():
   SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hJbAPI).
   RETURN hJbAPI.
 END.
+*/

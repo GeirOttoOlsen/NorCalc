@@ -1,0 +1,5 @@
+-db norcalc -U norcalc -P norcalc123
+-H 10.12.0.5
+-S 4000
+-N tcp
+

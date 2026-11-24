@@ -93,6 +93,8 @@ CLASS JBoxToolbar:
         BUFFER-HANDLE = ioFieldMap:BUFFER-HANDLE
         .
     END SET.
+
+  DEF PUBLIC PROPERTY CONTAINER-OBJECT AS JBoxContainer GET. SET.    
   			
   DEFINE PUBLIC PROPERTY objectState AS CHARACTER 
     GET(): 
@@ -326,7 +328,7 @@ CLASS JBoxToolbar:
         ).                             
     END.
     
-    PUBLISH "setChildToolbarObject" FROM hSourceProc (hSourceProc,THIS-OBJECT).   /* targets: tabfolder and viewer */                           
+    PUBLISH "setChildToolbarObject" FROM hSourceProc (hSourceProc,THIS-OBJECT).   /* targets: tabfolder and viewer */
     PUBLISH "setContainerToolbarObject" FROM hSourceProc (hSourceProc,THIS-OBJECT). /* publish to container class */                             
      
   END METHOD.
@@ -336,7 +338,7 @@ CLASS JBoxToolbar:
     ,icImage           AS CHARACTER
     ,icParentMenuLabel AS CHARACTER
     ,ibAlwaysEnabled   AS LOG
-    ,icAddAs           AS CHARACTER /* "button": button only. "menu": menu-item only. "": both */
+    ,icAddAs           AS CHARACTER /* "button": button only. "menu": menu-item only. "": both. "toggle": toggle menu-item.*/
     ,icShortCut        AS CHARACTER
     ,icTooltip         AS CHARACTER
     ,icMethod          AS CHARACTER
@@ -368,7 +370,9 @@ CLASS JBoxToolbar:
     END.
                                         
     IF icAddAs = "button" THEN icTool = icTool + "|".
-    cToolDef = icTool + ";" + icLabel + icShortCut + ";" + icTooltip + ";" + icMethod + ";" + icImage.
+    cToolDef = icTool + ";" + icLabel + icShortCut + ";"
+             + (IF icAddAs = "toggle" THEN "toggle" ELSE icTooltip)
+             + ";" + icMethod + ";" + icImage.
     IF ibAlwaysEnabled   THEN cToolDef = cToolDef + "¤enable".
     IF icAddAs BEGINS "menu" OR designWidget:TYPE = "window" THEN cToolDef = cToolDef + (IF NUM-ENTRIES(cToolDef,"¤") = 1 THEN "¤" ELSE " ") + "menu".
     DYNAMIC-FUNCTION("setObjectSourceProc",hSourceProc).  
@@ -414,8 +418,8 @@ CLASS JBoxToolbar:
     ,icImage         AS CHARACTER
     ,icParentMenu    AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER):  
-    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,icAddAs,"","","").
+    ,button_menu-item_toggle AS CHARACTER):  
+    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,button_menu-item_toggle,"","","").
   END METHOD.
   
   METHOD PUBLIC VOID addTool (icTool          AS CHARACTER
@@ -423,9 +427,9 @@ CLASS JBoxToolbar:
     ,icImage         AS CHARACTER
     ,icParentMenu    AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER
+    ,button_menu-item AS CHARACTER
     ,icShortcut      AS CHARACTER):  
-    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,icAddAs,icShortcut,"","").
+    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,button_menu-item,icShortcut,"","").
   END METHOD.
   
   METHOD PUBLIC VOID addTool (icTool          AS CHARACTER
@@ -433,10 +437,10 @@ CLASS JBoxToolbar:
     ,icImage         AS CHARACTER
     ,icParentMenu    AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER
+    ,button_menu-item  AS CHARACTER
     ,icShortcut      AS CHARACTER
     ,icTooltip       AS CHARACTER):  
-    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,icAddAs,icShortcut,icTooltip,"").
+    addTool(icTool,icLabel,icImage,icParentMenu,ibAlwaysEnabled,button_menu-item,icShortcut,icTooltip,"").
   END METHOD.
     
   /* Same again + set button to enabled */
@@ -459,21 +463,21 @@ CLASS JBoxToolbar:
   /* Same again + set button to enabled and decide how it should be added (button/menu-item/both) */
   METHOD PUBLIC VOID addTool (icTool          AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER): /* "button": only buttons. "menu": only menu items. "": both */  
-    addTool(icTool,"","","",ibAlwaysEnabled,icAddAs,"","","").
+    ,button_menu-item_toggle         AS CHARACTER): /* "button": only buttons. "menu": only menu items. "": both */  
+    addTool(icTool,"","","",ibAlwaysEnabled,button_menu-item_toggle,"","","").
   END METHOD.
   METHOD PUBLIC VOID addTool (icTool          AS CHARACTER
     ,icLabel         AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER):  
-    addTool(icTool,icLabel,"","",ibAlwaysEnabled,icAddAs,"","","").
+    ,button_menu-item_toggle         AS CHARACTER):  
+    addTool(icTool,icLabel,"","",ibAlwaysEnabled,button_menu-item_toggle,"","","").
   END METHOD.
   METHOD PUBLIC VOID addTool (icTool          AS CHARACTER
     ,icLabel         AS CHARACTER
     ,icImage         AS CHARACTER
     ,ibAlwaysEnabled AS LOG
-    ,icAddAs         AS CHARACTER):  
-    addTool(icTool,icLabel,icImage,"",ibAlwaysEnabled,icAddAs,"","","").
+    ,button_menu-item_toggle         AS CHARACTER):  
+    addTool(icTool,icLabel,icImage,"",ibAlwaysEnabled,button_menu-item_toggle,"","","").
   END METHOD.
 
  
@@ -658,6 +662,10 @@ CLASS JBoxToolbar:
     DYNAMIC-FUNCTION("setAttribute",TOOLBAR-HANDLE,"disabledEvents",icToolList).
   END METHOD.
 
+  METHOD PUBLIC VOID addDisabledTools (icToolList AS CHARACTER):
+    setJBoxAttribute("disabledEvents",TRIM(getJBoxAttribute("disabledEvents") + "," + icToolList,",")). 
+  END METHOD.
+
   METHOD PUBLIC VOID setToolDisabled (icTool AS CHARACTER):
     DEFINE VARIABLE cEnaEvents AS CHARACTER NO-UNDO.
     DEFINE VARIABLE cDisEvents AS CHARACTER NO-UNDO.
@@ -692,6 +700,10 @@ CLASS JBoxToolbar:
 
   METHOD PUBLIC VOID setEnabledTools (icToolList AS CHARACTER):
     DYNAMIC-FUNCTION("setAttribute",TOOLBAR-HANDLE,"enabledEvents",icToolList).
+  END METHOD.
+
+  METHOD PUBLIC VOID addEnabledTools (icToolList AS CHARACTER):
+    setJBoxAttribute("enabledEvents",TRIM(getJBoxAttribute("enabledEvents") + "," + icToolList,",")). 
   END METHOD.
   
   METHOD PUBLIC VOID setToolEnabled (icTool AS CHARACTER):

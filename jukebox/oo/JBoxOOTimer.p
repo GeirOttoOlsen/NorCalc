@@ -39,7 +39,6 @@ DEF VAR hFocus         AS HANDLE NO-UNDO.
 DEF VAR hFocus2        AS HANDLE NO-UNDO.
 DEF VAR hContainerProc AS HANDLE NO-UNDO.
 DEF VAR cIntProcName   AS CHAR   NO-UNDO.
-DEF VAR iRetVal        AS INT    NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -289,24 +288,22 @@ DEFINE INPUT PARAMETER  e as System.EventArgs.
 IF bNamedSuspend THEN RETURN.
 
 IF VALID-HANDLE(hFocus) THEN DO:
-  IF hFocus:TYPE = "WINDOW" THEN 
+  IF hFocus:TYPE = "WINDOW" THEN
     hFocus:MOVE-TO-TOP().
   ELSE APPLY "ENTRY" TO hFocus.
   hFocus = ?.
   IF VALID-HANDLE(hFocus2) THEN DO:
-    IF hFocus2:TYPE = "WINDOW" THEN DO:
+    IF hFocus2:TYPE = "WINDOW" THEN
       hFocus2:MOVE-TO-TOP().
-      DYNAMIC-FUNCTION("DoRedrawWindow",hFocus2).
-    END.  
     ELSE APPLY "ENTRY" TO hFocus2.
     hFocus2 = ?.
   END.  
   timer1:ENABLED = NO.  
 END.
 ELSE IF VALID-HANDLE(hContainerProc) AND CAN-DO(hContainerProc:INTERNAL-ENTRIES,cIntProcName) THEN DO:
+  timer1:ENABLED = NO.
   RUN VALUE(cIntProcName) IN hContainerProc.
   hContainerProc = ?.
-  timer1:ENABLED = NO.
 END. 
 ELSE IF NOT bSuspend THEN DO:
   IF cMethod NE "" THEN DO:

@@ -44,6 +44,8 @@ CLASS JBoxMainForm INHERITS Form :
              THIS-OBJECT:ultraTabbedMdiManager1:Orientation = System.Windows.Forms.Orientation:Horizontal.
          END SET.
 
+  DEFINE PUBLIC PROPERTY ultraActiveMdiTab AS Infragistics.Win.UltraWinTabbedMdi.MdiTab NO-UNDO GET. PROTECTED SET.
+
 	CONSTRUCTOR PUBLIC JBoxMainForm( ):
 		SUPER().
 		InitializeComponent ( ).
@@ -249,6 +251,7 @@ CLASS JBoxMainForm INHERITS Form :
 	
 	METHOD PRIVATE VOID OnToolClick( INPUT sender AS System.Object, INPUT e AS Infragistics.Win.UltraWinToolbars.ToolClickEventArgs ):
 	  RUN EventHandler IN fViewProcedure ('ToolClick':u, sender, e).
+    THIS-OBJECT:ultraActiveMdiTab = ultraTabbedMdiManager1:ActiveTab.
 				
 		RETURN.
 	END METHOD.
@@ -268,7 +271,8 @@ CLASS JBoxMainForm INHERITS Form :
   END METHOD.
 
   METHOD PUBLIC VOID OnResizeBegin( INPUT sender AS System.Object, INPUT e AS CLASS System.EventArgs ):
-/*    MESSAGE "Resize begin" view-as alert-box.*/
+/*    MESSAGE INT(cast(poArgs, ToolClickEventArgs):Tool:KEY) "Resize begin" view-as alert-box. */
+    THIS-OBJECT:ultraActiveMdiTab = ultraTabbedMdiManager1:ActiveTab.
     RETURN.
   END METHOD.
   
@@ -279,7 +283,7 @@ CLASS JBoxMainForm INHERITS Form :
   END METHOD.
 
   METHOD PUBLIC VOID OnMdiChildFormActivated(sender AS CLASS System.Object, e AS CLASS System.EventArgs):
-    IF NOT bFromEndResize THEN
+//    IF NOT bFromEndResize THEN
       RUN EventHandler IN fViewProcedure ('FormActivated':u, sender, e).
     bFromEndResize = NO.  
     RETURN.

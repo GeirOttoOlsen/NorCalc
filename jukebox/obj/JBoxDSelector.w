@@ -94,6 +94,7 @@ DEF VAR hWinToolBar        AS HANDLE NO-UNDO.
 DEF VAR iSelectIndex       AS INT NO-UNDO.
 DEF VAR iDeSelectIndex     AS INT NO-UNDO.
 DEF VAR oSelector          AS JBoxDynSelector NO-UNDO.
+DEF VAR cTtName            AS CHAR   NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -373,10 +374,15 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
   RUN enable_UI.
 
+  IF icServerSelectProc BEGINS "TTname;" THEN
+    ASSIGN cTtName = ENTRY(2,icServerSelectProc,";")
+           icServerSelectProc = "".
 
   RUN InitWindow.
   IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"mySelectorObject") THEN DO:
     oSelector = NEW JBoxDynSelector(ihParent,THIS-PROCEDURE,hBrwSource,hBrwTarget,?).
+    IF cTtName NE "" THEN
+      oSelector:NAME = cTtName.
     RUN mySelectorObject IN ihParent (oSelector).
   END.  
   ELSE IF VALID-HANDLE(ihParent) AND CAN-DO(ihParent:INTERNAL-ENTRIES,"setSelectorAttributes") THEN
@@ -414,36 +420,9 @@ PROCEDURE DeSelectAllRecord :
 ------------------------------------------------------------------------------*/
 IF NOT hBrwTarget:QUERY:IS-OPEN THEN RETURN.
 
-hBrwTarget:QUERY:GET-FIRST().
-REPEAT WHILE NOT hBrwTarget:QUERY:QUERY-OFF-END:
-  ASSIGN cSelRowidList = REPLACE(cSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-         cSelRowidList = REPLACE(cSelRowidList,",,",",")
-         .
+hBrwTarget:SELECT-ALL().
+RUN DeSelectRecord.
 
-  IF NOT CAN-DO(cDeSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-    cDeSelRowidList = cDeSelRowidList + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
-
-  IF icServerDeSelectProc = "" THEN 
-    hBuffTarget:BUFFER-DELETE().
-
-  hBrwTarget:QUERY:GET-NEXT().
-END.
-
-IF icServerDeSelectProc NE "" THEN DO:
-  DO ix = 1 TO NUM-ENTRIES(cDeSelRowidList):
-    bOk = DYNAMIC-FUNCTION("DoUpdate",hBuffTarget:NAME,
-                  icServerDeSelectProc,
-                  "",
-                  ENTRY(ix,cDeSelRowidList),
-                  "",
-                  "",
-                  FALSE).
-  END.
-  DYNAMIC-FUNCTION("DoCommit",FALSE).
-END.
-
-RUN OpenQuerySource.
-RUN OpenQueryTarget.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -456,16 +435,22 @@ PROCEDURE DeSelectRecord :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+DEF VAR cNewList AS CHAR NO-UNDO.
+DEF VAR iy       AS INT  NO-UNDO.
+
 IF hBrwTarget:NUM-SELECTED-ROWS > 0 THEN 
   DO ix = 1 TO hBrwTarget:NUM-SELECTED-ROWS:
     bOk = hBrwTarget:FETCH-SELECTED-ROW(ix).
     IF bOK THEN DO:
-      ASSIGN cSelRowidList = REPLACE(cSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-             cSelRowidList = REPLACE(cSelRowidList,",,",",")
-             .
+      cNewList = "".
+      DO iy = 1 TO NUM-ENTRIES(cSelRowidList):
+        IF ENTRY(iy,cSelRowidList) NE hBuffTarget::RowIdent1 THEN
+          cNewList = cNewList + (IF cNewList NE "" THEN "," ELSE "") + ENTRY(iy,cSelRowidList).
+      END.          
+      cSelRowidList = cNewList.
   
       IF NOT CAN-DO(cDeSelRowidList,hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-        cDeSelRowidList = cDeSelRowidList + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
+        cDeSelRowidList = cDeSelRowidList + (IF cDeSelRowidList NE "" THEN "," ELSE "") + hBuffTarget:BUFFER-FIELD("Rowident1"):BUFFER-VALUE.
   
       IF icServerDeSelectProc = "" THEN 
         hBuffTarget:BUFFER-DELETE().
@@ -771,8 +756,11 @@ PROCEDURE OpenQueryTarget :
 DEF VAR cModSortColumn AS CHAR NO-UNDO.
 
 IF icServerSelectProc = "" THEN DO:
-
-  IF cSortColumn NE "" AND SUBSTR(cSortColumn,LENGTH(cSortColumn)) = "]" THEN
+  IF DYNAMIC-FUNCTION("getAttribute",hBrwTarget,"querySort") = "iJBoxSelectIndex" THEN DO:
+    cModSortColumn = "iJBoxSelectIndex".
+    DYNAMIC-FUNCTION("setSortLabel",hBrwTarget,"",NO).
+  END.  
+  ELSE IF cSortColumn NE "" AND SUBSTR(cSortColumn,LENGTH(cSortColumn)) = "]" THEN
     cModSortColumn = "jbextent_" + RIGHT-TRIM(SUBSTR(cSortColumn,R-INDEX(cSortColumn,"[") + 1),"]") + "_" + SUBSTR(cSortColumn,1,R-INDEX(cSortColumn,"[") - 1).
   ELSE cModSortColumn = cSortColumn.
 
@@ -871,6 +859,9 @@ PROCEDURE SelectRecord :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+DEF VAR cNewList      AS CHAR NO-UNDO.
+DEF VAR iy            AS INT  NO-UNDO.
+
 IF hBrwSource:NUM-SELECTED-ROWS > 0 THEN DO:
   iSelectIndex = iSelectIndex + 1.
   DO ix = 1 TO hBrwSource:NUM-SELECTED-ROWS:
@@ -882,12 +873,15 @@ IF hBrwSource:NUM-SELECTED-ROWS > 0 THEN DO:
         hBuffTarget:BUFFER-FIELD("iJBoxSelectIndex"):BUFFER-VALUE = iSelectIndex.
       END.
   
-      ASSIGN cDeSelRowidList = REPLACE(cDeSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE,"")
-             cDeSelRowidList = REPLACE(cDeSelRowidList,",,",",")
-             .
+      cNewList = "".
+      DO iy = 1 TO NUM-ENTRIES(cDeSelRowidList):
+        IF ENTRY(iy,cDeSelRowidList) NE hBuffSource::RowIdent1 THEN
+          cNewList = cNewList + (IF cNewList NE "" THEN "," ELSE "") + ENTRY(iy,cDeSelRowidList).
+      END.          
+      cDeSelRowidList = cNewList.
   
       IF NOT CAN-DO(cSelRowidList,hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE) THEN
-        cSelRowidList = cSelRowidList + hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE + ",".
+        cSelRowidList = cSelRowidList + (IF cSelRowidList NE "" THEN "," ELSE "") + hBuffSource:BUFFER-FIELD("Rowident1"):BUFFER-VALUE.
     END.
   END.
 END.
@@ -933,6 +927,10 @@ PROCEDURE StartSearch :
 DEF VAR cModSortColumn AS CHAR NO-UNDO.
 
 IF icServerSelectProc = "" AND DYNAMIC-FUNCTION("GetCurrentObject") = hBrwTarget THEN DO:
+  IF DYNAMIC-FUNCTION("getAttribute",hBrwTarget,"querysort") = "iJBoxSelectIndex" THEN DO:
+    APPLY "end-search" TO hBrwTarget.
+    RETURN.
+  END.  
   IF cSortColumn = hBrwTarget:CURRENT-COLUMN:NAME THEN bDesc = NOT bDesc.
   ELSE bDesc = FALSE.
   cSortColumn = hBrwTarget:CURRENT-COLUMN:NAME.

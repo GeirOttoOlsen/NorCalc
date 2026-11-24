@@ -14,6 +14,7 @@ DEF INPUT  PARAM icSessionId  AS CHAR NO-UNDO.
 DEF INPUT  PARAM icBufferName AS CHAR NO-UNDO.
 DEF INPUT  PARAM icCriteria   AS CHAR NO-UNDO.
 DEF INPUT  PARAM icColumns    AS CHAR NO-UNDO.
+DEF INPUT  PARAM icDelimiter  AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocValues     AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn     AS CHAR NO-UNDO.
 
@@ -29,6 +30,8 @@ DEF VAR cCompZeroQuery   AS CHAR   NO-UNDO.
 DEF VAR cCodeMasterQuery AS CHAR NO-UNDO.
 
 {incl/validatesession.i}
+
+IF icDelimiter = "" THEN icDelimiter = "|".
 
 IF icBufferName BEGINS "last " THEN
   ASSIGN bLast = TRUE
@@ -126,19 +129,19 @@ IF ocValues NE "AMBIGUOUS" THEN DO:
 
           ocValues = ocValues + (IF hField:BUFFER-VALUE[iExtent] NE ? THEN 
                                    hField:BUFFER-VALUE[iExtent]
-                                 ELSE "") + "|".
+                                 ELSE "") + icDelimiter.
         END.
         ELSE IF ENTRY(ix,icColumns) = "ROWID" THEN
-          ocValues = ocValues + STRING(hBuffer:ROWID) + "|".
+          ocValues = ocValues + STRING(hBuffer:ROWID) + icDelimiter.
         ELSE 
           ocValues = ocValues + (IF hBuffer:BUFFER-FIELD(ENTRY(ix,icColumns)):BUFFER-VALUE NE ? THEN 
                                    hBuffer:BUFFER-FIELD(ENTRY(ix,icColumns)):BUFFER-VALUE 
-                                 ELSE "") + "|".
+                                 ELSE "") + icDelimiter.
       END.
       ELSE 
         ocValues = ocValues + (IF hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,icColumns),";")):BUFFER-VALUE[INT(ENTRY(2,ENTRY(ix,icColumns),";"))] NE ? THEN 
                                  hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,icColumns),";")):BUFFER-VALUE[INT(ENTRY(2,ENTRY(ix,icColumns),";"))]
-                               ELSE "") + "|".
+                               ELSE "") + icDelimiter.
     END.
     ELSE ocValues = STRING(hBuffer:ROWID).
   END.

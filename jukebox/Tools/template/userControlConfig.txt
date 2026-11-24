@@ -17,10 +17,24 @@
 
 <CODE>  oJBoxDevExEdit = NEW JBoxDevExEdit(THIS-PROCEDURE,Comments:HANDLE).
 <CODE>  oJBoxDevExEdit:RegisterWithJukeBox(YES).
+<CODE>  /* NB: DisplayLink must be created AFTER the fieldMap and Query/Browse object are linked */
 <CODE>  oJBoxDevExEdit:CreateDisplayLink(<FieldMapObject>:BUFFER-HANDLE,'Comments').
 <CODE>  oJBoxDevExEdit:cDocLoadContext = 'Customer.Comments'.
 <CODE>  oJBoxDevExEdit:cDocLoadIdFields = 'CustNum'.
 <CODE>  oJBoxDevExEdit:cDocLoadFormat = 'rtf'.
+
+<NAME>uc.JBoxUltraFormattedText
+<DESC>Infragistics html editor
+<DESC>Replace Customer / Comments and CustNum with your own table / edit field and id field(s)
+<DESC>Resize settings for the 4GL editor widget will apply to the .Net object			
+<DESC>
+<DESC>NOTE: When using an Edit button to enable modifying data add code to DisplayRecord, EditRecord and NewRecord (after SUPER):
+<DESC>oJBoxUltraFormattedText:ultraFormattedTextEditor1:ReadOnly = YES. /* (NO for Edit/New) */
+
+<CODE>  oJBoxUltraFormattedText = NEW uc.JBoxUltraFormattedText(THIS-PROCEDURE,Comments:HANDLE).
+<CODE>  oJBoxUltraFormattedText:RegisterWithJukeBox(YES).
+<CODE>  /* NB: DisplayLink must be created AFTER the fieldMap and Query/Browse object are linked */
+<CODE>  oJBoxUltraFormattedText:CreateDisplayLink(<FieldMapObject>:BUFFER-HANDLE,'Comments').
 
 <NAME>uc.JBoxUltraGantt
 <DESC>Infragistics Gantt chart

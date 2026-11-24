@@ -162,14 +162,14 @@ DEFINE BUTTON btnServerFileName
 DEFINE VARIABLE cAction AS CHARACTER FORMAT "x(256)" 
      LABEL "Aksjon" 
      VIEW-AS FILL-IN 
-     SIZE 29 BY 1 TOOLTIP "Enten verktøy i knapperad, f,eks ~"New,Delete,Save~" eller egendefinert".
+     SIZE 29 BY 1.
 
 DEFINE VARIABLE cClientFileName AS CHARACTER FORMAT "x(40)" 
      LABEL "Klient prog.navn" 
      VIEW-AS FILL-IN 
      SIZE 29 BY 1.
 
-DEFINE VARIABLE cDescription AS CHARACTER FORMAT "x(50)" 
+DEFINE VARIABLE cDescription AS CHARACTER FORMAT "x(150)" 
      LABEL "Beskrivelse" 
      VIEW-AS FILL-IN 
      SIZE 29 BY 1.
@@ -633,10 +633,10 @@ IF DYNAMIC-FUNCTION("getCurrentObject") = hBrowse THEN DO:
                   ,hBuffFuncAccess:TABLE-HANDLE) THEN
     DYNAMIC-FUNCTION("getRunProcReturnTable",hBuffFuncAccess).
 
-/*  IF NOT hFieldMap:AVAIL OR hFieldMap:AVAIL AND hFieldMap:BUFFER-FIELD("bMenu"):BUFFER-VALUE THEN*/
-/*    DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledevents","StartContainer").                  */
-/*  ELSE                                                                                           */
-/*    DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledevents","").                                */
+  IF NOT hFieldMap:AVAIL OR hFieldMap:AVAIL AND hFieldMap:BUFFER-FIELD("bMenu"):BUFFER-VALUE THEN
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledevents","StartContainer").
+  ELSE
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"disabledevents","").
 END.
 
 RUN SUPER.
@@ -770,8 +770,7 @@ DO WITH FRAME {&FRAME-NAME}:
          .
 
   IF NOT bScand THEN
-    ASSIGN 
-/*           bMenu:LABEL               = "Menu"*/
+    ASSIGN bMenu:LABEL               = "Menu"
            cClientFileName:LABEL     = "Client prog.name"
            cObjectName:LABEL         = "Object"
            cAction:LABEL             = "Action"
@@ -779,8 +778,6 @@ DO WITH FRAME {&FRAME-NAME}:
            cDescription:LABEL        = "Description"
            bAllowCompanyAdmins:LABEL = "Allowed for company admins"
            .
-
-  bMenu:HIDDEN = YES.
 
   IF NOT bAllowCompAdminInstalled THEN
     bAllowCompanyAdmins:HIDDEN = YES.
@@ -790,14 +787,14 @@ DO WITH FRAME {&FRAME-NAME}:
                     100,                   
                     "",                    
                     "JBoxFunction"         
-/*                    + ";bMenu" + (IF NOT bScand THEN "|Menu" ELSE "")*/
-                    + ";cAction" + (IF NOT bScand THEN "|Action" ELSE "|Aksjon") 
-                    + ";cObjectName" + (IF NOT bScand THEN "|Object" ELSE "|Objekt")
-                    + ";cClientFileName" + (IF NOT bScand THEN "|Client prog.name" ELSE "|Klientprogram")
-                    + ";cServerFileName" + (IF NOT bScand THEN "|Server prog.name" ELSE "|Serverprogram")
-                    + ";cDescription" + (IF NOT bScand THEN "|Description" ELSE "|Beskrivelse")
+                    + ";bMenu" + (IF NOT bScand THEN "|Menu" ELSE "")
+                    + ";cAction" + (IF NOT bScand THEN "|Action" ELSE "") 
+                    + ";cObjectName" + (IF NOT bScand THEN "|Object" ELSE "")
+                    + ";cClientFileName" + (IF NOT bScand THEN "|Client prog.name" ELSE "")
+                    + ";cServerFileName" + (IF NOT bScand THEN "|Server prog.name" ELSE "")
+                    + ";cDescription" + (IF NOT bScand THEN "|Description" ELSE "")
                     + (IF bAllowCompAdminInstalled THEN 
-                        ";bAllowCompanyAdmins" + (IF NOT bScand THEN "|Allowed comp.admins" else "|Tillatt firmaadm")
+                        ";bAllowCompanyAdmins" + (IF NOT bScand THEN "|Allowed comp.admins" else "")
                        ELSE "")
                     + ";dCreated" + (IF NOT bScand THEN "|Created" ELSE "")
                     + ";cCreatedBy" + (IF NOT bScand THEN "|By" ELSE "")
@@ -806,7 +803,7 @@ DO WITH FRAME {&FRAME-NAME}:
                     + ";!iJBoxFunctionId"
                     ,"WHERE false", 
                     "").                         
-//  hBrwColMenu = hBrowse:GET-BROWSE-COLUMN(1).
+  hBrwColMenu = hBrowse:GET-BROWSE-COLUMN(1).
 
   hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",RectBrowseSearch:HANDLE,hBrowse,1).
   DYNAMIC-FUNCTION("createObjectLink",hBrowse,hSearchField).
@@ -814,7 +811,7 @@ DO WITH FRAME {&FRAME-NAME}:
   hFieldMap = DYNAMIC-FUNCTION("NewFieldMap",
                     hBrowse:QUERY,
                     FRAME {&FRAME-NAME}:HANDLE,
-                    "cClientFileName,cAction,cObjectName,cDescription,cServerFileName" /* + ",bMenu" */
+                    "cClientFileName,bMenu,cAction,cObjectName,cDescription,cServerFileName"
                   + (IF bAllowCompAdminInstalled THEN ",bAllowCompanyAdmins" ELSE "")
                    ,"",
                     "","",                      
@@ -938,7 +935,7 @@ RUN OpenQuery.
 DYNAMIC-FUNCTION("setCurrentObject",hToolbar).
 RUN SUPER.  
 
-RUN JBoxDSimpleSelectList.w ("Function (action)|function" + /* |Menu|menu */ "|Other (server-routine)|other",?,OUTPUT cType). 
+RUN JBoxDSimpleSelectList.w ("Function (action)|function|Menu|menu|Other (server-routine)|other",?,OUTPUT cType). 
 
 IF cType = "function" THEN
   RUN StartContainerRecord.
@@ -960,10 +957,10 @@ PROCEDURE RowDisplayBrowse :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-/*IF DYNAMIC-FUNCTION("getCurrentObject") = hBrowse THEN DO:*/
-/*  hBrwColMenu:FONT = iFontWingdings.                      */
-/*  hBrwColMenu:FORMAT = CHR(254) + "/"  + CHR(168).        */
-/*END.                                                      */
+IF DYNAMIC-FUNCTION("getCurrentObject") = hBrowse THEN DO:
+  hBrwColMenu:FONT = iFontWingdings.
+  hBrwColMenu:FORMAT = CHR(254) + "/"  + CHR(168).
+END.
 RUN SUPER.
 END PROCEDURE.
 

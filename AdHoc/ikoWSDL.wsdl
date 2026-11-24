@@ -1,0 +1,944 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="wsdl-viewer.xsl" ?>
+<wsdl:definitions name="invoicing-nets-submitter" targetNamespace="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+xmlns:tns="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
+<wsp:Policy wsu:Id="UsernameToken"
+xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+<wsp:ExactlyOne>
+<wsp:All>
+<sp:SupportingTokens>
+<wsp:Policy>
+<sp:UsernameToken sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/AlwaysToRecipient">
+<wsp:Policy>
+<sp:WssUsernameToken10 />
+</wsp:Policy>
+</sp:UsernameToken>
+</wsp:Policy>
+</sp:SupportingTokens>
+</wsp:All>
+</wsp:ExactlyOne>
+</wsp:Policy>
+<wsdl:types>
+<xsd:schema targetNamespace="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/">
+<xsd:complexType name="CustomValuesType">
+<xsd:annotation>
+<xsd:documentation>Key-value pair for adding custom values. Note that the key's must be unique if more than one is added</xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="key" type="tns:Text20" />
+<xsd:element name="value" type="tns:Text50" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="Text20">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="20" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="Text50">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="100" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="Text100">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="200" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="NameType">
+<xsd:annotation>
+<xsd:documentation>Name of the issuer</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="100" />
+<xsd:minLength value="1" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="BillingAccountNumberType">
+<xsd:annotation>
+<xsd:documentation>Must be a Norwegian account number with 11 digits</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:length value="11" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="OrganizationNumberType">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="9" />
+<xsd:minLength value="9" />
+<xsd:pattern value="[0-9]{9}" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="RejectReasonType">
+<xsd:annotation>
+<xsd:documentation>The reason the invoice or consignment was rejected.</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="2000" />
+<xsd:minLength value="1" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PostalCodeType">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="10" />
+<xsd:minLength value="4" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="PostalCityType">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="30" />
+<xsd:minLength value="1" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="CountryCodeType">
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="2" />
+<xsd:minLength value="2" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="MessageIdentifierType">
+<xsd:annotation>
+<xsd:documentation>A unique identifier for a request/response message pair used for logging</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="5" />
+<xsd:maxLength value="50" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:complexType name="AuditInformationType">
+<xsd:annotation>
+<xsd:documentation>Information used for auditing and logging messages</xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="EfakturaIdentifierResultType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="UNIQUE_RECEIVER_FOUND">
+<xsd:annotation>
+<xsd:documentation>The invoice receiver is found in the receiver register </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="RECEIVER_NOT_FOUND">
+<xsd:annotation>
+<xsd:documentation>The invoice receiver is not found in the receiver register </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="LOOKUP_KEY_MISSING_DATA">
+<xsd:annotation>
+<xsd:documentation>Missing input data on lookup key </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="MULTIPLE_RECEIVERS">
+<xsd:annotation>
+<xsd:documentation>Multiple receivers found for the given details. More info is needed to find an exact match. </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="EfakturaIdentifierType">
+<xsd:annotation>
+<xsd:documentation>The efakturaIdentifier of the receiver, the unique efaktura address for this receiver </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="9" />
+<xsd:minLength value="9" />
+<xsd:pattern value="[0-9]{9}" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="EFakturaReferenceType">
+<xsd:annotation>
+<xsd:documentation>The customer agreement reference (eFakturareferanse) of the receiver, used in the agreement between invoice issuer and receiver (JTTB) </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="32" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="EmailType">
+<xsd:annotation>
+<xsd:documentation>A valid email address </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="5" />
+<xsd:maxLength value="100" />
+<xsd:pattern value="[^@]+@[^\.]+\..+" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="TelephoneType">
+<xsd:annotation>
+<xsd:documentation>A valid phone number </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="6" />
+<xsd:maxLength value="16" />
+<xsd:pattern value="\+?\d+" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="socialSecurityNumberType">
+<xsd:annotation>
+<xsd:documentation>The social security number of the receiver. </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="11" />
+<xsd:minLength value="11" />
+<xsd:pattern value="[0-9]{11}" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:complexType name="InvoiceIssuerResponseType">
+<xsd:annotation>
+<xsd:documentation>The result of issuer lookup in the getEfakturaIdentifier call. It returns if issuer is blocked by receiver, issuer has efaktura agreement with receiver, and if found a valid efaktura-referanse is returned </xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="blockedByReceiver" type="xsd:boolean" />
+<xsd:element name="hasEfakturaAgreement" type="xsd:boolean" />
+<xsd:element name="efakturaReferences" type="tns:EFakturaReferenceType" minOccurs="0" maxOccurs="unbounded" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="EfakturaIdentifierResponseType">
+<xsd:annotation>
+<xsd:documentation>Result of efakturaidentifier lookup. The lookup-key is also returned to pair the efaktura identifier with the correct receiver. </xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="responseResult" type="tns:EfakturaIdentifierResultType" />
+<xsd:element name="hasAutoAcceptAgreements" type="xsd:boolean" minOccurs="0" />
+<xsd:element name="efakturaIdentifier" type="tns:EfakturaIdentifierType" minOccurs="0" />
+<xsd:element name="efakturaIdentifierKey" type="tns:EfakturaIdentifierKeyType" />
+<xsd:element name="issuerResponse" type="tns:InvoiceIssuerResponseType" minOccurs="0" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="EfakturaIdentifiersResponseType">
+<xsd:annotation>
+<xsd:documentation>List with efakturaidentifier-keys and efakturaidentifier if found </xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="efakturaIdentifierResponse" type="tns:EfakturaIdentifierResponseType" maxOccurs="1000" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="EmailAliasType">
+<xsd:annotation>
+<xsd:documentation>A valid email address, used for alias </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="5" />
+<xsd:maxLength value="100" />
+<xsd:pattern value="[^@]+@[^\.]+\..+" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="TelephoneAliasType">
+<xsd:annotation>
+<xsd:documentation>A valid phone number, prefixed with country code (i.e. +4799999999), used for alias </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="6" />
+<xsd:maxLength value="16" />
+<xsd:pattern value="\+\d+" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="SocialSecurityNumberType">
+<xsd:annotation>
+<xsd:documentation>The social security number of the receiver. This is encrypted </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="11" />
+<xsd:minLength value="11" />
+<xsd:pattern value="[0-9]{11}" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="providerIdType">
+<xsd:annotation>
+<xsd:documentation>Id of the issuer</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:minLength value="9" />
+<xsd:maxLength value="9" />
+<xsd:pattern value="[0-9]{9}" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="eFakturaReferenceType">
+<xsd:annotation>
+<xsd:documentation>The customer agreement reference (eFakturareferanse) of the receiver, used in the agreement between invoice issuer and receiver (JTTB) </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="32" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:complexType name="eFakturaReferenceAndContentProviderType">
+<xsd:sequence>
+<xsd:element name="eFakturaReference" type="tns:eFakturaReferenceType" />
+<xsd:element name="contentProviderId" type="tns:providerIdType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="FullNameType">
+<xsd:sequence>
+<xsd:element name="firstName" type="tns:NameType" minOccurs="0" />
+<xsd:element name="lastName" type="tns:NameType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="ConsignmentIdType">
+<xsd:annotation>
+<xsd:documentation>Unique consignment reference </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="40" />
+<xsd:minLength value="1" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="AddressLineType">
+<xsd:annotation>
+<xsd:documentation>Street, postal or other address </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="50" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:complexType name="AddressType">
+<xsd:sequence>
+<xsd:element name="addressLine1" type="tns:AddressLineType" minOccurs="0" />
+<xsd:element name="addressLine2" type="tns:AddressLineType" minOccurs="0" />
+<xsd:element name="postalCode" type="tns:PostalCodeType" minOccurs="0" />
+<xsd:element name="city" type="tns:PostalCityType" minOccurs="0" />
+<xsd:element name="countryCode" type="tns:CountryCodeType" minOccurs="0" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="EfakturaIdentifierKeyType">
+<xsd:annotation>
+<xsd:documentation>Contains the keys used to search for a unique receiver to get the efaktura identifier. The following rules apply: 1. Search can be made on social security number, organization number, efaktura identifier or eFakturaReferenceAndContentProvider as single key. 2. If email alias or phone alias or date of birth is provided at least two of them must match 3. If only one of date of birth, email alias or phone alias is provided, one of either name, address or postal code must match. 4. If none of date of birth, email alias or phone alias is given all of name, address and postal code must match. 5. For name and address it is allowed for search where the text is a part of the given field 6. First and last name is also to be switched, meaning a first name search will also try to search in the last name column </xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="id" type="xsd:long" minOccurs="0" />
+<xsd:element name="efakturaIdentifier" type="tns:EfakturaIdentifierType" minOccurs="0" />
+<xsd:choice minOccurs="0">
+<xsd:element name="socialSecurityNumber" type="tns:SocialSecurityNumberType" />
+<xsd:element name="organizationNumber" type="tns:OrganizationNumberType" />
+</xsd:choice>
+<xsd:element name="telephoneAlias" type="tns:TelephoneAliasType" minOccurs="0" />
+<xsd:element name="emailAlias" type="tns:EmailAliasType" minOccurs="0" />
+<xsd:element name="name" type="tns:FullNameType" minOccurs="0" />
+<xsd:element name="address" type="tns:AddressType" minOccurs="0" />
+<xsd:element name="invoiceIssuer" type="tns:OrganizationNumberType" minOccurs="0" />
+<xsd:element name="dateOfBirth" type="xsd:date" minOccurs="0" />
+<xsd:element name="eFakturaReferenceAndContentProvider" type="tns:eFakturaReferenceAndContentProviderType" minOccurs="0" maxOccurs="1" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="EfakturaIdentifiersKeyType">
+<xsd:annotation>
+<xsd:documentation>Contains a set of keys used to search for a unique receiver to get the efaktura identifier </xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="efakturaIdentifierKey" type="tns:EfakturaIdentifierKeyType" maxOccurs="1000" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="GetEfakturaIdentifiers">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<xsd:element name="getEfakturaIdentifiersKey" type="tns:EfakturaIdentifiersKeyType" />
+<xsd:element name="returnOnlyMatchingKeyParams" type="xsd:boolean" minOccurs="0" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="GetEfakturaIdentifiersResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="getEfakturaIdentifiersResponse" type="tns:EfakturaIdentifiersResponseType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="InvoiceSpecification">
+<xsd:annotation>
+<xsd:documentation>Contains the invoice specification fields</xsd:documentation>
+</xsd:annotation>
+<xsd:sequence>
+<xsd:element name="receiverName" type="tns:FullNameType" minOccurs="0" />
+<xsd:element name="receiverAddress" type="tns:AddressType" minOccurs="0" />
+<xsd:element name="senderName" type="tns:FullNameType" minOccurs="0" />
+<xsd:element name="senderAddress" type="tns:AddressType" minOccurs="0" />
+<xsd:element name="invoiceDate" type="xsd:date" minOccurs="0" />
+<xsd:element name="paymentTerms" type="tns:Text100" minOccurs="0" />
+<xsd:element name="customValues" type="tns:CustomValuesType" minOccurs="0" maxOccurs="5" />
+<xsd:element name="invoiceTaxTotals" type="tns:TaxTotalType" minOccurs="0" maxOccurs="1" />
+<xsd:element name="invoiceDescription" type="tns:Text100" minOccurs="0" maxOccurs="1" />
+<xsd:element name="invoiceLines" type="tns:InvoiceLinesType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="InvoiceType">
+<xsd:sequence>
+<xsd:element name="invoiceNumber" type="tns:InvoiceNumberType" />
+<xsd:choice>
+<xsd:element name="efakturaIdentifier" type="tns:EfakturaIdentifierType" />
+<xsd:element name="socialSecurityNumber" type="tns:socialSecurityNumberType" />
+<xsd:element name="efakturaReference" type="tns:EFakturaReferenceType" />
+</xsd:choice>
+<xsd:element name="issuer" type="tns:OrganizationNumberType" />
+<xsd:element name="receiverName" type="tns:FullNameType" minOccurs="0" />
+<xsd:element name="receiverAddress" type="tns:AddressType" minOccurs="0" />
+<xsd:element name="receiverEmail" type="tns:EmailType" minOccurs="0" />
+<xsd:element name="receiverPhone" type="tns:TelephoneType" minOccurs="0" />
+<xsd:element name="kid" type="tns:KidType" minOccurs="0" />
+<xsd:element name="dueDate" type="xsd:date" />
+<xsd:element name="amount" type="tns:SimpleAmountType" />
+<xsd:element name="minimumAmount" type="tns:SimpleAmountType" minOccurs="0" />
+<xsd:element name="accountNumber" type="tns:BillingAccountNumberType" />
+<xsd:element name="documentType" type="tns:documentType" />
+<xsd:element name="invoiceDocumentType" type="tns:invoiceDocumentType" minOccurs="0" />
+<xsd:choice>
+<xsd:element name="pdf" type="tns:Pdf" />
+<xsd:element name="invoiceSpecification" type="tns:InvoiceSpecification" />
+</xsd:choice>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="AddInvoices">
+<xsd:annotation>
+<xsd:documentation> To get status for the invoices and consignments use the getInvoiceStatus and getConsignmentStatus call. Possible validation error codes from operation 5009 - User must supply service provider id 5010 - User not allowed to supply service provider id </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<!-- Service provider is only necessary and allowed on request. -->
+<xsd:element name="serviceProvider" type="tns:OrganizationNumberType" minOccurs="0" />
+<xsd:element name="consignmentId" type="tns:ConsignmentIdType" />
+<xsd:element name="invoices" type="tns:InvoicesType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="AddInvoicesResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="noOfInvoices" type="tns:InvoiceCountType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="GetConsignmentStatus">
+<xsd:annotation>
+<xsd:documentation> Possible validation error codes from operation 5001 - Unable to find consignment 5002 - Multiple consignments found for id 5009 - User must supply service provider id 5010 - User not allowed to supply service provider id </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<!-- Service provider is only necessary and allowed on request. -->
+<xsd:element name="serviceProvider" type="tns:OrganizationNumberType" minOccurs="0" />
+<xsd:element name="consignmentId" type="tns:ConsignmentIdType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:simpleType name="ConsignmentStatusType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="IN_PROGRESS">
+<xsd:annotation>
+<xsd:documentation>Processing of the consignment is in progress </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="PROCESSED">
+<xsd:annotation>
+<xsd:documentation>Processing of the consignment is finished </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="REJECTED">
+<xsd:annotation>
+<xsd:documentation>The whole consignment is rejected </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="STOPPED">
+<xsd:annotation>
+<xsd:documentation>Consignment is stopped by operator </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:complexType name="RejectedInvoicesType">
+<xsd:sequence>
+<xsd:element name="rejectedInvoice" type="tns:RejectedInvoiceType" minOccurs="0" maxOccurs="1000" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="RejectedInvoiceType">
+<xsd:sequence>
+<xsd:element name="invoiceNumber" type="tns:InvoiceNumberType" />
+<xsd:element name="rejectedReason" type="tns:RejectReasonType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="GetConsignmentStatusResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="status" type="tns:ConsignmentStatusType" />
+<xsd:element name="rejectedReason" type="tns:RejectReasonType" minOccurs="0" />
+<xsd:element name="acceptedInvoiceCount" type="xsd:long" />
+<xsd:element name="rejectedInvoiceCount" type="xsd:long" />
+<xsd:element name="rejectedInvoices" type="tns:RejectedInvoicesType" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>List of rejected invoices.</xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:simpleType name="documentType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="EFAKTURA">
+<xsd:annotation>
+<xsd:documentation>Document type of efaktura</xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="AVTALEGIRO">
+<xsd:annotation>
+<xsd:documentation>Document type of AvtaleGiro</xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="invoiceDocumentType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="INVOICE" />
+<xsd:enumeration value="REMINDER" />
+<xsd:enumeration value="CREDIT_NOTE" />
+<xsd:enumeration value="COLLECTION_NOTICE" />
+<xsd:enumeration value="DUNNING" />
+<xsd:enumeration value="PAYMENT_REQUEST" />
+<xsd:enumeration value="ENFORCEMENT_WARNING" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="Pdf">
+<xsd:annotation>
+<xsd:documentation>PDF representation of the invoice</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:base64Binary" />
+</xsd:simpleType>
+<xsd:simpleType name="SimpleAmountType">
+<xsd:annotation>
+<xsd:documentation>The amount represented as a number with two decimals. Must not be negative </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:decimal">
+<xsd:fractionDigits value="2" />
+<xsd:minInclusive value="0.00" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="EhfXml">
+<xsd:annotation>
+<xsd:documentation>Base64 encoded ehfFile. Must contain a unique number per invoice</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:base64Binary" />
+</xsd:simpleType>
+<xsd:complexType name="InvoicesType">
+<xsd:choice>
+<xsd:element name="invoice" type="tns:InvoiceType" maxOccurs="1000" />
+<xsd:element name="efhXml" type="tns:EhfXml" maxOccurs="1000" />
+</xsd:choice>
+</xsd:complexType>
+<xsd:complexType name="InvoiceLineType">
+<xsd:sequence>
+<xsd:element name="itemName" type="tns:Text100" />
+<xsd:element name="itemDescription" type="tns:Text50" minOccurs="0" />
+<xsd:element name="invoicedQuantity" type="xsd:decimal" minOccurs="0" />
+<xsd:element name="lineAmount" type="xsd:decimal" />
+<xsd:element name="taxPercent" type="xsd:decimal" minOccurs="0" />
+<xsd:element name="taxAmount" type="xsd:decimal" minOccurs="0" />
+<xsd:element name="itemIdentification" type="tns:Text50" minOccurs="0" />
+<xsd:element name="itemPrice" type="xsd:decimal" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="TaxTotalType">
+<xsd:sequence>
+<xsd:element name="taxAmount" type="xsd:decimal" />
+<xsd:element name="taxAmountPerCategory" type="tns:TaxPerCategoryType" minOccurs="1" maxOccurs="unbounded" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="TaxPerCategoryType">
+<xsd:sequence>
+<xsd:element name="taxPercent" type="xsd:decimal" minOccurs="0" />
+<xsd:element name="taxableAmount" type="xsd:decimal" minOccurs="0" />
+<xsd:element name="taxAmount" type="xsd:decimal" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="InvoiceLinesType">
+<xsd:sequence>
+<xsd:element name="invoiceLine" type="tns:InvoiceLineType" minOccurs="1" maxOccurs="100" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="InvoiceNumberType">
+<xsd:annotation>
+<xsd:documentation>Unique reference to the invoice for the issuer.</xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="100" />
+<xsd:minLength value="1" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="KidType">
+<xsd:annotation>
+<xsd:documentation>KID </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:string">
+<xsd:maxLength value="25" />
+<xsd:minLength value="2" />
+<xsd:pattern value="\d*" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:simpleType name="InvoiceCountType">
+<xsd:annotation>
+<xsd:documentation>The number of invoices received </xsd:documentation>
+</xsd:annotation>
+<xsd:restriction base="xsd:int" />
+</xsd:simpleType>
+<xsd:element name="GetInvoiceStatus">
+<xsd:annotation>
+<xsd:documentation> Possible validation error codes from operation 5009 - User must supply service provider id 5010 - User not allowed to supply service provider id </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<!-- Service provider is only necessary and allowed on request. -->
+<xsd:element name="serviceProvider" type="tns:OrganizationNumberType" minOccurs="0" />
+<xsd:element name="getInvoiceStatuses" type="tns:GetInvoiceStatusesType">
+<xsd:annotation>
+<xsd:documentation>List of invoices, to get status for </xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="GetInvoiceStatusResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="invoiceStatusResponses" type="tns:InvoiceStatusResponsesType">
+<xsd:annotation>
+<xsd:documentation>List of invoices, with status </xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="GetInvoiceStatusesType">
+<xsd:sequence>
+<xsd:element name="showDistributed" type="xsd:boolean" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>To show outbound channel for invoices. </xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="getInvoiceStatus" type="tns:GetInvoiceStatusType" maxOccurs="1000" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="GetInvoiceStatusType">
+<xsd:sequence>
+<xsd:element name="issuer" type="tns:OrganizationNumberType" />
+<xsd:element name="invoiceNumber" type="tns:InvoiceNumberType" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="InvoiceStatusResponsesType">
+<xsd:sequence>
+<xsd:element name="invoiceStatusResponse" type="tns:InvoiceStatusResponseType" maxOccurs="1000" />
+</xsd:sequence>
+</xsd:complexType>
+<xsd:complexType name="InvoiceStatusResponseType">
+<xsd:sequence>
+<xsd:element name="issuer" type="tns:OrganizationNumberType" />
+<xsd:element name="invoiceNumber" type="tns:InvoiceNumberType" />
+<xsd:element name="status" type="tns:InvoiceStatusType" />
+<xsd:element name="rejectReason" type="tns:RejectReasonType" minOccurs="0" />
+<xsd:element name="distributed" type="tns:Text20" minOccurs="0">
+<xsd:annotation>
+<xsd:documentation>Outbound channel for invoices (B2C, PRINT, EMAIL) </xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="InvoiceStatusType">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="PROCESSED">
+<xsd:annotation>
+<xsd:documentation>The invoice is processed successfully </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="REJECTED">
+<xsd:annotation>
+<xsd:documentation>The invoice is rejected </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="IN_PROGRESS">
+<xsd:annotation>
+<xsd:documentation>The invoice processing is in progress </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="DUPLICATE">
+<xsd:annotation>
+<xsd:documentation>The invoice number is a duplicate </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="NOT_FOUND">
+<xsd:annotation>
+<xsd:documentation>The invoice is not found </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+<xsd:enumeration value="CANCELLED">
+<xsd:annotation>
+<xsd:documentation>The invoice is cancelled </xsd:documentation>
+</xsd:annotation>
+</xsd:enumeration>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:element name="CancellableInvoiceSearchCriteria">
+<xsd:annotation>
+<xsd:documentation> Possible validation error codes from operation 5004 - Unable to find invoice 5005 - Cancellation on paid invoice 5006 - Invoice already cancelled 5007 - Multiple invoices found </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<xsd:element name="issuer" type="tns:OrganizationNumberType" />
+<xsd:element name="kid" type="tns:KidType" minOccurs="0" />
+<xsd:element name="dueDate" type="xsd:date" />
+<xsd:element name="amount" type="tns:SimpleAmountType" />
+<xsd:element name="minimumAmount" type="tns:SimpleAmountType" minOccurs="0" />
+<xsd:element name="accountNumber" type="tns:BillingAccountNumberType" />
+<xsd:element name="documentType" type="tns:documentType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="CancelInvoice">
+<xsd:annotation>
+<xsd:documentation> Possible validation error codes from operation 5004 - Unable to find invoice 5005 - Cancellation on paid invoice 5006 - Invoice already cancelled 5008 - Authorization failed </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="auditInformation" type="tns:AuditInformationType" />
+<xsd:element name="invoiceId" type="xsd:long" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="CancelInvoiceResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="invoiceId" type="xsd:long" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="CancellableInvoiceResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+<xsd:element name="invoiceId" type="xsd:long" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ServerFault">
+<xsd:annotation>
+<xsd:documentation> Indicates an internal server error. </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:simpleType name="ErrorCodeType">
+<xsd:restriction base="xsd:int">
+<xsd:minInclusive value="5000" />
+<xsd:maxExclusive value="5999" />
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:element name="ValidationFault">
+<xsd:annotation>
+<xsd:documentation> Indicates that the client has sent an invalid request. </xsd:documentation>
+</xsd:annotation>
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="errorCode" type="tns:ErrorCodeType" />
+<xsd:element name="messageIdentifier" type="tns:MessageIdentifierType" />
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+</xsd:schema>
+</wsdl:types>
+<wsdl:message name="getConsignmentStatus">
+<wsdl:part name="getConsignmentStatus" element="tns:GetConsignmentStatus" />
+</wsdl:message>
+<wsdl:message name="getConsignmentStatusResponse">
+<wsdl:part name="getConsignmentStatusResponse" element="tns:GetConsignmentStatusResponse" />
+</wsdl:message>
+<wsdl:message name="getInvoiceStatus">
+<wsdl:part name="getInvoiceStatus" element="tns:GetInvoiceStatus" />
+</wsdl:message>
+<wsdl:message name="getInvoiceStatusResponse">
+<wsdl:part name="getInvoiceStatusResponse" element="tns:GetInvoiceStatusResponse" />
+</wsdl:message>
+<wsdl:message name="addInvoices">
+<wsdl:part name="addInvoices" element="tns:AddInvoices" />
+</wsdl:message>
+<wsdl:message name="getEfakturaIdentifiers">
+<wsdl:part name="getEfakturaIdentifiers" element="tns:GetEfakturaIdentifiers" />
+</wsdl:message>
+<wsdl:message name="getEfakturaIdentifiersResponse">
+<wsdl:part name="getEfakturaIdentifiersResponse" element="tns:GetEfakturaIdentifiersResponse" />
+</wsdl:message>
+<wsdl:message name="addInvoicesResponse">
+<wsdl:part name="addInvoicesResponse" element="tns:AddInvoicesResponse" />
+</wsdl:message>
+<wsdl:message name="cancellableInvoice">
+<wsdl:part name="cancellableInvoice" element="tns:CancellableInvoiceSearchCriteria" />
+</wsdl:message>
+<wsdl:message name="cancelInvoice">
+<wsdl:part name="cancelInvoice" element="tns:CancelInvoice" />
+</wsdl:message>
+<wsdl:message name="cancelInvoiceResponse">
+<wsdl:part name="cancelInvoiceResponse" element="tns:CancelInvoiceResponse" />
+</wsdl:message>
+<wsdl:message name="cancellableInvoiceResponse">
+<wsdl:part name="cancellableInvoiceResponse" element="tns:CancellableInvoiceResponse" />
+</wsdl:message>
+<wsdl:message name="validationFault">
+<wsdl:part name="validationFault" element="tns:ValidationFault" />
+</wsdl:message>
+<wsdl:message name="serverFault">
+<wsdl:part name="serverFault" element="tns:ServerFault" />
+</wsdl:message>
+<wsdl:portType name="EfakturaNetsSubmitterPortType">
+<wsdl:operation name="getConsignmentStatus">
+<wsdl:documentation>Get status on consignment</wsdl:documentation>
+<wsdl:input message="tns:getConsignmentStatus" />
+<wsdl:output message="tns:getConsignmentStatusResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+<wsdl:operation name="getInvoiceStatus">
+<wsdl:documentation>Gets an already created invoice </wsdl:documentation>
+<wsdl:input message="tns:getInvoiceStatus" />
+<wsdl:output message="tns:getInvoiceStatusResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+<wsdl:operation name="addInvoices">
+<wsdl:documentation> Creates an invoice that is to be displayed in the online bank 5003 - One of efakturaReference,efakturaIdentifier or socialSecurityNumber is required </wsdl:documentation>
+<wsdl:input message="tns:addInvoices" />
+<wsdl:output message="tns:addInvoicesResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+<wsdl:operation name="getEfakturaIdentifiers">
+<wsdl:documentation>Returns efakturaIdentifier and auto accept agreement if the receiver is found by efaktura identifier, personalnumber, organization number, phone, email, name, or address. </wsdl:documentation>
+<wsdl:input message="tns:getEfakturaIdentifiers" />
+<wsdl:output message="tns:getEfakturaIdentifiersResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+<wsdl:operation name="getCancellableInvoice">
+<wsdl:documentation>Find cancellable invoice using mandatory and optional parameters </wsdl:documentation>
+<wsdl:input message="tns:cancellableInvoice" />
+<wsdl:output message="tns:cancellableInvoiceResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+<wsdl:operation name="cancelInvoice">
+<wsdl:documentation>Cancel an invoice by an unique id </wsdl:documentation>
+<wsdl:input message="tns:cancelInvoice" />
+<wsdl:output message="tns:cancelInvoiceResponse" />
+<wsdl:fault name="validationFault" message="tns:validationFault" />
+<wsdl:fault name="serverFault" message="tns:serverFault" />
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="EfakturaNetsSubmitterSoapBinding" type="tns:EfakturaNetsSubmitterPortType">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+<wsdl:operation name="getEfakturaIdentifiers">
+<soap:operation soapAction="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/getEfakturaIdentifiers" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+<wsdl:operation name="addInvoices">
+<soap:operation soapAction="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/addInvoices" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+<wsdl:operation name="getInvoiceStatus">
+<soap:operation soapAction="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/getInvoiceStatus" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+<wsdl:operation name="getConsignmentStatus">
+<soap:operation soapAction="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/getConsignmentStatus" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+<wsdl:operation name="getCancellableInvoice">
+<soap:operation soapAction="https://efaktura-services.nets.no/efaktura-submitter-service/v1/getCancellableInvoice" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+<wsdl:operation name="cancelInvoice">
+<soap:operation soapAction="https://efaktura-services.nets.no/efaktura-submitter-service/v1/cancelInvoice" />
+<wsdl:input>
+<soap:body use="literal" />
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal" />
+</wsdl:output>
+<wsdl:fault name="validationFault">
+<soap:fault name="validationFault" use="literal" />
+</wsdl:fault>
+<wsdl:fault name="serverFault">
+<soap:fault name="serverFault" use="literal" />
+</wsdl:fault>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="EfakturaNetsSubmitterService">
+<wsdl:port name="EfakturaNetsSubmittertPort" binding="tns:EfakturaNetsSubmitterSoapBinding">
+<soap:address location="https://efaktura-services.nets.no/invoicing-nets-submitter/v1/" />
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>

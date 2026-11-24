@@ -43,3 +43,4 @@ PROCEDURE FirstItem:
 
   ocReturn = "test". /* Always string value. Use SKIPROW to exclude row from result set */
 END PROCEDURE.
+

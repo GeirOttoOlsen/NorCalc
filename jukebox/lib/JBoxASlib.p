@@ -81,6 +81,9 @@ def var iReConnectPause as int init ? no-undo. /*initiate with ? so that 0 can b
 def var iReConnectAttempts as int init ? no-undo.  /*initiate with ? so that 0 can be used*/
 DEF VAR cQueryStopAfter           AS CHAR   NO-UNDO.
 DEF VAR cOrgBuffersAndFields            AS CHAR   NO-UNDO.
+DEF VAR bDisableCache             AS LOG NO-UNDO.
+DEF VAR cPreScanBaseQuery         AS CHAR NO-UNDO.
+DEF VAR cFieldValueDelimiter      AS CHAR NO-UNDO.
 
 /* Temp-tables and variables for Transaction.engine: */
 DEF TEMP-TABLE ttTransAction NO-UNDO
@@ -142,6 +145,7 @@ DEF VAR cServerTransInputParam    AS CHAR NO-UNDO.
 DEF VAR cSkipCalcFields           AS CHAR NO-UNDO.
 DEF VAR cAppendWinCompanyTitle    AS CHAR NO-UNDO.
 DEF VAR cUniqueBuffer             AS CHAR NO-UNDO.
+DEF VAR hCurrQueryObject          AS HANDLE NO-UNDO.
 
 /* Query module: */
 /* &IF DEFINED (ttDataDictDefined) = 0 &THEN  */
@@ -196,6 +200,7 @@ DEF TEMP-TABLE tt_field
     FIELD Field-Can-Write  AS CHAR
     INDEX idxFileField Table-Name Field-Name
     INDEX idxField Field-Name
+    INDEX idxDbTableField Db-name Table-name Field-Name
     .
 
 DEF VAR htt_field         AS HANDLE NO-UNDO.
@@ -208,6 +213,16 @@ DEF TEMP-TABLE ttDefaultTranslation
     FIELD cFieldHelp  AS CHAR
     .
 
+DEF TEMP-TABLE ttASconnection
+    FIELD cConnectionName AS CHAR
+    FIELD hAppserver      AS HANDLE
+    FIELD cSessionId      AS CHAR
+    FIELD cUserId         AS CHAR
+    FIELD cUserName       AS CHAR
+    FIELD iCompanyid      AS INT
+    FIELD bActive         AS LOG
+    .
+    
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -226,6 +241,19 @@ DEF TEMP-TABLE ttDefaultTranslation
 
 
 /* ************************  Function Prototypes ********************** */
+
+&IF DEFINED(EXCLUDE-addAsLibCache) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD addAsLibCache Procedure
+FUNCTION addAsLibCache RETURNS LOGICAL 
+  (INPUT icDbList AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-assignStringValue) = 0 &THEN
 
@@ -652,6 +680,32 @@ FUNCTION getFieldDataType RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getFieldFormat) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFieldFormat Procedure
+FUNCTION getFieldFormat RETURNS CHARACTER 
+  (INPUT icDbField AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFieldLabel) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFieldLabel Procedure
+FUNCTION getFieldLabel RETURNS CHARACTER 
+  (INPUT icDbField AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getFieldList) = 0 &THEN
 
@@ -1388,6 +1442,34 @@ FUNCTION runProcDs RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-runProcGetDS) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD runProcGetDS Procedure
+FUNCTION runProcGetDS RETURNS LOGICAL 
+  (INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-runProcGetTT) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD runProcGetTT Procedure
+FUNCTION runProcGetTT RETURNS LOGICAL 
+  (INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-Scandinavian) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD Scandinavian Procedure 
@@ -1398,6 +1480,19 @@ FUNCTION Scandinavian RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setActiveASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setActiveASconnection Procedure
+FUNCTION setActiveASconnection RETURNS LOGICAL 
+  (INPUT icAsConnectionName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setAppendWinCompanyTitle) = 0 &THEN
 
@@ -1598,6 +1693,19 @@ FUNCTION setCompanyId RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setCurrentQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCurrentQueryObject Procedure
+FUNCTION setCurrentQueryObject RETURNS LOGICAL 
+  (INPUT ihCurrQueryObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setCurrentRowid) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCurrentRowid Procedure 
@@ -1622,6 +1730,25 @@ FUNCTION setDataDictFilter RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-initASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD initASconnection Procedure
+FUNCTION initASconnection RETURNS LOGICAL 
+  (INPUT icAsConnectionName AS CHAR,
+   INPUT ihAppserver      AS HANDLE,
+   INPUT icSessionId      AS CHAR,
+   INPUT icUserId         AS CHAR,
+   INPUT icUserName       AS CHAR,
+   INPUT iiCompanyId      AS INT,
+   INPUT ibActive         AS LOG) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setDefaultTranslation) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setDefaultTranslation Procedure 
@@ -1635,6 +1762,19 @@ FUNCTION setDefaultTranslation RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setFieldValueDelimiter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setFieldValueDelimiter Procedure
+FUNCTION setFieldValueDelimiter RETURNS LOGICAL 
+  (INPUT icFieldValueDelimiter AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setIndexOnRowids) = 0 &THEN
 
@@ -1725,6 +1865,19 @@ FUNCTION setPostUpdProc RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setPreScanBaseQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setPreScanBaseQuery Procedure
+FUNCTION setPreScanBaseQuery RETURNS LOGICAL 
+  (INPUT icPreScanBaseQuery AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setPreScanLimit) = 0 &THEN
 
@@ -1925,6 +2078,19 @@ FUNCTION setUseAppserver RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setUseCache) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setUseCache Procedure
+FUNCTION setUseCache RETURNS LOGICAL 
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setUseDynamicsTranslation) = 0 &THEN
 
@@ -2143,6 +2309,8 @@ DEF VAR cNotCanDeleteBuffs AS CHAR   NO-UNDO.
 
 CREATE TEMP-TABLE ohTempTable.
 
+IF NUM-ENTRIES(icBuffersAndFields,CHR(3)) > 1 THEN icBuffersAndFields = ENTRY(NUM-ENTRIES(icBuffersAndFields,CHR(3)),icBuffersAndFields,CHR(3)).
+
 iBufferCount = NUM-ENTRIES(icBuffersAndFields).
 
 DO ix = 1 TO iBufferCount:
@@ -2184,12 +2352,12 @@ DO ix = 1 TO iBufferCount:
             END.
             WHEN 2 THEN DO:
               IF bExtent AND NOT cExtraField BEGINS "+" THEN 
-                cExtraLabel = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
+                cExtraLabel = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"%2C",",").
               ELSE                  
                 cExtraDataType = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
             END.
             WHEN 3 THEN cExtraFormat   = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"<",",").
-            WHEN 5 THEN cExtraLabel    = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
+            WHEN 5 THEN cExtraLabel    = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"%2C",",").
           END CASE.
         END.
         iz = iz - 1.
@@ -2267,7 +2435,7 @@ DO ix = 1 TO iBufferCount:
             DO iz = 2 TO NUM-ENTRIES(ENTRY(iy,cBufferDef,";"),"|"):
               IF iz = 2 THEN DO:
                 IF ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|") NE "=" THEN 
-                  cOverrideLabel = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
+                  cOverrideLabel = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"%2C",",").
                 ELSE 
                   cOverrideLabel = tt_field.Field-Label.
               END.
@@ -2314,12 +2482,12 @@ DO ix = 1 TO iBufferCount:
             DO iz = 2 TO NUM-ENTRIES(ENTRY(iy,cBufferDef,";"),"|"):
               IF iz = 2 THEN DO:
                 IF ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|") NE "=" THEN 
-                  cOverrideLabel = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
+                  cOverrideLabel = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"%2C",",").
                 ELSE 
                   cOverrideLabel = tt_field.Field-Label.
               END.
-              ELSE IF iz = 3 THEN
-                cOverrideFormat = ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|").
+              ELSE IF iz = 3 THEN 
+                cOverrideFormat = REPLACE(ENTRY(iz,ENTRY(iy,cBufferDef,";"),"|"),"<",",").
             END.
             IF iz = 3 THEN
               cOverrideFormat = tt_field.Field-format. /* No override on format */
@@ -2538,6 +2706,55 @@ END PROCEDURE.
 
 /* ************************  Function Implementations ***************** */
 
+&IF DEFINED(EXCLUDE-addAsLibCache) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION addAsLibCache Procedure
+FUNCTION addAsLibCache RETURNS LOGICAL 
+  (INPUT icDbList AS CHAR  ):
+/*------------------------------------------------------------------------------
+ Purpose: Called from JBoxSchemaCache when cache from Progress datasource is loaded 
+ Notes:   tt_field cache could already exist.
+          Must be re-visited to support multiple connections using same ldb name(s)
+------------------------------------------------------------------------------*/
+DEF VAR ix AS INT NO-UNDO.
+DEF VAR hbtt_field AS HANDLE NO-UNDO.
+
+DO ix = 1 TO NUM-ENTRIES(icDbList):
+  FIND FIRST tt_field
+       WHERE tt_field.Db-Name = ENTRY(ix,icDbList)
+       NO-ERROR.
+  IF AVAIl tt_field THEN RETURN NO.
+END.       
+
+hbtt_field = BUFFER tt_field:HANDLE.
+
+getTempTable("jbserv_getfieldcache.p","",htt_field). // tt_field will be appended
+
+FOR EACH ttDefaultTranslation
+    WHERE ttDefaultTranslation.cLanguage = cLanguage
+      AND ttDefaultTranslation.cFieldLabel NE ""
+    :
+
+  FOR EACH tt_field 
+      WHERE tt_field.Field-Name = ttDefaultTranslation.cFieldName
+      :
+    ASSIGN tt_field.Field-Label = ttDefaultTranslation.cFieldLabel
+           tt_field.Field-Help  = ttDefaultTranslation.cFieldHelp
+           .
+  END.
+END.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-assignStringValue) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION assignStringValue Procedure 
@@ -2642,11 +2859,6 @@ DO ix = 1 TO NUM-ENTRIES(icCacheList,";"):
                  .
         END.
       END.
-/*       OUTPUT TO c:\temp\datadict.csv.   */
-/*       FOR EACH tt_field:                */
-/*         EXPORT DELIMITER ";" tt_field.  */
-/*       END.                              */
-/*       OUTPUT CLOSE.                     */
     END.
     NEXT.
   END.
@@ -2723,7 +2935,8 @@ ELSE cServerReturnParam = "".
 
 IF cReturnTrans BEGINS "Invalid session" OR cReturnTrans BEGINS "ERROR: " THEN DO:
   MESSAGE cReturnTrans VIEW-AS ALERT-BOX.
-  QUIT.
+  IF cReturnTrans BEGINS "Invalid session" THEN
+    QUIT.
 END.
 
 RETURN FALSE. 
@@ -2924,45 +3137,91 @@ DEF VAR obOK AS LOG NO-UNDO.
 
 bOK = SESSION:SET-WAIT-STATE("general").
 
-IF getAppServiceHandle() NE ? THEN DO:
-  RUN jbserv_servertrans.p
-      ON getAppServiceHandle()
-     (DYNAMIC-FUNCTION("getSessionId"),
-      ibReturnAll,
-      cServerTransInputParam,
-      TABLE-HANDLE httTransAction,
-      INPUT-OUTPUT TABLE-HANDLE httTransRecord,
-      OUTPUT cReturnTrans,
-      OUTPUT obOK,
-      cTransLogFile)
-      NO-ERROR.
-
-  IF ERROR-STATUS:ERROR AND ERROR-STATUS:GET-NUMBER(1) = 3230 THEN 
-    RUN jbserv_servertrans.p
+IF VALID-HANDLE(hCurrQueryObject) AND DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName") NE "" THEN DO:
+  IF getAppServiceHandle() NE ? THEN DO:
+    RUN jbserv_servertrans_sql.p
         ON getAppServiceHandle()
        (DYNAMIC-FUNCTION("getSessionId"),
+        DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName"),
         ibReturnAll,
+        cServerTransInputParam,
         TABLE-HANDLE httTransAction,
         INPUT-OUTPUT TABLE-HANDLE httTransRecord,
         OUTPUT cReturnTrans,
         OUTPUT obOK,
         cTransLogFile)
         NO-ERROR.
-
-  IF ERROR-STATUS:ERROR THEN
-    IF ReconnectServer() THEN 
-      obOK = DoCommit (ibReturnAll).
+  
+    IF ERROR-STATUS:ERROR AND ERROR-STATUS:GET-NUMBER(1) = 3230 THEN 
+      RUN jbserv_servertrans_sql.p
+          ON getAppServiceHandle()
+         (DYNAMIC-FUNCTION("getSessionId"),
+          DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName"),
+          ibReturnAll,
+          TABLE-HANDLE httTransAction,
+          INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+          OUTPUT cReturnTrans,
+          OUTPUT obOK,
+          cTransLogFile)
+          NO-ERROR.
+  
+    IF ERROR-STATUS:ERROR THEN
+      IF ReconnectServer() THEN 
+        obOK = DoCommit (ibReturnAll).
+  END.
+  ELSE
+    RUN jbserv_servertrans_sql.p
+       (DYNAMIC-FUNCTION("getSessionId"),
+        DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName"),
+        ibReturnAll,
+        cServerTransInputParam,
+        TABLE-HANDLE httTransAction,
+        INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+        OUTPUT cReturnTrans,
+        OUTPUT obOK,
+        cTransLogFile).
 END.
-ELSE
-  RUN jbserv_servertrans.p
-     (DYNAMIC-FUNCTION("getSessionId"),
-      ibReturnAll,
-      cServerTransInputParam,
-      TABLE-HANDLE httTransAction,
-      INPUT-OUTPUT TABLE-HANDLE httTransRecord,
-      OUTPUT cReturnTrans,
-      OUTPUT obOK,
-      cTransLogFile).
+ELSE DO:
+  IF getAppServiceHandle() NE ? THEN DO:
+    RUN jbserv_servertrans.p
+        ON getAppServiceHandle()
+       (DYNAMIC-FUNCTION("getSessionId"),
+        ibReturnAll,
+        cServerTransInputParam,
+        TABLE-HANDLE httTransAction,
+        INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+        OUTPUT cReturnTrans,
+        OUTPUT obOK,
+        cTransLogFile)
+        NO-ERROR.
+  
+    IF ERROR-STATUS:ERROR AND ERROR-STATUS:GET-NUMBER(1) = 3230 THEN 
+      RUN jbserv_servertrans.p
+          ON getAppServiceHandle()
+         (DYNAMIC-FUNCTION("getSessionId"),
+          ibReturnAll,
+          TABLE-HANDLE httTransAction,
+          INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+          OUTPUT cReturnTrans,
+          OUTPUT obOK,
+          cTransLogFile)
+          NO-ERROR.
+  
+    IF ERROR-STATUS:ERROR THEN
+      IF ReconnectServer() THEN 
+        obOK = DoCommit (ibReturnAll).
+  END.
+  ELSE
+    RUN jbserv_servertrans.p
+       (DYNAMIC-FUNCTION("getSessionId"),
+        ibReturnAll,
+        cServerTransInputParam,
+        TABLE-HANDLE httTransAction,
+        INPUT-OUTPUT TABLE-HANDLE httTransRecord,
+        OUTPUT cReturnTrans,
+        OUTPUT obOK,
+        cTransLogFile).
+END.
 
 ASSIGN ixTransActionId        = 0
        ixTransRecordId        = 0
@@ -2977,7 +3236,10 @@ ELSE
 
 CheckReturnValue(cReturnTrans).
 
-RETURN obOK.
+FINALLY:
+  setCurrentQueryObject(?).
+  RETURN obOK.
+END.  
 
 END FUNCTION.
 
@@ -3012,6 +3274,7 @@ ELSE IF INDEX(icValues,"|") > 0 THEN DO:
           "The cause of this error could also be that the number of data field names don't match the number of data values"
           VIEW-AS ALERT-BOX ERROR.
   ixTransRecordId = 0.
+  setCurrentQueryObject(?).
   RETURN NO.
 END.
 
@@ -3099,6 +3362,7 @@ IF icIdFldsOrCrit NE "" AND icIdValues NE "" THEN DO:
             "The cause of this error could also be that the number of data field names don't match the number of data values"
             VIEW-AS ALERT-BOX ERROR.
     ixTransRecordId = 0.
+    setCurrentQueryObject(?).
     RETURN NO.
   END.
 END. 
@@ -3167,10 +3431,14 @@ DEF VAR inx          AS INT NO-UNDO.
 DEF VAR bUseRecord   AS LOG NO-UNDO.
 DEF VAR hField       AS HANDLE NO-UNDO.
 DEF VAR cUpdateValue AS CHAR NO-UNDO.
+DEF VAR cMatchField  AS CHARACTER NO-UNDO.
+
+IF icFieldsToMatch MATCHES "RowIdent*" THEN
+  cMatchField = STRING(ihBuffer:BUFFER-FIELD(icFieldsToMatch):BUFFER-VALUE).
 
 FOR EACH ttTransRecord
     WHERE (IF icFieldsToMatch MATCHES "RowIdent*" THEN
-             ttTransRecord.cTransRecordRowid = STRING(ihBuffer:BUFFER-FIELD(icFieldsToMatch):BUFFER-VALUE)
+             ttTransRecord.cTransRecordRowid = cMatchField
            ELSE TRUE),
     FIRST ttTransAction 
           WHERE ttTransAction.iTransActionId = ttTransRecord.iTransActionId
@@ -3331,6 +3599,7 @@ IF icIdFldsOrCrit NE "" AND icIdValues NE "" THEN DO:
             "The cause of this error could also be that the number of data field names don't match the number of data values"
             VIEW-AS ALERT-BOX ERROR.
     ixTransRecordId = 0.
+    setCurrentQueryObject(?).
     RETURN NO.
   END.
 END. 
@@ -3343,6 +3612,7 @@ ELSE IF INDEX(icValues,"|") > 0 THEN DO:
           "The cause of this error could also be that the number of data field names don't match the number of data values"
           VIEW-AS ALERT-BOX ERROR.
   ixTransRecordId = 0.
+  setCurrentQueryObject(?).
   RETURN NO.
 END.
 
@@ -3526,8 +3796,15 @@ IF VALID-HANDLE(hUseAppServer) THEN DO:
   hReturnValue = hUseAppServer.
   hUseAppServer = ?.
 END.
-ELSE
-  hReturnValue = hAppServer.
+ELSE DO:
+  FIND FIRST ttASconnection 
+       WHERE ttASconnection.bActive
+       NO-ERROR.
+  IF AVAIL ttASconnection THEN
+    hReturnValue = ttASconnection.hAppserver.
+  ELSE  
+    hReturnValue = hAppServer.
+END.  
 
 RETURN hReturnValue.
 
@@ -3613,6 +3890,9 @@ FUNCTION getASUserId RETURNS CHARACTER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+FIND FIRST ttASconnection WHERE ttASconnection.bActive
+     NO-ERROR.
+IF AVAIL ttASconnection THEN RETURN ttASconnection.cUserId.
 
 RETURN cASUserId.   
 
@@ -3632,6 +3912,9 @@ FUNCTION getASuserName RETURNS CHARACTER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+FIND FIRST ttASconnection WHERE ttASconnection.bActive
+     NO-ERROR.
+IF AVAIL ttASconnection THEN RETURN ttASconnection.cUserName.
 
 RETURN cASuserName.
 
@@ -4067,6 +4350,13 @@ ELSE DO:
         cFieldName,
         OUTPUT cDataType)
         .
+  IF cDataType NE "" AND cDataType NE ? THEN DO:     
+    CREATE tt_field.
+    ASSIGN tt_field.Db-Name = cDbName
+           tt_field.Table-name = cTableName
+           tt_field.Field-Name = cFieldName
+           tt_field.Field-Type = cDataType.
+  END.        
   RETURN cDataType.
 END.
 
@@ -4078,6 +4368,234 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getFieldFormat) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFieldFormat Procedure
+FUNCTION getFieldFormat RETURNS CHARACTER 
+  ( INPUT icDbField AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR cDbName    AS CHAR NO-UNDO.
+DEF VAR cTableName AS CHAR NO-UNDO.
+DEF VAR cFieldName AS CHAR NO-UNDO.
+DEF VAR cFormat    AS CHAR NO-UNDO.
+
+IF NUM-ENTRIES(icDbField,".") = 3 THEN DO:
+  ASSIGN cDbName    = ENTRY(1,icDbField,".")
+         cTableName = ENTRY(2,icDbField,".")
+         cFieldName = ENTRY(3,icDbField,".")
+         .
+
+  FIND FIRST tt_field 
+       WHERE tt_field.Db-Name    = cDbName
+         AND tt_field.Table-Name = cTableName
+         AND tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:      
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Db-Name    = cDbName
+           AND tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Db-Name    = cDbName
+           AND tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+ELSE IF NUM-ENTRIES(icDbField,".") = 2 THEN DO:
+  ASSIGN cTableName = ENTRY(1,icDbField,".")
+         cFieldName = ENTRY(2,icDbField,".")
+         .
+  FIND FIRST tt_field 
+       WHERE tt_field.Table-Name = cTableName
+         AND tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+ELSE DO:
+  cFieldName = icDbField.
+  FIND FIRST tt_field 
+       WHERE tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+
+IF AVAIL tt_field THEN RETURN tt_field.Field-Format.
+ELSE DO:
+  IF getAppServiceHandle() NE ? THEN
+    RUN jbserv_getfieldformat.p
+        ON getAppServiceHandle()
+       (DYNAMIC-FUNCTION("getSessionId"),
+        cDbName,
+        cTableName,
+        cFieldName,
+        OUTPUT cFormat)
+        NO-ERROR.
+  ELSE 
+    RUN jbserv_getfieldformat.p
+       (DYNAMIC-FUNCTION("getSessionId"),
+        cDbName,
+        cTableName,
+        cFieldName,
+        OUTPUT cFormat)
+        .
+  RETURN cFormat.
+END.
+
+RETURN "".  
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFieldLabel) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFieldLabel Procedure
+FUNCTION getFieldLabel RETURNS CHARACTER 
+  ( INPUT icDbField AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR cDbName    AS CHAR NO-UNDO.
+DEF VAR cTableName AS CHAR NO-UNDO.
+DEF VAR cFieldName AS CHAR NO-UNDO.
+DEF VAR cLabel     AS CHAR NO-UNDO.
+
+IF NUM-ENTRIES(icDbField,".") = 3 THEN DO:
+  ASSIGN cDbName    = ENTRY(1,icDbField,".")
+         cTableName = ENTRY(2,icDbField,".")
+         cFieldName = ENTRY(3,icDbField,".")
+         .
+
+  FIND FIRST tt_field 
+       WHERE tt_field.Db-Name    = cDbName
+         AND tt_field.Table-Name = cTableName
+         AND tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:      
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Db-Name    = cDbName
+           AND tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Db-Name    = cDbName
+           AND tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+ELSE IF NUM-ENTRIES(icDbField,".") = 2 THEN DO:
+  ASSIGN cTableName = ENTRY(1,icDbField,".")
+         cFieldName = ENTRY(2,icDbField,".")
+         .
+  FIND FIRST tt_field 
+       WHERE tt_field.Table-Name = cTableName
+         AND tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Table-Name = cTableName
+           AND tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+ELSE DO:
+  cFieldName = icDbField.
+  FIND FIRST tt_field 
+       WHERE tt_field.Field-Name = cFieldName
+       NO-ERROR.
+       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "buf*_*" THEN DO:
+    cFieldName = SUBSTR(cFieldName,INDEX(cFieldName,"_") + 1).      
+    FIND FIRST tt_field 
+         WHERE tt_field.Field-Name = cFieldName
+         NO-ERROR.
+  END.       
+  IF NOT AVAIL tt_field AND cFieldName MATCHES "*]" THEN      
+    FIND FIRST tt_field 
+         WHERE tt_field.Field-Name = SUBSTR(cFieldName,1,R-INDEX(cFieldName,"[") - 1)
+         NO-ERROR.
+END.
+
+IF AVAIL tt_field THEN 
+  cLabel = IF tt_field.Field-Label NE ? THEN tt_field.Field-Label ELSE tt_field.Field-Name.
+ELSE DO:
+  IF getAppServiceHandle() NE ? THEN
+    RUN jbserv_getfieldlabel.p
+        ON getAppServiceHandle()
+       (DYNAMIC-FUNCTION("getSessionId"),
+        cDbName,
+        cTableName,
+        cFieldName,
+        OUTPUT cLabel)
+        .
+  ELSE 
+    RUN jbserv_getfieldlabel.p
+       (DYNAMIC-FUNCTION("getSessionId"),
+        cDbName,
+        cTableName,
+        cFieldName,
+        OUTPUT cLabel)
+        .
+END.
+
+RETURN cLabel.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getFieldList) = 0 &THEN
 
@@ -4227,6 +4745,7 @@ IF getAppServiceHandle() NE ? THEN DO:
       icBufferName,
       icQueryCriteria,
       icColumns,
+      cFieldValueDelimiter,
       OUTPUT cValues,
       OUTPUT cReturnTrans)
       NO-ERROR.
@@ -4241,6 +4760,7 @@ ELSE
       icBufferName,
       icQueryCriteria,
       icColumns,
+      cFieldValueDelimiter,
       OUTPUT cValues,
       OUTPUT cReturnTrans)
       .
@@ -4252,7 +4772,10 @@ IF cReturnTrans NE "" THEN
 
 CheckReturnValue(cReturnTrans).
 
-RETURN cValues.
+FINALLY:
+  cFieldValueDelimiter = "".
+  RETURN cValues.
+END.  
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
@@ -4377,10 +4900,17 @@ FUNCTION getIsTableCached RETURNS LOGICAL
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+DEF VAR bCached AS LOG NO-UNDO.
+
 FIND FIRST ttCache 
      WHERE ttCache.hTempTable = ihTableHandle
      NO-ERROR.
-RETURN AVAIL ttCache.
+IF AVAIL ttCache THEN RETURN YES.     
+
+IF ihTableHandle:TYPE = "TEMP-TABLE" THEN
+  PUBLISH "getIsCachedTempTable" (ihTableHandle,OUTPUT bCached).
+
+RETURN bCached.
 
 END FUNCTION.
 
@@ -4456,6 +4986,8 @@ FUNCTION getIsUserSettingInstalled RETURNS LOGICAL
     Notes:  
 ------------------------------------------------------------------------------*/
 DEF VAR cSettingList AS CHAR NO-UNDO.
+
+IF bDisableCache THEN RETURN NO.
 
 FIND FIRST ttCache
      WHERE ttCache.cTableName = "JBoxUserSetting"
@@ -4631,6 +5163,7 @@ DEF VAR obOk           AS LOG    NO-UNDO.
 
 IF ihTargetBuffer:TYPE = "buffer" THEN
   httTable = ihTargetBuffer:TABLE-HANDLE.
+ELSE httTable = ihTargetBuffer.  
 
 bOK = SESSION:SET-WAIT-STATE("general").
 
@@ -5399,8 +5932,12 @@ FUNCTION getSessionId RETURNS CHARACTER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-IF PROGRAM-NAME(2) MATCHES "*jbox*" THEN
+IF PROGRAM-NAME(2) MATCHES "*jbox*" THEN DO:
+  FIND FIRST ttASconnection WHERE ttASconnection.bActive
+       NO-ERROR.
+  IF AVAIL ttASconnection THEN RETURN ttASconnection.cSessionId.
   RETURN cSessionId.
+END.  
 ELSE RETURN ENCODE("zzz01/01/1900" + STRING(TIME)).
 
 END FUNCTION.
@@ -5669,6 +6206,8 @@ IF bIndexOnRowids THEN
   cParamString   = TRIM(cParamString + ",indexonrowids;yes",",").
 IF cPreScanQuery NE "" THEN
   cParamString = TRIM(cParamString + ",prescanquery;" + REPLACE(cPreScanQuery,",","¤"),",").
+IF cPreScanBaseQuery NE "" THEN
+  cParamString = TRIM(cParamString + ",prescanbasequery;" + REPLACE(cPreScanBaseQuery,",","¤"),",").
 IF cCalcFieldFilter NE "" THEN
   cParamString = TRIM(cParamString + ",calcfieldfilter;" + cCalcFieldFilter).
 IF iPreScanLimit NE 0 THEN
@@ -5691,6 +6230,28 @@ bOK = SESSION:SET-WAIT-STATE("general").
 IF NOT icQueryCriteria BEGINS "where false" THEN
   PUBLISH "setProgBarProperty" ("startQuery","").
 
+cParamString = REPLACE(cParamString,"getTOMORROW",STRING(TODAY + 1)).
+cParamString = REPLACE(cParamString,"getFirstDayOfMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfMonth",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorMonth",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextMonth",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfQuarter",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorQuarter",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextQuarter",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfYear",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfPriorYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorYear",TODAY))).
+cParamString = REPLACE(cParamString,"getFirstDayOfNextYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextYear",TODAY))).
+
+icQueryCriteria = REPLACE(icQueryCriteria,"getTOMORROW",STRING(TODAY + 1)).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfMonth",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorMonth",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextMonth",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextMonth",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfQuarter",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorQuarter",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextQuarter",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextQuarter",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfYear",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfPriorYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfPriorYear",TODAY))).
+icQueryCriteria = REPLACE(icQueryCriteria,"getFirstDayOfNextYear",STRING(DYNAMIC-FUNCTION("getFirstDayOfNextYear",TODAY))).
+
 hTmpAppService = getAppServiceHandle().
 
 IF CAN-FIND(FIRST tt_field) 
@@ -5699,6 +6260,7 @@ IF CAN-FIND(FIRST tt_field)
 /*    AND bReturnQueryInfo              */
 /*    AND PROGRAM-NAME(2) BEGINS "New"  */
    AND NOT icBuffersAndFields BEGINS "_fi"
+   AND NOT bDisableCache
    THEN 
   RUN CreateQueryFromCache
      (icBuffersAndFields,
@@ -5748,17 +6310,18 @@ IF NOT icQueryCriteria BEGINS "where false" THEN
 
 CheckReturnValue(cReturnTrans).
 
-ASSIGN cQueryStatFields = ""
-       cCalcFieldProc   = ""
-       cPreScanQuery    = ""
-       cCalcFieldFilter = ""
-       iPreScanLimit    = 0
-       bReturnQueryInfo = NO
-       cNoExistBuffers  = ""
-       bIndexOnRowids   = NO
-       cSkipCalcFields  = ""
-       cUniqueBuffer    = ""
-       cQueryStopAfter  = ""
+ASSIGN cQueryStatFields  = ""
+       cCalcFieldProc    = ""
+       cPreScanQuery     = ""
+       cPreScanBaseQuery = ""
+       cCalcFieldFilter  = ""
+       iPreScanLimit     = 0
+       bReturnQueryInfo  = NO
+       cNoExistBuffers   = ""
+       bIndexOnRowids    = NO
+       cSkipCalcFields   = ""
+       cUniqueBuffer     = ""
+       cQueryStopAfter   = ""
        .
 
 RETURN hTempTable.
@@ -6266,7 +6829,12 @@ DEF VAR cSettingList       AS CHAR   NO-UNDO.
 DEF VAR ocReturn           AS CHAR   NO-UNDO.
 DEF VAR hQuery             AS HANDLE NO-UNDO.
 
+IF bDisableCache THEN RETURN "".
+
 bOK = SESSION:SET-WAIT-STATE("general").
+
+IF icSourceFile NE "" THEN
+  icSourceFile = ENTRY(NUM-ENTRIES(icSourceFile,"\"),icSourceFile,"\").
 
 FIND FIRST ttCache
      WHERE ttCache.cTable = "JBoxUserSetting"
@@ -6374,6 +6942,8 @@ DEF VAR ocReturn           AS CHAR   NO-UNDO.
 DEF VAR hQuery             AS HANDLE NO-UNDO.
 
 bOK = SESSION:SET-WAIT-STATE("general").
+IF icSourceFile NE "" THEN
+  icSourceFile = ENTRY(NUM-ENTRIES(icSourceFile,"\"),icSourceFile,"\").
 
 FIND FIRST ttCache
      WHERE ttCache.cTable = "JBoxUserSetting"
@@ -6918,6 +7488,7 @@ DEF VAR cAltExtFieldHandles AS CHAR   NO-UNDO.
 DEF VAR iCntExtFields       AS INT    NO-UNDO.
 DEF VAR cExcludeLocalFields AS CHAR   NO-UNDO.
 DEF VAR cExcludedFields     AS CHAR   NO-UNDO. 
+DEF VAR cSqlKeyColumns      AS CHAR   NO-UNDO.
 
 IF icBuffersAndFields = "" THEN RETURN FALSE.
 
@@ -6928,15 +7499,42 @@ CASE ihObject:TYPE:
   OTHERWISE RETURN FALSE.
 END CASE.
 
-cQueryCriteria = "WHERE ROWID(" + ENTRY(1,ENTRY(1,icBuffersAndFields),";") + ") = TO-ROWID('" + 
-                 (IF cCurrentRowid NE "" THEN cCurrentRowid
-                  ELSE STRING(hBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE)) + "')" +
-                 icQueryJoin                                          
-                 .
-
-httTable = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",
-                            icBuffersAndFields,
-                            cQueryCriteria).
+IF VALID-HANDLE(hCurrQueryObject) AND DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName") NE "" THEN DO:
+  cSqlKeyColumns = JBoxSqlSchemaHelper:Instance:getPrimaryKeyColumns(
+                      DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName")
+                     ,JBoxSqlSchemaHelper:Instance:getABLTableSQLName(DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName")
+                                                                     ,ENTRY(1,ENTRY(1,icBuffersAndFields),";"))
+                                                                     ).
+  IF cCurrentRowid = "" THEN cCurrentRowid = hBuffer::RowIdent1.                                                                      
+  DO ix = 1 TO NUM-ENTRIES(cSqlKeyColumns):
+    cQueryCriteria = cQueryCriteria + (IF cQueryCriteria = "" THEN "WHERE " ELSE " AND ")
+                   + ENTRY(ix,cSqlKeyColumns)
+                   + " = "
+                   + JBoxSqlSchemaHelper:Instance:getABLToSQLValue(DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName")
+                     ,ENTRY(1,ENTRY(1,icBuffersAndFields),";")
+                     ,ENTRY(ix,cSqlKeyColumns)
+                     ,ENTRY(ix,cCurrentRowid,CHR(1))
+                                                                   )
+                   .                                                                   
+  END.
+  httTable = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",
+                                "sqlDb" 
+                                + CHR(3) + DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlDbName")  
+                                + CHR(3) + DYNAMIC-FUNCTION("getAttribute",hCurrQueryObject,"sqlView") 
+                                + CHR(3) + icBuffersAndFields,
+                              cQueryCriteria).
+END.
+ELSE DO:
+  cQueryCriteria = "WHERE ROWID(" + ENTRY(1,ENTRY(1,icBuffersAndFields),";") + ") = TO-ROWID('" + 
+                   (IF cCurrentRowid NE "" THEN cCurrentRowid
+                    ELSE STRING(hBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE)) + "')" +
+                   icQueryJoin                                          
+                   .
+  
+  httTable = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",
+                              icBuffersAndFields,
+                              cQueryCriteria).
+END.
 
 httTableBuffer = httTable:DEFAULT-BUFFER-HANDLE.
 
@@ -7015,7 +7613,9 @@ DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
                                        
 IF bShowHourGlass THEN SESSION:SET-WAIT-STATE("general").
 
-DELETE OBJECT httRunProc NO-ERROR.
+IF VALID-HANDLE(httRunProc) THEN
+  DELETE OBJECT httRunProc NO-ERROR.
+httRunProc = ?.  
 
 IF VALID-HANDLE(httTable) THEN DO:
   IF httTable:TYPE = "buffer" THEN
@@ -7095,7 +7695,9 @@ DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
                                        
 IF bShowHourGlass THEN SESSION:SET-WAIT-STATE("general").
 
-DELETE OBJECT hdsRunProc NO-ERROR.
+IF VALID-OBJECT(hdsRunProc) THEN
+  DELETE OBJECT hdsRunProc NO-ERROR.
+hdsRunProc = ?.  
 
 IF VALID-HANDLE(ihDataset) THEN DO:
   CREATE DATASET hdsRunProc.
@@ -7141,6 +7743,126 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-runProcGetDS) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION runProcGetDS Procedure
+FUNCTION runProcGetDS RETURNS LOGICAL 
+ ( INPUT icServerProgram  AS CHAR,
+   INPUT icParamList      AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  Retrieve custom queries
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR obOk          AS LOG NO-UNDO.
+DEF VAR httBuffer     AS HANDLE NO-UNDO.
+DEF VAR httQuery      AS HANDLE NO-UNDO.
+DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
+                                       
+IF bShowHourGlass THEN SESSION:SET-WAIT-STATE("general").
+
+IF VALID-OBJECT(hdsRunProc) THEN
+  DELETE OBJECT hdsRunProc NO-ERROR.
+hdsRunProc = ?.  
+
+IF getAppServiceHandle() NE ? THEN DO:
+  RUN jbserv_runproc_ds.p
+      ON getAppServiceHandle()
+     (getSessionId(),
+      icServerProgram,
+      icParamList,
+      OUTPUT DATASET-HANDLE hdsRunProc,
+      OUTPUT cReturnTrans,
+      OUTPUT obOk)
+      NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+    IF ReconnectServer() THEN 
+      obOK = runProc(icServerProgram,icParamList,hdsRunProc).
+  END.
+END.
+ELSE 
+  RUN jbserv_runproc_ds.p
+     (getSessionId(),
+      icServerProgram,
+      icParamList,
+      OUTPUT DATASET-HANDLE hdsRunProc,
+      OUTPUT cReturnTrans,
+      OUTPUT obOk)
+      .
+
+SESSION:SET-WAIT-STATE("").
+
+IF obOk THEN cServerTransReturnParam = cReturnTrans.
+
+RETURN obOk.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-runProcGetTT) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION runProcGetTT Procedure
+FUNCTION runProcGetTT RETURNS LOGICAL 
+  ( INPUT icServerProgram  AS CHAR,
+    INPUT icParamList      AS CHAR ) :
+/*------------------------------------------------------------------------------
+  Purpose:  Retrieve custom queries
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR obOk          AS LOG NO-UNDO.
+DEF VAR httBuffer     AS HANDLE NO-UNDO.
+DEF VAR httQuery      AS HANDLE NO-UNDO.
+DEF VAR hTargetBuffer AS HANDLE NO-UNDO.
+                                       
+IF bShowHourGlass THEN SESSION:SET-WAIT-STATE("general").
+
+IF VALID-HANDLE(httRunProc) THEN
+  DELETE OBJECT httRunProc NO-ERROR.
+httRunProc = ?.  
+
+IF getAppServiceHandle() NE ? THEN DO:
+  RUN jbserv_runproc_gettt.p
+      ON getAppServiceHandle()
+     (getSessionId(),
+      icServerProgram,
+      icParamList,
+      OUTPUT TABLE-HANDLE httRunProc,
+      OUTPUT cReturnTrans,
+      OUTPUT obOk)
+      NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN DO:
+    IF ReconnectServer() THEN 
+      obOK = runProcGetTT(icServerProgram,icParamList).
+  END.
+END.
+ELSE 
+  RUN jbserv_runproc_gettt.p
+     (getSessionId(),
+      icServerProgram,
+      icParamList,
+      OUTPUT TABLE-HANDLE httRunProc,
+      OUTPUT cReturnTrans,
+      OUTPUT obOk)
+      .
+
+SESSION:SET-WAIT-STATE("").
+
+IF obOk THEN cServerTransReturnParam = cReturnTrans.
+
+RETURN obOk.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-Scandinavian) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION Scandinavian Procedure 
@@ -7161,6 +7883,40 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setActiveASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setActiveASconnection Procedure
+FUNCTION setActiveASconnection RETURNS LOGICAL 
+  ( INPUT icAsConnectionName AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose: Swap datasource (ie appserver handle)
+ Notes:
+------------------------------------------------------------------------------*/
+IF icAsConnectionName NE "" THEN DO:
+  FIND FIRST ttASconnection
+       WHERE ttASconnection.cConnectionName = icAsConnectionName
+       NO-ERROR.
+  IF AVAIL ttASconnection THEN 
+    ttASconnection.bActive = YES.
+    
+  FOR EACH ttASconnection 
+      WHERE ttASconnection.cConnectionName NE icAsConnectionName
+      : 
+    ttASconnection.bActive = NO. 
+  END.
+END.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setAppendWinCompanyTitle) = 0 &THEN
 
@@ -7708,6 +8464,28 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setCurrentQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCurrentQueryObject Procedure
+FUNCTION setCurrentQueryObject RETURNS LOGICAL 
+  ( INPUT ihCurrQueryObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  hCurrQueryObject = ihCurrQueryObject.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setCurrentRowid) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCurrentRowid Procedure 
@@ -7756,6 +8534,53 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-initASconnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION initASconnection Procedure
+FUNCTION initASconnection RETURNS LOGICAL 
+  ( INPUT icAsConnectionName AS CHAR
+   ,INPUT ihAppserver      AS HANDLE
+   ,INPUT icSessionId      AS CHAR
+   ,INPUT icUserId         AS CHAR
+   ,INPUT icUserName       AS CHAR
+   ,INPUT iiCompanyId      AS INT
+   ,INPUT ibActive         AS LOG ):
+/*------------------------------------------------------------------------------
+ Purpose: Support of multi-tenant client (ie multiple appservers)
+ Notes:   Added July 2023
+------------------------------------------------------------------------------*/
+FIND FIRST ttASconnection
+     WHERE ttASconnection.cConnectionName = icAsConnectionName
+     NO-ERROR.
+IF NOT AVAIL ttASconnection THEN DO:
+  CREATE ttASconnection.
+  ASSIGN ttASconnection.cConnectionName = icAsConnectionName
+         ttASconnection.hAppserver      = ihAppserver
+         ttASconnection.cSessionId      = icSessionId
+         ttASconnection.cUserId         = icUserId
+         ttASconnection.cUserName       = icUserName
+         ttASconnection.iCompanyid      = iiCompanyId
+         .
+END.       
+ttASconnection.bActive = YES.
+
+FOR EACH ttASconnection 
+    WHERE ttASconnection.cConnectionName NE icAsConnectionName
+    : 
+  ttASconnection.bActive = NO. 
+END.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setDefaultTranslation) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setDefaultTranslation Procedure 
@@ -7795,6 +8620,28 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setFieldValueDelimiter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setFieldValueDelimiter Procedure
+FUNCTION setFieldValueDelimiter RETURNS LOGICAL 
+  ( INPUT icFieldValueDelimiter AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  cFieldValueDelimiter = icFieldValueDelimiter.
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setIndexOnRowids) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setIndexOnRowids Procedure 
@@ -7828,6 +8675,8 @@ FUNCTION setLanguageCode RETURNS LOGICAL
 ------------------------------------------------------------------------------*/
 DEF VAR cDefActionList AS CHAR NO-UNDO.
 DEF VAR cDefLabelList  AS CHAR NO-UNDO.
+DEF VAR iNumDbs        AS INT  NO-UNDO.
+DEF VAR bOk            AS LOG  NO-UNDO.
 
 IF icLanguage = "EN" THEN DO:
   ASSIGN cDefActionList = "accept,new,edit,close,help,copy,undo,delete,save"
@@ -7851,13 +8700,27 @@ END.
 
 cLanguage = icLanguage.
 
-RETURN DoUpdate("JBoxLoginSession","",
-                "cSessionId",
-                getSessionId(),
-                "cLanguage",
-                cLanguage,
-                YES).
+IF runProc("jbserv_getnumdbconnected.p","",?) THEN DO:
+  iNumDbs = INT(cServerTransReturnParam).
+  IF NUM-DBS > 0 THEN
+    bOk = DoUpdate("JBoxLoginSession","",
+                    "cSessionId",
+                    getSessionId(),
+                    "cLanguage",
+                    cLanguage,
+                    YES).
+END.
+ELSE 
+  bOk = DoUpdate("JBoxLoginSession","",
+                  "cSessionId",
+                  getSessionId(),
+                  "cLanguage",
+                  cLanguage,
+                  YES).
 
+ixTransRecordId = 0.
+RETURN bOk.  
+              
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
@@ -7986,6 +8849,28 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setPreScanBaseQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setPreScanBaseQuery Procedure
+FUNCTION setPreScanBaseQuery RETURNS LOGICAL 
+  ( INPUT icPreScanBaseQuery AS CHAR):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+cPreScanBaseQuery = icPreScanBaseQuery.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setPreScanLimit) = 0 &THEN
 
@@ -8373,6 +9258,28 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setUseCache) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setUseCache Procedure
+FUNCTION setDisableAsLibCache RETURNS LOGICAL 
+  ( INPUT ibDisableCache AS LOG ):
+/*------------------------------------------------------------------------------
+ Purpose: Disables cache and user settings - for multi connection session
+ Notes:
+------------------------------------------------------------------------------*/
+bDisableCache = ibDisableCache.
+
+RETURN bDisableCache.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setUseDynamicsTranslation) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setUseDynamicsTranslation Procedure 
@@ -8405,7 +9312,12 @@ FUNCTION setUserSetting RETURNS LOGICAL
 /*------------------------------------------------------------------------------
   Purpose:  Store user setting / attribute
 ------------------------------------------------------------------------------*/
+IF bDisableCache THEN RETURN NO.
+
 bOK = SESSION:SET-WAIT-STATE("general").
+
+IF icSourceFile NE "" THEN
+  icSourceFile = ENTRY(NUM-ENTRIES(icSourceFile,"\"),icSourceFile,"\").
 
 IF getAppServiceHandle() NE ? THEN DO:
   RUN jbserv_setusersetting.p

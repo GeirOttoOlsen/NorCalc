@@ -106,10 +106,9 @@ NORPROSJEKT.spirovent NORPROSJEKT.aktivt NORPROSJEKT.prosjektid
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS RECT-12 COMBO-BOX-prosjekt FILL-IN_prosjekt ~
-FILL-IN_prosjektnr COMBO-BOX-prosjektnr TOGGLE-IKKE-AKTIVE-PROSJEKT ~
-BROWSE-Prosjekt 
+FILL-IN_prosjektnr COMBO-BOX-prosjektnr tgl_ikkeAktive BROWSE-Prosjekt 
 &Scoped-Define DISPLAYED-OBJECTS COMBO-BOX-prosjekt FILL-IN_prosjektnr ~
-COMBO-BOX-prosjektnr TOGGLE-IKKE-AKTIVE-PROSJEKT 
+COMBO-BOX-prosjektnr tgl_ikkeAktive 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -267,10 +266,10 @@ DEFINE RECTANGLE RECT-12
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 124 BY 3.14.
 
-DEFINE VARIABLE TOGGLE-IKKE-AKTIVE-PROSJEKT AS LOGICAL INITIAL no 
+DEFINE VARIABLE tgl_ikkeAktive AS LOGICAL INITIAL no 
      LABEL "Inn&kl. Ikke-aktive" 
      VIEW-AS TOGGLE-BOX
-     SIZE 25 BY .76 NO-UNDO.
+     SIZE 29.2 BY .76 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -303,7 +302,7 @@ DEFINE FRAME Prosjekt-Frame
      FILL-IN_prosjekt AT ROW 1.95 COL 33.8 COLON-ALIGNED NO-LABEL
      FILL-IN_prosjektnr AT ROW 3.14 COL 42.2 RIGHT-ALIGNED NO-LABEL
      COMBO-BOX-prosjektnr AT ROW 3.19 COL 15.8 COLON-ALIGNED
-     TOGGLE-IKKE-AKTIVE-PROSJEKT AT ROW 3.29 COL 44.8
+     tgl_ikkeAktive AT ROW 3.29 COL 44.8
      BROWSE-Prosjekt AT ROW 4.81 COL 1
      " Søke" VIEW-AS TEXT
           SIZE 8 BY .67 AT ROW 1.19 COL 5.2
@@ -375,7 +374,7 @@ IF NOT PROSJEKTOVERSIKT:LOAD-SMALL-ICON("adeicon\progress":U) THEN
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME Prosjekt-Frame
    FRAME-NAME                                                           */
-/* BROWSE-TAB BROWSE-Prosjekt TOGGLE-IKKE-AKTIVE-PROSJEKT Prosjekt-Frame */
+/* BROWSE-TAB BROWSE-Prosjekt tgl_ikkeAktive Prosjekt-Frame */
 ASSIGN 
        FRAME Prosjekt-Frame:PRIVATE-DATA     = 
                 "DLGCLOSE".
@@ -447,6 +446,19 @@ DO:
 /*goo - jboxrelation*/
 /*  prosjektIdParam = NORPROSJEKT.prosjektid.     */
 /*  prosjektNavnParam = NORPROSJEKT.prosjekt_navn.*/
+  
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-Prosjekt PROSJEKTOVERSIKT
+ON VALUE-CHANGED OF BROWSE-Prosjekt IN FRAME Prosjekt-Frame
+DO:
+  current-rec = rowid(norprosjekt).
+  jboxSession:Instance:setJBoxAttribute('ProsjektIdParam',string(NORPROSJEKT.prosjektid)).
+  jboxSession:Instance:setJBoxAttribute('ProsjektNavnParam',string(NORPROSJEKT.prosjekt_navn)).
   
 END.
 
@@ -586,7 +598,7 @@ DO:
 /*    pointer =  SESSION:SET-WAIT-STATE("GENERAL").
     anleggsnrParam = NPSHANLG.anleggsnr.
     anleggsNavnParam = NPSHANLG.anlegg.
-    Current-Rec = RECID(NPSHANLG).
+    Current-Rec = rowid(NPSHANLG).
     IF THIS-PROCEDURE:PERSISTENT THEN
         THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(anleggsnrParam).
     RUN SHUSYST.W  (INPUT THIS-PROCEDURE:PRIVATE-DATA,  INPUT anleggsNavnParam) NO-ERROR.
@@ -2152,10 +2164,10 @@ END.
 &ANALYZE-RESUME
 
 
-&Scoped-define SELF-NAME TOGGLE-IKKE-AKTIVE-PROSJEKT
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL TOGGLE-IKKE-AKTIVE-PROSJEKT PROSJEKTOVERSIKT
-ON VALUE-CHANGED OF TOGGLE-IKKE-AKTIVE-PROSJEKT IN FRAME Prosjekt-Frame /* Innkl. Ikke-aktive */
-DO:  
+&Scoped-define SELF-NAME tgl_ikkeAktive
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL tgl_ikkeAktive PROSJEKTOVERSIKT
+ON VALUE-CHANGED OF tgl_ikkeAktive IN FRAME Prosjekt-Frame /* Innkl. Ikke-aktive */
+DO:
     IF bareAktive = TRUE THEN
         bareAktive = FALSE.
     ELSE
@@ -2173,11 +2185,12 @@ DO:
      APPLY 'ENTRY' TO BROWSE-Prosjekt.
 
      RETURN NO-APPLY.
-
+  
 END.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
 
 
 &UNDEFINE SELF-NAME
@@ -2238,7 +2251,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   do with frame {&Frame-name}:
     apply 'value-changed' to browse BROWSE-Prosjekt.
     /* Set InnkluderIkke Aktive til TRUE */
-    TOGGLE-IKKE-AKTIVE-PROSJEKT:CHECKED = TRUE.
+    tgl_ikkeAktive:CHECKED = TRUE.
     bareAktive = FALSE.
   end.
   IF NOT THIS-PROCEDURE:PERSISTENT THEN
@@ -2295,10 +2308,10 @@ PROCEDURE enable_UI :
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
   DISPLAY COMBO-BOX-prosjekt FILL-IN_prosjektnr COMBO-BOX-prosjektnr 
-          TOGGLE-IKKE-AKTIVE-PROSJEKT 
+          tgl_ikkeAktive 
       WITH FRAME Prosjekt-Frame IN WINDOW PROSJEKTOVERSIKT.
   ENABLE RECT-12 COMBO-BOX-prosjekt FILL-IN_prosjekt FILL-IN_prosjektnr 
-         COMBO-BOX-prosjektnr TOGGLE-IKKE-AKTIVE-PROSJEKT BROWSE-Prosjekt 
+         COMBO-BOX-prosjektnr tgl_ikkeAktive BROWSE-Prosjekt 
       WITH FRAME Prosjekt-Frame IN WINDOW PROSJEKTOVERSIKT.
   {&OPEN-BROWSERS-IN-QUERY-Prosjekt-Frame}
 END PROCEDURE.

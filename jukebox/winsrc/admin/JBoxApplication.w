@@ -31,6 +31,9 @@
 CREATE WIDGET-POOL.
 
 /* ***************************  Definitions  ************************** */
+&IF "{1}" = "Developer_Studio_is_Running" &THEN
+  &SCOPED-DEFINE UIB_is_Running 1 
+&ENDIF   
 
 /* Parameters Definitions ---                                           */
 
@@ -456,7 +459,7 @@ DO WITH FRAME {&FRAME-NAME}:
                                 rectTBApplication:HANDLE,
                                 "Application",
                                 "New,Copy,Undo,Delete,Save,Filter,FlatView,Excel"
-                              + ",Test;Install;Test installation"
+//                              + ",Test;Install;Test installation"
                                ,"").
   DYNAMIC-FUNCTION("createObjectLink",hBrwApplication,hTBApplication).
   DYNAMIC-FUNCTION("createObjectLink",hFMApplication,hTBApplication).

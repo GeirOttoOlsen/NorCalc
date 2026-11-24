@@ -26,14 +26,23 @@ DEF VAR cDbList            AS CHAR   NO-UNDO.
 DEF VAR bAppendMenuNum     AS LOG    NO-UNDO INIT YES.
 DEF VAR bRestUnlessAllowed AS LOG    NO-UNDO.
 DEF VAR bCheckCustomAccess AS LOG    NO-UNDO.
+DEF VAR hbJBoxMenu         AS HANDLE NO-UNDO.
+DEF VAR hbJBoxMenuToMenu   AS HANDLE NO-UNDO.
 
-CREATE TEMP-TABLE hTempTable.
-CREATE BUFFER hBuffMenu FOR TABLE "JBoxMenu".
-CREATE BUFFER hBuffUser FOR TABLE "JBoxUser" NO-ERROR.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenu",OUTPUT hBuffMenu) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxUser",OUTPUT hBuffUser) THEN RETURN.
+
 CREATE BUFFER hBuffUserMenu FOR TABLE "JBoxUserMenu" NO-ERROR.
 CREATE BUFFER hBuffUserGroupMem FOR TABLE "JBoxUserGroupMembers" NO-ERROR.
 CREATE BUFFER hBuffCompanyMenu FOR TABLE "JBoxCompanyMenu" NO-ERROR.
 CREATE BUFFER hBuffMenuTrans FOR TABLE "JBoxMenuTranslation" NO-ERROR.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenu",OUTPUT hbJBoxMenu) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenuToMenu",OUTPUT hbJBoxMenuToMenu) THEN RETURN.
+
+CREATE TEMP-TABLE hTempTable.
+
 hLimitToCompAdm   = hBuffMenu:BUFFER-FIELD("bLimitToCompanyAdmins") NO-ERROR.
 hLimitToSuperUser = hBuffMenu:BUFFER-FIELD("bLimitToSuperUsers") NO-ERROR.
 
@@ -211,7 +220,7 @@ httBuffer = hTempTable:DEFAULT-BUFFER-HANDLE.
 
 ix = 0.
 CREATE QUERY hQuery.
-hQuery:ADD-BUFFER(BUFFER JBoxMenu:HANDLE).
+hQuery:ADD-BUFFER(hbJBoxMenu).
 hQuery:QUERY-PREPARE("FOR EACH JBoxMenu NO-LOCK " + icParam) NO-ERROR.
 IF ERROR-STATUS:ERROR THEN DO:
   ocReturn = "Failed to open the initial query: " + icParam + CHR(10) +
@@ -220,27 +229,29 @@ END.
 hQuery:QUERY-OPEN() NO-ERROR.
 hQuery:GET-FIRST().
 REPEAT WHILE NOT hQuery:QUERY-OFF-END:
-  IF icParam = "where true" AND
-     CAN-FIND(FIRST JBoxMenuToMenu                                     
-              WHERE JBoxMenuToMenu.iFromMenuId = INT(hQuery:GET-BUFFER-HANDLE(1):BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE)) 
+  IF icParam = "where true" AND hbJBoxMenuToMenu:FIND-FIRST("WHERE JBoxMenuToMenu.iFromMenuId = " + STRING(hbJBoxMenu::iJBoxMenuId),NO-LOCK) 
      THEN DO:
     hQuery:GET-NEXT().
     NEXT.
   END.
-  RUN CreateMenu (hQuery:GET-BUFFER-HANDLE(1):BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE,0,1,1,"","",0).
+  RUN CreateMenu (hbJBoxMenu::iJBoxMenuId,0,1,1,"","",0).
   hQuery:GET-NEXT().
 END.
 
-DELETE OBJECT hTempTable.
-DELETE OBJECT hBuffMenu.
-DELETE OBJECT hQuery.
-DELETE OBJECT hQueryUserGroupMem NO-ERROR.
-DELETE OBJECT hBuffUser NO-ERROR.
-DELETE OBJECT hBuffUserMenu NO-ERROR.
-DELETE OBJECT hBuffUserGroupMem NO-ERROR.
-DELETE OBJECT hBuffCompanyUser NO-ERROR.
-DELETE OBJECT hBuffCompanyMenu NO-ERROR.
-DELETE OBJECT hBuffMenuTrans NO-ERROR.
+FINALLY:
+  DELETE OBJECT hTempTable.
+  DELETE OBJECT hBuffMenu NO-ERROR.
+  DELETE OBJECT hQuery NO-ERROR.
+  DELETE OBJECT hQueryUserGroupMem NO-ERROR.
+  DELETE OBJECT hBuffUser NO-ERROR.
+  DELETE OBJECT hBuffUserMenu NO-ERROR.
+  DELETE OBJECT hBuffUserGroupMem NO-ERROR.
+  DELETE OBJECT hBuffCompanyUser NO-ERROR.
+  DELETE OBJECT hBuffCompanyMenu NO-ERROR.
+  DELETE OBJECT hBuffMenuTrans NO-ERROR.
+  DELETE OBJECT hbJBoxMenu NO-ERROR.
+  DELETE OBJECT hbJBoxMenuToMenu NO-ERROR.
+END.  
 
 PROCEDURE CreateMenu:
   DEF INPUT PARAM iiMenuId          AS INT  NO-UNDO.
@@ -260,78 +271,104 @@ PROCEDURE CreateMenu:
 
   IF NOT CustomAccess(iiMenuId) THEN RETURN.
   
-  DEF VAR cImg           AS CHAR NO-UNDO.
-  DEF VAR cMnuType       AS CHAR NO-UNDO.
-  DEF VAR iParentNodeIdx AS INT  NO-UNDO.
-  DEF VAR hBFImage       AS HANDLE NO-UNDO.
-  DEF VAR hBFTvNavBar    AS HANDLE NO-UNDO.
-  DEF VAR hBFMenuNumber  AS HANDLE NO-UNDO.
-
-  DEF BUFFER bJBoxMenu       FOR JBoxMenu.
-  ASSIGN hBFImage      = BUFFER bJBoxMenu:BUFFER-FIELD("cImage")
-         hBFTvNavBar   = BUFFER bJBoxMenu:BUFFER-FIELD("iTvNavBarStyle")
-         hBFMenuNumber = BUFFER bJBoxMenu:BUFFER-FIELD("cMenuNumber")
+  DEF VAR cImg              AS CHAR   NO-UNDO.
+  DEF VAR cMnuType          AS CHAR   NO-UNDO.
+  DEF VAR iParentNodeIdx    AS INT    NO-UNDO.
+  DEF VAR bFound            AS LOG    NO-UNDO.
+  DEF VAR hBFImage          AS HANDLE NO-UNDO.
+  DEF VAR hBFTvNavBar       AS HANDLE NO-UNDO.
+  DEF VAR hBFMenuNumber     AS HANDLE NO-UNDO.
+  DEF VAR hbJBoxMenu        AS HANDLE NO-UNDO.
+  DEF VAR hbJBoxMenu2       AS HANDLE NO-UNDO.
+  DEF VAR hbJboxMenuToMenu  AS HANDLE NO-UNDO.
+  DEF VAR hbJboxMenuToMenu2 AS HANDLE NO-UNDO.
+  DEF VAR hqMenuToMenu      AS HANDLE NO-UNDO.
+  DEF VAR hqMenuToMenu2     AS HANDLE NO-UNDO.
+  
+  CREATE BUFFER hbJBoxMenu        FOR TABLE "JBoxMenu".
+  CREATE BUFFER hbJBoxMenu2       FOR TABLE "JBoxMenu".
+  CREATE BUFFER hbJBoxMenuToMenu  FOR TABLE "JBoxMenuToMenu".
+  CREATE BUFFER hbJBoxMenuToMenu2 FOR TABLE "JBoxMenuToMenu".
+  CREATE QUERY  hqMenuToMenu.
+  CREATE QUERY  hqMenuToMenu2.
+  hqMenuToMenu:SET-BUFFERS(hbJboxMenuToMenu).
+  hqMenuToMenu2:SET-BUFFERS(hbJboxMenuToMenu2,hbJBoxMenu2).
+  
+  ASSIGN hBFImage      = hbJBoxMenu:BUFFER-FIELD("cImage")
+         hBFTvNavBar   = hbJBoxMenu:BUFFER-FIELD("iTvNavBarStyle")
+         hBFMenuNumber = hbJBoxMenu:BUFFER-FIELD("cMenuNumber")
          NO-ERROR.
 
-  DEF BUFFER bbJboxMenu      FOR JBoxMenu.
-  DEF BUFFER bJboxMenuToMenu FOR JBoxMenuToMenu.
+  bFound = hbJBoxMenu:FIND-FIRST("WHERE JBoxMenu.iJBoxMenuId = " + STRING(iiMenuId), NO-LOCK) NO-ERROR.
 
-  FIND bJBoxMenu WHERE bJBoxMenu.iJBoxMenuId = iiMenuId NO-LOCK NO-ERROR.
-  IF AVAIL bJBoxMenu THEN DO:
+  IF bFound THEN DO:
 
     httBuffer:BUFFER-CREATE().
-    httBuffer:BUFFER-COPY(BUFFER bJBoxMenu:HANDLE).
+    httBuffer:BUFFER-COPY(hbJBoxMenu).
     ASSIGN ix = ix + 1
            httBuffer:BUFFER-FIELD("iParentMenuId"):BUFFER-VALUE    = iiParentMenuId
            httBuffer:BUFFER-FIELD("iSeq"):BUFFER-VALUE             = iiSeq
            httBuffer:BUFFER-FIELD("iNodeIndex"):BUFFER-VALUE       = ix
            httBuffer:BUFFER-FIELD("iLevel"):BUFFER-VALUE           = iiLevel
-           httBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE        = STRING(ROWID(bJBoxMenu))
+           httBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE        = STRING(hbJBoxMenu:ROWID)
            httBuffer:BUFFER-FIELD("cParentMenuType"):BUFFER-VALUE  = icParentMenuType
            httBuffer:BUFFER-FIELD("iParentNodeIndex"):BUFFER-VALUE = iiParentNodeIndex
-           cMnuType                                                = bJBoxMenu.cMenuType
+           cMnuType                                                = hbJBoxMenu::cMenuType
            iParentNodeIdx                                          = ix
            .
     IF VALID-HANDLE(hBFImage) THEN
       cImg = hBFImage:BUFFER-VALUE.
 
     IF VALID-HANDLE(hBFTvNavBar) THEN
-      IF bJBoxMenu.cMenuType = "tv-nav-bar" THEN
+      IF hbJBoxMenu::cMenuType = "tv-nav-bar" THEN
         iCurrStyle = hBFTvNavBar:BUFFER-VALUE.
       ELSE
         httBuffer:BUFFER-FIELD("iTvNavBarStyle"):BUFFER-VALUE = iCurrStyle.
 
     IF VALID-HANDLE(hBuffMenuTrans) AND cCurrLanguage NE "" THEN DO:
-      hBuffMenuTrans:FIND-FIRST("WHERE iJBoxMenuId = " + STRING(bJBoxMenu.iJBoxMenuId) + " AND cLanguage = '" + cCurrLanguage + "'",NO-LOCK) NO-ERROR.
-      IF hBuffMenuTrans:AVAIL AND hBuffMenuTrans:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE NE "" THEN
-        httBuffer:BUFFER-COPY(hBuffMenuTrans).
+      bFound = hBuffMenuTrans:FIND-FIRST("WHERE iJBoxMenuId = " + STRING(hbJBoxMenu::iJBoxMenuId) + " AND cLanguage = '" + cCurrLanguage + "'",NO-LOCK) NO-ERROR.
+      IF bFound THEN DO:
+        IF hBuffMenuTrans:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE NE "" THEN
+          httBuffer:BUFFER-COPY(hBuffMenuTrans).
+      END.  
     END.
       
-    IF bJBoxMenu.cMenuType = "menu-item" AND VALID-HANDLE(hBFMenuNumber) AND hBFMenuNumber:BUFFER-VALUE NE "" THEN
+    IF hbJBoxMenu::cMenuType = "menu-item" AND VALID-HANDLE(hBFMenuNumber) AND hBFMenuNumber:BUFFER-VALUE NE "" THEN
       httBuffer:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE = httBuffer:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE 
                                                         + (IF bAppendMenuNum THEN " (" + hBFMenuNumber:BUFFER-VALUE + ")" ELSE "").
-  
-    FOR EACH bJBoxMenuToMenu NO-LOCK
-        WHERE bJBoxMenuToMenu.iToMenuId = bJboxMenu.iJBoxMenuId
-       ,FIRST bbJboxMenu NO-LOCK
-              WHERE bbJboxMenu.iJBoxMenuId = bJBoxMenuToMenu.iFromMenuId
-                AND bbJboxMenu.cMenuType   = "sub-menu":
+
+    hqMenuToMenu2:QUERY-PREPARE("FOR EACH JBoxMenuToMenu NO-LOCK WHERE JBoxMenuToMenu.iToMenuId = " + STRING(hbJBoxMenu::iJBoxMenuId)
+                              + ",FIRST JboxMenu NO-LOCK WHERE JboxMenu.iJBoxMenuId = JBoxMenuToMenu.iFromMenuId"
+                              + " AND JboxMenu.cMenuType = 'sub-menu'").
+    hqMenuToMenu2:QUERY-OPEN ().
+    IF hqMenuToMenu2:GET-FIRST() THEN                          
       httBuffer:BUFFER-FIELD("bHasChildSubMenu"):BUFFER-VALUE = YES.
-      LEAVE.
-    END.
-    FOR EACH bJBoxMenuToMenu NO-LOCK
-        WHERE bJBoxMenuToMenu.iToMenuId = bJboxMenu.iJBoxMenuId
-       ,FIRST bbJboxMenu NO-LOCK
-              WHERE bbJboxMenu.iJBoxMenuId = bJBoxMenuToMenu.iFromMenuId
-                AND bbJboxMenu.cMenuType   = "MENU-ITEM":
+
+    hqMenuToMenu2:QUERY-PREPARE("FOR EACH JBoxMenuToMenu NO-LOCK WHERE JBoxMenuToMenu.iToMenuId = " + STRING(hbJBoxMenu::iJBoxMenuId)
+                              + ",FIRST JboxMenu NO-LOCK WHERE JboxMenu.iJBoxMenuId = JBoxMenuToMenu.iFromMenuId"
+                              + " AND JboxMenu.cMenuType = 'menu-item'").
+    hqMenuToMenu2:QUERY-OPEN ().
+    IF hqMenuToMenu2:GET-FIRST() THEN                          
       httBuffer:BUFFER-FIELD("bHasChildMenuItem"):BUFFER-VALUE = YES.
-      LEAVE.
+
+    hqMenuToMenu:QUERY-PREPARE("FOR EACH JBoxMenuToMenu NO-LOCK WHERE JBoxMenuToMenu.iToMenuId = " + STRING(hbJBoxMenu::iJBoxMenuId) 
+                             + " BY JBoxMenuToMenu.iSeq").
+    hqMenuToMenu:QUERY-OPEN ().
+    REPEAT WHILE hqMenuToMenu:GET-NEXT():                          
+      RUN CreateMenu (hbJBoxMenuToMenu::iFromMenuId,hbJBoxMenuToMenu::iToMenuId,hbJBoxMenuToMenu::iSeq,iiLevel + 1,cMnuType,cImg,iParentNodeIdx).
     END.
 
-    FOR EACH bJBoxMenuToMenu NO-LOCK
-        WHERE bJBoxMenuToMenu.iToMenuId = bJboxMenu.iJBoxMenuId
-           BY bJBoxMenuToMenu.iSeq:
-      RUN CreateMenu (bJBoxMenuToMenu.iFromMenuId,bJBoxMenuToMenu.iToMenuId,bJBoxMenuToMenu.iSeq,iiLevel + 1,cMnuType,cImg,iParentNodeIdx).
-    END.
   END.
+  CATCH eErr AS Progress.Lang.Error :
+    MESSAGE eErr:GetMessage(1)
+    VIEW-AS ALERT-BOX.  
+  END CATCH.
+  FINALLY:
+    DELETE OBJECT hbJBoxMenu NO-ERROR.
+    DELETE OBJECT hbJBoxMenu2 NO-ERROR.
+    DELETE OBJECT hbJBoxMenuToMenu NO-ERROR.
+    DELETE OBJECT hbJBoxMenuToMenu2 NO-ERROR.
+    DELETE OBJECT hqMenuToMenu NO-ERROR.
+    DELETE OBJECT hqMenuToMenu2 NO-ERROR.
+  END FINALLY.
 END PROCEDURE.

@@ -99,7 +99,7 @@
             21.sep.16 Brynjar in add-fields.ip added OR.. to the test for how to select table-name from added field:
                               IF imode = "3" OR NUM-ENTRIES(tmp-name,".") = 3
             18.nov.19 Brynjar Added mandatory option for calculated field
-                              
+            08.apr.20 Brynjar Uses auto-zap to flag distinct                  
                               
 NOTE: The variable isReport is used to enable calculated fields 
       for WebReports. 
@@ -988,8 +988,7 @@ ON VALUE-CHANGED OF brw-flds DO:
   
   RUN display_bc.ip.
   /* Brynjar: */
-  IF bJukeBox THEN
-    tog_visible:SENSITIVE = YES.
+  IF bJukeBox THEN RUN SetToggleState.ip.
 
 END. /* On value-changed of brw-flds */
 
@@ -1359,6 +1358,9 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   &SCOPED-DEFINE CANCEL-EVENT U2
   {adeuib/ide/dialogstart.i btn_ok btn_cancel frametitle}
      
+  IF bJukeBox THEN
+    RUN SetToggleState.ip.
+
     &if defined(IDE-IS-RUNNING) = 0 &then
   WAIT-FOR GO OF FRAME bc-editor.
     &else
@@ -1522,7 +1524,6 @@ procedure DoChooseEdit:
                                    INPUT-OUTPUT cMandatory,
                                    OUTPUT pOk
                                    ).
-
   END.
   ELSE
     RUN 
@@ -1579,6 +1580,7 @@ procedure DoChooseEdit:
   {&OPEN-QUERY-brw-flds}
   REPOSITION brw-flds TO RECID cur-record.
   RUN enable_UI.
+
 end procedure.
 
 procedure ChooseCalcField:    
@@ -1837,6 +1839,7 @@ procedure DoChooseCalcField:
   
   {&OPEN-QUERY-brw-flds}
   REPOSITION brw-flds TO RECID cur-record.
+
   RUN enable_UI.
 END.
 
@@ -2178,6 +2181,11 @@ PROCEDURE enable_UI :
     END. /* Else working on a browse */
   END. /* We opened a query with no records */
   RUN set-first-last.ip.
+
+  /* Brynjar */
+  IF bJukeBox THEN
+    RUN SetToggleState.ip.
+
 END PROCEDURE. /* enable_ui */
 
 procedure ChooseAdd:
@@ -3040,20 +3048,31 @@ END. /* PROCEDURE set-first-last.ip */
 PROCEDURE SetToggleState.ip:
   /* These two toggles should only be on when the browse column is made
      to be sensitive                                                    */
+  /* Brynjar: */
+  IF NOT AVAIL _BC THEN RETURN.
+
   IF _BC._ENABLED THEN
     ASSIGN tog_disable_auto_zap:SENSITIVE IN FRAME bc-editor = TRUE
            tog_column_read_only:SENSITIVE IN FRAME bc-editor = (_BC._DBNAME <> "_<CALC>":U)
            tog_auto_return:SENSITIVE IN FRAME bc-editor      = TRUE.
   ELSE /*  if ENABLE was turned off, return to default values.       */
-    ASSIGN _BC._DISABLE-AUTO-ZAP                             = FALSE
+    ASSIGN _BC._DISABLE-AUTO-ZAP                             = (IF bJukeBox THEN _BC._DISABLE-AUTO-ZAP ELSE FALSE) /* Brynjar */
            _BC._AUTO-RETURN                                  = FALSE
-           _BC._COLUMN-READ-ONLY                             = FALSE
+           _BC._COLUMN-READ-ONLY                             = (IF bJukeBox THEN _BC._COLUMN-READ-ONLY ELSE FALSE) /* Brynjar */
            tog_disable_auto_zap:SENSITIVE IN FRAME bc-editor = FALSE
            tog_disable_auto_zap:CHECKED   IN FRAME bc-editor = _BC._DISABLE-AUTO-ZAP
            tog_column_read_only:SENSITIVE IN FRAME bc-editor = FALSE
            tog_column_read_only:CHECKED   IN FRAME bc-editor = _BC._COLUMN-READ-ONLY
            tog_auto_return:SENSITIVE IN FRAME bc-editor      = FALSE
            tog_auto_return:CHECKED   IN FRAME bc-editor      = _BC._AUTO-RETURN.
+  /* Brynjar: */
+  IF bJukeBox THEN DO:
+    ASSIGN  tog_disable_auto_zap:SENSITIVE = NOT CAN-DO("DATE-TIME,DATE-TIME-TZ,DECIMAL",_BC._DATA-TYPE)
+            tog_disable_auto_zap:LABEL = "Distinct (JBox)"
+            tog_column_read_only:SENSITIVE = CAN-DO("INTEGER,DECIMAL",_BC._DATA-TYPE)
+            tog_column_read_only:LABEL = "Accumulate (JBox)"
+            .
+  END.
 END.
 
 

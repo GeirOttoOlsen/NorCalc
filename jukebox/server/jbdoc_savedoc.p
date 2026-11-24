@@ -63,6 +63,7 @@ FUNCTION CreImportDataLog RETURNS LOGICAL (INPUT icLogType AS CHAR,INPUT icLogNa
          .
 END FUNCTION.
 
+/*
 FUNCTION getASuserId     RETURNS CHARACTER FORWARD.
 FUNCTION getCompanyId    RETURNS INTEGER   FORWARD.
 FUNCTION getCodeMaster   RETURNS INTEGER   FORWARD.
@@ -74,6 +75,7 @@ FUNCTION getSysParam     RETURNS CHARACTER
 FUNCTION getGenCode RETURNS CHARACTER
   ( INPUT icCodeType  AS CHAR,
     INPUT icValueDesc AS CHAR ) FORWARD.
+*/
 
 hDocBuffer = BUFFER JBoxDocument:HANDLE.
 hDocRelBuffer = BUFFER JBoxDocRel:HANDLE.
@@ -271,6 +273,7 @@ FINALLY:
   DELETE OBJECT hDocRevBuffer NO-ERROR.
 END.  
 
+/*
 FUNCTION getASuserId RETURNS CHARACTER
   ( /* parameter-definitions */ ) :
 /*------------------------------------------------------------------------------
@@ -373,3 +376,4 @@ ELSE RETURN ?.
 RETURN cCodeValue.
 
 END FUNCTION.
+*/

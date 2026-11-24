@@ -2,6 +2,7 @@ DEF INPUT  PARAM iiFunctionId AS INT  NO-UNDO.
 DEF INPUT  PARAM icUserId     AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obAccess     AS LOG  NO-UNDO.
 
+{incl/validatecaller.i}
 
 FIND FIRST JBoxFunction NO-LOCK
      WHERE JBoxFunction.iJBoxFunctionId = iiFunctionId 

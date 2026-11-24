@@ -28,6 +28,11 @@ CLASS JBoxRelation:
     field cParameterValue as char
     index iParameterId is primary unique hParameterId cParameterName
     .
+  def temp-table ttInvalidate 
+    field hParent      as handle
+    field hChild       as handle
+    index hParent is primary unique hParent hChild
+    .
     
   define public static property instance as class JBoxRelation no-undo
   get():
@@ -36,35 +41,67 @@ CLASS JBoxRelation:
   end get.
   private set.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-		
-	CONSTRUCTOR private JBoxRelation ():
-		
-	END CONSTRUCTOR.
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+    
+  CONSTRUCTOR private JBoxRelation ():
+    
+  END CONSTRUCTOR.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
 
-	METHOD PUBLIC VOID addParameter( input ihId as handle, input icName as char, icValue as char):
+  METHOD PUBLIC VOID addParameter( input ihId as handle, input icName as char, icValue as char):
 
     find first ttParameter where ttParameter.hParameterId = ihId and cParameterName = icName no-error.
     if avail ttParameter then delete ttParameter.
     
-		create ttParameter no-error.
-		assign 
-		  ttParameter.hParameterId    = ihId
-		  ttParameter.cParameterName  = icName
-		  ttParameter.cParameterValue = icValue
-		  .
-		  
-		RETURN.
+    create ttParameter no-error.
+    assign 
+      ttParameter.hParameterId    = ihId
+      ttParameter.cParameterName  = icName
+      ttParameter.cParameterValue = icValue
+      .
+      
+    RETURN.
 
-	END METHOD.
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD PUBLIC VOID addInvalidate( input ihParent as handle, ihChild as handle):
+    find first ttInvalidate where ttInvalidate.hParent = ihParent and ttInvalidate.hChild = ihChild no-error.
+    if not avail ttInvalidate then do:
+      create ttInvalidate.
+      assign 
+        ttInvalidate.hParent = ihParent
+        ttInvalidate.hChild  = ihChild
+        .
+    end.      
+    RETURN.
+
+  END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD PUBLIC VOID Invalidate( input ihParent as handle):
+    for each ttInvalidate where ttInvalidate.hParent = ihParent:
+      if valid-handle(ttInvalidate.hChild) then apply 'close' to ttInvalidate.hChild.
+      delete ttInvalidate no-error.
+    end.      
+    RETURN.
+
+  END METHOD.
 
   /*------------------------------------------------------------------------------
    Purpose:
@@ -86,14 +123,14 @@ CLASS JBoxRelation:
 
   END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
 
-	METHOD PUBLIC HANDLE BaseQueryHdl( input icTableName as char ):
-		
-		DEFINE VARIABLE result AS HANDLE NO-UNDO.
+  METHOD PUBLIC HANDLE BaseQueryHdl( input icTableName as char ):
+    
+    DEFINE VARIABLE result AS HANDLE NO-UNDO.
     find first ttQuery where ttQuery.queryTableName = icTableName and ttQuery.queryIsBase no-lock no-error.
     if avail ttQuery then result = ttQuery.QueryHdl.
     else 
@@ -102,46 +139,46 @@ CLASS JBoxRelation:
 /*      VIEW-AS ALERT-BOX.                                               */
       result = ?.
     end.
-		RETURN result.
+    RETURN result.
 
-	END METHOD.
+  END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
 
-	METHOD PUBLIC VOID addBaseQueryHdl(input icTableName as char, input ihBaseQuery as handle  ):
-	  def var ix as int no-undo.
-	  
-	  /*Delete it if it already is avail*/
-	  find first ttQuery where ttQuery.queryTableName = icTableName and ttQuery.queryIsBase no-error.
-	  if avail ttQuery then delete ttQuery.
-	  
-	  find last ttQuery no-lock no-error.
-	  if not avail ttQuery then ix = 0.
-	  else ix = ttQuery.querySeq.
-	  
-		create ttQuery.
-		assign
-		  ttQuery.querySeq = ix + 1
-		  ttQuery.queryHdl = ihBaseQuery
-		  ttQuery.queryIsBase = true
-		  ttQuery.queryTableName = icTableName
-		. 
-		RETURN.
+  METHOD PUBLIC VOID addBaseQueryHdl(input icTableName as char, input ihBaseQuery as handle  ):
+    def var ix as int no-undo.
+    
+    /*Delete it if it already is avail*/
+    find first ttQuery where ttQuery.queryTableName = icTableName and ttQuery.queryIsBase no-error.
+    if avail ttQuery then delete ttQuery.
+    
+    find last ttQuery no-lock no-error.
+    if not avail ttQuery then ix = 0.
+    else ix = ttQuery.querySeq.
+    
+    create ttQuery.
+    assign
+      ttQuery.querySeq = ix + 1
+      ttQuery.queryHdl = ihBaseQuery
+      ttQuery.queryIsBase = true
+      ttQuery.queryTableName = icTableName
+    . 
+    RETURN.
 
-	END METHOD.
+  END METHOD.
 
-	/*------------------------------------------------------------------------------
-	 Purpose:
-	 Notes:
-	------------------------------------------------------------------------------*/
-	DESTRUCTOR PUBLIC JBoxRelation ( ):
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+  DESTRUCTOR PUBLIC JBoxRelation ( ):
 
-	END DESTRUCTOR.
-	
-	
+  END DESTRUCTOR.
+  
+  
   
 END CLASS.
 

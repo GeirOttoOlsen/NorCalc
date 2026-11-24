@@ -48,7 +48,7 @@ IF SEARCH(".\specialpref.txt") NE ? THEN DO:
   END.
 END.
     
-RUN JBoxLoadLib.p ("ResizeLib.p,JBoxASlib.p,JBoxUIlib.p,JBoxFUlib.p" + (IF SEARCH("controls.dll") NE ? AND cMainMenuType NE "plain" THEN ",controls.p" ELSE "")).
+RUN JBoxLoadLib.p ("ResizeLib.p,JBoxASlib.p,JBoxUIlib.p,JBoxFUlib.p" + (IF PROCESS-ARCHITECTURE = 32 AND SEARCH("controls.dll") NE ? AND cMainMenuType NE "plain" THEN ",controls.p" ELSE "")).
 
 ON 'close':U OF THIS-PROCEDURE RETURN.  
 
@@ -112,7 +112,7 @@ IF bOk THEN DO:
             AND PROVERSION GE "10.2B" 
             AND (SEARCH("JBoxAppStart_oo.r") NE ? OR SEARCH("JBoxAppStart_oo.p") NE ?) THEN
           cMainMenuType = "Ribbon".
-        ELSE IF SEARCH("controls.dll") NE ? THEN
+        ELSE IF PROCESS-ARCHITECTURE = 32 AND SEARCH("controls.dll") NE ? THEN
           cMainMenuType = "Nav-bar".
         ELSE
           cMainMenuType = "plain".
@@ -131,7 +131,7 @@ IF bOk THEN DO:
     ELSE
       cMainMenuProg = "JBoxJlwDynMenu.w".
   END.
-  IF SEARCH("controls.dll") NE ? AND cMainMenuType NE "plain" THEN
+  IF PROCESS-ARCHITECTURE = 32 AND SEARCH("controls.dll") NE ? AND cMainMenuType NE "plain" THEN
     DYNAMIC-FUNCTION("setAttribute",SESSION,"tabfolderprog","JBoxJLWtabFolder.w").
 
   RUN VALUE(cMainMenuProg) PERSIST SET hMenu.
@@ -224,7 +224,7 @@ PROCEDURE RestartMenu:
             AND PROVERSION GE "10.2B" 
             AND (SEARCH("JBoxAppStart_oo.r") NE ? OR SEARCH("JBoxAppStart_oo.p") NE ?) THEN
           cMainMenuType = "Ribbon".
-        ELSE IF SEARCH("controls.dll") NE ? THEN
+        ELSE IF PROCESS-ARCHITECTURE = 32 AND SEARCH("controls.dll") NE ? THEN
           cMainMenuType = "Nav-bar".
         ELSE
           cMainMenuType = "plain".

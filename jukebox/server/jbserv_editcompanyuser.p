@@ -17,6 +17,8 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 DEF VAR ix          AS INT    NO-UNDO.
 DEF VAR cUserId     AS CHAR   NO-UNDO.
 
+{incl/validatecaller.i}
+
 cUserId = ENTRY(1,icParam,"|").
 
 DO TRANSACTION:

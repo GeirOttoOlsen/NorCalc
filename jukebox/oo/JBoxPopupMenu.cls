@@ -34,6 +34,15 @@ CLASS JBoxPopupMenu:
     POPUP-MENU-HANDLE:POPUP-ONLY = yes.
 	END CONSTRUCTOR.
 
+  CONSTRUCTOR PUBLIC JBoxPopupMenu (ihSourceProc AS HANDLE):
+    SUPER ().
+    
+    hSourceProc = ihSourceProc.
+    
+    CREATE MENU POPUP-MENU-HANDLE.
+    POPUP-MENU-HANDLE:POPUP-ONLY = yes.
+  END CONSTRUCTOR.
+
   CONSTRUCTOR PUBLIC JBoxPopupMenu (ihPopup      AS HANDLE
                                    ,ihSourceProc AS HANDLE):
     SUPER ().
@@ -66,7 +75,7 @@ CLASS JBoxPopupMenu:
       END.         
     END.                          
 
-    if ibAlwaysEnabled   then icTool = icTool + "¤enable".
+    IF ibAlwaysEnabled THEN icMethod = icMethod + "¤enable".
     DYNAMIC-FUNCTION("setObjectSourceProc",hSourceProc).  
     DYNAMIC-FUNCTION("NewMenuBand",IF VALID-HANDLE(hParentMenu) THEN hParentMenu ELSE POPUP-MENU-HANDLE
                                   ,icTool + ";" + icLabel + ";" + icMethod                                  
@@ -87,6 +96,12 @@ CLASS JBoxPopupMenu:
                              ,icParentMenuLabel AS CHAR):
     addTool(icTool,icLabel,icParentMenuLabel,NO,NO,NO,"").
   END METHOD.
+  METHOD PUBLIC VOID addTool (icTool       AS CHAR
+                             ,icLabel      AS CHAR
+                             ,ibAlwaysEnabled   AS LOG):
+    addTool(icTool,icLabel,"",ibAlwaysEnabled,NO,NO,"").
+  END METHOD.
+
 
   METHOD PUBLIC VOID addRule ():
     addTool("-","","",NO,NO,NO,"").
@@ -168,6 +183,14 @@ CLASS JBoxPopupMenu:
     addSubMenu(icSubMenu,"").
   END METHOD.
 
+  METHOD PUBLIC VOID applyTool (icTool AS CHARACTER):
+    DEFINE VARIABLE hWidget AS HANDLE NO-UNDO.
+    
+    hWidget = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"menu-item" + icTool)).
+    IF VALID-HANDLE(hWidget) THEN 
+      RUN InvokeMethod(POPUP-MENU-HANDLE,DYNAMIC-FUNCTION("getEventMethod",POPUP-MENU-HANDLE,hWidget)).
+  END METHOD.
+
   METHOD PUBLIC HANDLE getMenuItemHandle (icTool  as char):
     def var hWidget as handle no-undo.
     hWidget = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"menu-item" + icTool)) NO-ERROR.
@@ -179,6 +202,138 @@ CLASS JBoxPopupMenu:
     hWidget = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"sub-menu" + icTool)) NO-ERROR.
     return hWidget.
   end method.
+
+  METHOD PUBLIC VOID setTools(icState  AS CHARACTER):
+    DYNAMIC-FUNCTION("setToolbar",POPUP-MENU-HANDLE,icState).
+  END METHOD.
+
+  METHOD PUBLIC VOID setTools ():
+    THIS-OBJECT:setTools("avail"). /* same as property objectState */
+  END METHOD.
+  
+  METHOD PUBLIC VOID setJBoxAttribute(icAttribute AS CHAR
+                                     ,icValue AS CHAR):
+    DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,icAttribute,icValue).
+  END METHOD.
+  METHOD PUBLIC CHARACTER getJBoxAttribute(icAttribute AS CHAR):
+    RETURN  DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,icAttribute).
+  END METHOD.
+
+  METHOD PUBLIC VOID setDisabledTools (icToolList AS CHARACTER):
+    DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"disabledEvents",icToolList).
+  END METHOD.
+
+  METHOD PUBLIC VOID addDisabledTools (icToolList AS CHARACTER):
+    setJBoxAttribute("disabledEvents",TRIM(getJBoxAttribute("disabledEvents") + "," + icToolList,",")). 
+  END METHOD.
+
+  METHOD PUBLIC VOID setToolDisabled (icTool AS CHARACTER):
+    DEFINE VARIABLE cEnaEvents AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE cDisEvents AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE ix         AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE cTools     AS CHARACTER NO-UNDO.
+ 
+    IF icTool = "" THEN 
+    DO:
+      THIS-OBJECT:setDisabledTools("").
+      RETURN.
+    END.  
+    
+    cDisEvents = DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"disabledEvents").
+    cEnaEvents = DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"enabledEvents").
+
+    cTools = icTool.  
+    DO ix = 1 TO NUM-ENTRIES(cTools):
+      icTool = ENTRY(ix,cTools).
+
+      IF NOT CAN-DO(cDisEvents,icTool) THEN 
+      DO:
+        cDisEvents = cDisEvents + (IF cDisEvents NE "" THEN "," ELSE "") + icTool.
+        DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"disabledEvents",cDisEvents).
+      END.  
+      IF CAN-DO(cEnaEvents,icTool) THEN 
+      DO:
+        cEnaEvents = DYNAMIC-FUNCTION("DeleteListItem",cEnaEvents,icTool,0,"").
+        DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"enabledEvents",cEnaEvents).
+      END.
+    END.    
+  END METHOD.
+
+  METHOD PUBLIC VOID setEnabledTools (icToolList AS CHARACTER):
+    DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"enabledEvents",icToolList).
+  END METHOD.
+
+  METHOD PUBLIC VOID addEnabledTools (icToolList AS CHARACTER):
+    setJBoxAttribute("enabledEvents",TRIM(getJBoxAttribute("enabledEvents") + "," + icToolList,",")). 
+  END METHOD.
+  
+  METHOD PUBLIC VOID setToolEnabled (icTool AS CHARACTER):
+    DEFINE VARIABLE cEnaEvents AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE cDisEvents AS CHARACTER NO-UNDO.
+    DEFINE VARIABLE ix         AS INTEGER   NO-UNDO.
+    DEFINE VARIABLE cTools     AS CHARACTER NO-UNDO.
+    
+    IF icTool = "" THEN 
+    DO:
+      THIS-OBJECT:setEnabledTools("").
+      RETURN.
+    END.
+    cDisEvents = DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"disabledEvents").
+    cEnaEvents = DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"enabledEvents").
+    
+    cTools = icTool.  
+    DO ix = 1 TO NUM-ENTRIES(cTools):
+      icTool = ENTRY(ix,cTools).
+      IF NOT CAN-DO(cEnaEvents,icTool) THEN 
+      DO:
+        cEnaEvents = cEnaEvents + (IF cEnaEvents NE "" THEN "," ELSE "") + icTool.
+        DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"enabledEvents",cEnaEvents).
+      END.
+      IF CAN-DO(cDisEvents,icTool) THEN 
+      DO:
+        cDisEvents = DYNAMIC-FUNCTION("DeleteListItem",cDisEvents,icTool,0,"").
+        DYNAMIC-FUNCTION("setAttribute",POPUP-MENU-HANDLE,"disabledEvents",cDisEvents).
+      END.
+    END.    
+  END METHOD.
+  
+  METHOD PUBLIC VOID setSubMenuSensitive (icSubMenu AS CHARACTER,ibSensitive AS LOG):
+    DEFINE VARIABLE hWidget AS HANDLE NO-UNDO.
+    hWidget = getSubMenuHandle(icSubMenu).
+    IF VALID-HANDLE(hWidget) THEN hWidget:SENSITIVE = ibSensitive.
+  END METHOD.
+
+  METHOD PUBLIC VOID setToolLabel (icTool AS CHARACTER
+    ,icLabel  AS CHARACTER):
+    DEFINE VARIABLE hWidget AS HANDLE NO-UNDO.
+    hWidget = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"menu-item" + icTool)) NO-ERROR.
+    IF VALID-HANDLE(hWidget) THEN
+      hWidget:LABEL = icLabel.                                  
+  END METHOD.
+
+  METHOD PUBLIC LOGICAL setToolMethod (icTool    AS CHARACTER
+    ,icMethod  AS CHARACTER):
+    DEFINE VARIABLE hWidget AS HANDLE NO-UNDO.
+    DEFINE VARIABLE bReturn AS LOG    NO-UNDO.
+    hWidget = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",POPUP-MENU-HANDLE,"menu-item" + icTool)) NO-ERROR.
+    IF VALID-HANDLE(hWidget) THEN 
+    DO:
+      DYNAMIC-FUNCTION("setEventMethod",POPUP-MENU-HANDLE,hWidget,icMethod).
+      bReturn = YES.
+    END.  
+  END METHOD.
+
+
+  METHOD PUBLIC LOGICAL getActionPermission(INPUT icAction AS CHAR):
+    hSourceProc = SOURCE-PROCEDURE.
+
+    RUN JBoxLogFuncToMeth.p ("getActionPermission"
+                            ,"CHARACTER,CHARACTER,CHARACTER"
+                            ,hSourceProc:FILE-NAME + CHR(1) + POPUP-MENU-HANDLE:NAME + CHR(1) + icAction
+                            ,?
+                            ,OUTPUT bOk).
+    RETURN bOk.                        
+  END.
 
 	DESTRUCTOR PUBLIC JBoxPopupMenu ( ):
 

@@ -28,7 +28,7 @@ DO TRANSACTION:
   end.
   else
   DO ix = 2 TO NUM-ENTRIES(icParam,'|'):
-    FIND FIRST Gruppe WHERE ROWID(Gruppe) = to-rowid(ENTRY(ix,icParam,'|')) NO-LOCK.
+    FIND FIRST Gruppe WHERE ROWID(Gruppe) = to-rowid(ENTRY(ix,icParam,'|')) NO-LOCK no-error.
     iGruppeId = IF AVAILABLE Gruppe THEN Gruppe.iGruppeId ELSE 0.
     FIND PersonGruppe WHERE PersonGruppe.iPersonId = iPersonId 
       AND PersonGruppe.iGruppeId = iGruppeId NO-LOCK NO-ERROR.

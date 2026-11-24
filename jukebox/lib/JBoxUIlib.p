@@ -167,6 +167,29 @@ PROCEDURE ShellExecuteA EXTERNAL "SHELL32.DLL" :
   DEFINE RETURN PARAMETER hInstance     AS LONG.
 END PROCEDURE.
 
+&SCOPED-DEFINE MSGFLT_ADD 1
+&SCOPED-DEFINE WM_DROPFILES 0x233
+&SCOPED-DEFINE WM_COPYGLOBALDATA 0x0049
+&SCOPED-DEFINE WM_COPYDATA 0x004A
+
+PROCEDURE ChangeWindowMessageFilter EXTERNAL "user32.dll" :
+    DEFINE INPUT  PARAMETER uiMessage AS LONG.
+    DEFINE INPUT  PARAMETER dwFlag    AS LONG.
+    DEFINE RETURN PARAMETER retVal    AS LONG.
+END PROCEDURE.
+
+DEFINE VARIABLE retVal AS INTEGER     NO-UNDO.
+
+RUN ChangeWindowMessageFilter({&WM_DROPFILES}, {&MSGFLT_ADD}, OUTPUT retVal).
+/*MESSAGE "WM_DROPFILES" retVal                */
+/*    VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.*/
+    
+RUN ChangeWindowMessageFilter({&WM_COPYGLOBALDATA}, {&MSGFLT_ADD}, OUTPUT retVal).
+/*MESSAGE "WM_COPYGLOBALDATA" retVal           */
+/*    VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.*/
+
+RUN ChangeWindowMessageFilter({&WM_COPYDATA}, {&MSGFLT_ADD}, OUTPUT retVal).
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -233,6 +256,23 @@ FUNCTION BrwOrQryToFMapTranslation RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-BufferToCsv) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD BufferToCsv Procedure
+FUNCTION BufferToCsv RETURNS LOGICAL 
+  (INPUT ihBuffer AS HANDLE,
+   INPUT icFileName AS CHAR,
+   INPUT icDelimiter AS CHAR,
+   INPUT icExceptFields AS CHAR,
+   INPUT ibOpen AS LOG) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-ChangePrimarySearchBuffer) = 0 &THEN
 
@@ -306,6 +346,19 @@ FUNCTION DoMessage RETURNS INTEGER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-FetchAllRows) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD FetchAllRows Procedure
+FUNCTION FetchAllRows RETURNS LOGICAL 
+  (INPUT ihQueryObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-FixQueryOperators) = 0 &THEN
 
@@ -422,6 +475,19 @@ FUNCTION getExcelHandle RETURNS COM-HANDLE
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getLinkedQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLinkedQueryObject Procedure
+FUNCTION getLinkedQueryObject RETURNS HANDLE 
+  (INPUT ihObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getMousePosition) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getMousePosition Procedure 
@@ -516,6 +582,19 @@ FUNCTION LoadWinIcon RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-localQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD localQuery Procedure
+FUNCTION localQuery RETURNS CHARACTER 
+  (INPUT ihQueryObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-NavigateFromBrowseOverlay) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD NavigateFromBrowseOverlay Procedure 
@@ -527,6 +606,19 @@ FUNCTION NavigateFromBrowseOverlay RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-reDrawGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD reDrawGridFilter Procedure
+FUNCTION reDrawGridFilter RETURNS LOGICAL 
+  (INPUT ihBrowse AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-RefreshParentRecord) = 0 &THEN
 
@@ -596,6 +688,19 @@ FUNCTION setApplyLastKey RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setAsConnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setAsConnection Procedure
+FUNCTION setAsConnection RETURNS LOGICAL 
+  (INPUT ihObject AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setAttribute) = 0 &THEN
 
@@ -706,6 +811,20 @@ FUNCTION setEventProcReturnValue RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setFilterButtonStatus) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setFilterButtonStatus Procedure
+FUNCTION setFilterButtonStatus RETURNS LOGICAL 
+  (INPUT ihObject AS HANDLE,
+   INPUT ibActive AS LOG) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setNoColumnSort) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setNoColumnSort Procedure 
@@ -798,6 +917,20 @@ FUNCTION StartWindow RETURNS HANDLE
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-stripInvalidChars) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD stripInvalidChars Procedure
+FUNCTION stripInvalidChars RETURNS CHARACTER 
+  (INPUT icText AS CHAR,
+   INPUT icDataType AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-SwapPrescanToMainBuffer) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD SwapPrescanToMainBuffer Procedure 
@@ -846,17 +979,17 @@ RUN JBoxLoadLib.p("JBoxObjLib.p").
 
 IF cDefActionList = "" THEN
   cDefActionList = "accept,new,edit,close,help,copy,undo,delete,save"
-                 + ",excel,word,print,filter,www,email,next,prev,first,last"
+                 + ",excel,word,print,filter,www,email,next,prev,first,last,printPdf"
                  + ",commit,rollback,activate,flatview,refresh,accum,moveup,movedown,browseconfig,color,note,documents,insert,multiSortBrowse,copyBrowseRows,selectAllRows,deselectRow,rowsToBatch"
                    .
 IF cDefImageList = "" THEN
   cDefImageList  = "bmp/accep16e.bmp,bmp/new16e.bmp,bmp/edit16e.bmp,bmp/e-exit.bmp,bmp/e-help.bmp,bmp/copy.bmp,bmp/undo16e.bmp,bmp/del16e.bmp,bmp/save.bmp" /* gif/saverec.gif" */
-                 + ",gif/afexcel.gif,gif/afword.gif,bmp/print16e.bmp,gif/filter.gif,gif/afinternet.gif,gif/msngrWindow.gif,bmp/next.bmp,bmp/prev.bmp,bmp/first.bmp,bmp/last.bmp"
+                 + ",gif/afexcel.gif,gif/afword.gif,bmp/print16e.bmp,gif/filter.gif,gif/afinternet.gif,gif/msngrWindow.gif,bmp/next.bmp,bmp/prev.bmp,bmp/first.bmp,bmp/last.bmp,bmp/AcroPDF_dll_102.bmp"
                  + ",bmp/commit.bmp,bmp/rollback.bmp,gif/active.gif,gif/sdogen16.gif,gif/refresh.gif,gif/statusu.gif,gif/moveup.gif,gif/movedown.gif,bmp/table.bmp,bmp/color.bmp,bmp/note16e.bmp,bmp/critino.bmp,bmp/add.bmp,bmp/bullet_triangle_green.bmp,bmp/copyrec.bmp,bmp/text1.bmp,bmp/text0.bmp,newbmp/yllpg16e.BMP"
                  .
 
 IF cDefLabelList = "" THEN
-  cDefLabelList = "Aksepter,Ny,Endre,Lukk,Hjelp,Kopier,Angre,Slett,Lagre,Excel,Word,Utskrift,Filter,www,E-post,Neste,Forrige,Første,Siste"
+  cDefLabelList = "Aksepter,Ny,Endre,Lukk,Hjelp,Kopier,Angre,Slett,Lagre,Excel,Word,Utskrift,Filter,www,E-post,Neste,Forrige,Første,Siste,Pdf"
                 + ",Commit,Rull tilbake,Aktiver,Drill-down visning,Oppdater visning,Akkumuler,Flytt opp,Flytt ned,Kolonneoppsett,Farge,Notat,Dokumenter,Sett inn,Sorter på flere kolonner,Kopier rad(er),Velg alle rader,Fjern markering av rad,Sett rader i resultatsett"
                 .
 
@@ -1524,6 +1657,82 @@ END PROCEDURE.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-clearGridFilterRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE clearGridFilterRecord Procedure
+PROCEDURE clearGridFilterRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF BUFFER bttObjectLink FOR ttObjectLink.
+DEF BUFFER bttAttribute  FOR ttAttribute.
+
+DEF VAR hBrowse AS HANDLE NO-UNDO.
+DEF VAR hWidget AS HANDLE NO-UNDO.
+IF ttObject.cObjectType = "toolbar" THEN DO:
+  FIND FIRST ttObjectLink
+       WHERE ttObjectLink.hFromObject = ttObject.hObject
+         AND ttObjectLink.cLinkType   = "browse" NO-ERROR.
+  IF AVAIL ttObjectLink THEN DO:
+    hBrowse = ttObjectLink.hToObject.
+    FIND FIRST bttObjectLink
+         WHERE bttObjectLink.hFromObject = ttObjectLink.hToObject
+           AND bttObjectLink.cLinkType   = "gridFilter" NO-ERROR.
+    IF AVAIL bttObjectLink THEN       
+      FIND ttObject WHERE ttObject.hObject = bttObjectLink.hToObject NO-ERROR.
+  END.  
+  IF NOT AVAIL ttObject THEN RETURN.
+END.
+ELSE IF ttObject.cObjectType = "popupMenu" THEN DO:
+  FIND FIRST ttObjectLink
+       WHERE ttObjectLink.hFromObject = ttObject.hObject
+         AND ttObjectLink.cLinkType   = "browse" NO-ERROR.
+  IF AVAIL ttObjectLink THEN DO:
+    hBrowse = ttObjectLink.hToObject.
+    FIND FIRST bttObjectLink
+         WHERE bttObjectLink.hFromObject = ttObjectLink.hToObject
+           AND bttObjectLink.cLinkType   = "gridFilter" NO-ERROR.
+    IF AVAIL bttObjectLink THEN       
+      FIND ttObject WHERE ttObject.hObject = bttObjectLink.hToObject NO-ERROR.
+  END.  
+  IF NOT AVAIL ttObject THEN RETURN.
+END.
+ELSE IF ttObject.cObjectType = "browse" THEN DO:
+  hBrowse = ttObject.hObject.
+  FIND FIRST bttObjectLink
+       WHERE bttObjectLink.hFromObject = ttObject.hObject
+         AND bttObjectLink.cLinkType   = "gridFilter" NO-ERROR.
+  IF AVAIL bttObjectLink THEN       
+    FIND ttObject WHERE ttObject.hObject = bttObjectLink.hToObject NO-ERROR.
+END.  
+IF NOT ttObject.cObjectType = "gridfilter" THEN
+  RETURN.
+
+FOR EACH bttAttribute OF ttObject
+    WHERE bttAttribute.cName BEGINS "filterfield_search_":
+
+  hWidget = WIDGET-HANDLE(getAttribute(ttObject.hObject,bttAttribute.cName)).
+
+  setAttribute(hBrowse,"gridFilterValue_" + SUBSTR(hWidget:NAME,8),"").
+  setAttribute(hBrowse,"gridOperatorInUse_" + SUBSTR(hWidget:NAME,8),"").             
+  setAttribute(ttObject.hObject,"operator_" + hWidget:NAME,"").             
+               
+  hWidget:SCREEN-VALUE = "".
+  IF hWidget:TYPE = "combo-box" THEN
+    hWidget:SCREEN-VALUE = " " NO-ERROR.
+END.
+DYNAMIC-FUNCTION("InitGridFilter",hBrowse,"","","","noexec"). 
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-CloseWindow) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE CloseWindow Procedure 
@@ -1845,13 +2054,9 @@ ELSE DO:
       rRepos = hBuffer:ROWID.
       DYNAMIC-FUNCTION("DoRefetchTrans",hBuffer,"FIRST","").
       DYNAMIC-FUNCTION("RefreshRowids",hBrowse,hBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE).
-/*       DYNAMIC-FUNCTION("refreshRow",hBrowse,                                         */
-/*                         DYNAMIC-FUNCTION("getAttribute",hBrowse,"buffersandfields"), */
-/*                         DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryjoin")).       */
   
       hBrowse:QUERY:QUERY-OPEN().
       hBrowse:SET-REPOSITIONED-ROW(iCurrRow + 1,"conditional").
-/*       hBrowse:SET-REPOSITIONED-ROW(hBrowse:DOWN,"conditional"). */
       hBrowse:QUERY:REPOSITION-TO-ROWID(rRepos).
   
       IF getAttribute(hBrowse,"enableondblclick") = "yes" OR getAttribute(hBrowse,"enableOnToolbarClick") = "yes" THEN 
@@ -2687,10 +2892,11 @@ IF NOT CAN-FIND(FIRST ttObjectLink
                       
   SaveModified(hCurrObject).
 
-IF hCurrObject:TYPE NE "query" AND 
-   CAN-FIND(FIRST ttObjectLink 
-            WHERE ttObjectLink.hToObject = hCurrObject
-              AND CAN-DO("parent,onetoone",ttObjectLink.cLinkType)) THEN DO:
+IF hCurrObject:TYPE NE "query" AND getAttribute(hCurrObject,"redrawOnRowChange") = "YES"
+/*   AND CAN-FIND(FIRST ttObjectLink                                 */
+/*            WHERE ttObjectLink.hToObject = hCurrObject             */
+/*              AND CAN-DO("parent,onetoone",ttObjectLink.cLinkType))*/
+            THEN DO:
   bWindowLock = YES.  
   DoLockWindow(hCurrObject:WINDOW).
 END.
@@ -2733,17 +2939,17 @@ FOR EACH ttObjectLink
                        ELSE IF hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE = 'CHARACTER' THEN 
                         '"' + hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE + '"'
                        ELSE
-                        hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE + '("' +
-                        STRING(hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + '")'
+                        hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE + "('" +
+                        STRING(hBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + "')"
                        )
                      ELSE
                       (IF hLinkFromBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE = 'HANDLE' THEN 
-                        'WIDGET-HANDLE("' + STRING(hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + '")'
+                        "WIDGET-HANDLE('" + STRING(hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + "')"
                        ELSE IF hLinkFromBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE = 'CHARACTER' THEN 
-                        '"' + hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE + '"'
+                        "'" + hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE + "'"
                        ELSE
-                        hLinkFromBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE + '("' +
-                        STRING(hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + '")'
+                        hLinkFromBuffer:BUFFER-FIELD(ENTRY(1,ENTRY(ix,cChildLinkInfo),";")):DATA-TYPE + "('" +
+                        STRING(hBuffer:BUFFER-FIELD(ENTRY(2,ENTRY(ix,cChildLinkInfo),";")):BUFFER-VALUE) + "')"
                        )
                      )
                   + " AND ".
@@ -2889,8 +3095,12 @@ IF hCurrObject:TYPE = "browse" AND hCurrObject:MULTIPLE THEN DO:
       hRecordSelectWidget:SCREEN-VALUE = "".
 END.
 
-IF bWindowLock THEN
-  DoLockWindow(?).
+IF bWindowLock THEN DO:
+  IF VALID-HANDLE(hCurrObject:WINDOW) THEN
+    DYNAMIC-FUNCTION("DoRedrawWindow",hCurrObject:WINDOW).
+  ELSE  
+    DoLockWindow(?).
+END.  
 
 setCurrentObject(hCurrObject).
 
@@ -3024,6 +3234,8 @@ IF AVAIL ttEvent THEN DO:
   END.
 
   IF NOT bPass THEN DO:
+    
+    setAsConnection(ttEvent.hObject).
 
     IF VALID-HANDLE(ihSourceProc) AND ihSourceProc NE hCurrSourceProc AND CAN-DO(ihSourceProc:INTERNAL-ENTRIES,ttEvent.cMethod) THEN
       RUN VALUE(ttEvent.cMethod) IN ihSourceProc NO-ERROR.
@@ -3032,15 +3244,6 @@ IF AVAIL ttEvent THEN DO:
     ELSE IF CAN-DO(THIS-PROCEDURE:INTERNAL-ENTRIES,ttEvent.cMethod) THEN 
       RUN VALUE(ttEvent.cMethod) NO-ERROR.
     ELSE MESSAGE "Method not found: " ttEvent.cMethod.
-
-/*     IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,ttEvent.cMethod) THEN DO: */
-/*       RUN VALUE(ttEvent.cMethod) IN ihSourceProc NO-ERROR.               */
-/*       IF ERROR-STATUS:ERROR THEN                                         */
-/*         RUN VALUE(ttEvent.cMethod) IN hCurrSourceProc NO-ERROR.          */
-/*     END.                                                                 */
-/*     ELSE IF CAN-DO(THIS-PROCEDURE:INTERNAL-ENTRIES,ttEvent.cMethod) THEN */
-/*       RUN VALUE(ttEvent.cMethod) NO-ERROR.                               */
-/*     ELSE MESSAGE "Method not found: " ttEvent.cMethod.                   */
 
   END.
   IF ERROR-STATUS:ERROR THEN RETURN.
@@ -3055,8 +3258,9 @@ IF bReturnNoApply OR bMyReturnNoApply OR getAttribute(hCurrObject,"return-no-app
     hWidgetEnter:CURSOR-OFFSET = iCursorOffset.
   END.
   ELSE IF VALID-HANDLE(hWidgetEnd) THEN DO:
+    hMyEventWidget = hWidgetEnd.
     APPLY "entry" TO hWidgetEnd.
-    APPLY "end" TO hWidgetEnd.
+    APPLY "end" TO hMyEventWidget.
   END.
   ELSE IF VALID-HANDLE(hWidgetEnter) THEN
     APPLY "entry" TO hWidgetEnter.
@@ -3232,7 +3436,6 @@ PROCEDURE EndResizeBrowseColumn :
   Notes:       Current object is the browse, current event is generated by end-resize of browse column
 ------------------------------------------------------------------------------*/
 /* Check if current column, the column before or after is resized */
-DEF VAR cBrowseColumns   AS CHAR   NO-UNDO.
 DEF VAR hWidget          AS HANDLE NO-UNDO.
 DEF VAR hResizeWidget    AS HANDLE NO-UNDO.
 DEF VAR iTmpXpixels      AS INT    NO-UNDO.
@@ -3241,13 +3444,17 @@ DEF VAR hLastOverlay     AS HANDLE NO-UNDO.
 DEF VAR hFirstOverlay    AS HANDLE NO-UNDO.
 DEF VAR cTabChain        AS CHAR   NO-UNDO.
 DEF VAR cWidthPixelsList AS CHAR   NO-UNDO.
+DEF VAR hGridFilter      AS HANDLE NO-UNDO.
+
+hGridFilter = DYNAMIC-FUNCTION("getLinkedObject",ttObject.hObject,"gridFilter","from").
 
 IF NOT CAN-FIND(FIRST ttObjectLink
                 WHERE ttObjectLink.hFromObject = ttObject.hObject
-                  AND ttObjectLink.cLinkType   = "browseoverlay") THEN
+                  AND ttObjectLink.cLinkType   = "browseoverlay")
+   AND NOT VALID-HANDLE(hGridFilter) THEN
   RETURN.
 
-IF bFreezeEndResizeBrw THEN
+//IF bFreezeEndResizeBrw THEN
   DoLockWindow(ttObject.hObject:WINDOW).
 
 ASSIGN iTmpXpixels      = ttObject.hObject:FRAME:WIDTH-PIXELS
@@ -3270,9 +3477,10 @@ FOR EACH ttObjectLink
   hResizeWidget = ?.
   DO ix = 1 TO ttObject.hObject:NUM-COLUMNS:
     hWidget = ttObject.hObject:GET-BROWSE-COLUMN(ix).
-    cBrowseColumns = cBrowseColumns + hWidget:NAME + ",".
-    IF hWidget:NAME = ttObjectLink.cLinkInfo THEN
+    IF hWidget:NAME = ttObjectLink.cLinkInfo THEN DO:
       hResizeWidget = hWidget.
+      LEAVE.
+    END.  
   END.
 
   IF NOT VALID-HANDLE(hResizeWidget) THEN DO:
@@ -3366,7 +3574,11 @@ IF VALID-HANDLE(ttObject.hObject) AND ttObject.hObject:TYPE = "browse" AND ttObj
          ttObject.hObject:FRAME:HEIGHT-PIXELS = iTmpYpixels
          NO-ERROR.
 
-IF bFreezeEndResizeBrw THEN DoLockWindow(?).
+IF VALID-HANDLE(hGridFilter) THEN reDrawGridFilter(ttObject.hObject).
+
+IF getAttribute(SESSION,"userkeepswindowlocked") NE "yes" THEN
+//  IF bFreezeEndResizeBrw THEN 
+  DoLockWindow(?).
 
 END PROCEDURE.
 
@@ -3584,9 +3796,10 @@ DEF VAR cLabel      AS CHAR   NO-UNDO.
 
 hCurrObject = ttObject.hObject.
 
-hHelpWidget = WIDGET-HANDLE(getAttribute(hCurrWidget:WINDOW,"HelpTextWidget")) NO-ERROR.
+IF VALID-HANDLE(hCurrWidget) AND CAN-QUERY(hCurrWidget,"WINDOW") THEN
+  hHelpWidget = WIDGET-HANDLE(getAttribute(hCurrWidget:WINDOW,"HelpTextWidget")) NO-ERROR.
 
-IF VALID-HANDLE(hHelpWidget) THEN DO:
+IF VALID-HANDLE(hHelpWidget) AND VALID-HANDLE(hCurrWidget) THEN DO:
   cLabel = hCurrWidget:LABEL NO-ERROR.
   hHelpWidget:SCREEN-VALUE = IF getAttribute(hCurrWidget,"MyHelpText") NE "" THEN getAttribute(hCurrWidget,"MyHelpText")
                              ELSE IF hCurrWidget:HELP NE ? THEN hCurrWidget:HELP 
@@ -3598,7 +3811,7 @@ END.
   
 IF hCurrObject:TYPE = "browse" THEN
     DYNAMIC-FUNCTION("viewRecordCount",hCurrObject).
-ELSE IF CAN-DO("fill-in,editor",hCurrWidget:TYPE) THEN DO:
+ELSE IF VALID-HANDLE(hCurrWidget) AND CAN-DO("fill-in,editor",hCurrWidget:TYPE) THEN DO:
   FOR EACH ttObjectLink 
       WHERE ttObjectLink.hFromObject = hCurrObject
         AND ttObjectLink.cLinkType = "dotNetDisplay"
@@ -3635,6 +3848,7 @@ DEF VAR iNewBatch    AS INT NO-UNDO.
 DEF VAR iMaxCount    AS INT NO-UNDO.
 DEF VAR hQryOrBuffer AS HANDLE NO-UNDO.
 DEF VAR hCurrObject  AS HANDLE NO-UNDO.
+DEF VAR cRowsToBatch AS CHAR   NO-UNDO.  
 
 hCurrObject = ttObject.hObject.
 
@@ -3686,8 +3900,7 @@ IF hQryOrBuffer:TYPE = "BROWSE"
   setAttribute(hQryOrBuffer,"querystart",STRING(iMaxCount)).
 END.
 
-
-IF hQryOrBuffer:TYPE = "BROWSE" 
+ELSE IF hQryOrBuffer:TYPE = "BROWSE" 
    AND getAttribute(hQryOrBuffer,"lastrowid") = "" 
    AND getAttribute(hQryOrBuffer,"uselocaldata") NE "yes" 
    AND hQryOrBuffer:NUM-SELECTED-ROWS < 2  
@@ -3699,6 +3912,9 @@ IF hQryOrBuffer:TYPE = "BROWSE"
     RUN dAskForQueryBatch.w (OUTPUT iNewBatch).
 
   IF iNewBatch > 0 THEN DO:
+    cRowsToBatch = getAttribute(hQryOrBuffer,"rowstobatch").
+    setAttribute(hQryOrBuffer,"rowstobatch",STRING(iNewBatch)).
+    
     iMaxCount = DYNAMIC-FUNCTION("FillBrowse",hQryOrBuffer,
                         iNewBatch,
                         INT(getAttribute(hQryOrBuffer,"querystart")),
@@ -3715,6 +3931,7 @@ IF hQryOrBuffer:TYPE = "BROWSE"
                         getAttribute(hQryOrBuffer,"querysort"),
                         getAttribute(hQryOrBuffer,"querydesc") = "desc").
     setAttribute(hQryOrBuffer,"querystart",STRING(iMaxCount)).
+    setAttribute(hQryOrBuffer,"rowstobatch",cRowsToBatch).
   END.
   ELSE IF iNewBatch < 0 THEN RETURN.
 END.
@@ -3855,7 +4072,12 @@ END.
 RUN MoveToTop IN hFilter.
 
 DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","").
-DYNAMIC-FUNCTION("DoLockWindow",?).
+IF VALID-HANDLE(hFilterButton) AND VALID-HANDLE(hFilterButton:WINDOW) THEN
+  DYNAMIC-FUNCTION("DoRedrawWindow",hFilterButton:WINDOW).
+ELSE IF VALID-HANDLE(hBrowseOrQuery) AND hBrowseOrQuery:TYPE = "browse" AND VALID-HANDLE(hBrowseOrQuery:WINDOW) THEN
+  DYNAMIC-FUNCTION("DoRedrawWindow",hBrowseOrQuery:WINDOW).
+ELSE
+  DYNAMIC-FUNCTION("DoLockWindow",?).
 
 setCurrentObject(hCurrObject).
 
@@ -3982,7 +4204,8 @@ END.
 ELSE IF VALID-HANDLE(hQuery) THEN DO:
   iMaxCount = DYNAMIC-FUNCTION("fillQuery",hCurrObject,
                       INT(getAttribute(hCurrObject,"rowstobatch")),
-                      INT(getAttribute(hCurrObject,"querystart")),"","").
+                      INT(getAttribute(hCurrObject,"querystart")),"","","",
+                      getAttribute(hCurrObject,"querydesc") = "desc").
 
   setAttribute(hCurrObject,"querystart",STRING(iMaxCount)).
   IF hCurrObject:GET-BUFFER-HANDLE(1):AVAIL THEN DO:
@@ -4033,6 +4256,7 @@ DEF VAR bEmbedded             AS LOG    NO-UNDO.
 DEF VAR cTitle                AS CHAR   NO-UNDO.
 DEF VAR bUseDataBrowseObject  AS LOG    NO-UNDO.        
 DEF VAR bCopyData             AS LOG    NO-UNDO.     
+DEF VAR hSourceBuffer         AS HANDLE NO-UNDO.
 
 hCurrObject = ttObject.hObject.
 
@@ -4056,7 +4280,7 @@ hSourceQuery = ttObject.hObject.
 
 ASSIGN cBuffersAndFields = IF getAttribute(hSourceQuery,"flatviewbuffersandfields") NE "" THEN
                              getAttribute(hSourceQuery,"flatviewbuffersandfields")
-                           ELSE IF ttObject.cObjectType = "query" THEN 
+                           ELSE IF ttObject.cObjectType = "query" OR getAttribute(hSourceQuery,"sqlDbName") NE "" THEN 
                              getAttribute(hSourceQuery,"buffersandfields")
                            ELSE
                              getAttribute(hSourceQuery,"viewbuffersandfields")
@@ -4076,20 +4300,34 @@ ASSIGN cBuffersAndFields = IF getAttribute(hSourceQuery,"flatviewbuffersandfield
                            .
 
 IF NOT VALID-HANDLE(hFlatView) THEN DO:
-  PUBLISH "StartTabWindow" ("JBoxDataBrw.w",
-           TRIM((IF DYNAMIC-FUNCTION("Scandinavian") THEN "Rapport" ELSE "Report") + " " + cTitle), 
-           hCurrSourceProc, /* parent */
-           YES,     /* (always) new instance */
-           NO,     /* keep the tab open after close of this window */
-           OUTPUT hFlatView). 
-  IF NOT VALID-HANDLE(hFlatView) THEN          
-    RUN JBoxDataBrw.w PERSIST SET hFlatView.
-  ELSE bEmbedded = YES.
-
+  IF getAttribute(hSourceQuery,"childwindow") = "yes" THEN DO:
+    PUBLISH "StartChildWindow" ("JBoxDataBrw.w",
+             TRIM((IF DYNAMIC-FUNCTION("Scandinavian") THEN "Rapport" ELSE "Report") + " " + cTitle), 
+             hCurrSourceProc, /* parent */
+             YES,     /* (always) new instance */
+             OUTPUT hFlatView). 
+    IF NOT VALID-HANDLE(hFlatView) THEN          
+      RUN JBoxDataBrw.w PERSIST SET hFlatView.
+    DYNAMIC-FUNCTION("setAttribute",hFlatView,"childwindow","yes").  
+  END.   
+  ELSE DO:  
+    PUBLISH "StartTabWindow" ("JBoxDataBrw.w",
+             TRIM((IF DYNAMIC-FUNCTION("Scandinavian") THEN "Rapport" ELSE "Report") + " " + cTitle), 
+             hCurrSourceProc, /* parent */
+             YES,     /* (always) new instance */
+             NO,     /* keep the tab open after close of this window */
+             OUTPUT hFlatView). 
+    IF NOT VALID-HANDLE(hFlatView) THEN          
+      RUN JBoxDataBrw.w PERSIST SET hFlatView.
+    ELSE bEmbedded = YES.
+  END.
+  
   hPlaceHolder = DYNAMIC-FUNCTION("getBrowseHandle" IN hFlatView).
 
-  IF getAttribute(hSourceQuery,"tempTableHandle") = ""
-     OR (getAttribute(hSourceQuery,"useLocalData") = "yes" AND getAttribute(hSourceQuery,"distinctcolumns") NE "" AND getAttribute(hSourceQuery,"tempTableHandle") = "") THEN
+
+  IF getAttribute(hSourceQuery,"originaltemptable") = "" AND getAttribute(hSourceQuery,"tempTableHandle") = "" OR hSourceQuery:TYPE = "query"
+     OR (getAttribute(hSourceQuery,"useLocalData") = "yes" AND getAttribute(hSourceQuery,"distinctcolumns") NE "" AND getAttribute(hSourceQuery,"tempTableHandle") = "" AND getAttribute(hSourceQuery,"originaltemptable") = "")
+     THEN
     RUN getChildFldsAndCrit (hSourceQuery,
                              getAttribute(hSourceQuery,"flatviewjointype"),
                              getAttribute(hSourceQuery,"allviewfields"),
@@ -4101,6 +4339,7 @@ IF NOT VALID-HANDLE(hFlatView) THEN DO:
   ELSE DO:               
     bCopyData = YES.
     DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"UseLocalData").
+    DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"originalTempTable").
     IF hSourceQuery:TYPE = "BROWSE" THEN DO:
       IF cBuffersAndFields = "" THEN DO:
         cBuffersAndFields = "temp-table " + hSourceQuery:QUERY:GET-BUFFER-HANDLE (1):NAME.
@@ -4111,6 +4350,10 @@ IF NOT VALID-HANDLE(hFlatView) THEN DO:
       ELSE IF NOT cBuffersAndFields BEGINS "temp-table " THEN cBuffersAndFields = "temp-table " + cBuffersAndFields.
       IF NOT cBuffersAndFields MATCHES "*jbCountDistinct*" THEN
         cBuffersAndFields = cBuffersAndFields + ";jbCountDistinct|INTEGER|>>><>>><>>9||Count;jbAverage|DECIMAL|->>><>>><>>9.99||Average".
+      IF NOT cBuffersAndFields MATCHES "*RowCount*" THEN
+        cBuffersAndFields = cBuffersAndFields + ";RowCount|INTEGER|>>><>>><>>9||RowCount".
+//      DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"fieldLabel_").
+      DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"fieldFormat_").
     END.
   END.  
 
@@ -4146,7 +4389,14 @@ IF NOT VALID-HANDLE(hFlatView) THEN DO:
   DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"distinctdatatypes").
   DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"prescanquery*").
   DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"prescanbasequery").
+  DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"allcalcfields").
+  DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"dataSourceName").
+  DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"grid").
+  DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"sql").
+
 //  IF getAttribute(hSourceQuery,"flatviewbuffersandfields") = "" AND NOT bCopyData THEN
+/*  IF hSourceQuery:TYPE NE "query" THEN /* 08.01.20 */                              */
+  IF getAttribute(hSourceQuery,"sqlDbName") NE "" THEN
     DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hPlaceHolder,"tempTableHandle").
   DYNAMIC-FUNCTION("msetAttribute",hPlaceHolder,"prescanquerywhere","").
 
@@ -4189,6 +4439,11 @@ IF NOT VALID-HANDLE(hFlatView) THEN DO:
     IF DYNAMIC-FUNCTION("getAttribute",hCurrObject,"tempTableHandle") NE "" AND NOT cBuffersAndFields BEGINS "temp-table " THEN
       cBuffersAndFields = "temp-table " + cBuffersAndFields.
 
+    IF getAttribute(hSourceQuery,getAttribute(hSourceQuery,"dataSourceName")) NE "" THEN DO:
+      DYNAMIC-FUNCTION("setSessionId",JBoxSession:Instance:getJBoxAttribute(getAttribute(hSourceQuery,"dataSourceName") + "_sessionId")).
+      DYNAMIC-FUNCTION("setAppserviceHandle",WIDGET-HANDLE(JBoxSession:Instance:getJBoxAttribute(getAttribute(hSourceQuery,"dataSourceName") + "_apsv"))).
+    END.  
+
     IF bUseDataBrowseObject THEN
       RUN InitFlatViewDataBrwObj.p (hFlatView,
                                     cBuffersAndFields,cQueryCrit,cQuerySort,
@@ -4204,9 +4459,20 @@ IF NOT VALID-HANDLE(hFlatView) THEN DO:
     DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hFlatBrw,"baseQuery").
     DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hFlatBrw,"queryFilter").
     DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hFlatBrw,"queryWhere").
+    DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hFlatBrw,"allcalcFields").
 
     IF bCopyData THEN
       hFlatBrw:QUERY:GET-BUFFER-HANDLE (1):COPY-TEMP-TABLE (hSourceQuery:QUERY:GET-BUFFER-HANDLE(1),NO,NO,YES).
+
+    IF DYNAMIC-FUNCTION("getAttribute",hSourceQuery,"SQLdbName") NE "" THEN DO: /* if sql manipulate buffers and fields to contain datatype */
+      IF hSourceQuery:TYPE = "browse" THEN hSourceBuffer = hSourceQuery:QUERY:GET-BUFFER-HANDLE(1).
+      ELSE hSourceBuffer = hSourceQuery:GET-BUFFER-HANDLE (1).
+      
+      IF cBuffersAndFields BEGINS "temp-table " THEN
+        DYNAMIC-FUNCTION("setAttribute",hFlatBrw,"buffersAndFields",TRIM(SUBSTR(cBuffersAndFields,12))).
+      DYNAMIC-FUNCTION("setAttribute",hFlatBrw,"useLocalData","").
+      DYNAMIC-FUNCTION("CopyAttributes",hSourceQuery,hFlatBrw,"sql").
+    END.  
 
     RUN InvokeMethod(hFlatBrw,"OpenQuery").  
 
@@ -4306,13 +4572,14 @@ FOR EACH ttObjectLink
     :
   
   IF getAttribute(ttObjectLink.hFromObject,"excludeFromFlatView") = "yes" THEN NEXT.
-  
+
   cBuffAndFlds = IF getAttribute(ttObjectLink.hFromObject,"flatviewbuffersandfields") NE "" THEN
                    getAttribute(ttObjectLink.hFromObject,"flatviewbuffersandfields")
                  ELSE IF ttObjectLink.hFromObject:TYPE = "query" THEN  
                    getAttribute(ttObjectLink.hFromObject,"buffersandfields")
                  ELSE
                    getAttribute(ttObjectLink.hFromObject,"viewbuffersandfields").
+                   
   IF DYNAMIC-FUNCTION("getAttribute",ttObjectLink.hFromObject,"hideflatviewduplicates") = "yes" THEN
     DO ix = 1 TO NUM-ENTRIES(cBuffAndFlds):
       ASSIGN cModBuffAndFlds   = cModBuffAndFlds + ENTRY(1,ENTRY(ix,cBuffAndFlds),";") + ";"
@@ -4399,7 +4666,7 @@ FOR EACH ttObjectLink
                      ELSE IF hbChild:BUFFER-FIELD(ENTRY(1,ENTRY(ix,ttObjectLink.cLinkInfo),";")):DATA-TYPE = "CHARACTER" THEN
                        "STRING(" + hbParent:NAME + "." + ENTRY(2,ENTRY(ix,ttObjectLink.cLinkInfo),";") + ")"
                      ELSE
-                       hbChild:BUFFER-FIELD(ENTRY(2,ENTRY(ix,ttObjectLink.cLinkInfo),";")):DATA-TYPE + "(" +
+                       hbParent:BUFFER-FIELD(ENTRY(2,ENTRY(ix,ttObjectLink.cLinkInfo),";")):DATA-TYPE + "(" +
                        hbParent:NAME + "." + ENTRY(2,ENTRY(ix,ttObjectLink.cLinkInfo),";") + ")"
                      )
                    ).
@@ -4435,6 +4702,9 @@ FOR EACH ttObjectLink
                           INPUT-OUTPUT iocQueryCrit,
                           INPUT-OUTPUT iocCalcFieldProcs,
                           INPUT-OUTPUT iocFieldReposList).
+
+  DYNAMIC-FUNCTION("CopyAttributes",ttObjectLink.hFromObject,ihPlaceHolder,"fieldLabel_").
+  DYNAMIC-FUNCTION("CopyAttributes",ttObjectLink.hFromObject,ihPlaceHolder,"fieldFormat_").
                         
 END.                          
 
@@ -4444,6 +4714,89 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-gridFilterLookup) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE gridFilterLookup Procedure
+PROCEDURE gridFilterLookup:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hFillIn   AS HANDLE NO-UNDO.
+DEF VAR hFilter   AS HANDLE NO-UNDO.
+DEF VAR hBrowse   AS HANDLE NO-UNDO.
+DEF VAR cOper     AS CHAR   NO-UNDO.
+DEF VAR cLabel    AS CHAR   NO-UNDO.
+DEF VAR cColumn   AS CHAR   NO-UNDO.
+DEF VAR cLookup   AS CHAR   NO-UNDO.
+DEF VAR cDropDown AS CHAR   NO-UNDO.
+DEF VAR cOperList AS CHAR   NO-UNDO.
+DEF VAR hField    AS HANDLE NO-UNDO.
+
+hFilter = getCurrentObject().
+hBrowse = DYNAMIC-FUNCTION("getLinkedObject",hFilter,"browse","from").
+hFillIn = DYNAMIC-FUNCTION("getCurrentWidget").
+cColumn = SUBSTR(hFillIn:NAME,8).
+
+hField = hBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cColumn).
+
+cLabel = DYNAMIC-FUNCTION("getEventLabel",hFilter,hFillIn,"entry-of-widget").
+
+cLookup = DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterLookupFields_" + cColumn).
+IF cLookup NE "" THEN
+  cLookup = REPLACE(cLookup,"|",CHR(1)) 
+          + "|" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterLookupQuery_" + cColumn) 
+          + "|" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterLookupReturnField_" + cColumn)
+          .
+ELSE DO:
+  cDropDown = DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterDropDownFields_" + cColumn).
+  IF cDropDown NE "" THEN
+    cDropDown = cDropDown
+              + "|" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterDropDownQuery_" + cColumn)
+              .
+END.             
+
+cOperList = IF hField:DATA-TYPE = "CHARACTER" THEN
+              "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>|BEGINS|BEGINS|MATCHES|MATCHES"
+            ELSE "=|=|>|>|<|<|>=|>=|<=|<=|<>|<>".
+
+cOper = DYNAMIC-FUNCTION("getAttribute",hBrowse,"gridOperatorInUse_" + SUBSTR(hFillIn:NAME,8)).
+IF cOper = "" THEN 
+  cOper = IF hField:DATA-TYPE = "CHARACTER" THEN "BEGINS"
+          ELSE "=".
+
+IF LOOKUP(cOper,cOperList,"|") = 0 THEN cOperList = cOperList + "|" + cOper + "|" + cOper.
+
+setAttribute(SESSION,"gridLookupBrowse",STRING(hBrowse)).
+
+JBoxSession:Instance:PromptForValues(IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett verdi og operator" ELSE "Enter value and operator",
+                                     cLabel
+                             + "|" + hField:DATA-TYPE
+                             + "|" + hField:FORMAT
+                             + "|" + (IF hFillIn:INPUT-VALUE NE ? THEN hFillIn:SCREEN-VALUE ELSE "")
+                             + (IF cLookup NE "" THEN
+                                 "|||" + cLookup
+                                ELSE IF cDropDown NE "" THEN
+                                 "|||" + cDropDown  
+                                ELSE "") 
+                             + "¤Operator|CHARACTER|X|" + cOper + "|" + cOperList).
+IF JBoxSession:Instance:PromptValueOk THEN DO:
+  hFillIn:SCREEN-VALUE = ENTRY(1,JBoxSession:Instance:PromptValue,"|").
+  setAttribute(hFilter,"operator_" + hFillIn:NAME,ENTRY(2,JBoxSession:Instance:PromptValue,"|")).
+  hFillIn:TOOLTIP = "Operator: " + ENTRY(2,JBoxSession:Instance:PromptValue,"|").
+  APPLY "return" TO hFillIn.                              
+END.                             
+//setAttribute(SESSION,"gridLookupBrowse","").
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-Help) = 0 &THEN
 
@@ -4665,7 +5018,8 @@ END.
 ELSE DO:
   iMaxCount = DYNAMIC-FUNCTION("fillQuery",hCurrObject,
                       INT(getAttribute(hCurrObject,"rowstobatch")),
-                      INT(getAttribute(hCurrObject,"querystart")),"","").
+                      INT(getAttribute(hCurrObject,"querystart")),"","","",
+                      getAttribute(hCurrObject,"querydesc") = "desc").
 
   setAttribute(hCurrObject,"querystart",STRING(iMaxCount)).
 
@@ -4753,6 +5107,7 @@ DEF VAR iBGcolNum            AS INT    NO-UNDO INIT ?.
 DEF VAR bNewRow              AS LOG    NO-UNDO.
 DEF VAR cLastEvent           AS CHAR   NO-UNDO.
 DEF VAR iFocusedRow          AS INT    NO-UNDO.
+DEF VAR hRowIdent1           AS HANDLE NO-UNDO.
 
 IF NOT AVAIL ttObject OR (AVAIL ttObject AND ttObject.cObjectType NE "fill-in")  THEN .
 
@@ -4800,7 +5155,7 @@ IF hFillIn:MODIFIED THEN DO:
            AND DEC(hFillIn:SCREEN-VALUE) NE DEC(cValidate3) THEN
           bMyOK = FALSE.
       END.
-      WHEN "INTEGER" THEN DO:
+      WHEN "INTEGER" OR WHEN "INT64" THEN DO:
         IF (INT(hFillIn:SCREEN-VALUE) LT INT(cValidate1) OR INT(hFillIn:SCREEN-VALUE) GT INT(cValidate2)) 
           AND INT(hFillIn:SCREEN-VALUE) NE INT(cValidate3) THEN
           bMyOK = FALSE.
@@ -4827,7 +5182,7 @@ IF hFillIn:MODIFIED THEN DO:
 
       CASE hFillIn:DATA-TYPE:
         WHEN "DECIMAL"   THEN hFillIn:SCREEN-VALUE = "0".
-        WHEN "INTEGER"   THEN hFillIn:SCREEN-VALUE = "0".
+        WHEN "INTEGER" OR WHEN "INT64" THEN hFillIn:SCREEN-VALUE = "0".
         WHEN "DATE"      THEN hFillIn:SCREEN-VALUE = ?.
         WHEN "CHARACTER" THEN hFillIn:SCREEN-VALUE = "".
       END.
@@ -4865,6 +5220,7 @@ IF hFillIn:MODIFIED THEN DO:
       IF DYNAMIC-FUNCTION("getIsAttributeSet",hBrowse,"serverTransInputParam") THEN
         DYNAMIC-FUNCTION("setServerTransInputParam",DYNAMIC-FUNCTION("getAttribute",hBrowse,"serverTransInputParam")).
         
+      DYNAMIC-FUNCTION("setCurrentQueryObject",hBrowse).
       bMyOK = DYNAMIC-FUNCTION("DoUpdate",hBuffer:NAME,
                     cUpdateValProc,
                     "",
@@ -4872,10 +5228,14 @@ IF hFillIn:MODIFIED THEN DO:
                     getAttribute(hFillIn,"buffercolumn") + (IF cExtraUpdateFields NE "" THEN "," + cExtraUpdateFields ELSE ""),
                     hFillIn:SCREEN-VALUE + (IF cExtraUpdateValues NE "" THEN CHR(1) + cExtraUpdateValues ELSE ""),
                     IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraLeaveBrowseFillIn") THEN FALSE ELSE TRUE).
+
+      DYNAMIC-FUNCTION("setCurrentQueryObject",?).
                     
       setAttribute(hBrowse,"serverTransParam",DYNAMIC-FUNCTION("getServerTransReturnParam")).
       setAttribute(hBrowse,"serverTransMessage",DYNAMIC-FUNCTION("getTransactionMessage")).
     END.
+    ELSE IF getAttribute(hBrowse,"uselocaldata") = "yes" AND NOT getAttribute(hBrowse,"editWithFieldMap") = "yes" THEN 
+      hBuffer:BUFFER-FIELD(getAttribute(hFillIn,"buffercolumn")):BUFFER-VALUE = hFillIn:INPUT-VALUE NO-ERROR.
     ELSE bMyOK = TRUE.
 
     IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraLeaveBrowseFillIn") THEN
@@ -4896,7 +5256,9 @@ IF hFillIn:MODIFIED THEN DO:
       hBrowse:SELECT-ROW(hBrowse:FOCUSED-ROW) NO-ERROR.
     IF hBrowse:IS-ROW-SELECTED(hBrowse:FOCUSED-ROW) THEN DO:
       IF getAttribute(hFillIn,"refreshrow") = "yes" THEN DO:
-        RefreshRowids (hBrowse,hBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE).
+        hRowIdent1 = hBuffer:BUFFER-FIELD("RowIdent1") NO-ERROR.
+        IF VALID-HANDLE(hRowIdent1) THEN
+          RefreshRowids (hBrowse,hBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE).
         bFreezeEndResizeBrw = YES.
         IF getAttribute(hBrowse,"enableondblclick") = "yes" OR getAttribute(hBrowse,"enableon") = "yes" THEN 
           setAttribute(hBrowse,"enableupdate","yes").
@@ -4904,7 +5266,10 @@ IF hFillIn:MODIFIED THEN DO:
         bFreezeEndResizeBrw = NO.
       END.
       ELSE DO:
-        hBuffer:BUFFER-FIELD(getAttribute(hFillIn,"browsecolumn")):BUFFER-VALUE = hFillIn:INPUT-VALUE NO-ERROR.
+        IF hFillIn:DATA-TYPE BEGINS "datetime" THEN
+          hBuffer:BUFFER-FIELD(getAttribute(hFillIn,"browsecolumn")):BUFFER-VALUE = STRING(hFillIn:INPUT-VALUE) NO-ERROR.
+        ELSE      
+          hBuffer:BUFFER-FIELD(getAttribute(hFillIn,"browsecolumn")):BUFFER-VALUE = hFillIn:INPUT-VALUE NO-ERROR.
         IF ERROR-STATUS:GET-MESSAGE(1) NE "" AND ERROR-STATUS:GET-NUMBER(1) NE 11841 THEN
           MESSAGE ERROR-STATUS:GET-MESSAGE(1)
             VIEW-AS ALERT-BOX INFORMATION BUTTONS OK.
@@ -5143,6 +5508,8 @@ setAttribute(hBrowse,"querystart","0").
 
 bDesc = DYNAMIC-FUNCTION("ComposeSortString",hBrowse,YES).
 
+PUBLISH "SortStringChanged" (hBrowse).      
+
 IF DYNAMIC-FUNCTION("getLinkedObject",hBrowse,"browse-search-field","from") NE ? THEN DO:
   setAttribute(hBrowse,"querywhere","").
   setAttribute(hBrowse,"prescanquerywhere","").
@@ -5163,6 +5530,12 @@ IF iMaxCount = 0 THEN
   hBrowse:QUERY:QUERY-CLOSE().
 
 APPLY "value-changed":U TO hBrowse.
+
+setAttribute(SESSION,"userkeepswindowlocked","").
+DoLockWindow(?).
+
+IF getAttribute(SESSION,"UIB_is_Running") = "yes" THEN
+  DYNAMIC-FUNCTION("DoRedrawWindow",hBrowse:WINDOW).
 
 END PROCEDURE.
 
@@ -5206,6 +5579,7 @@ DEF VAR cPrimaryRowid       AS CHAR   NO-UNDO.
 DEF VAR cBuffersAndFields   AS CHAR   NO-UNDO.
 DEF VAR cBufferList         AS CHAR   NO-UNDO.
 DEF VAR cPrimaryKeyWidgets  AS CHAR   NO-UNDO.
+DEF VAR cParentLinkValues   AS CHAR   NO-UNDO.
 
 IF NOT DYNAMIC-FUNCTION("getIsEventAllowed",ttObject.hObject,"new") THEN RETURN.
 
@@ -5433,6 +5807,8 @@ ELSE DO:
     DYNAMIC-FUNCTION("setPostUpdProc",IF getAttribute(hBuffer,"postUpdateProc") NE "" THEN
                                         getAttribute(hBuffer,"postUpdateProc")
                                       ELSE getAttribute(hBrowse,"postUpdateProc")).
+                                      
+    cParentLinkValues = DYNAMIC-FUNCTION("getParentLinkValues",hBrowse).
 
     ASSIGN cUpdateValProc = IF getAttribute(hBrowse,"customUpdateValProc") NE "" THEN 
                               LEFT-TRIM(RIGHT-TRIM(getAttribute(hBrowse,"customUpdateValProc") + ",=" +
@@ -5456,9 +5832,9 @@ ELSE DO:
                              ELSE getAttribute(hBuffer,"bufferextrafields")),",")
            cExtraUpdateValues = DYNAMIC-FUNCTION("getParentLinkValues",hBrowse) +  
                             (IF getAttribute(hBrowse,"bufferextravalues") NE "" THEN 
-                               "|" + getAttribute(hBrowse,"bufferextravalues")
+                               (IF cParentLinkValues NE "" THEN "|" ELSE "") + getAttribute(hBrowse,"bufferextravalues")
                              ELSE IF getAttribute(hBuffer,"bufferextravalues") NE "" THEN 
-                               "|" + getAttribute(hBuffer,"bufferextravalues")
+                               (IF cParentLinkValues NE "" THEN "|" ELSE "") + getAttribute(hBuffer,"bufferextravalues")
                              ELSE "")
                             .
 
@@ -5895,7 +6271,8 @@ ELSE DO:
     
   iMaxCount = DYNAMIC-FUNCTION("fillQuery",ttObject.hObject,
                       INT(getAttribute(ttObject.hObject,"rowstobatch")),
-                      INT(getAttribute(ttObject.hObject,"querystart")),"","").
+                      INT(getAttribute(ttObject.hObject,"querystart")),"","","",
+                      getAttribute(ttObject.hObject,"querydesc") = "desc").
 END.
 
 setAttribute(ttObject.hObject,"querystart",STRING(iMaxCount)).
@@ -5969,7 +6346,8 @@ ELSE DO:
     
   iMaxCount = DYNAMIC-FUNCTION("fillQuery",ttObject.hObject,
                       INT(getAttribute(ttObject.hObject,"rowstobatch")),
-                      INT(getAttribute(ttObject.hObject,"querystart")),"","").
+                      INT(getAttribute(ttObject.hObject,"querystart")),"","","",
+                      getAttribute(ttObject.hObject,"querydesc") = "desc").
 END.
 
 setAttribute(ttObject.hObject,"querystart",STRING(iMaxCount)).
@@ -6059,7 +6437,8 @@ ELSE DO:
   
   iMaxCount = DYNAMIC-FUNCTION("fillQuery",hTmpObject,
                       INT(getAttribute(hTmpObject,"rowstobatch")),
-                      INT(getAttribute(hTmpObject,"querystart")),"","").
+                      INT(getAttribute(hTmpObject,"querystart")),"","","",
+                      bDesc).
 END.
 
 IF DYNAMIC-FUNCTION("getTransactionMessage") NE "" 
@@ -6435,7 +6814,8 @@ DEF VAR hColumn AS HANDLE NO-UNDO.
 
 FOR EACH bttObject 
     WHERE bttObject.cObjectType = "browse":
-  IF CAN-FIND(FIRST bttObjectLink
+      
+  IF VALID-HANDLE(bttObject.hObject) AND VALID-HANDLE(bttObject.hObject:WINDOW) AND bttObject.hObject:WINDOW = ihWindow AND CAN-FIND(FIRST bttObjectLink
               WHERE bttObjectLink.hFromObject = bttObject.hObject
                 AND bttObjectLink.cLinkType   = "browseoverlay") THEN DO:
     hColumn = bttObject.hObject:GET-BROWSE-COLUMN(1) NO-ERROR.
@@ -6608,6 +6988,8 @@ ASSIGN hCurrObject         = ttObject.hObject
        bFreezeEndResizeBrw = YES
        .
 
+//DoLockWindow(hCurrObject:WINDOW).
+
 IF getAttribute(hCurrObject,"enableOnToolbarClick") = "yes" AND getAttribute(ttObject.hObject,"enableupdate") = "yes" THEN DO:
   iCancelNextEvents = 2.  
   hCurrObject:SELECT-ROW(iPrevRow).
@@ -6672,8 +7054,8 @@ FOR EACH ttObjectLink
     hCurrObject:SELECT-ROW(iCurrRow).
     IF hCurrObject:MULTIPLE THEN 
       hCurrObject:SELECT-FOCUSED-ROW().
-    DoLockWindow(?).
-    
+    DYNAMIC-FUNCTION("DoRedrawWindow",hCurrObject:WINDOW).
+//    DoLockWindow(?).
   END.
 END.
 
@@ -6687,12 +7069,16 @@ IF bOverlays OR hCurrObject:MULTIPLE THEN DO:
     hCurrObject:SELECT-ROW(1).
     DisplayRow(hCurrObject).
   END.
+  
   IF CAN-FIND(FIRST ttObjectLink
               WHERE ttObjectLink.hFromObject = hCurrObject
-                AND ttObjectLink.cLinkType   = "browseoverlay") THEN
-    hCurrObject:REFRESH() NO-ERROR.
+                AND ttObjectLink.cLinkType   = "browseoverlay") THEN DO:
+    IF getAttribute(hCurrObject,"enableondblclick") = "" THEN               
+      hCurrObject:REFRESH() NO-ERROR.
+  END.  
 
-  DYNAMIC-FUNCTION("DispBrwOverlayWidgets",hCurrObject).  
+  IF bOverlays THEN
+    DYNAMIC-FUNCTION("DispBrwOverlayWidgets",hCurrObject).  
 END.  
 
 /* In the value-change we might have re-created the toggle overlays: */
@@ -6724,6 +7110,10 @@ bFreezeEndResizeBrw = NO.
 IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraRowEntry") THEN 
   RUN ExtraRowEntry IN hCurrSourceProc (hCurrObject).
 
+IF // getAttribute(SESSION,"userkeepswindowlocked") NE "yes" OR
+  getAttribute(hCurrObject,"redrawOnRowChange") = "YES" THEN 
+//  DoLockWindow(?).
+  DYNAMIC-FUNCTION("DoRedrawWindow",hCurrObject:WINDOW).
 
 END PROCEDURE.
 
@@ -7008,6 +7398,7 @@ IF (getAttribute(hCurrFieldMap,"uselocaldata") NE "yes" AND getAttribute(hQueryO
       IF iReturn = 2 THEN RETURN.
     END.
 
+    DYNAMIC-FUNCTION("setCurrentQueryObject",hQueryObject).
     bOk = DYNAMIC-FUNCTION("DoUpdate",getAttribute(hCurrFieldMap,"dbname") + hCurrFieldMap:NAME,
                   getAttribute(hCurrFieldMap,"customUpdateValProc"),
                   "",
@@ -7015,6 +7406,7 @@ IF (getAttribute(hCurrFieldMap,"uselocaldata") NE "yes" AND getAttribute(hQueryO
                   cInputFields,
                   cInputValues,
                   IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraSaveRecord") THEN FALSE ELSE TRUE).
+    DYNAMIC-FUNCTION("setCurrentQueryObject",?).
   END.
   ELSE IF cTBstate = "new" THEN DO:
     ASSIGN cParentLinkValues = DYNAMIC-FUNCTION("getParentLinkValues",hQueryObject)
@@ -7028,6 +7420,7 @@ IF (getAttribute(hCurrFieldMap,"uselocaldata") NE "yes" AND getAttribute(hQueryO
       ASSIGN cInputValues = cInputValues + cModParentLinkValues
              cInputFields = TRIM(cInputFields + cModParentLinkFields,",").
     
+    DYNAMIC-FUNCTION("setCurrentQueryObject",hQueryObject).
     bOk = DYNAMIC-FUNCTION("DoCreate",getAttribute(hCurrFieldMap,"dbname") + hCurrFieldMap:NAME,
                   IF getAttribute(hCurrFieldMap,"customUpdateValProc") NE "" THEN
                     LEFT-TRIM(RIGHT-TRIM(getAttribute(hCurrFieldMap,"customUpdateValProc") + ",=" +
@@ -7038,6 +7431,7 @@ IF (getAttribute(hCurrFieldMap,"uselocaldata") NE "yes" AND getAttribute(hQueryO
                   cInputFields,
                   cInputValues,
                   IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraSaveRecord") THEN FALSE ELSE TRUE).
+    DYNAMIC-FUNCTION("setCurrentQueryObject",?).
   END.
   ELSE RETURN ERROR "error".
   
@@ -7081,9 +7475,9 @@ IF getAttribute(hCurrFieldMap,"uselocaldata") NE "yes" AND getAttribute(hQueryOb
 ELSE DO:
   cBufferUpdateFields = getAttribute(hCurrFieldMap,"BufferUpdateFields").
 
-  DO ix = 1 TO NUM-ENTRIES(cBufferUpdateFields):
-    IF VALID-HANDLE(hCurrFieldMap:BUFFER-FIELD(ENTRY(ix,cBufferUpdateFields))) THEN
-      DYNAMIC-FUNCTION("assignStringValue",hCurrFieldMap:BUFFER-FIELD(ENTRY(ix,cBufferUpdateFields)),ENTRY(ix,cInputValues,CHR(1))).
+  DO ix = 1 TO NUM-ENTRIES(cInputFields):
+    IF VALID-HANDLE(hCurrFieldMap:BUFFER-FIELD(ENTRY(ix,cInputFields))) THEN
+      DYNAMIC-FUNCTION("assignStringValue",hCurrFieldMap:BUFFER-FIELD(ENTRY(ix,cInputFields)),ENTRY(ix,cInputValues,CHR(1))).
   END.
 END.
 
@@ -7112,6 +7506,7 @@ IF AVAIL ttObjectLink THEN DO:
 
   IF NOT getAttribute(hCurrFieldMap,"uselocaldata") = "yes" AND NOT getAttribute(hQueryObject,"uselocaldata") = "yes" THEN DO:
     DYNAMIC-FUNCTION("setCalcFieldProc",getAttribute(hRefreshObject,"calcfieldproc")).
+    DYNAMIC-FUNCTION("setCurrentQueryObject",hQueryObject).
     IF cPrimaryRowid NE "" THEN DO:
       DYNAMIC-FUNCTION("setCurrentRowid",cPrimaryRowid).
       DYNAMIC-FUNCTION("refreshRow",hRefreshObject,
@@ -7122,6 +7517,7 @@ IF AVAIL ttObjectLink THEN DO:
       DYNAMIC-FUNCTION("refreshRow",hRefreshObject,
                         getAttribute(hRefreshObject,"buffersandfields"),
                         getAttribute(hRefreshObject,"queryjoin")).
+    DYNAMIC-FUNCTION("setCurrentQueryObject",?).
   END.
 
   IF cTBstate = "new" THEN DO:
@@ -7223,6 +7619,45 @@ END PROCEDURE.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-ScrollHorizontalBrowse) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ScrollHorizontalBrowse Procedure
+PROCEDURE ScrollHorizontalBrowse:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DoLockWindow(IF ttObject.hObject:FRAME:TYPE = "dialog-box" THEN ttObject.hObject:FRAME ELSE ttObject.hObject:WINDOW).
+
+reDrawGridFilter(ttObject.hObject).
+
+FOR EACH ttObjectLink
+    WHERE ttObjectLink.hFromObject = ttObject.hObject
+      AND ttObjectLink.cLinkType   = "browseoverlay":
+
+  ttObjectLink.hToObject:VISIBLE = FALSE.
+  FOR EACH ttEvent
+      WHERE ttEvent.hObject = ttObjectLink.hToObject
+        AND ttEvent.cName   = "lookup":
+    ttEvent.hWidget:VISIBLE = NO.
+  END.
+END.
+
+IF ttObject.hObject:FRAME:TYPE = "dialog-box" THEN
+  DoLockWindow(?).
+ELSE  
+  DYNAMIC-FUNCTION("DoRedrawWindow",ttObject.hObject:WINDOW).
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-ScrollNotifyBrowse) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ScrollNotifyBrowse Procedure 
@@ -7319,7 +7754,7 @@ IF ((getAttribute(SESSION,"windowsbrowse") = "yes" AND getAttribute(ttObject.hOb
             END.
           END.
           APPLY "value-changed" TO hCurrObject.
-          DoLockWindow(?).
+//          DoLockWindow(?).
           bMyReturnNoApply = YES.
           LEAVE WindowsBrowse.
         END.
@@ -7386,7 +7821,7 @@ IF ((getAttribute(SESSION,"windowsbrowse") = "yes" AND getAttribute(ttObject.hOb
             END.
           END.
           APPLY "value-changed" TO hCurrObject.
-          DoLockWindow(?).
+//          DoLockWindow(?).
           bMyReturnNoApply = YES.
           LEAVE WindowsBrowse.
         END.
@@ -7422,6 +7857,7 @@ FOR EACH ttObjectLink
   END.
 END.
 
+
 IF hCurrObject:FRAME:TYPE NE "dialog-box" THEN
   ASSIGN hCurrObject:FRAME:WIDTH-PIXELS  = iTmpXpixels
          hCurrObject:FRAME:HEIGHT-PIXELS = iTmpYpixels
@@ -7433,7 +7869,6 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
-
 &IF DEFINED(EXCLUDE-SelectAllRowsRecord) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SelectAllRowsRecord Procedure 
@@ -7707,6 +8142,28 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-ShiftCursorRightGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ShiftCursorRightGridFilter Procedure
+PROCEDURE ShiftCursorRightGridFilter:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hBrowse AS HANDLE NO-UNDO.
+
+hBrowse = DYNAMIC-FUNCTION("getLinkedObject",ttObject.hObject,"browse","from").
+IF VALID-HANDLE(hBrowse) THEN APPLY "cursor-right" TO hBrowse.
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-ShiftCursorUpBrowse) = 0 &THEN
 
@@ -7991,24 +8448,36 @@ IF NOT AVAIL ttObjectLink THEN
 IF AVAIL ttObjectLink THEN DO:
   hQueryObject = ttObjectLink.hToObject.
 
-  FOR EACH ttAttribute
-      WHERE ttAttribute.hObject = hQueryObject:
-    IF ttAttribute.cName BEGINS "OperatorInUse_"
-      OR ttAttribute.cName BEGINS "FilterValue_"
-      OR ttAttribute.cName BEGINS "GroupOperator_"
-      OR ttAttribute.cName BEGINS "FieldGroup_"
-      OR ttAttribute.cName BEGINS "FieldOperator_"
-      OR ttAttribute.cName BEGINS "HiddenGroupOperator_"
-      THEN
-     DELETE ttAttribute.
-  END.
+  IF getAttribute(ttObject.hObject,"gridfilter") = "yes" THEN
+    FOR EACH ttAttribute
+        WHERE ttAttribute.hObject = hQueryObject:
+      IF ttAttribute.cName BEGINS "gridOperatorInUse_"
+        OR ttAttribute.cName BEGINS "gridFilterValue_"
+        OR ttAttribute.cName BEGINS "gridFieldOperator_"
+        THEN
+       DELETE ttAttribute.
+    END.
+  ELSE
+    FOR EACH ttAttribute
+        WHERE ttAttribute.hObject = hQueryObject:
+      IF ttAttribute.cName BEGINS "OperatorInUse_"
+        OR ttAttribute.cName BEGINS "FilterValue_"
+        OR ttAttribute.cName BEGINS "GroupOperator_"
+        OR ttAttribute.cName BEGINS "FieldGroup_"
+        OR ttAttribute.cName BEGINS "FieldOperator_"
+        OR ttAttribute.cName BEGINS "HiddenGroupOperator_"
+        THEN
+       DELETE ttAttribute.
+    END.
 
   PUBLISH "BeforeSetDynFilter" (hQueryObject).
 
   bActiveFilter = setDynFilter("Execute",hDynFilter,hQueryObject,"","").
   IF bActiveFilter = ? THEN RETURN.
 
-  PUBLISH "DynFilterDefined" (hQueryObject).
+  IF getAttribute(hQueryObject,"noPublishDynFilterDefined") = "" THEN
+    PUBLISH "DynFilterDefined" (hQueryObject).
+  setAttribute(hQueryObject,"noPublishDynFilterDefined","").  
 
   hWidget = WIDGET-HANDLE(getAttribute(hDynFilter,"filterbutton")).
   
@@ -8029,10 +8498,12 @@ IF AVAIL ttObjectLink THEN DO:
       END.
     END.
     &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN
-      IF cActiveFilterButton NE "" AND bActiveFilter THEN
-        hWidget:LOAD-IMAGE(cActiveFilterButton) NO-ERROR.
-      ELSE IF NOT bActiveFilter AND cPassiveFilterButton NE "" THEN
-        hWidget:LOAD-IMAGE(cPassiveFilterButton) NO-ERROR.
+      IF getAttribute(hDynFilter,"gridFilter") = "" THEN DO:
+        IF cActiveFilterButton NE "" AND bActiveFilter THEN
+          hWidget:LOAD-IMAGE(cActiveFilterButton) NO-ERROR.
+        ELSE IF NOT bActiveFilter AND cPassiveFilterButton NE "" THEN
+          hWidget:LOAD-IMAGE(cPassiveFilterButton) NO-ERROR.
+      END.    
     &ENDIF    
   END.
 
@@ -8142,7 +8613,11 @@ IF AVAIL ttObjectLink THEN DO:
   END.
   DYNAMIC-FUNCTION("initDynFilter",ttObjectLink.hToObject,cFieldList,cOperatorList,cValueList,"static").  
   DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","").
-  DYNAMIC-FUNCTION("DoLockWindow",?).
+  
+  IF VALID-HANDLE(hBrowse) AND VALID-HANDLE(hBrowse:WINDOW) THEN
+    DYNAMIC-FUNCTION("DoRedrawWindow",hBrowse:WINDOW).
+  ELSE  
+    DYNAMIC-FUNCTION("DoLockWindow",?).
 END.
 
 END PROCEDURE.
@@ -8151,6 +8626,105 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-StartGridFilterRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartGridFilterRecord Procedure
+PROCEDURE StartGridFilterRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hWidget       AS HANDLE NO-UNDO.
+DEF VAR cOperator     AS CHAR   NO-UNDO.
+DEF VAR hBrowse       AS HANDLE NO-UNDO.
+DEF VAR cFieldList    AS CHAR   NO-UNDO.
+DEF VAR cOperatorList AS CHAR   NO-UNDO.
+DEF VAR cValueList    AS CHAR   NO-UNDO.
+DEF VAR cValue        AS CHAR   NO-UNDO.
+DEF VAR cTmpOper      AS CHAR   NO-UNDO.
+DEF VAR hReturnTo     AS HANDLE NO-UNDO.
+DEF VAR hField        AS HANDLE NO-UNDO.
+
+IF NOT ttObject.cObjectType = "gridfilter" THEN
+  RETURN.
+
+hReturnTo = hCurrWidget.
+                                             
+FIND FIRST ttObjectLink
+     WHERE ttObjectLink.hFromObject = ttObject.hObject
+       AND ttObjectLink.cLinkType   = "browse" NO-ERROR.
+
+IF AVAIL ttObjectLink THEN DO:
+  hBrowse = ttObjectLink.hToObject.
+  FOR EACH bttAttribute NO-LOCK OF ttObject
+      WHERE bttAttribute.cName BEGINS "filterfield_":
+  
+    hWidget = WIDGET-HANDLE(getAttribute(ttObject.hObject,bttAttribute.cName)).
+    hField = hBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(SUBSTR(hWidget:NAME,8)).
+
+    hWidget:SCREEN-VALUE = REPLACE(hWidget:SCREEN-VALUE,'%',"*").
+    IF hWidget:SCREEN-VALUE = "*" THEN hWidget:SCREEN-VALUE = "".
+
+    setAttribute(ttObjectLink.hToObject,
+                 "gridfiltervalue_" + hWidget:NAME,IF hWidget:SCREEN-VALUE NE ? THEN hWidget:SCREEN-VALUE ELSE "").
+    
+    IF hWidget:SCREEN-VALUE NE ? 
+       AND hWidget:SCREEN-VALUE NE "" 
+       AND IF CAN-DO("INTEGER,DECIMAL,INT64",hWidget:DATA-TYPE) THEN hWidget:INPUT-VALUE NE 0 ELSE TRUE
+       AND IF CAN-DO("CHARACTER",hWidget:DATA-TYPE) THEN hWidget:INPUT-VALUE NE "" ELSE TRUE
+       THEN DO:
+
+      ASSIGN cOperator = ""
+             cTmpOper  = "".
+      IF getAttribute(ttObject.hObject,"operator_" + hWidget:NAME) NE "" THEN 
+        cOperator = getAttribute(ttObject.hObject,"operator_" + hWidget:NAME).
+      ELSE IF hField:DATA-TYPE = "CHARACTER" THEN
+        cOperator = (IF INDEX(hWidget:SCREEN-VALUE,"*") > 0 THEN
+                       "MATCHES"
+                     ELSE "BEGINS").
+      ELSE                     
+        cOperator = "=".
+
+      IF cOperator NE "" THEN DO:
+        cValue = hWidget:SCREEN-VALUE.
+        IF cOperator = "MATCHES" AND INDEX(cValue,"*") = 0 THEN cValue = "*" + cValue + "*".
+        ELSE IF cOperator = "MATCHES" AND INDEX(cValue,"*") = LENGTH(cValue) THEN 
+          ASSIGN cOperator = "BEGINS"
+                 cValue = SUBSTR(cValue,1,LENGTH(cValue) - 1)
+                 cTmpOper = "MATCHES".
+        ELSE IF hWidget:DATA-TYPE = "CHARACTER" AND INDEX(cValue,"*") > 0 THEN cOperator = "MATCHES".
+        ASSIGN cFieldList    = cFieldList + (IF cFieldList NE "" THEN "," ELSE "") + getAttribute(ttObject.hObject,"bufferfield_" + hWidget:NAME)
+               cOperatorList = cOperatorList + (IF cOperatorList NE "" THEN "," ELSE "") + cOperator 
+               cValueList    = cValueList + (IF cValueList NE "" THEN "|" ELSE "") + cValue.
+               .
+      END.         
+
+      setAttribute(ttObjectLink.hToObject,"gridOperatorInUse_" + hWidget:NAME,(IF cTmpOper NE "" THEN cTmpOper ELSE cOperator)).
+
+    END.      
+  END.
+  DYNAMIC-FUNCTION("initGridFilter",ttObjectLink.hToObject,cFieldList,cOperatorList,cValueList,"execute").  
+  DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","").
+
+  hWidgetEnd = hReturnTo.
+  
+  IF VALID-HANDLE(hBrowse) AND VALID-HANDLE(hBrowse:WINDOW) THEN
+    DYNAMIC-FUNCTION("DoRedrawWindow",hBrowse:WINDOW).
+  ELSE  
+    DYNAMIC-FUNCTION("DoLockWindow",?).
+    
+END.
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-StartSearch) = 0 &THEN
 
@@ -8243,7 +8817,10 @@ IF getAttribute(ttObject.hObject,"uselocaldata") NE "yes" THEN DO:
   DO ix = 1 TO NUM-ENTRIES(cSortMap):
     IF ENTRY(1,ENTRY(ix,cSortMap),";") = cNewSort THEN DO:
       setAttribute(ttObject.hObject,"querysort",ENTRY(2,ENTRY(ix,cSortMap),";")).
-      setAttribute(ttObject.hObject,"localsort","").
+/*      setAttribute(ttObject.hObject,"localsort",""). */
+      setAttribute(ttObject.hObject,"localsort",ENTRY(1,ENTRY(ix,cSortMap),";")). /* fixed for sql */
+      setAttribute(ttObject.hObject,"1stSortColumn",ENTRY(1,ENTRY(ix,cSortMap),";")). /* fixed for sql */
+      setAttribute(ttObject.hObject,"1stDbSortColumn",ENTRY(2,ENTRY(ix,cSortMap),";")). /* fixed for sql */
       setAttribute(ttObject.hObject,"sortbuffer",getAttribute(ttObject.hObject,"fieldbuffer" + ENTRY(2,ENTRY(ix,cSortMap),";"))).
       bOK = FALSE.
     END.
@@ -8318,6 +8895,8 @@ IF bOK THEN DO:
 
   DYNAMIC-FUNCTION("ComposeSortString",hBrowse,NO).
 
+  PUBLISH "SortStringChanged" (hBrowse).      
+
   iMaxCount = DYNAMIC-FUNCTION("fillBrowse",hBrowse,
                       INT(getAttribute(hBrowse,"rowstobatch")),
                       INT(getAttribute(hBrowse,"querystart")),"","","",
@@ -8384,9 +8963,26 @@ DEF VAR cInpVal         AS CHAR   NO-UNDO.
 DEF VAR cCalcFlfFilter  AS CHAR   NO-UNDO.
 DEF VAR hRowCnt         AS HANDLE NO-UNDO.
 DEF VAR cTemp           AS CHAR   NO-UNDO.
+DEF VAR ix              AS INT    NO-UNDO.
 
 hCobj   = ttObject.hObject.
-cInpVal = ttObject.hObject:INPUT-VALUE.
+IF hCobj:DATA-TYPE BEGINS "DATETIME" THEN DO:
+  cInpVal = hObj:SCREEN-VALUE.
+  cInpVal = TRIM(cInpVal).
+  cInpVal = TRIM(cInpVal,",").
+  cInpVal = TRIM(cInpVal).
+  cInpVal = TRIM(cInpVal,".").
+  cInpVal = TRIM(cInpVal).
+  cInpVal = TRIM(cInpVal,":").
+  cInpVal = TRIM(cInpVal).
+  cInpVal = TRIM(cInpVal,":").
+  cInpVal = TRIM(cInpVal).
+  cInpVal = TRIM(cInpVal,":").
+  cInpVal = TRIM(cInpVal).
+END.  
+ELSE  
+  cInpVal = ttObject.hObject:INPUT-VALUE NO-ERROR.
+IF ERROR-STATUS:ERROR THEN cInpVal = "".
 
 FIND FIRST ttObjectLink 
      WHERE ttObjectLink.hFromObject = ttObject.hObject
@@ -8398,11 +8994,11 @@ IF NOT AVAIL ttObjectLink THEN DO:
   RETURN.
 END.
 
-ASSIGN hTmpObject        = ttObjectLink.hToObject
+ASSIGN hTmpObject   = ttObjectLink.hToObject
        hMyTmpQryObj = hTmpObject
        hMyTmpFldObj = ttObject.hObject
-       bOk               = TRUE
-       bDesc             = getAttribute(hTmpObject,"querydesc") = "desc"
+       bOk          = TRUE
+       bDesc        = getAttribute(hTmpObject,"querydesc") = "desc"
        .
 
 hRowCnt = hTmpObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD("RowCount") NO-ERROR. 
@@ -8525,17 +9121,27 @@ IF bOK THEN DO:
           setAttribute(hTmpObject,"querywhere","").
       END.
     END.
-    WHEN "LOGICAL" THEN 
-      setAttribute(hTmpObject,"querywhere",cWhereAnd + cDbFld + cOperator +
-                                                       STRING(hCobj:INPUT-VALUE)
-                                                       ).
+    WHEN "LOGICAL" THEN DO:
+      IF cInpVal NE "" THEN
+        setAttribute(hTmpObject,"querywhere",cWhereAnd + cDbFld + cOperator + cInpVal).
+      ELSE
+        setAttribute(hTmpObject,"querywhere","").
+    END.                                                   
     OTHERWISE DO:
-      IF ttObject.hObject:DATA-TYPE BEGINS "date" THEN DO:
+      IF ttObject.hObject:DATA-TYPE = "date" THEN DO:
         IF hCobj:INPUT-VALUE = ? THEN
           setAttribute(hTmpObject,"querywhere","").
         ELSE 
           setAttribute(hTmpObject,"querywhere",cWhereAnd + cDbFld + cOperator +
                                                            ttObject.hObject:DATA-TYPE + "('" + hCobj:INPUT-VALUE + "')"
+                                                          ).
+      END.  
+      ELSE IF ttObject.hObject:DATA-TYPE BEGINS "date" THEN DO:
+        IF cInpVal = ? THEN
+          setAttribute(hTmpObject,"querywhere","").
+        ELSE 
+          setAttribute(hTmpObject,"querywhere",cWhereAnd + cDbFld + cOperator +
+                                                           ttObject.hObject:DATA-TYPE + "('" + cInpVal + "')"
                                                           ).
       END.  
       ELSE IF hCobj:INPUT-VALUE = 0 THEN
@@ -8546,6 +9152,13 @@ IF bOK THEN DO:
                                                          ).
     END.
   END CASE.
+  
+  IF getAttribute(hTmpObject,"queryWhere") = "" THEN DO:
+    RUN OpenQuery.
+    setAttribute(SESSION,"userkeepswindowlocked","").
+    DoLockWindow(?).
+    RETURN.
+  END. 
 
   IF (getAttribute(hTmpObject,"uselocaldata") = "yes" OR cSearchDef = "goto") AND NOT
      (getAttribute(hTmpObject,"uselocaldata") = "yes" AND TRIM(cOperator) = "MATCHES")
@@ -8553,7 +9166,7 @@ IF bOK THEN DO:
 
     hTmpObject:QUERY:QUERY-PREPARE("PRESELECT EACH " + hTmpObject:QUERY:GET-BUFFER-HANDLE(1):NAME + " NO-LOCK "
                                  + (IF getAttribute(hTmpObject,"uselocaldata") = "yes" THEN
-                                      getAttribute(hTmpObject,"baseQuery") + getAttribute(hTmpObject,"QueryFilter")
+                                      localQuery(hTmpObject)
                                     ELSE "")
                                  + " BY " + getAttribute(hTmpObject,"localsort") 
                                  + (IF VALID-HANDLE(hRowCnt) THEN 
@@ -8580,7 +9193,7 @@ IF bOK THEN DO:
         hTmpQry:QUERY-PREPARE("FOR EACH " + hTmpObject:QUERY:GET-BUFFER-HANDLE(1):NAME
                               + " NO-LOCK " 
                               + (IF getAttribute(hTmpObject,"uselocaldata") = "yes" THEN
-                                   getAttribute(hTmpObject,"baseQuery") + getAttribute(hTmpObject,"QueryFilter")
+                                   localQuery(hTmpObject)
                                  ELSE (IF TRIM(getAttribute(hTmpObject,"querywhere")) BEGINS "AND " THEN " WHERE TRUE " ELSE ""))
                               + REPLACE(getAttribute(hTmpObject,"querywhere"),cDbFld,cClientFld)
                               + " BY " + getAttribute(hTmpObject,"localsort") 
@@ -8593,7 +9206,7 @@ IF bOK THEN DO:
           hTmpQry:QUERY-PREPARE("FOR EACH " + hTmpObject:QUERY:GET-BUFFER-HANDLE(1):NAME
                                 + " NO-LOCK " 
                                 + (IF getAttribute(hTmpObject,"uselocaldata") = "yes" THEN
-                                     getAttribute(hTmpObject,"baseQuery") + getAttribute(hTmpObject,"QueryFilter")
+                                     localQuery(hTmpObject)
                                    ELSE (IF TRIM(getAttribute(hTmpObject,"querywhere")) BEGINS "AND " THEN " WHERE TRUE " ELSE ""))
                                 + REPLACE(getAttribute(hTmpObject,"querywhere"),cDbFld,cClientFld)
                                 + " BY SUBSTR('" + getAttribute(hTmpObject,"localsort") + "',1,50)" 
@@ -8610,6 +9223,8 @@ IF bOK THEN DO:
         IF bReposOk 
            AND getAttribute(hTmpObject,"uselocaldata") NE "yes"
            AND hCobj:DATA-TYPE NE "CHARACTER" 
+           AND hCobj:DATA-TYPE NE "LOGICAL" 
+           AND NOT hCobj:DATA-TYPE BEGINS "DATET"
            AND STRING(hTmpObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(cClientFld):BUFFER-VALUE) NE hCobj:INPUT-VALUE THEN DO:
           IF CAN-DO(getAttribute(hTmpObject,"allcalcfields"),cClientFld) THEN DO:
             setAttribute(hTmpObject,"calcfieldwhere",cClientFld + "¤=¤" + hCobj:INPUT-VALUE).
@@ -8853,6 +9468,93 @@ END PROCEDURE.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-ToCsvRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ToCsvRecord Procedure
+PROCEDURE ToCsvRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hQryOrBrowse AS HANDLE NO-UNDO.
+DEF VAR hCurrObject  AS HANDLE NO-UNDO.
+DEF VAR htt          AS HANDLE NO-UNDO.
+DEF VAR cFileName    AS CHAR   NO-UNDO.
+DEF VAR ix           AS INT    NO-UNDO.
+DEF VAR hBuffer      AS HANDLE NO-UNDO.
+DEF VAR cExceptCols  AS CHAR   NO-UNDO.
+DEF VAR cCsvDelim    AS CHAR   NO-UNDO.
+
+hCurrObject = ttObject.hObject.
+
+hQryOrBrowse = getLinkedQueryObject(hCurrObject).
+
+IF hQryOrBrowse = ? THEN DO:
+  MESSAGE "Invalid object ref for export (not linked to query or browse object)"
+  VIEW-AS ALERT-BOX.
+  RETURN.
+END.  
+IF hQryOrBrowse:TYPE = "BROWSE" THEN
+  hBuffer = hQryOrBrowse:QUERY:GET-BUFFER-HANDLE (1).
+ELSE
+  hBuffer = hQryOrBrowse:GET-BUFFER-HANDLE (1). 
+
+ cFileName = hBuffer:NAME + ".csv".
+
+SYSTEM-DIALOG GET-FILE cFileName USE-FILENAME.
+
+IF cFileName = "" THEN RETURN.
+
+IF NUM-ENTRIES(cFileName,".") = 1 THEN cFileName = cFileName + ".csv".
+
+cCsvDelim = getAttribute(hQryOrBrowse,"csvDelimiter").
+
+cExceptCols = IF getAttribute(hQryOrBrowse,"distinctcolumns") NE "" THEN 
+                "RowCount" 
+              ELSE "RowCount,jbCountDistinct,jbAverage".
+IF hQryOrBrowse:TYPE = "BROWSE" THEN 
+  DO ix = 1 TO hQryOrBrowse:NUM-COLUMNS:
+    IF NOT hQryOrBrowse:GET-BROWSE-COLUMN (ix):VISIBLE THEN
+      cExceptCols = cExceptCols + "," + hQryOrBrowse:GET-BROWSE-COLUMN (ix):NAME.
+  END.  
+
+IF hQryOrBrowse:TYPE = "BROWSE" AND hQryOrBrowse:NUM-SELECTED-ROWS > 1 THEN DO:
+  CREATE TEMP-TABLE htt.
+  DO ix = 1 TO hBuffer:NUM-FIELDS:
+    IF CAN-DO(cExceptCols,hBuffer:BUFFER-FIELD(ix):NAME) 
+       OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent"
+       OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "jbextent_"
+          THEN NEXT.
+         
+    htt:ADD-LIKE-FIELD (hBuffer:BUFFER-FIELD(ix):NAME, hBuffer:BUFFER-FIELD(ix):HANDLE).
+  END.
+  htt:TEMP-TABLE-PREPARE(hBuffer:NAME).
+  
+  DO ix = 1 TO hQryOrBrowse:NUM-SELECTED-ROWS:
+    IF hQryOrBrowse:FETCH-SELECTED-ROW (ix) THEN DO:
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-CREATE().
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-COPY(hBuffer).
+    END.
+  END.
+  BufferToCsv(htt:DEFAULT-BUFFER-HANDLE,cFileName,cCsvDelim,cExceptCols,YES).
+  DELETE OBJECT htt.
+END.    
+
+ELSE IF FetchAllRows(hCurrObject) THEN 
+  BufferToCsv(hBuffer,cFileName,cCsvDelim,cExceptCols,YES).
+
+setCurrentObject(hCurrObject).
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-TodaysDateKey) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE TodaysDateKey Procedure 
@@ -8864,13 +9566,13 @@ PROCEDURE TodaysDateKey :
 ------------------------------------------------------------------------------*/
 IF VALID-HANDLE(hCurrWidget) AND hCurrWidget:TYPE = "fill-in" AND hCurrWidget:DATA-TYPE = "date" THEN DO:
   IF DATE(hCurrWidget:SCREEN-VALUE) = ? THEN
-    hCurrWidget:SCREEN-VALUE = STRING(TODAY).
+    hCurrWidget:SCREEN-VALUE = STRING(TODAY) NO-ERROR.
   IF LAST-EVENT:FUNCTION = "+" THEN
     hCurrWidget:SCREEN-VALUE = STRING(DATE(hCurrWidget:SCREEN-VALUE) + 1).
   ELSE IF LAST-EVENT:FUNCTION = "-" THEN
     hCurrWidget:SCREEN-VALUE = STRING(DATE(hCurrWidget:SCREEN-VALUE) - 1).
   ELSE
-    hCurrWidget:SCREEN-VALUE = STRING(TODAY).
+    hCurrWidget:SCREEN-VALUE = STRING(TODAY) NO-ERROR.
 
   RUN AnyPrintableKey.
 END.
@@ -8880,6 +9582,266 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-ToJsonRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ToJsonRecord Procedure
+PROCEDURE ToJsonRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hQryOrBrowse AS HANDLE NO-UNDO.
+DEF VAR hCurrObject  AS HANDLE NO-UNDO.
+DEF VAR htt          AS HANDLE NO-UNDO.
+DEF VAR hBuffer      AS HANDLE NO-UNDO.
+DEF VAR cFileName    AS CHAR   NO-UNDO.
+DEF VAR ix           AS INT    NO-UNDO.
+DEF VAR cExceptCols  AS CHAR   NO-UNDO.
+
+hCurrObject = ttObject.hObject.
+
+hQryOrBrowse = getLinkedQueryObject(hCurrObject).
+
+IF hQryOrBrowse = ? THEN DO:
+  MESSAGE "Invalid object ref for export (not linked to query or browse object)"
+  VIEW-AS ALERT-BOX.
+  RETURN.
+END.  
+
+IF hQryOrBrowse:TYPE = "BROWSE" THEN
+  hBuffer = hQryOrBrowse:QUERY:GET-BUFFER-HANDLE (1).
+ELSE
+  hBuffer = hQryOrBrowse:GET-BUFFER-HANDLE (1). 
+
+ cFileName = hBuffer:NAME + ".json".
+
+SYSTEM-DIALOG GET-FILE cFileName USE-FILENAME.
+
+IF cFileName = "" THEN RETURN.
+
+IF NUM-ENTRIES(cFileName,".") = 1 THEN cFileName = cFileName + ".json".
+
+CREATE TEMP-TABLE htt.
+
+cExceptCols = IF getAttribute(hQryOrBrowse,"distinctcolumns") NE "" THEN 
+                "RowCount" 
+              ELSE "RowCount,jbCountDistinct,jbAverage".
+
+IF hQryOrBrowse:TYPE = "BROWSE" THEN 
+  DO ix = 1 TO hQryOrBrowse:NUM-COLUMNS:
+    IF NOT hQryOrBrowse:GET-BROWSE-COLUMN (ix):VISIBLE THEN
+      cExceptCols = cExceptCols + "," + hQryOrBrowse:GET-BROWSE-COLUMN (ix):NAME.
+  END.  
+
+DO ix = 1 TO hBuffer:NUM-FIELDS:
+  IF CAN-DO(cExceptCols,hBuffer:BUFFER-FIELD(ix):NAME) 
+     OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent"
+     OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "jbextent_"
+        THEN NEXT.
+       
+  htt:ADD-LIKE-FIELD (hBuffer:BUFFER-FIELD(ix):NAME, hBuffer:BUFFER-FIELD(ix):HANDLE).
+END.
+htt:TEMP-TABLE-PREPARE(hBuffer:NAME).
+
+IF hQryOrBrowse:TYPE = "BROWSE" AND hQryOrBrowse:NUM-SELECTED-ROWS > 1 THEN DO:
+  DO ix = 1 TO hQryOrBrowse:NUM-SELECTED-ROWS:
+    IF hQryOrBrowse:FETCH-SELECTED-ROW (ix) THEN DO:
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-CREATE().
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-COPY(hQryOrBrowse:QUERY:GET-BUFFER-HANDLE (1)).
+    END.
+  END.
+  htt:WRITE-JSON("file",cFileName,YES,"utf-8").
+END.    
+ELSE IF FetchAllRows(hCurrObject) THEN DO:
+  htt:COPY-TEMP-TABLE (hBuffer,NO,NO,YES).
+  htt:WRITE-JSON("file",cFileName,YES,"utf-8").
+END.  
+  
+DO ON ERROR UNDO, THROW:  
+  System.Diagnostics.Process:Start("notepad.exe",cFileName).
+  CATCH eOS AS Progress.Lang.Error :
+     MESSAGE eOS:GetMessage(1) VIEW-AS ALERT-BOX.
+  END CATCH.
+END.
+
+FINALLY:
+  DELETE OBJECT htt NO-ERROR.
+  setCurrentObject(hCurrObject).
+END.  
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-ToXmlRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ToXmlRecord Procedure
+PROCEDURE ToXmlRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hQryOrBrowse AS HANDLE NO-UNDO.
+DEF VAR hCurrObject  AS HANDLE NO-UNDO.
+DEF VAR htt          AS HANDLE NO-UNDO.
+DEF VAR hBuffer      AS HANDLE NO-UNDO.
+DEF VAR cFileName    AS CHAR   NO-UNDO.
+DEF VAR ix           AS INT    NO-UNDO.
+DEF VAR cExceptCols  AS CHAR   NO-UNDO.
+
+hCurrObject = ttObject.hObject.
+
+hQryOrBrowse = getLinkedQueryObject(hCurrObject).
+
+IF hQryOrBrowse = ? THEN DO:
+  MESSAGE "Invalid object ref for export (not linked to query or browse object)"
+  VIEW-AS ALERT-BOX.
+  RETURN.
+END.  
+
+IF hQryOrBrowse:TYPE = "BROWSE" THEN
+  hBuffer = hQryOrBrowse:QUERY:GET-BUFFER-HANDLE (1).
+ELSE
+  hBuffer = hQryOrBrowse:GET-BUFFER-HANDLE (1). 
+
+ cFileName = hBuffer:NAME + ".xml".
+
+SYSTEM-DIALOG GET-FILE cFileName USE-FILENAME.
+
+IF cFileName = "" THEN RETURN.
+
+IF NUM-ENTRIES(cFileName,".") = 1 THEN cFileName = cFileName + ".xml".
+
+CREATE TEMP-TABLE htt.
+
+cExceptCols = IF getAttribute(hQryOrBrowse,"distinctcolumns") NE "" THEN 
+                "RowCount" 
+              ELSE "RowCount,jbCountDistinct,jbAverage".
+IF hQryOrBrowse:TYPE = "BROWSE" THEN 
+  DO ix = 1 TO hQryOrBrowse:NUM-COLUMNS:
+    IF NOT hQryOrBrowse:GET-BROWSE-COLUMN (ix):VISIBLE THEN
+      cExceptCols = cExceptCols + "," + hQryOrBrowse:GET-BROWSE-COLUMN (ix):NAME.
+  END.  
+
+DO ix = 1 TO hBuffer:NUM-FIELDS:
+  IF CAN-DO(cExceptCols,hBuffer:BUFFER-FIELD(ix):NAME) 
+     OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent"
+     OR hBuffer:BUFFER-FIELD(ix):NAME BEGINS "jbextent_"
+        THEN NEXT.
+       
+  htt:ADD-LIKE-FIELD (hBuffer:BUFFER-FIELD(ix):NAME, hBuffer:BUFFER-FIELD(ix):HANDLE).
+END.
+htt:TEMP-TABLE-PREPARE(hBuffer:NAME).
+
+IF hQryOrBrowse:TYPE = "BROWSE" AND hQryOrBrowse:NUM-SELECTED-ROWS > 1 THEN DO:
+  DO ix = 1 TO hQryOrBrowse:NUM-SELECTED-ROWS:
+    IF hQryOrBrowse:FETCH-SELECTED-ROW (ix) THEN DO:
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-CREATE().
+      htt:DEFAULT-BUFFER-HANDLE:BUFFER-COPY(hQryOrBrowse:QUERY:GET-BUFFER-HANDLE (1)).
+    END.
+  END.
+  htt:WRITE-XML("file",cFileName,YES,"utf-8").
+END.    
+ELSE IF FetchAllRows(hCurrObject) THEN DO:
+  htt:COPY-TEMP-TABLE (hBuffer,NO,NO,YES).
+  htt:WRITE-XML("file",cFileName,YES,"utf-8").
+END.  
+  
+DO ON ERROR UNDO, THROW:  
+  System.Diagnostics.Process:Start("notepad.exe",cFileName).
+  CATCH eOS AS Progress.Lang.Error :
+     MESSAGE eOS:GetMessage(1) VIEW-AS ALERT-BOX.
+  END CATCH.
+END.
+
+FINALLY:
+  DELETE OBJECT htt NO-ERROR.
+  setCurrentObject(hCurrObject).
+END.  
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-ToXmlSchemaRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ToXmlSchemaRecord Procedure
+PROCEDURE ToXmlSchemaRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR iNewBatch    AS INT NO-UNDO.
+DEF VAR iMaxCount    AS INT NO-UNDO.
+DEF VAR hQryOrBuffer AS HANDLE NO-UNDO.
+DEF VAR hCurrObject  AS HANDLE NO-UNDO.
+DEF VAR htt          AS HANDLE NO-UNDO.
+DEF VAR cFileName    AS CHAR   NO-UNDO.
+DEF VAR ix           AS INT    NO-UNDO.
+DEF VAR cRowsToBatch AS CHAR   NO-UNDO.  
+
+
+SYSTEM-DIALOG GET-FILE cFileName.
+
+IF cFileName = "" THEN RETURN.
+
+IF NUM-ENTRIES(cFileName,".") = 1 THEN cFileName = cFileName + ".xsd".
+
+hCurrObject = ttObject.hObject.
+
+IF ttObject.cObjectType = "browse" THEN 
+  hQryOrBuffer = ttObject.hObject.
+ELSE DO:
+  FIND FIRST ttObjectLink
+       WHERE ttObjectLink.hFromObject = ttObject.hObject 
+         AND ttObjectLink.cLinkType   = "browse" 
+       NO-ERROR.
+  IF NOT AVAIL ttObjectLink THEN
+    FIND FIRST ttObjectLink
+         WHERE ttObjectLink.hFromObject = ttObject.hObject 
+           AND ttObjectLink.cLinkType   = "fieldmap" 
+         NO-ERROR.
+  IF NOT AVAIL ttObjectLink THEN
+    FIND FIRST ttObjectLink
+         WHERE ttObjectLink.hFromObject = ttObject.hObject 
+           AND ttObjectLink.cLinkType   = "query" 
+         NO-ERROR.
+  IF AVAIL ttObjectLink THEN 
+    FIND FIRST ttObject 
+         WHERE ttObject.hObject = ttObjectLink.hToObject
+         NO-ERROR.
+  IF NOT AVAIL ttObject THEN RETURN.
+  hQryOrBuffer = ttObject.hObject.  
+END.
+
+IF hQryOrBuffer:TYPE = "BROWSE" THEN 
+  hQryOrBuffer:QUERY:GET-BUFFER-HANDLE (1):WRITE-XMLSCHEMA("file",cFileName,YES,"utf-8").
+  
+OS-COMMAND NO-WAIT VALUE("notepad " + cFileName).  
+
+setCurrentObject(hCurrObject).
+
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-UndoRecord) = 0 &THEN
 
@@ -9081,6 +10043,7 @@ ELSE DO:
                               .
       IF DYNAMIC-FUNCTION("getIsAttributeSet",hBrowse,"serverTransInputParam") THEN
         DYNAMIC-FUNCTION("setServerTransInputParam",DYNAMIC-FUNCTION("getAttribute",hBrowse,"serverTransInputParam")).
+      DYNAMIC-FUNCTION("setCurrentQueryObject",hBrowse).
       bOK = DYNAMIC-FUNCTION("DoUpdate",hBuffer:NAME,
                   cUpdateValProc,
                   "",
@@ -9089,6 +10052,7 @@ ELSE DO:
                   (IF hCombo:SCREEN-VALUE = ? THEN "" ELSE hCombo:SCREEN-VALUE) + (IF cExtraUpdateValues NE "" THEN CHR(1) + cExtraUpdateValues ELSE ""),
                   IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraValChngBrowseDropDown") THEN FALSE ELSE TRUE).
                   
+      DYNAMIC-FUNCTION("setCurrentQueryObject",?).
       setAttribute(hBrowse,"serverTransReturnParam",DYNAMIC-FUNCTION("getServerTransReturnParam")).
       setAttribute(hBrowse,"serverTransReturnMessage",DYNAMIC-FUNCTION("getTransactionMessage")).
     END.
@@ -9203,6 +10167,7 @@ ELSE DO:
                               .
       IF DYNAMIC-FUNCTION("getIsAttributeSet",hBrowse,"serverTransInputParam") THEN
         DYNAMIC-FUNCTION("setServerTransInputParam",DYNAMIC-FUNCTION("getAttribute",hBrowse,"serverTransInputParam")).
+      DYNAMIC-FUNCTION("setCurrentQueryObject",hBrowse).
       bOK = DYNAMIC-FUNCTION("DoUpdate",hBuffer:NAME,
                    cUpdateValProc,
                    "",
@@ -9211,6 +10176,7 @@ ELSE DO:
                    hToggle:INPUT-VALUE + (IF cExtraUpdateValues NE "" THEN CHR(1) + cExtraUpdateValues ELSE ""),
                    IF CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"ExtraValChngBrowseToggle") THEN FALSE ELSE TRUE).
 
+      DYNAMIC-FUNCTION("setCurrentQueryObject",?).
       setAttribute(hBrowse,"serverTransReturnParam",DYNAMIC-FUNCTION("getServerTransReturnParam")).
       setAttribute(hBrowse,"serverTransReturnMessage",DYNAMIC-FUNCTION("getTransactionMessage")).
     END.
@@ -9435,6 +10401,121 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-BufferToCsv) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION BufferToCsv Procedure
+FUNCTION BufferToCsv RETURNS LOGICAL 
+  ( INPUT ihBuffer AS HANDLE,
+    INPUT icFileName AS CHAR,
+    INPUT icDelimiter AS CHAR,
+    INPUT icExceptFields AS CHAR,
+    INPUT ibOpen AS LOG ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hBuffer   AS HANDLE NO-UNDO.
+DEF VAR hQuery    AS HANDLE NO-UNDO.
+DEF VAR ix        AS INT    NO-UNDO.
+DEF VAR htt       AS HANDLE NO-UNDO.
+DEF VAR hDateFlds AS HANDLE NO-UNDO EXTENT.
+DEF VAR iNumDates AS INT    NO-UNDO.
+DEF VAR bOk       AS LOG    NO-UNDO.
+DEF VAR cDel      AS CHAR   NO-UNDO.
+DEF VAR iy        AS INT    NO-UNDO.
+
+DO ix = 1 TO ihBuffer:NUM-FIELDS:
+  IF CAN-DO(icExceptFields,ihBuffer:BUFFER-FIELD(ix):NAME) THEN NEXT.
+  IF ihBuffer:BUFFER-FIELD(ix):DATA-TYPE BEGINS "date" THEN
+    iNumDates = iNumDates + 1.   
+END.
+
+EXTENT(hDateFlds) = MAX(1,iNumDates).
+IF icDelimiter = "" THEN icDelimiter = ";".
+
+CREATE TEMP-TABLE htt.
+
+DO ix = 1 TO ihBuffer:NUM-FIELDS:
+  IF CAN-DO(icExceptFields,ihBuffer:BUFFER-FIELD(ix):NAME) 
+     OR ihBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent"
+     OR ihBuffer:BUFFER-FIELD(ix):NAME BEGINS "jbextent_"
+        THEN NEXT.
+       
+  IF NOT ihBuffer:BUFFER-FIELD(ix):DATA-TYPE BEGINS "date" THEN 
+    htt:ADD-LIKE-FIELD (ihBuffer:BUFFER-FIELD(ix):NAME, ihBuffer:BUFFER-FIELD(ix):HANDLE).
+  ELSE IF iNumDates > 0 THEN DO:
+    iy = iy + 1.
+    hDateFlds[iy] = ihBuffer:BUFFER-FIELD(ix).
+    htt:ADD-NEW-FIELD(ihBuffer:BUFFER-FIELD(ix):NAME,"CHARACTER").
+  END.  
+END.    
+htt:TEMP-TABLE-PREPARE(ihBuffer:NAME).
+
+hBuffer = htt:DEFAULT-BUFFER-HANDLE.
+
+CREATE QUERY hQuery.
+hQuery:SET-BUFFERS(ihBuffer).
+hQuery:QUERY-PREPARE("FOR EACH " + ihBuffer:NAME + " NO-LOCK").
+hQuery:QUERY-OPEN ().
+
+REPEAT WHILE hQuery:GET-NEXT():
+  hBuffer:BUFFER-CREATE ().
+  hBuffer:BUFFER-COPY(ihBuffer).  
+  DO ix = 1 TO iNumDates:
+    IF hDateFlds[ix]:BUFFER-VALUE = ? THEN
+      hBuffer:BUFFER-FIELD(hDateFlds[ix]:NAME):BUFFER-VALUE = "NULL".
+    ELSE
+      hBuffer:BUFFER-FIELD(hDateFlds[ix]:NAME):BUFFER-VALUE = STRING(ISO-DATE(hDateFlds[ix]:BUFFER-VALUE)).
+  END.
+END.
+
+DELETE OBJECT hQuery.
+
+CREATE QUERY hQuery.
+hQuery:SET-BUFFERS(hBuffer).
+hQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " NO-LOCK").
+hQuery:QUERY-OPEN ().
+
+OUTPUT TO VALUE(icFileName).
+DO ix = 1 TO hBuffer:NUM-FIELDS:
+  IF ix < hBuffer:NUM-FIELDS THEN cDel = icDelimiter.
+  ELSE cDel = "".
+  PUT UNFORMATTED hBuffer:BUFFER-FIELD(ix):NAME cDel.
+END.
+PUT SKIP.
+REPEAT WHILE hQuery:GET-NEXT():
+  DO ix = 1 TO hBuffer:NUM-FIELDS:
+    IF ix < hBuffer:NUM-FIELDS THEN cDel = icDelimiter.
+    ELSE cDel = "".
+    PUT UNFORMATTED hBuffer:BUFFER-FIELD(ix):BUFFER-VALUE cDel.
+  END.
+  PUT SKIP.
+END.
+OUTPUT CLOSE.
+
+IF ibOpen THEN DO ON ERROR UNDO, THROW:  
+  System.Diagnostics.Process:Start("notepad.exe",icFileName).
+  CATCH eOS AS Progress.Lang.Error :
+     MESSAGE eOS:GetMessage(1) VIEW-AS ALERT-BOX.
+  END CATCH.
+END.
+
+
+FINALLY:
+  DELETE OBJECT htt NO-ERROR.
+  DELETE OBJECT hQuery NO-ERROR.
+  RETURN YES.
+END.    
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-ChangePrimarySearchBuffer) = 0 &THEN
 
@@ -9838,6 +10919,136 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-FetchAllRows) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION FetchAllRows Procedure
+FUNCTION FetchAllRows RETURNS LOGICAL 
+  ( INPUT ihQueryObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hQryOrBrowse AS HANDLE NO-UNDO.
+DEF VAR cRowsToBatch AS CHAR NO-UNDO.
+DEF VAR iMaxCount    AS INT  NO-UNDO.
+DEF VAR iNewBatch    AS INT  NO-UNDO.
+
+hQryOrBrowse = getLinkedQueryObject(ihQueryObject).
+
+IF hQryOrBrowse:TYPE = "BROWSE"  
+   AND getAttribute(hQryOrBrowse,"firstrowid") = "" 
+   AND getAttribute(hQryOrBrowse,"uselocaldata") NE "yes" 
+   THEN DO:
+  iMaxCount = DYNAMIC-FUNCTION("FillBrowse",hQryOrBrowse,
+                      INT(getAttribute(hQryOrBrowse,"rowstobatch")),
+                      INT(getAttribute(hQryOrBrowse,"querystart")),
+                      getAttribute(hQryOrBrowse,"buffersandfields"),
+                      getAttribute(hQryOrBrowse,"basequery") + 
+                        getAttribute(hQryOrBrowse,"queryfilter") + 
+                        getAttribute(hQryOrBrowse,"querywhere") + 
+                       (IF getAttribute(hQryOrBrowse,"use-index") NE "" THEN
+                         " USE-INDEX " + getAttribute(hQryOrBrowse,"use-index")
+                        ELSE "") +
+                          getAttribute(hQryOrBrowse,"queryjoin"),
+                      getAttribute(hQryOrBrowse,"querysort"),
+                      IF getAttribute(hQryOrBrowse,"querydesc") = "desc" THEN TRUE ELSE FALSE).
+  setAttribute(hQryOrBrowse,"querystart",STRING(iMaxCount)).
+END.
+
+ELSE IF hQryOrBrowse:TYPE = "BROWSE" 
+   AND getAttribute(hQryOrBrowse,"lastrowid") = "" 
+   AND getAttribute(hQryOrBrowse,"uselocaldata") NE "yes" 
+   THEN DO:
+    
+  IF (getAttribute(SESSION,"DropExcelWarning") NE "YES" AND
+      getAttribute(hQryOrBrowse,"DropExcelWarning") NE "NO")
+     OR getAttribute(hQryOrBrowse,"DropExcelWarning") = "YES" THEN
+    RUN dAskForQueryBatch.w (OUTPUT iNewBatch).
+
+  IF iNewBatch > 0 THEN DO:
+    cRowsToBatch = getAttribute(hQryOrBrowse,"rowstobatch").
+    setAttribute(hQryOrBrowse,"rowstobatch",STRING(iNewBatch)).
+    iMaxCount = DYNAMIC-FUNCTION("FillBrowse",hQryOrBrowse,
+                        iNewBatch,
+                        INT(getAttribute(hQryOrBrowse,"querystart")),
+                        getAttribute(hQryOrBrowse,"buffersandfields"),
+                        getAttribute(hQryOrBrowse,"basequery") +
+                          getAttribute(hQryOrBrowse,"queryfilter") +
+                          getAttribute(hQryOrBrowse,"querywhere") +
+                         (IF getAttribute(hQryOrBrowse,"use-index") NE "" THEN
+                           " USE-INDEX " + getAttribute(hQryOrBrowse,"use-index")
+                          ELSE "") +
+                            getAttribute(hQryOrBrowse,"queryjoin"),
+                        getAttribute(hQryOrBrowse,"querysort"),
+                        getAttribute(hQryOrBrowse,"querydesc") = "desc").
+    setAttribute(hQryOrBrowse,"querystart",STRING(iMaxCount)).
+    setAttribute(hQryOrBrowse,"rowstobatch",cRowsToBatch).
+  END.
+  ELSE IF iNewBatch < 0 THEN RETURN NO.
+END.
+
+ELSE IF hQryOrBrowse:TYPE = "QUERY"  
+   AND getAttribute(hQryOrBrowse,"firstrowid") = "" 
+   AND getAttribute(hQryOrBrowse,"uselocaldata") NE "yes" 
+   THEN DO:
+  iMaxCount = DYNAMIC-FUNCTION("FillQuery",hQryOrBrowse,
+                      INT(getAttribute(hQryOrBrowse,"rowstobatch")),
+                      INT(getAttribute(hQryOrBrowse,"querystart")),
+                      getAttribute(hQryOrBrowse,"buffersandfields"),
+                      getAttribute(hQryOrBrowse,"basequery") + 
+                        getAttribute(hQryOrBrowse,"queryfilter") + 
+                        getAttribute(hQryOrBrowse,"querywhere") + 
+                       (IF getAttribute(hQryOrBrowse,"use-index") NE "" THEN
+                         " USE-INDEX " + getAttribute(hQryOrBrowse,"use-index")
+                        ELSE "") +
+                          getAttribute(hQryOrBrowse,"queryjoin"),
+                      getAttribute(hQryOrBrowse,"querysort"),
+                      IF getAttribute(hQryOrBrowse,"querydesc") = "desc" THEN TRUE ELSE FALSE).
+  setAttribute(hQryOrBrowse,"querystart",STRING(iMaxCount)).
+END.
+
+ELSE IF hQryOrBrowse:TYPE = "QUERY" 
+   AND getAttribute(hQryOrBrowse,"lastrowid") = "" 
+   AND getAttribute(hQryOrBrowse,"uselocaldata") NE "yes" 
+   THEN DO:
+    
+  iNewBatch = 10000000.
+
+  IF iNewBatch > 0 THEN DO:
+    cRowsToBatch = getAttribute(hQryOrBrowse,"rowstobatch").
+    setAttribute(hQryOrBrowse,"rowstobatch",STRING(iNewBatch)).
+    iMaxCount = DYNAMIC-FUNCTION("FillQuery",hQryOrBrowse,
+                        iNewBatch,
+                        INT(getAttribute(hQryOrBrowse,"querystart")),
+                        getAttribute(hQryOrBrowse,"buffersandfields"),
+                        getAttribute(hQryOrBrowse,"basequery") +
+                          getAttribute(hQryOrBrowse,"queryfilter") +
+                          getAttribute(hQryOrBrowse,"querywhere") +
+                         (IF getAttribute(hQryOrBrowse,"use-index") NE "" THEN
+                           " USE-INDEX " + getAttribute(hQryOrBrowse,"use-index")
+                          ELSE "") +
+/*                          (IF getAttribute(hQryOrBrowse,"orgqueryjoin") = "" THEN */
+                            getAttribute(hQryOrBrowse,"queryjoin"),
+/*                           ELSE ""), */
+                        getAttribute(hQryOrBrowse,"querysort"),
+                        getAttribute(hQryOrBrowse,"querydesc") = "desc").
+    setAttribute(hQryOrBrowse,"querystart",STRING(iMaxCount)).
+    setAttribute(hQryOrBrowse,"rowstobatch",cRowsToBatch).
+  END.
+  ELSE IF iNewBatch < 0 THEN RETURN NO.
+END.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-FixQueryOperators) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION FixQueryOperators Procedure 
@@ -9928,6 +11139,8 @@ FUNCTION getAttribute RETURNS CHARACTER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+IF ihObject = ? THEN RETURN "".
+
 FIND FIRST ttAttribute 
      WHERE ttAttribute.hObject = ihObject
        AND ttAttribute.cName   = icName
@@ -10185,6 +11398,47 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getLinkedQueryObject) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLinkedQueryObject Procedure
+FUNCTION getLinkedQueryObject RETURNS HANDLE 
+  ( INPUT ihObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF BUFFER ttObject     FOR ttObject.
+DEF BUFFER ttObjectLink FOR ttObjectLink.
+
+IF CAN-DO("browse,query",ihObject:TYPE) THEN 
+  RETURN ihObject.
+ELSE DO:
+  FIND FIRST ttObjectLink
+       WHERE ttObjectLink.hFromObject = ihObject 
+         AND ttObjectLink.cLinkType   = "browse" 
+       NO-ERROR.
+  IF NOT AVAIL ttObjectLink THEN
+    FIND FIRST ttObjectLink
+         WHERE ttObjectLink.hFromObject = ihObject 
+           AND ttObjectLink.cLinkType   = "query" 
+         NO-ERROR.
+  IF AVAIL ttObjectLink THEN 
+    FIND FIRST ttObject 
+         WHERE ttObject.hObject = ttObjectLink.hToObject
+         NO-ERROR.
+  IF NOT AVAIL ttObject THEN RETURN ?.
+  RETURN ttObject.hObject.  
+END.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getMousePosition) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getMousePosition Procedure 
@@ -10195,6 +11449,18 @@ FUNCTION getMousePosition RETURNS INTEGER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+DEF VAR pos               AS INT EXTENT 2 NO-UNDO.
+DEF VAR hProc             AS HANDLE NO-UNDO.
+DEF VAR oOeform           AS Progress.Lang.Object NO-UNDO.
+DEF VAR iFormX            AS INT NO-UNDO.
+DEF VAR iFormY            AS INT NO-UNDO.
+DEF VAR oWindowContainer  AS Progress.Windows.WindowContainer NO-UNDO.
+DEF VAR iContX            AS INT NO-UNDO.
+DEF VAR iContY            AS INT NO-UNDO.
+DEF VAR iTabX             AS INT NO-UNDO.
+DEF VAR iTabY             AS INT NO-UNDO.
+DEF VAR isMdi             AS LOG NO-UNDO.
+
 /* Ref http://oehive.org/node/435: */
 /*----- memptr for use with API call -----*/
 def var mpt_mousexy as memptr no-undo.
@@ -10204,28 +11470,88 @@ set-size(mpt_mousexy) = 8.
 def var rc as int no-undo.
 
 RUN GetCursorPos(INPUT GET-POINTER-VALUE(mpt_mousexy),
-                 OUTPUT rc).
+                 OUTPUT rc) NO-ERROR.                 
 
 IF NOT VALID-HANDLE(ihWinOrFrame) THEN DO:
   IF icXY = "Y" THEN RETURN INT(string(get-long(mpt_mousexy,5))).
   ELSE RETURN INT(string(get-long(mpt_mousexy,1))).
 END.
 
-run ScreenToClient (ihWinOrFrame:hWnd,
-                    INPUT GET-POINTER-VALUE(mpt_mousexy),
-                    OUTPUT rc).
-IF icXY = "Y" THEN RETURN INT(string(get-long(mpt_mousexy,5))).
-ELSE RETURN INT(string(get-long(mpt_mousexy,1))).
+IF System.Environment:Is64BitProcess THEN DO: 
+/*  run ScreenToClient (ihWinOrFrame:hWnd,                   */
+/*                      INPUT GET-POINTER-VALUE(mpt_mousexy),*/
+/*                      OUTPUT rc).                          */
+
+//  RUN GetCursorPos (OUTPUT pos).
+
+
+  hProc = DYNAMIC-FUNCTION("getProcHandle",FOCUS).
+    
+  IF VALID-HANDLE(hProc) THEN DO:  
+    oOeform = DYNAMIC-FUNCTION("getWindowForm" IN hProc) NO-ERROR.
+    IF VALID-OBJECT(oOeForm) THEN DO:
+      ASSIGN iFormX = CAST(oOeform,"Progress.Windows.Form"):Location:X
+             iFormY = CAST(oOeform,"Progress.Windows.Form"):Location:Y
+             .
+      IF DYNAMIC-FUNCTION("getIsMDIchild" IN hProc) THEN
+        ASSIGN iContX = CAST(oOeform,"Progress.Windows.MDIChildForm"):ParentForm:Location:X
+               iContY = CAST(oOeform,"Progress.Windows.MDIChildForm"):ParentForm:Location:Y
+               .
+      ELSE        
+        ASSIGN oWindowContainer = CAST(oOeform,"JBoxWrapperForm"):windowContainer
+               iContX = oWindowContainer:Location:X
+               iContY = oWindowContainer:Location:Y
+               .
+      PUBLISH "getTabAbsPosition" (INPUT hProc,OUTPUT iTabX,OUTPUT iTabY).       
+    END.     
+    
+//  IF icXY = "X" THEN RETURN pos[1]. ELSE RETURN pos[2].
+
+   def var oDrawPoint as class System.Drawing.Point no-undo.
+  
+   oDrawPoint = System.Windows.Forms.Cursor:Position.
+   
+/*    MESSAGE "abs.pos X:" DYNAMIC-FUNCTION("getAbsPosition",ihWinOrFrame,"x") skip     */
+/*            oDrawPoint:X oDrawPoint:Y skip                                            */
+/*            hProc:FILE-NAME SKIP                                                      */
+/*            "form x/y" iFormX iFormY skip                                             */
+/*            "tab x/y" iTabX iTabY skip                                                */
+/*            "wincont x/y" oWindowContainer:Location:X oWindowContainer:Location:Y skip*/
+/*            "frame x/y" ihWinOrFrame:X ihWinOrFrame:Y                                 */
+/*    VIEW-AS ALERT-BOX.                                                                */
+   
+   IF icXY = "Y" THEN 
+     RETURN oDrawPoint:Y - iFormY - iContY - iTabY - ihWinOrFrame:Y. 
+   ELSE 
+     RETURN oDrawPoint:X - iFormX - iContX - iTabX - ihWinOrFrame:X.
+  END.
+   
+/*  RUN GetCursorPos (OUTPUT pos).          */
+/*  MESSAGE pos[1] pos[2] VIEW-AS ALERT-BOX.*/
+
+END.                  
+ELSE DO:                     
+  rc = DYNAMIC-FUNCTION("ScreenToClient32",ihWinOrFrame:hWnd,
+                        INPUT GET-POINTER-VALUE(mpt_mousexy)).
+                    
+  IF icXY = "Y" THEN RETURN INT(string(get-long(mpt_mousexy,5))).
+  ELSE RETURN INT(string(get-long(mpt_mousexy,1))).
+END.  
 
 END FUNCTION.
+/*
+PROCEDURE GetCursorPos EXTERNAL "USER32.DLL":
+    DEFINE OUTPUT PARAMETER pos AS LONG.
+END PROCEDURE.
+*/
 
 PROCEDURE GetCursorPos EXTERNAL "user32.dll":
   DEFINE INPUT  PARAMETER  lpPoint     AS LONG. /* memptr */
   DEFINE RETURN PARAMETER  ReturnValue AS LONG.
 END PROCEDURE.
-PROCEDURE ScreenToClient EXTERNAL "user32" :
+PROCEDURE ScreenToClient EXTERNAL "user32.dll" :
    DEFINE INPUT  PARAMETER hWnd        AS LONG.
-   DEFINE INPUT  PARAMETER lpPoint     AS LONG. /* memptr */
+   DEFINE INPUT  PARAMETER lpPoint     AS INT64. /* memptr */
    DEFINE RETURN PARAMETER ReturnValue AS LONG.
 END PROCEDURE.
 
@@ -10233,6 +11559,47 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-ViewRowAsColRecord) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewRowAsColRecord Procedure
+PROCEDURE ViewRowAsColRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR oContainer AS JBoxContainer NO-UNDO.
+DEF VAR hDetail    AS HANDLE NO-UNDO.
+
+DEF BUFFER bttObject FOR ttObject.
+
+FIND FIRST ttObjectLink NO-LOCK
+     WHERE ttObjectLink.hFromObject = ttObject.hObject
+       AND ttObjectLink.cLinkType   = "browse"
+     NO-ERROR.
+IF NOT AVAIL ttObjectLink THEN RETURN.
+
+FIND bttObject WHERE bttObject.hObject = ttObjectLink.hToObject.
+ 
+oContainer = JBoxSession:Instance:getContainerObject(bttObject.hSourceProc).
+IF VALID-OBJECT(oContainer) THEN
+  hDetail = oContainer:StartChildWindow("JBoxRecordBrw.w",IF JBoxSession:Instance:Scandinavian THEN "Detaljer" ELSE "Details", NO).
+ELSE DO:
+  RUN JboxRecordBrw.w PERSIST SET hDetail.
+  hDetail:CURRENT-WINDOW:TITLE = IF JBoxSession:Instance:Scandinavian THEN "Detaljer" ELSE "Details".
+  RUN InitializeObject IN hDetail.
+END.    
+RUN ViewTtRecord IN hDetail(bttObject.hObject:QUERY:GET-BUFFER-HANDLE(1)).
+RUN MoveToTop in hDetail NO-ERROR.
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getPrimaryRowIdent) = 0 &THEN
 
@@ -10511,6 +11878,56 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-localQuery) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION localQuery Procedure
+FUNCTION localQuery RETURNS CHARACTER 
+  ( INPUT ihQueryObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cQuery      AS CHAR NO-UNDO.
+DEF VAR ix          AS INT  NO-UNDO.
+DEF VAR cEntry      AS CHAR NO-UNDO.
+DEF VAR cDb         AS CHAR NO-UNDO.
+DEF VAR iy          AS INT  NO-UNDO.
+DEF VAR cLeftPar    AS CHAR NO-UNDO.
+DEF VAR cModQuery   AS CHAR NO-UNDO.
+DEF VAR cBufferName AS CHAR NO-UNDO.
+
+cQuery = getAttribute(ihQueryObject,"baseQuery") + getAttribute(ihQueryObject,"queryFilter").
+
+IF ihQueryObject:TYPE = "browse" THEN
+  cBufferName = ihQueryObject:QUERY:GET-BUFFER-HANDLE (1):NAME.
+ELSE
+  cBufferName = ihQueryObject:GET-BUFFER-HANDLE (1):NAME.   
+
+DO ix = 1 TO NUM-ENTRIES(cQuery," "):
+  cEntry = ENTRY(ix,cQuery," ").
+  IF NUM-ENTRIES(cEntry,".") > 2 AND ENTRY(3,cEntry,".") = cBufferName THEN DO:
+    cDb = ENTRY(1,cEntry).
+    cLeftPar = "". 
+    DO iy = 1 TO LENGTH(cDb):
+      IF SUBSTR(cDb,iy,1) = "(" THEN
+        cLeftPar = cLeftPar + "(".
+    END.  
+    cEntry = cLeftPar + SUBSTR(cEntry,INDEX(cEntry,".") + 1).
+  END.
+  cModQuery = cModQuery + (IF cModQuery NE "" THEN " " ELSE "") + cEntry.  
+END.  
+
+RETURN cModQuery.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-NavigateFromBrowseOverlay) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION NavigateFromBrowseOverlay Procedure 
@@ -10599,6 +12016,7 @@ IF ihBrowse:IS-ROW-SELECTED(ihBrowse:FOCUSED-ROW) THEN DO:
     ELSE
       APPLY "page-down" TO ihBrowse.
 
+    bFreezeEndResizeBrw = YES.
     APPLY "value-changed" TO ihBrowse.
 
     IF NOT VALID-HANDLE(ihOverlay) THEN
@@ -10766,6 +12184,86 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-reDrawGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION reDrawGridFilter Procedure
+FUNCTION reDrawGridFilter RETURNS LOGICAL 
+  ( INPUT ihBrowse AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hGridFilter       AS HANDLE NO-UNDO.
+DEF VAR hColumn           AS HANDLE NO-UNDO.
+DEF VAR cBufferFlds       AS CHAR   NO-UNDO.
+DEF VAR cFilterFlds       AS CHAR   NO-UNDO.
+DEF VAR hWidget           AS HANDLE NO-UNDO.
+DEF VAR iWidth            AS INT    NO-UNDO.
+DEF VAR iFrameWidth       AS INT    NO-UNDO.
+DEF VAR hLastVisSearchFld AS HANDLE NO-UNDO.
+DEF VAR hLastVisColumn    AS HANDLE NO-UNDO.
+
+IF LAST-EVENT:LABEL BEGINS "CURSOR" THEN RETURN NO.
+
+hGridFilter = DYNAMIC-FUNCTION("getLinkedObject",ihBrowse,"gridFilter","from").
+IF VALID-HANDLE(hGridFilter) THEN DO:
+  cBufferFlds = DYNAMIC-FUNCTION("mgetAttribute",hGridFilter,"bufferfield_").
+  cFilterFlds = DYNAMIC-FUNCTION("mgetAttribute",hGridFilter,"filterfield_").
+  
+  iFrameWidth = hGridFilter:FRAME:WIDTH-PIXELS.
+  DO ix = 1 TO NUM-ENTRIES(cFilterFlds):
+    hWidget = WIDGET-HANDLE(ENTRY(ix,cFilterFlds)) NO-ERROR.
+    IF VALID-HANDLE(hWidget) THEN 
+      hWidget:X = 1.
+  END.   
+
+  DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+    hColumn = ihBrowse:GET-BROWSE-COLUMN(ix).
+    hWidget = WIDGET-HANDLE(ENTRY(LOOKUP(hColumn:NAME,cBufferFlds),cFilterFlds)) NO-ERROR.
+    IF VALID-HANDLE(hWidget) AND hWidget:NAME = "search_" + hColumn:NAME THEN DO:
+      IF hColumn:X NE ? AND hColumn:X > 0 AND hColumn:VISIBLE AND ihBrowse:X + hColumn:X + hColumn:WIDTH-PIXELS LT ihBrowse:FRAME:WIDTH-PIXELS THEN DO:
+      
+        IF ihBrowse:X + hColumn:X + hColumn:WIDTH-PIXELS GT ihBrowse:X + ihBrowse:WIDTH-PIXELS THEN
+          iWidth = MIN(hColumn:WIDTH-PIXELS - 1,ihBrowse:WIDTH-PIXELS - hColumn:X - 1).
+        ELSE
+          iWidth = hColumn:WIDTH-PIXELS - 1.
+
+        IF iWidth > 20 AND hColumn:X + iWidth < ihBrowse:X + ihBrowse:WIDTH-PIXELS THEN DO:
+          IF VALID-HANDLE(hLastVisSearchFld) THEN hWidget:MOVE-AFTER(hLastVisSearchFld).
+          ASSIGN hWidget:WIDTH-PIXELS = iWidth
+                 hWidget:X = MAX(1,ihBrowse:X + hColumn:X)
+                 hWidget:Y = ihBrowse:Y - 23
+                 hWidget:VISIBLE = YES
+                 hLastVisSearchFld = hWidget
+                 hLastVisColumn = hColumn
+                 NO-ERROR.
+          IF ERROR-STATUS:ERROR THEN
+            MESSAGE "Error " error-status:get-message(1)
+            VIEW-AS ALERT-BOX.     
+        END.         
+        ELSE hWidget:VISIBLE = NO.         
+      END.         
+      ELSE hWidget:VISIBLE = NO.
+    END.          
+  END.
+  IF VALID-HANDLE(hLastVisSearchFld) AND VALID-HANDLE(hLastVisColumn) THEN DO:
+    hLastVisSearchFld:VISIBLE = SUBSTR(hLastVisSearchFld:NAME,8) = hLastVisColumn:NAME.   // BIG BUG in the ABL..
+    ihBrowse:MOVE-AFTER(hLastVisSearchFld).
+    hLastVisSearchFld:MOVE-BEFORE(ihBrowse).
+  END.  
+  ASSIGN hGridFilter:FRAME:WIDTH-PIXELS = iFrameWidth
+         hGridFilter:FRAME:VIRTUAL-WIDTH-PIXELS = iFrameWidth.
+END.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-RefreshParentRecord) = 0 &THEN
 
@@ -10941,6 +12439,9 @@ DEF VAR cClientBufferList AS CHAR   NO-UNDO.
 DEF VAR cServerBufferList AS CHAR   NO-UNDO.
 DEF VAR cRowIdentIdxList  AS CHAR   NO-UNDO.
 DEF VAR cPrimaryBuffer    AS CHAR   NO-UNDO.
+DEF VAR cSqlKeyColumns    AS CHAR   NO-UNDO.
+DEF VAR iy                AS INT    NO-UNDO.
+DEF VAR cCurrentRowid     AS CHAR   NO-UNDO.
 
 IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"uselocaldata") NE "yes" THEN DO:
 
@@ -10966,23 +12467,58 @@ IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"uselocaldata") NE "yes" THEN D
   END.
   cPrimaryBuffer = ENTRY(1,ENTRY(1,getAttribute(ihQueryObject,"buffersandfields")),";").
 
-  IF NUM-ENTRIES(icRowidList) LE 250  THEN DO:
-    DO ix = 1 TO NUM-ENTRIES(icRowIdList):
-      cQueryString = cQueryString + "ROWID(" + cPrimaryBuffer + ") = TO-ROWID('" + ENTRY(ix,icRowIdList) + "') OR ".
-    END.
-    cQueryString = SUBSTR(cQueryString,1,LENGTH(cQueryString) - 3).
-  END.
-  
   cTemp = DYNAMIC-FUNCTION("AddCalcParam",getAttribute(ihQueryObject,"BuffersAndFields"),ihQueryObject).
-  DYNAMIC-FUNCTION("setCalcFieldProc",getAttribute(ihQueryObject,"calcfieldproc")).  
-  httTable = DYNAMIC-FUNCTION("getTempTableJoin",10000,0,"",
-                              cTemp,
-                              (IF NUM-ENTRIES(icRowidList) > 250 THEN
-                                "WHERE CAN-DO('" + TRIM(icRowidList,",") + "',STRING(ROWID(" + cPrimaryBuffer + ")))"
-                               ELSE  
-                                 cQueryString)
-                             + getAttribute(ihQueryObject,"queryjoin")
-                              ).
+
+  IF getAttribute(ihQueryObject,"sqlDbName") NE "" THEN DO:
+    cSqlKeyColumns = JBoxSqlSchemaHelper:Instance:getPrimaryKeyColumns(
+                      getAttribute(ihQueryObject,"sqlDbName")
+                     ,JBoxSqlSchemaHelper:Instance:getABLTableSQLName(getAttribute(ihQueryObject,"sqlDbName")
+                                                                     ,cPrimaryBuffer)
+                                                                     ).
+
+    DO ix = 1 TO NUM-ENTRIES(icRowIdList,CHR(3)):
+      cCurrentRowid = ENTRY(ix,icRowIdList,CHR(3)).
+      cQueryString = cQueryString + (IF ix > 1 THEN " OR " ELSE "") + "(".
+      DO iy = 1 TO NUM-ENTRIES(cSqlKeyColumns):
+        cQueryString = cQueryString + (IF iy > 1 THEN " AND " ELSE "")
+                       + ENTRY(iy,cSqlKeyColumns)
+                       + " = "
+                       + JBoxSqlSchemaHelper:Instance:getABLToSQLValue(getAttribute(ihQueryObject,"sqlDbName")
+                         ,cPrimaryBuffer
+                         ,ENTRY(iy,cSqlKeyColumns)
+                         ,ENTRY(iy,cCurrentRowid,CHR(1))
+                                                                       )
+                       .                                                                   
+      END.
+      cQueryString = cQueryString + ")".
+    END.  
+    httTable = DYNAMIC-FUNCTION("getTempTableJoin",ix - 1,0,"",
+                                  "sqlDb" 
+                                  + CHR(3) + getAttribute(ihQueryObject,"sqlDbName")  
+                                  + CHR(3) + getAttribute(ihQueryObject,"sqlView") 
+                                  + CHR(3) + cTemp,
+                                cQueryString).
+
+  END.
+  ELSE DO:
+    icRowidList = REPLACE(icRowidList,CHR(3),",").
+    IF NUM-ENTRIES(icRowidList) LE 250  THEN DO:
+      DO ix = 1 TO NUM-ENTRIES(icRowIdList):
+        cQueryString = cQueryString + "ROWID(" + cPrimaryBuffer + ") = TO-ROWID('" + ENTRY(ix,icRowIdList) + "') OR ".
+      END.
+      cQueryString = SUBSTR(cQueryString,1,LENGTH(cQueryString) - 3).
+    END.
+    
+    DYNAMIC-FUNCTION("setCalcFieldProc",getAttribute(ihQueryObject,"calcfieldproc")).  
+    httTable = DYNAMIC-FUNCTION("getTempTableJoin",10000,0,"",
+                                cTemp,
+                                (IF NUM-ENTRIES(icRowidList) > 250 THEN
+                                  "WHERE CAN-DO('" + TRIM(icRowidList,",") + "',STRING(ROWID(" + cPrimaryBuffer + ")))"
+                                 ELSE  
+                                   cQueryString)
+                               + getAttribute(ihQueryObject,"queryjoin")
+                                ).
+  END.                              
   
   IF DYNAMIC-FUNCTION("getTransactionMessage") NE "" THEN 
     DoMessage (0,0,DYNAMIC-FUNCTION("getTransactionMessage"),"JukeBox, Query error:","").
@@ -11307,6 +12843,57 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setAsConnection) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setAsConnection Procedure
+FUNCTION setAsConnection RETURNS LOGICAL 
+  ( INPUT ihObject AS HANDLE ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  DEF BUFFER ttObject  FOR ttObject.
+  DEF BUFFER bttObject FOR ttObject.
+  DEF BUFFER ttObjectLink FOR ttObjectLink.
+  DEF BUFFER ttAttribute FOR ttAttribute.
+  
+  DEF VAR bSet AS LOG NO-UNDO.
+  
+  FIND FIRST ttObject WHERE ttObject.hObject = ihObject
+       NO-ERROR.
+  IF AVAIL ttObject THEN DO:
+    FOR EACH ttObjectLink
+        WHERE ttObjectLink.hFromObject = ihObject
+       ,FIRST bttObject
+              WHERE bttObject.hObject = ttObjectLink.hToObject
+       ,FIRST ttAttribute
+              WHERE ttAttribute.hObject = bttObject.hObject
+                AND ttAttribute.cName = "DataSourceName"       
+      :
+      DYNAMIC-FUNCTION("setActiveASconnection",ttAttribute.cValue).
+      bSet = YES.  
+    END.         
+    IF NOT bSet THEN DO:    
+      FIND FIRST ttAttribute
+           WHERE ttAttribute.hObject = ihObject
+             AND ttAttribute.cName = "DataSourceName"
+           NO-ERROR.
+        
+      DYNAMIC-FUNCTION("setActiveASconnection",IF AVAIL ttAttribute THEN ttAttribute.cValue ELSE "").  
+    END.    
+  END.  
+
+  RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setAttribute) = 0 &THEN
 
@@ -11653,6 +13240,7 @@ DEF VAR hNumInUseField     AS HANDLE  NO-UNDO.
 DEF VAR cLastPreScan       AS CHAR    NO-UNDO.
 DEF VAR bAppendPrescan     AS LOG     NO-UNDO.
 DEF VAR bLocal             AS LOG     NO-UNDO.
+DEF VAR cBufferDb          AS CHAR    NO-UNDO.
 
 FIND FIRST ttObject 
      WHERE ttObject.hObject = ihFilter
@@ -11677,7 +13265,8 @@ IF NOT bLocal THEN
               + (IF getAttribute(ihQueryObject,"extraFilterBuffers") NE "" AND
                     NOT CAN-DO(getAttribute(ihQueryObject,"bufferlist"),getAttribute(ihQueryObject,"extraFilterBuffers")) THEN
                     "," + getAttribute(ihQueryObject,"extraFilterBuffers") ELSE "").
-ELSE
+
+IF cBufferList = "" THEN
   cBufferList = getAttribute(ihQueryObject,"basetable").
 
 DO ix = 1 TO NUM-ENTRIES(cBufferList):
@@ -11693,10 +13282,15 @@ DO ix = 1 TO NUM-ENTRIES(cBufferList):
   ELSE
     CREATE BUFFER hBuffer FOR TABLE ttObject.hDesignObject:GET-BUFFER-HANDLE(1).
 
+  cBufferDb = getAttribute(ihQueryObject,"bufferDb" + ENTRY(ix,cBufferList)).
+  IF cBufferDb NE "" THEN cBufferDb = cBufferDb + ".".
+
   hNumInUseField = hBuffer:BUFFER-FIELD("NumInUse") NO-ERROR.
 
   hQuery:SET-BUFFERS(hBuffer).
-  hQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " WHERE BufferName = '" + ENTRY(ix,cBufferList) + "' AND FieldGroup NE 0 BY FieldGroup BY GroupOperator DESC BY FieldOperator BY Seq").
+  hQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME 
+                    + (IF NOT bLocal THEN " WHERE BufferName = '" + ENTRY(ix,cBufferList) + "' AND " ELSE " WHERE ")
+                    + "FieldGroup NE 0 BY FieldGroup BY GroupOperator DESC BY FieldOperator BY Seq").
   hQuery:QUERY-OPEN().
 
   hQuery:GET-FIRST().
@@ -11726,51 +13320,57 @@ DO ix = 1 TO NUM-ENTRIES(cBufferList):
     hQuery:QUERY-OPEN().
     hQuery:GET-FIRST().
     IF hBuffer:AVAIL THEN DO:
-      cFltStr = cFltStr + " " + ENTRY(iy,cGroupOperList) + " (". 
+      cFltStr = cFltStr + " " + ENTRY(iy,cGroupOperList)
+              + (IF iy = 1 AND NUM-ENTRIES(cGroupList) > 1 AND CAN-DO(cGroupOperList,"OR") THEN
+                   " ( "
+                 ELSE "" )
+              + " (" + (IF hBuffer::FieldOperator = "AND NOT" THEN "NOT" ELSE ""). 
       REPEAT WHILE NOT hQuery:QUERY-OFF-END:
-        IF hBuffer::Operator = "IN" AND NUM-ENTRIES(hBuffer::ColumnValue) < 20 THEN DO:
-          cFltStr = cFltStr + " " + hBuffer::FieldOperator + " (". 
-          DO iz = 1 TO NUM-ENTRIES(hBuffer::ColumnValue):
-            cFltStr = cFltStr + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
-                              + (IF bLocal THEN hBuffer::ColumnName 
-                                 ELSE 
-                                   getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
-                                 + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
-                              + (IF hBuffer::DataType NE "CHARACTER" THEN ")" ELSE "")
-                              + " = '" + ENTRY(iy,hBuffer::ColumnValue) + "'"
-                              + (IF iz < NUM-ENTRIES(hBuffer::ColumnValue) THEN " OR " ELSE ")")
-                              .
-          END.                    
-        END.                     
+        IF CAN-DO("IN,NOT IN",hBuffer::Operator) THEN 
+          cFltStr = cFltStr + " LOOKUP("
+                  + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
+                  + (IF bLocal THEN hBuffer::ColumnName
+                     ELSE
+                       getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
+                     + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
+                  + (IF hBuffer::DataType NE "CHARACTER" THEN "),'" ELSE ",'")
+                  + hBuffer::ColumnValue + "') "
+                  + (IF hBuffer::Operator = "IN" THEN ">" ELSE "=") + " 0"
+                  . 
+        ELSE IF CAN-DO("IS NULL,NE NULL",hBuffer::Operator) THEN          
+          cFltStr = cFltStr + " "
+                  + (IF bLocal THEN hBuffer::ColumnName ELSE 
+                       getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
+                     + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName)) + " "
+                  + (IF hBuffer::Operator = "IS NULL" THEN "=" ELSE "<>") + " ?".
         ELSE 
           cFltStr = cFltStr + " " 
-                      + (IF hBuffer::Operator = "IN" THEN 
-                           "CAN-DO('" + hBuffer::ColumnValue + "'," 
-                         + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
-                         ELSE "")
-                      + (IF bLocal THEN hBuffer::ColumnName ELSE
-                           getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
-                         + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
-                      + (IF hBuffer::Operator NE "IN" THEN 
-                           " " + hBuffer::Operator 
-                        + (IF hBuffer::DataType = "CHARACTER" THEN " '" + hBuffer::ColumnValue + "'"
-                           ELSE " " + hBuffer::DataType + "('" 
-                            + (IF hBuffer::ColumnValue NE ? THEN 
-                                (IF hBuffer::DataType = "logical" THEN
-                                   (IF hBuffer::ColumnValue = "yes" OR hBuffer::ColumnValue = hBuffer::CharValueTrue THEN "yes" ELSE "no")
-                                 ELSE hBuffer::ColumnValue) 
-                               ELSE "?") + "')"
-                               )
-                        ELSE (IF hBuffer::DataType NE "CHARACTER" THEN "))" ELSE ")")).
+                  + (IF bLocal THEN hBuffer::ColumnName ELSE
+                       getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
+                     + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
+                  +  " " + hBuffer::Operator 
+                  + (IF hBuffer::DataType = "CHARACTER" THEN " '" + hBuffer::ColumnValue + "'"
+                     ELSE " " + hBuffer::DataType + "('" 
+                      + (IF hBuffer::ColumnValue NE ? THEN 
+                          (IF hBuffer::DataType = "logical" THEN
+                             (IF hBuffer::ColumnValue = "yes" OR hBuffer::ColumnValue = hBuffer::CharValueTrue THEN "yes" ELSE "no")
+                           ELSE stripInvalidChars(hBuffer::ColumnValue,hBuffer::DataType)) 
+                         ELSE "?") + "')"
+                         )
+                  .
         hQuery:GET-NEXT().
         IF hBuffer:AVAIL THEN
           cFltStr = cFltStr + " " + hBuffer::FieldOperator.
       END.
-      cFltStr = cFltStr + ")". 
+      cFltStr = cFltStr + " )". 
     END.
   END.
-  
-  hQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " WHERE BufferName = '" + ENTRY(ix,cBufferList) + "' BY FieldOperator BY Seq").
+  IF NUM-ENTRIES(cGroupList) > 1 AND CAN-DO(cGroupOperList,"OR") THEN
+    cFltStr = cFltStr + " ) ".
+             
+  hQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME 
+                     + (IF NOT bLocal THEN " WHERE BufferName = '" + ENTRY(ix,cBufferList) + "'" ELSE "")
+                     + " BY FieldOperator BY Seq").
   hQuery:QUERY-OPEN().
   hQuery:GET-FIRST().
   REPEAT WHILE NOT hQuery:QUERY-OFF-END:
@@ -11784,78 +13384,96 @@ DO ix = 1 TO NUM-ENTRIES(cBufferList):
       IF VALID-HANDLE(hNumInUseField) THEN
         iNumInUse = hNumInUseField:BUFFER-VALUE.
 
-      IF icAction = "execute" THEN 
-        setAttribute(ihQueryObject,
-                     "filtervalue_" + STRING(iNumInUse) + "_" + hBuffer::ColumnName,
-                     hBuffer::ColumnValue).
+      IF icAction = "execute" THEN DO:
+        IF getAttribute(ihFilter,"gridfilter") = "yes" THEN
+          setAttribute(ihQueryObject,
+                       "gridfiltervalue_" + STRING(iNumInUse) + "_" + hBuffer::ColumnName,
+                       hBuffer::ColumnValue).
+        ELSE               
+          setAttribute(ihQueryObject,
+                       "filtervalue_" + STRING(iNumInUse) + "_" + hBuffer::ColumnName,
+                       hBuffer::ColumnValue).
+      END.               
       ELSE IF hBuffer::Operator NE "" THEN
         cFltValLst = cFltValLst + STRING(iNumInUse) + "_" + hBuffer::ColumnName + "¤" + hBuffer::ColumnValue + "|".
     END.
     ELSE DO:
-      IF icAction = "execute" THEN 
-        setAttribute(ihQueryObject,
-                     "filtervalue_" + hBuffer::ColumnName,
-                     hBuffer::ColumnValue).
+      IF icAction = "execute" THEN DO:
+        IF getAttribute(ihFilter,"gridfilter") = "yes" THEN
+          setAttribute(ihQueryObject,"gridfiltervalue_" + hBuffer::ColumnName,
+                       hBuffer::ColumnValue).
+        ELSE               
+          setAttribute(ihQueryObject,"filtervalue_" + hBuffer::ColumnName,
+                       hBuffer::ColumnValue).
+      END.               
       ELSE IF hBuffer::Operator NE "" THEN
         cFltValLst = cFltValLst + hBuffer::ColumnName + "¤" + hBuffer::ColumnValue + "|".
     END.
 
     IF hBuffer::Operator NE "" AND 
        (hBuffer::FieldGroup = 0 OR CAN-DO(cAllCalcFields,hBuffer::ColumnName)) THEN DO:
-      IF CAN-DO(cAllCalcFields,hBuffer::ColumnName) AND getAttribute(ihQueryObject,"uselocaldata") NE "yes" THEN
+      IF CAN-DO(cAllCalcFields,hBuffer::ColumnName) 
+         AND (getAttribute(ihQueryObject,"uselocaldata") NE "yes" OR getAttribute(ihQueryObject,"sqlDbname") NE "") THEN
         cCalcFieldFilter = cCalcFieldFilter 
                          + hBuffer::ColumnName + "¤" 
                          + hBuffer::Operator + "¤"
                          + (IF hBuffer::ColumnValue NE ? THEN hBuffer::ColumnValue ELSE "?") + "|".
       ELSE IF hBuffer::FieldGroup = 0 THEN DO:
-        IF hBuffer::Operator = "IN" AND NUM-ENTRIES(hBuffer::ColumnValue) < 20 THEN DO:
-          cFltStr = cFltStr + " " + hBuffer::FieldOperator + " (". 
-          DO iz = 1 TO NUM-ENTRIES(hBuffer::ColumnValue):
-            cFltStr = cFltStr + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
-                              + (IF bLocal THEN hBuffer::ColumnName 
-                                 ELSE 
-                                   getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
-                                 + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
-                              + (IF hBuffer::DataType NE "CHARACTER" THEN ")" ELSE "")
-                              + " = '" + ENTRY(iz,hBuffer::ColumnValue) + "'"
-                              + (IF iz < NUM-ENTRIES(hBuffer::ColumnValue) THEN " OR " ELSE ")")
-                              .
-          END.                    
-        END.                     
+        IF CAN-DO("IN,NOT IN",hBuffer::Operator) THEN
+          cFltStr = cFltStr + " " + hBuffer::FieldOperator + " LOOKUP("
+                  + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
+                  + (IF bLocal THEN hBuffer::ColumnName
+                     ELSE
+                       getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
+                     + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
+                  + (IF hBuffer::DataType NE "CHARACTER" THEN "),'" ELSE ",'")
+                  + hBuffer::ColumnValue + "') "
+                  + (IF hBuffer::Operator = "IN" THEN ">" ELSE "=") + " 0"
+                  . 
+        ELSE IF CAN-DO("IS NULL,NE NULL",hBuffer::Operator) THEN          
+          cFltStr = cFltStr + " " + hBuffer::FieldOperator + " "
+                  + (IF bLocal THEN hBuffer::ColumnName ELSE 
+                       getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
+                     + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName)) + " "
+                  + (IF hBuffer::Operator = "IS NULL" THEN "=" ELSE "<>") + " ?".
         ELSE 
           cFltStr = cFltStr + " " + hBuffer::FieldOperator + " " 
-                        + (IF hBuffer::Operator = "IN" THEN 
-                             "CAN-DO('" + hBuffer::ColumnValue + "'," 
-                           + (IF hBuffer::DataType NE "CHARACTER" THEN "STRING(" ELSE "")
-                           ELSE "")
                         + (IF bLocal THEN hBuffer::ColumnName ELSE 
                              getAttribute(ihQueryObject,"fieldbuffer" + hBuffer::ColumnName) + "."
                            + getAttribute(ihQueryObject,"orgdbfield" + hBuffer::ColumnName))
-                        + (IF hBuffer::Operator NE "IN" THEN 
-                             " " + hBuffer::Operator 
-                          + (IF hBuffer::DataType = "CHARACTER" THEN " '" + hBuffer::ColumnValue + "'"
-                             ELSE " " + hBuffer::DataType + "('" 
-                              + (IF hBuffer::ColumnValue NE ? THEN 
-                                  (IF hBuffer::DataType = "logical" THEN
-                                     (IF hBuffer::ColumnValue = "yes" OR hBuffer::ColumnValue = hBuffer::CharValueTrue THEN "yes" ELSE "no")
-                                   ELSE hBuffer::ColumnValue) 
-                                 ELSE "?") + "')"
-                                 )
-                          ELSE (IF hBuffer::DataType NE "CHARACTER" THEN "))" ELSE ")")).
-      END.                  
+                        + " " + hBuffer::Operator 
+                        + (IF hBuffer::DataType = "CHARACTER" THEN " " 
+                            + (IF hBuffer::ColumnValue NE ? THEN "'" + hBuffer::ColumnValue + "'" ELSE "?")
+                           ELSE " " + hBuffer::DataType + "('" 
+                            + (IF hBuffer::ColumnValue NE ? THEN 
+                                (IF hBuffer::DataType = "logical" THEN
+                                   (IF hBuffer::ColumnValue = "yes" OR hBuffer::ColumnValue = hBuffer::CharValueTrue THEN "yes" ELSE "no")
+                                 ELSE stripInvalidChars(hBuffer::ColumnValue,hBuffer::DataType)) 
+                               ELSE "?") + "')"
+                               )
+                          .
+      END.
     END.
 
     IF icAction = "execute" THEN DO:
-      setAttribute(ihQueryObject,"OperatorInUse_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
-                   hBuffer::ColumnName,hBuffer::Operator).
-      setAttribute(ihQueryObject,"GroupOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
-                   hBuffer::ColumnName,hBuffer::GroupOperator).
-      setAttribute(ihQueryObject,"FieldGroup_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
-                   hBuffer::ColumnName,hBuffer::FieldGroup).
-      setAttribute(ihQueryObject,"FieldOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
-                   hBuffer::ColumnName,hBuffer::FieldOperator).
-      setAttribute(ihQueryObject,"HiddenGroupOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
-                   hBuffer::ColumnName,hBuffer:BUFFER-FIELD("HiddenGroupOperator"):BUFFER-VALUE).
+      IF getAttribute(ihFilter,"gridfilter") = "yes" THEN DO:
+        setAttribute(ihQueryObject,"gridOperatorInUse_" +
+                     hBuffer::ColumnName,hBuffer::Operator).
+        setAttribute(ihQueryObject,"gridFieldOperator_" +
+                     hBuffer::ColumnName,hBuffer::FieldOperator).
+      END.
+      ELSE DO:
+        setAttribute(ihQueryObject,"OperatorInUse_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
+                     hBuffer::ColumnName,hBuffer::Operator).
+        setAttribute(ihQueryObject,"GroupOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
+                     hBuffer::ColumnName,hBuffer::GroupOperator).
+        setAttribute(ihQueryObject,"FieldGroup_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
+                     hBuffer::ColumnName,hBuffer::FieldGroup).
+        setAttribute(ihQueryObject,"FieldOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
+                     hBuffer::ColumnName,hBuffer::FieldOperator).
+        setAttribute(ihQueryObject,"HiddenGroupOperator_" + (IF iNumInUse > 0 THEN STRING(iNumInUse) + "_" ELSE "") +
+                     hBuffer::ColumnName,hBuffer:BUFFER-FIELD("HiddenGroupOperator"):BUFFER-VALUE).
+      END.               
     END.
     ELSE IF hBuffer::Operator NE "" THEN 
       ASSIGN 
@@ -11881,7 +13499,7 @@ DO ix = 1 TO NUM-ENTRIES(cBufferList):
   END.
 
   IF cFltStr NE "" OR cCalcFieldFilter NE "" THEN bActiveFilter = YES.
-  
+    
   IF ix = 1 THEN DO:
     IF icAction = "Execute" THEN
       RemoveUseIndex(ihQueryObject).
@@ -11895,13 +13513,13 @@ DO ix = 1 TO NUM-ENTRIES(cBufferList):
   END.
   ELSE DO:
     IF cFltStr NE "" THEN DO:
-      ASSIGN cFltStr        = TRIM(REPLACE(cFltStr,",",CHR(1)))
+      ASSIGN cFltStr        = TRIM(REPLACE(cFltStr,",",CHR(1)) + " " + getAttribute(ihQueryObject,"extraPrescanFilter" + ENTRY(ix,cBufferList)))
              bAppendPrescan = getAttribute(ihQueryObject,"appendprescanquery" + ENTRY(ix,cBufferList)) NE "no"
              cBaseQuery     = IF bAppendPrescan THEN TRIM(getAttribute(ihQueryObject,"basequery")) ELSE ""
              cQueryFilter   = IF bAppendPrescan THEN TRIM(cBaseTableFilter) ELSE ""
              .
-      IF getAttribute(ihQueryObject,"prescanquery" + ENTRY(ix,cBufferList)) NE "" THEN DO:
-        cPrScQry = getAttribute(ihQueryObject,"prescanquery" + ENTRY(ix,cBufferList)).              
+      IF getAttribute(ihQueryObject,"prescanquery" + cBufferDb + ENTRY(ix,cBufferList)) NE "" THEN DO:
+        cPrScQry = getAttribute(ihQueryObject,"prescanquery" + cBufferDb + ENTRY(ix,cBufferList)).              
 
         DO iz = 1 TO 5:
           cPrScQry = REPLACE(cPrScQry,"  "," ").
@@ -11958,9 +13576,16 @@ IF icAction = "Execute" THEN DO:
          cCurrPreScanQry  = TRIM(cCurrPreScanQry,CHR(28))
          .
 
-  setAttribute(ihQueryObject,"calcfieldfilter",cCalcFieldFilter).
-  setAttribute(ihQueryObject,"queryfilter",cBaseTableFilter).
-  setAttribute(ihQueryObject,"prescanmainquerycandidates_filter",TRIM(cMainQryCandList,"|")).
+  IF getAttribute(ihFilter,"gridfilter") = "yes" THEN DO:
+    setAttribute(ihQueryObject,"calcfieldwhere",cCalcFieldFilter).
+    setAttribute(ihQueryObject,"querywhere",cBaseTableFilter).
+    setAttribute(ihQueryObject,"prescanmainquerycandidate_query",TRIM(cMainQryCandList,"|")).
+  END.
+  ELSE DO:  
+    setAttribute(ihQueryObject,"calcfieldfilter",cCalcFieldFilter).
+    setAttribute(ihQueryObject,"queryfilter",cBaseTableFilter).
+    setAttribute(ihQueryObject,"prescanmainquerycandidates_filter",TRIM(cMainQryCandList,"|")).
+  END.
 
   IF SwapPrescanToMainBuffer(ihQueryObject,"") THEN DO:
     cCurrPreScanQry = cMainQryCandList.
@@ -11980,7 +13605,11 @@ IF icAction = "Execute" THEN DO:
           AND getAttribute(ihQueryObject,"sortbuffer") NE getAttribute(ihQueryObject,"basetable") THEN
     setAttribute(ihQueryObject,"querysort","").
 
-  setAttribute(ihQueryObject,"prescanqueryfilter",cCurrPreScanQry).
+  IF getAttribute(ihFilter,"gridfilter") = "yes" THEN
+    setAttribute(ihQueryObject,"prescanquerywhere",cCurrPreScanQry).
+  ELSE
+    setAttribute(ihQueryObject,"prescanqueryfilter",cCurrPreScanQry).
+    
   RETURN bActiveFilter.
 END.
 ELSE DO:
@@ -12048,6 +13677,53 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-setFilterButtonStatus) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setFilterButtonStatus Procedure
+FUNCTION setFilterButtonStatus RETURNS LOGICAL 
+  (INPUT ihObject AS HANDLE
+  ,INPUT ibActive AS LOG):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hWidget AS HANDLE NO-UNDO.
+
+hWidget = WIDGET-HANDLE(getAttribute(ihObject,"filterbutton")) NO-ERROR.
+
+IF NOT VALID-HANDLE(hWidget) THEN hWidget = DYNAMIC-FUNCTION("getToolbarButtonHandle",ihObject,"filter").
+
+IF VALID-HANDLE(hWidget) THEN DO:
+  IF hWidget:TYPE NE "button" THEN DO:
+    FIND FIRST ttEvent
+         WHERE ttEvent.hWidget = hWidget NO-ERROR.
+    IF AVAIL ttEvent THEN DO:
+      FIND FIRST bttEvent
+           WHERE bttEvent.hObject     = ttEvent.hObject
+             AND bttEvent.cAction     = ttEvent.cAction
+             AND bttEvent.cWidgetType = "button"
+           NO-ERROR.
+      IF AVAIL bttEvent AND VALID-HANDLE(bttEvent.hWidget) THEN
+        hWidget = bttEvent.hWidget.
+    END.
+  END.
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN
+    IF cActiveFilterButton NE "" AND ibActive THEN
+      hWidget:LOAD-IMAGE(cActiveFilterButton) NO-ERROR.
+    ELSE IF NOT ibActive AND cPassiveFilterButton NE "" THEN
+      hWidget:LOAD-IMAGE(cPassiveFilterButton) NO-ERROR.
+  &ENDIF    
+END.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-setNoColumnSort) = 0 &THEN
 
@@ -12264,6 +13940,47 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-stripInvalidChars) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION stripInvalidChars Procedure
+FUNCTION stripInvalidChars RETURNS CHARACTER 
+  (INPUT icText AS CHAR
+  ,INPUT icDataType AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  DEF VAR ix AS INT NO-UNDO.
+  DEF VAR cText AS CHAR NO-UNDO.
+  
+  CASE icDataType:
+    WHEN "INTEGER" OR WHEN "INT64" THEN
+      DO ix = 1 TO LENGTH(icText):
+        IF CAN-DO("-,0,1,2,3,4,5,6,7,8,9, ",SUBSTR(icText,ix,1)) THEN
+          cText = cText + SUBSTR(icText,ix,1).
+      END.      
+    WHEN "DECIMAL" THEN
+      DO ix = 1 TO LENGTH(icText):
+        IF SUBSTR(icText,ix,1) = "," THEN
+          cText = cText + SUBSTR(icText,ix,1).
+        ELSE IF CAN-DO("-,0,1,2,3,4,5,6,7,8,9, ,.",SUBSTR(icText,ix,1)) THEN
+          cText = cText + SUBSTR(icText,ix,1).
+      END.      
+    OTHERWISE cText = icText.
+
+  END CASE.
+  
+  RETURN cText.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-SwapPrescanToMainBuffer) = 0 &THEN
 

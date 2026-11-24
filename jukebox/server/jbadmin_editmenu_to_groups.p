@@ -17,6 +17,8 @@ DEF VAR cGroupIdList AS CHAR  NO-UNDO.
 DEF VAR cUserId      AS CHAR  NO-UNDO.
 DEF VAR hWriteAccess AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 ASSIGN iMenuId      = INT(ENTRY(1,icParam,";"))
        cGroupIdList = ENTRY(2,icParam,";")
        cUserId      = DYNAMIC-FUNCTION("getAsUserId" IN SOURCE-PROCEDURE)

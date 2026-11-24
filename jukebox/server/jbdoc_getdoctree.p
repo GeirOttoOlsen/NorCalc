@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId     AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOk            AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR cEntity       AS CHAR   NO-UNDO.
 DEF VAR cEntityId     AS CHAR   NO-UNDO.
 DEF VAR cQuery        AS CHAR   NO-UNDO.

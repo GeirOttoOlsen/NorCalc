@@ -13,6 +13,8 @@ DEF VAR ix               AS INT  NO-UNDO.
 DEF VAR iJBoxBCmessageId AS INT  NO-UNDO.
 DEF VAR cUserIdList      AS CHAR NO-UNDO.
 
+{incl/validatecaller.i}
+
 ASSIGN iJBoxBCmessageId = INT(ENTRY(1,icParam,";"))
        cUserIdList      = ENTRY(2,icParam,";").
 

@@ -643,7 +643,7 @@ FIND FIRST ttSort
 
 DO ix = 1 TO NUM-ENTRIES(cSortMap):
   IF ENTRY(1,ENTRY(ix,cSortMap),";") = ttSort.cColumn THEN
-    RETURN ENTRY(2,ENTRY(ix,cSortMap),";").
+    RETURN ENTRY(1,ENTRY(ix,cSortMap),";"). /* rettet i forb. med testing sql */
 END.
 
 IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"useLocalData") = "yes" AND SUBSTR(ttSort.cColumn,LENGTH(ttSort.cColumn)) = "]" THEN

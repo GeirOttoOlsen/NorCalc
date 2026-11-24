@@ -8,21 +8,25 @@ DEF OUTPUT PARAM ocReturn     AS CHAR  NO-UNDO.
 
 DEF VAR hBuffContext AS HANDLE NO-UNDO.
 DEF VAR bOk          AS LOG    NO-UNDO.
+DEF VAR hbJBoxProcessRel AS HANDLE NO-UNDO.
+DEF VAR cTable           AS CHAR   NO-UNDO.
 
-FIND JBoxProcessRel NO-LOCK
-     WHERE ROWID(JBoxProcessRel) = irProcessRel
-     NO-ERROR.
-IF AVAIL JBoxProcessRel THEN DO:
-  CREATE BUFFER hBuffContext FOR TABLE JBoxProcessRel.cContext NO-ERROR.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxProcessRel",OUTPUT hbJBoxProcessRel) THEN RETURN.
+
+bOk = hbJBoxProcessRel:FIND-BY-ROWID (irProcessRel,NO-LOCK) NO-ERROR.
+     
+IF bOk THEN DO:
+  cTable = hbJBoxProcessRel::cContext.
+  CREATE BUFFER hBuffContext FOR TABLE cTable NO-ERROR.
   IF VALID-HANDLE(hBuffContext) THEN 
-    CASE JBoxProcessRel.cContext:
+    CASE cTable:
       WHEN "JBoxEmailAccount" THEN DO:
-        bOk = hBuffContext:FIND-FIRST("WHERE iJBoxEmailAccountId = " + JBoxProcessRel.cEntityId,NO-LOCK) NO-ERROR.
+        bOk = hBuffContext:FIND-FIRST("WHERE iJBoxEmailAccountId = " + hbJBoxProcessRel::cEntityId,NO-LOCK) NO-ERROR.
         IF bOk THEN
           ocReturn = hBuffContext:BUFFER-FIELD("cEmailAddress"):BUFFER-VALUE.
       END.
       WHEN "JBoxEventLogType" THEN DO:
-        bOk = hBuffContext:FIND-FIRST("WHERE cEventLogType = '" + JBoxProcessRel.cEntityId + "'",NO-LOCK) NO-ERROR.
+        bOk = hBuffContext:FIND-FIRST("WHERE cEventLogType = '" + hbJBoxProcessRel::cEntityId + "'",NO-LOCK) NO-ERROR.
         IF bOk THEN
           ocReturn = hBuffContext:BUFFER-FIELD("cEventLogTypeText"):BUFFER-VALUE.
       END.
@@ -30,3 +34,7 @@ IF AVAIL JBoxProcessRel THEN DO:
 
 END.
 
+FINALLY:
+  DELETE OBJECT hbJBoxProcessRel NO-ERROR.
+  DELETE OBJECT hBuffContext NO-ERROR.      
+END FINALLY.

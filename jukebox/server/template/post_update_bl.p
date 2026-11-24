@@ -9,6 +9,8 @@ DEF INPUT  PARAM icAction       AS CHAR   NO-UNDO.  /* Delete, Create or Update 
 DEF INPUT  PARAM icSessionId    AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocValue        AS CHAR   NO-UNDO.  /* Error message. If <> blank the transaction is backed out */
 
+{incl/validatecaller.i}
+
 /* To get the fields used in current update (comma-separated list): */
 DEF VAR cFields AS CHAR NO-UNDO.
 cFields = DYNAMIC-FUNCTION("getCurrentValueFields" IN SOURCE-PROCEDURE).

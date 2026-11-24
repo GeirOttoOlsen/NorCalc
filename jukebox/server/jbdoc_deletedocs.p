@@ -14,6 +14,8 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 DEF VAR ix            AS INT    NO-UNDO.
 DEF VAR hbJboxDocMeta AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF BUFFER bDocRel FOR JBoxDocRel.
 
 CREATE BUFFER hbJBoxDocMeta FOR TABLE "JBoxDocMeta" NO-ERROR.

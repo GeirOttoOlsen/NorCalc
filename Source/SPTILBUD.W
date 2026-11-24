@@ -70,6 +70,12 @@ h = session:first-procedure.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCurrentRec Tilbuds-Window 
+FUNCTION getCurrentRec RETURNS ROWID
+  (  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
 
@@ -388,26 +394,27 @@ END.
 ON CHOOSE OF MENU-ITEM m_Endre /* Endre... */
 DO:
     DEFINE VAR nyId AS INTEGER INITIAL 0.     
-    
-    SESSION:SET-WAIT-STATE("GENERAL").
+/*    SESSION:SET-WAIT-STATE("GENERAL").*/
     IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + String(tilbudsIdParam).
     Current-Tilbuds-Rec = ROWID(NPSPTILBUD).
     nyRecord = FALSE.
-    RUN SPTLBRED.W (INPUT THIS-PROCEDURE:PRIVATE-DATA, INPUT-OUTPUT nyRecord, 
-        OUTPUT nyId) NO-ERROR.
+    RUN SPTLBRED.W (INPUT THIS-PROCEDURE:PRIVATE-DATA, INPUT-OUTPUT nyRecord, OUTPUT nyId).
     IF nyId > 0 THEN DO:
         FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec EXCLUSIVE-LOCK 
             NO-WAIT NO-ERROR.    
         IF AVAILABLE NPSPTILBUD THEN DO:    
             /* Oppdater avgitt pris for dette tilbudet */
-             RUN regnutTilbudspris.
+/*             RUN regnutTilbudspris.*/
           {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
             REPOSITION Tilbuds-Browse TO ROWID(Current-Tilbuds-Rec).           
             APPLY 'VALUE-CHANGED' TO Tilbuds-Browse
            IN FRAME TILBUDS-FRAME.
         END.
     END.        
-  
+  CATCH eAny AS Progress.Lang.Error :
+      MESSAGE eAny:GetMessage(1)
+      VIEW-AS ALERT-BOX.
+  END CATCH.  
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -444,43 +451,38 @@ DO:
     DEFINE VAR nyId AS INTEGER INITIAL 0.
     
     nyRecord = TRUE.
-    pointer =  SESSION:SET-WAIT-STATE("GENERAL").
-    IF THIS-PROCEDURE:PERSISTENT THEN
-        THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(anleggsnrParam).
-    RUN SPTLBRED.W  (INPUT THIS-PROCEDURE:PRIVATE-DATA, INPUT-OUTPUT nyRecord, 
-        OUTPUT nyId) NO-ERROR.
+    IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(anleggsnrParam).
+    RUN SPTLBRED.W  (INPUT THIS-PROCEDURE:PRIVATE-DATA, INPUT-OUTPUT nyRecord, OUTPUT nyId) NO-ERROR.
     IF nyId > 0 THEN DO:
-        FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec 
-            NO-LOCK NO-ERROR NO-WAIT.
-        IF AVAILABLE NPSPTILBUD THEN 
-            DO:
-                 RUN regnutTilbudspris.
-            
-                /* Opprett første record i oppfølging, og sett oppf.uke */
-            DEFINE VAR cUke LIKE NPSPANLG.oppf_uke.
-            DEFINE VAR cAar LIKE NPSPANLG.oppf_aar.
-
-            FIND NPSPANLG WHERE NPSPANLG.anleggsnr = anleggsnrParam NO-LOCK 
-                NO-WAIT NO-ERROR.
-            IF AVAILABLE NPSPANLG THEN
-                    cUke = NPSPANLG.oppf_uke.
-                    cAar = NPSPANLG.oppf_aar.
-            define var cp_tabell_navn as char.
-            define var ip_neste_id as integer.
-
-            cp_tabell_navn  = 'npsptopp'.
-            run neste_id.p (input cp_tabell_navn, output ip_neste_id).
-            CREATE NPSPTOPP.
-            ASSIGN 
-            NPSPTOPP.id = tilbudsIdParam
-            NPSPTOPP.oppf_nr = ip_neste_id
-            NPSPTOPP.neste_oppf_uke = cUke.
-            NPSPTOPP.neste_oppf_aar = cAar.            
-           /* Sett endringslås på anlegget */
-           UPDATE NPSPANLG SET endrings_laas = TRUE WHERE anleggsnr = anleggsnrParam.
-           
+      FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec NO-LOCK NO-ERROR NO-WAIT.
+      IF AVAILABLE NPSPTILBUD THEN DO:
+/*                 RUN regnutTilbudspris.                                              */
+/*                                                                                     */
+/*                /* Opprett første record i oppfølging, og sett oppf.uke */           */
+/*            DEFINE VAR cUke LIKE NPSPANLG.oppf_uke.                                  */
+/*            DEFINE VAR cAar LIKE NPSPANLG.oppf_aar.                                  */
+/*                                                                                     */
+/*            FIND NPSPANLG WHERE NPSPANLG.anleggsnr = anleggsnrParam NO-LOCK          */
+/*                NO-WAIT NO-ERROR.                                                    */
+/*            IF AVAILABLE NPSPANLG THEN                                               */
+/*                    cUke = NPSPANLG.oppf_uke.                                        */
+/*                    cAar = NPSPANLG.oppf_aar.                                        */
+/*            define var cp_tabell_navn as char.                                       */
+/*            define var ip_neste_id as integer.                                       */
+/*                                                                                     */
+/*            cp_tabell_navn  = 'npsptopp'.                                            */
+/*            run neste_id.p (input cp_tabell_navn, output ip_neste_id).               */
+/*            CREATE NPSPTOPP.                                                         */
+/*            ASSIGN                                                                   */
+/*            NPSPTOPP.id = tilbudsIdParam                                             */
+/*            NPSPTOPP.oppf_nr = ip_neste_id                                           */
+/*            NPSPTOPP.neste_oppf_uke = cUke.                                          */
+/*            NPSPTOPP.neste_oppf_aar = cAar.                                          */
+/*           /* Sett endringslås på anlegget */                                        */
+/*           UPDATE NPSPANLG SET endrings_laas = TRUE WHERE anleggsnr = anleggsnrParam.*/
+/*                                                                                     */
           {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
-            REPOSITION Tilbuds-Browse TO ROWID(Current-Tilbuds-Rec).           
+            REPOSITION Tilbuds-Browse TO ROWID(Current-Tilbuds-Rec).
             APPLY 'VALUE-CHANGED' TO Tilbuds-Browse
                 IN FRAME TILBUDS-FRAME.
 
@@ -490,7 +492,7 @@ DO:
            MENU-ITEM m_Ny_oppf:SENSITIVE IN MENU MENU-BAR-TILBUDS-WINDOW = YES.
            MENU-ITEM m_Endre_oppf:SENSITIVE IN MENU MENU-BAR-TILBUDS-WINDOW = YES.
         END.
-    END.  
+    END.
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1041,27 +1043,27 @@ PROCEDURE regnutTilbudspris :
   Parameters:  <none>
   Notes:       
 -------------------------------------------------------------*/
-            /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */
-            DEFINE VAR c_standardpris AS DECIMAL INITIAL 0.
-            DEFINE VAR c_pris AS DECIMAL INITIAL 0.
-            DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.
-
-            FIND NPSPANLG  WHERE  NPSPANLG.anleggsnr = anleggsnrParam NO-WAIT 
-                NO-ERROR.
-            IF AVAILABLE NPSPANLG THEN
-                c_standardpris = NPSPANLG.standardpris.
-
-            FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec NO-WAIT
-                NO-ERROR.            
-            IF AVAILABLE NPSPTILBUD THEN
-            DO:
-                 c_pris = c_standardpris.
-                 c_avgittpris = c_pris - ((c_pris *  NPSPTILBUD.rabatt%) / 100).
-                 tilbudsIdParam = npsptilbud.id. 
-           
-                ASSIGN NPSPTILBUD.pris  = c_standardpris
-                                 NPSPTILBUD.avgittpris =  c_avgittpris.
-            END.
+/*            /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */      */
+/*            DEFINE VAR c_standardpris AS DECIMAL INITIAL 0.                      */
+/*            DEFINE VAR c_pris AS DECIMAL INITIAL 0.                              */
+/*            DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.                        */
+/*                                                                                 */
+/*            FIND NPSPANLG  WHERE  NPSPANLG.anleggsnr = anleggsnrParam NO-WAIT    */
+/*                NO-ERROR.                                                        */
+/*            IF AVAILABLE NPSPANLG THEN                                           */
+/*                c_standardpris = NPSPANLG.standardpris.                          */
+/*                                                                                 */
+/*            FIND NPSPTILBUD WHERE ROWID(NPSPTILBUD) = Current-Tilbuds-Rec NO-WAIT*/
+/*                NO-ERROR.                                                        */
+/*            IF AVAILABLE NPSPTILBUD THEN                                         */
+/*            DO:                                                                  */
+/*                 c_pris = c_standardpris.                                        */
+/*                 c_avgittpris = c_pris - ((c_pris *  NPSPTILBUD.rabatt%) / 100). */
+/*                 tilbudsIdParam = npsptilbud.id.                                 */
+/*                                                                                 */
+/*                ASSIGN NPSPTILBUD.pris  = c_standardpris                         */
+/*                                 NPSPTILBUD.avgittpris =  c_avgittpris.          */
+/*            END.                                                                 */
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1076,6 +1078,65 @@ PROCEDURE View_Win :
 -------------------------------------------------------------*/
   {&WINDOW-NAME}:HIDDEN = FALSE.
 END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+/* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCurrentRec Tilbuds-Window 
+FUNCTION getCurrentRec RETURNS ROWID
+  (  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+
+    RETURN current-rec.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getNyRecord Tilbuds-Window 
+FUNCTION getNyRecord RETURNS LOGICAL
+  ():
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+    return nyRecord.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setCurrentRec Tilbuds-Window 
+FUNCTION setCurrentRec RETURNS LOGICAL
+  (input ipRowid as rowid  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+    current-rec = ipRowid.
+    return true.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setNyRecord Tilbuds-Window 
+FUNCTION setNyRecord RETURNS ROWID
+  ( input ipValue as logical ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+
+    nyRecord = ipValue.
+
+END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME

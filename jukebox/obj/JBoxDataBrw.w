@@ -77,6 +77,7 @@ DEF VAR bEnableSaveQuery     AS LOG    NO-UNDO.
 DEF VAR hBtnSaveQuery        AS HANDLE NO-UNDO.
 DEF VAR hBtnDeleteQuery      AS HANDLE NO-UNDO.
 DEF VAR hBtnShareQuery       AS HANDLE NO-UNDO.
+DEF VAR hBtnScheduleQuery    AS HANDLE NO-UNDO.
 DEF VAR hFilterBtn           AS HANDLE NO-UNDO.
 DEF VAR cActiveFilterBtn     AS CHAR   NO-UNDO.
 DEF VAR cPassiveFilterBtn    AS CHAR   NO-UNDO.
@@ -113,11 +114,27 @@ DEF VAR cMyMenuNameList      AS CHAR   NO-UNDO.
 DEF VAR cSharedMenuIdList    AS CHAR   NO-UNDO.
 DEF VAR cSharedMenuNameList  AS CHAR   NO-UNDO.
 DEF VAR hWinToolbar          AS HANDLE NO-UNDO.
+DEF VAR oContainer           AS JBoxContainer NO-UNDO.
+DEF VAR cJBoxUserSettingId   AS CHAR NO-UNDO.
+DEF VAR hViewTablesMenu      AS HANDLE NO-UNDO.
+DEF VAR hScheduler           AS HANDLE NO-UNDO.
+DEF VAR hFillTimeSeries      AS HANDLE NO-UNDO.
+DEF VAR hMenuItemShareQuery  AS HANDLE NO-UNDO.
+DEF VAR hDrillInNewWindow    AS HANDLE NO-UNDO.
+DEF VAR hSwitchLocal         AS HANDLE NO-UNDO. 
+/*DEF VAR hShowQuery           AS HANDLE NO-UNDO.       */
+/*DEF VAR oMenuStatusBar       AS JBoxPopupMenu NO-UNDO.*/
+
+DEF VAR oBrowse              AS JBoxBrowse NO-UNDO.
+
+def var BatchQueryId         as char no-undo.
 
 cQuerySettingList = "OperatorInUse_,GroupOperator_,FieldGroup_,FieldOperator_,OperatorInUse_,FieldOperator_,FilterValue_,HiddenGroupOperator_,queryfilter,prescanquery,calcfieldfilter,advancedfilter,getrecordcount"
 /*                    + ",allaccumfields,allcalcfields,prescanmainquerycandidates_filter" /* <- to keep from clearing */  */
+//                   + ",gridFilterValue_,gridOperatorInUse_"
                    + ",currviewfields,widthpixellist,distinctcolumns,accumfields,accumsortfields,accumviewfields"
                    + ",querysort,localsort,querydesc,1stsortcolumn,1stsortcolumndesc,2ndsortcolumn,2ndsortcolumndesc,3rdsortcolumn,3rdsortcolumndesc,4thsortcolumn,4thsortcolumndesc"
+                   + ",queryWhere,distinctTables,accumTables"
                      .
 
 DEF TEMP-TABLE ttChild
@@ -182,6 +199,13 @@ FUNCTION CreateSearchField RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBatchQueryId C-Win 
+FUNCTION getBatchQueryId RETURNS CHARACTER
+  ( /* parameter-definitions */ )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBrowseHandle C-Win 
 FUNCTION getBrowseHandle RETURNS HANDLE
   ( /* parameter-definitions */ )  FORWARD.
@@ -217,6 +241,13 @@ FUNCTION ReduceFields RETURNS CHARACTER
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD resetRowCounter C-Win 
+FUNCTION resetRowCounter RETURNS LOGICAL
+  (  )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD SaveQuery C-Win 
 FUNCTION SaveQuery RETURNS LOGICAL
   ( INPUT icCurrQueryId AS CHAR,
@@ -243,6 +274,20 @@ FUNCTION setAccumButton RETURNS LOGICAL
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setAccumFieldSort C-Win 
 FUNCTION setAccumFieldSort RETURNS LOGICAL
   ( INPUT ibAccumFieldSort AS LOG )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setBatchQueryId C-Win 
+FUNCTION setBatchQueryId RETURNS LOGICAL
+ ( input ipValue as char)  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setBrowseObject C-Win 
+FUNCTION setBrowseObject RETURNS LOGICAL
+  ( INPUT ioBrowse AS JBoxBrowse )  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -340,15 +385,12 @@ FUNCTION setRowsToBatch RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD SetSharedQueriesMenu C-Win
-FUNCTION SetSharedQueriesMenu RETURNS LOGICAL 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD SetSharedQueriesMenu C-Win 
+FUNCTION SetSharedQueriesMenu RETURNS LOGICAL
   (  ) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setSMSButton C-Win 
 FUNCTION setSMSButton RETURNS LOGICAL
@@ -385,6 +427,13 @@ FUNCTION setUseStdAppserver RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setViewAllTablesMenu C-Win 
+FUNCTION setViewAllTablesMenu RETURNS LOGICAL
+  ( INPUT icViewType AS CHAR ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setWinTitle C-Win 
 FUNCTION setWinTitle RETURNS LOGICAL
   ( INPUT icWinTitle AS CHAR )  FORWARD.
@@ -398,9 +447,6 @@ FUNCTION setWordButton RETURNS LOGICAL
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD StartQuery C-Win 
 FUNCTION StartQuery RETURNS LOGICAL
@@ -437,7 +483,7 @@ FUNCTION ViewQueryStat RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE VARIABLE fiCurrentQuery AS CHARACTER FORMAT "X(256)":U 
@@ -447,7 +493,7 @@ DEFINE VARIABLE fiCurrentQuery AS CHARACTER FORMAT "X(256)":U
 
 DEFINE RECTANGLE BrwFlatView
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 128.4 BY 15.71.
+     SIZE 129 BY 15.71.
 
 DEFINE RECTANGLE rectToolbar
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
@@ -465,14 +511,14 @@ DEFINE RECTANGLE searchField
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     fiCurrentQuery AT ROW 1.43 COL 72.4 COLON-ALIGNED
-     BrwFlatView AT ROW 2.67 COL 2
-     searchField AT ROW 1.33 COL 2.2
-     rectToolbar AT ROW 1.33 COL 20.8
+     fiCurrentQuery AT ROW 1.43 COL 68.2 COLON-ALIGNED
+     BrwFlatView AT ROW 2.67 COL 1.8
+     searchField AT ROW 1.33 COL 27.4
+     rectToolbar AT ROW 1.33 COL 2.2
      rectWinToolbar AT ROW 1.29 COL 125.2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
+         AT COLUMN 1 ROW 1
          SIZE 130.6 BY 17.62.
 
 
@@ -596,16 +642,21 @@ END.
 
 
 /* ***************************  Main Block  *************************** */
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
 
 /* Set CURRENT-WINDOW: this will parent dialog-boxes and frames.        */
 ASSIGN CURRENT-WINDOW                = {&WINDOW-NAME} 
        THIS-PROCEDURE:CURRENT-WINDOW = {&WINDOW-NAME}.
+  &ENDIF   
 
 /* The CLOSE event can be used from inside or outside the procedure to  */
 /* terminate it.                                                        */
 ON CLOSE OF THIS-PROCEDURE DO:
   DYNAMIC-FUNCTION("DoCleanUpObjects",THIS-PROCEDURE:CURRENT-WINDOW).
-  DYNAMIC-FUNCTION("setCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+    DYNAMIC-FUNCTION("setCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
+  &ENDIF   
+  
   PUBLISH "InvalidateHandle" (THIS-PROCEDURE).
   FOR EACH ttChild:
     IF VALID-HANDLE(ttChild.hChild) THEN 
@@ -628,26 +679,52 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     RUN InitializeObject ("FakturaLinje","WHERE ifakturalinjeid > 30","iFakturaHodeId",TRUE).
   &ENDIF
 
-
-
   SUBSCRIBE TO "InitStringTranslation" ANYWHERE.
 
   IF NOT THIS-PROCEDURE:PERSISTENT THEN
     WAIT-FOR CLOSE OF THIS-PROCEDURE.
 END.
 
-{incl/wintrigg.i}
+&IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+  {incl/wintrigg.i}
 
-ON 'ctrl-s' OF FRAME {&FRAME-NAME} ANYWHERE DO:
-  IF cCurrQueryId NE "" THEN RUN SaveCurrentQuery.
-  RETURN.
-END.
+  ON 'ctrl-s' OF FRAME {&FRAME-NAME} ANYWHERE DO:
+    IF cCurrQueryId NE "" THEN RUN SaveCurrentQuery.
+    RETURN.
+  END.
+&ENDIF
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
 
 /* **********************  Internal Procedures  *********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE BeforeDynAccum C-Win 
+PROCEDURE BeforeDynAccum :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF INPUT PARAM ihBrowse AS HANDLE NO-UNDO.
+DEF INPUT PARAM icAction AS CHAR   NO-UNDO.
+
+IF ihBrowse NE hBrowse THEN RETURN.
+
+IF icAction = "clear" THEN DO:
+  IF cInitSort NE "" THEN
+    DYNAMIC-FUNCTION("setSortString",hBrowse,ENTRY(NUM-ENTRIES(cInitSort,"."),cInitSort,".")).
+  
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"originalTempTable") NE "" THEN DO:
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"tempTableHandle",DYNAMIC-FUNCTION("getAttribute",hBrowse,"originalTempTable")).
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"uselocaldata","yes").
+  END.
+END.  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE BeforeSetDynFilter C-Win 
 PROCEDURE BeforeSetDynFilter :
@@ -662,6 +739,19 @@ IF ihQueryObject NE hBrowse THEN RETURN.
 
 IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"uselocaldata") = "yes" AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"tempTableHandle") = "" THEN
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"uselocaldata","").
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE copyHelpTextRecord C-Win 
+PROCEDURE copyHelpTextRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+  CLIPBOARD:VALUE = oContainer:statusBar:hHelpText:SCREEN-VALUE.
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -714,7 +804,7 @@ DEF VAR hCurrFlatBrw           AS HANDLE NO-UNDO.
 ASSIGN cDistinctColumns = DYNAMIC-FUNCTION("getAttribute",hBrowse,"distinctcolumns")
        cBaseTableFilterFields = DYNAMIC-FUNCTION("getAttribute",hBrowse,"basetablefilterfields")
        .
-       
+
 IF cDistinctColumns NE "" THEN DO:
   hCurrFlatView = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"flatviewhandle")) NO-ERROR.
   IF VALID-HANDLE(hCurrFlatView) THEN DO:
@@ -745,6 +835,7 @@ IF cDistinctColumns NE "" THEN DO:
              cCurrFlatAccum    = "".
   END.
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"drillDown","yes").
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"childwindow",DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"childwindow")).
   RUN FlatViewRecord.
 END.
 ELSE 
@@ -762,9 +853,9 @@ PROCEDURE DeleteQuery :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-IF cQueryOwner NE JBoxSession:Instance:UserId THEN DO:
-  IF JBoxSession:Instance:ViewQuestionYesNo((IF JBoxSession:Instance:Scandinavian THEN "Fjern kobling fra min bruker til " 
-                                             ELSE "Delete link from my user to ") + fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} + "?") THEN DO: 
+IF cQueryOwner NE JBoxSession:Instance:UserId AND oDynDataBrowse:ViewDsId = "" THEN DO:
+  IF JBoxSession:Instance:ViewQuestionYesNo((IF JBoxSession:Instance:Scandinavian THEN "Fjern kobling fra min bruker til" + CHR(10) 
+                                             ELSE "Delete link from my user to" + CHR(10)) + fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} + "?") THEN DO: 
     IF DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
                      "userquery",
                      DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
@@ -777,7 +868,7 @@ IF cQueryOwner NE JBoxSession:Instance:UserId THEN DO:
   END.    
 END.
 ELSE DO:
-  IF JBoxSession:Instance:ViewQuestionYesNo((IF JBoxSession:Instance:Scandinavian THEN "Slett " ELSE "Delete ") + fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} + "?") THEN 
+  IF JBoxSession:Instance:ViewQuestionYesNo((IF JBoxSession:Instance:Scandinavian THEN "Slett" + CHR(10) ELSE "Delete" + CHR(10)) + fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} + "?") THEN 
     SaveQuery(cCurrQueryId,"delete_setting").
 END.  
 
@@ -836,9 +927,42 @@ PROCEDURE DisplayRecord :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-PUBLISH "BeforeDisplayRecord" (hBrowse,hToolbar).
+DEF VAR cDistinctCol AS CHAR NO-UNDO.
 
+/*DYNAMIC-FUNCTION("DoLockWindow",hBrowse:WINDOW).                       */
+/*DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","yes").*/
+
+PUBLISH "BeforeDisplayRecord" (hBrowse,hToolbar).
 RUN SUPER.
+
+cDistinctCol = DYNAMIC-FUNCTION("getAttribute",hBrowse,"distinctcolumns").
+IF VALID-HANDLE(hFillTimeSeries) THEN DO:
+  hFillTimeSeries:SENSITIVE = cDistinctCol NE "" 
+                              AND NUM-ENTRIES(cDistinctCol) = 1
+                              AND CAN-DO("jb_weeknum,jb_month,jb_quarter,jb_year",DYNAMIC-FUNCTION("getAttribute",hBrowse,"calcProc" + cDistinctCol))
+                              .  
+END.        
+IF VALID-HANDLE(hDrillInNewWindow) THEN
+  hDrillInNewWindow:SENSITIVE = cDistinctCol NE "".     
+IF VALID-HANDLE(hSwitchLocal) THEN 
+  hSwitchLocal:SENSITIVE = DYNAMIC-FUNCTION("getAttribute",hBrowse,"lastRowid") NE "" AND cDistinctCol = "".
+
+/*DYNAMIC-FUNCTION("setAttribute",SESSION,"userKeepsWindowLocked","").*/
+/*DYNAMIC-FUNCTION("DoLockWindow",?).                                 */
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DrillInNewWinRecord C-Win 
+PROCEDURE DrillInNewWinRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DYNAMIC-FUNCTION("setAttribute",THIS-PROCEDURE,"childwindow","yes").
+RUN DefaultActionBrowse.
 
 END PROCEDURE.
 
@@ -865,6 +989,9 @@ DEF VAR cButton                  AS CHAR   NO-UNDO.
 IF ihBrowse NE hBrowse THEN RETURN.
 
 cPermanentDisabledEvents = DYNAMIC-FUNCTION("getAttribute",hToolbar,"permanentdisabledevents").
+
+IF VALID-HANDLE(hDrillInNewWindow) THEN
+  hDrillInNewWindow:SENSITIVE = icAction = "accum". 
 
 IF icAction = "accum" THEN DO:
   ASSIGN cDistinctCols = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctcolumns")
@@ -899,12 +1026,16 @@ IF icAction = "accum" THEN DO:
   hFilter = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"filterhandle")) NO-ERROR.
   IF VALID-HANDLE(hFilter) THEN APPLY "close" TO hFilter.
   setTotalFieldsMenu("accum").
+  setViewAllTablesMenu("accum").
+  resetRowCounter().
+  
 END.
 ELSE DO:
   THIS-PROCEDURE:CURRENT-WINDOW:TITLE = cOrgWinTitle.
   cButton = DYNAMIC-FUNCTION("getAttribute",SESSION,"passiveaccumbutton").
   DYNAMIC-FUNCTION("setAttribute",hToolbar,"disabledevents",cPermanentDisabledEvents).
   setTotalFieldsMenu("details").
+  setViewAllTablesMenu("details").
 END.
 
 IF VALID-HANDLE(hAccumBtn) THEN 
@@ -1111,6 +1242,8 @@ DEF VAR cModSkipUnique      AS CHAR   NO-UNDO.
 DEF VAR cNewCurrFields      AS CHAR   NO-UNDO.
 DEF VAR cModCurrFields      AS CHAR   NO-UNDO.
 DEF VAR cCurrViewFields     AS CHAR   NO-UNDO.
+DEF VAR hTT                 AS HANDLE NO-UNDO.
+DEF VAR hNewTT              AS HANDLE NO-UNDO.
 
 IF bNoDrillDown THEN DO:
   DYNAMIC-FUNCTION("DoMessage",0,0,
@@ -1158,36 +1291,48 @@ DO ix = 1 TO hBrowse:NUM-COLUMNS:
                       cBrowseColumn
     cFieldBuffer  = DYNAMIC-FUNCTION("getAttribute",hBrowse,"fieldbuffer" + cBrowseColumn)
                     .
-  IF CAN-DO(cDistinctCols,cBrowseColumn) AND NOT CAN-DO(cCalcFields,cBrowseColumn) AND LOOKUP(cFieldBuffer,cBufferList) = 1 THEN DO:
+  IF CAN-DO(cDistinctCols,cBrowseColumn) AND
+     ((NOT CAN-DO(cCalcFields,cBrowseColumn) AND LOOKUP(cFieldBuffer,cBufferList) = 1) 
+       OR DYNAMIC-FUNCTION("getAttribute",hBrowse,"originaltemptable") NE "") THEN DO:
+//       OR DYNAMIC-FUNCTION("getAttribute",hBrowse,"switchedToLocal") = "yes") THEN DO:
     ASSIGN cBuffDistinct  = cBuffDistinct + " " + cBrowseColumn + " = "
            cFilterExclude = cFilterExclude + "," + cBrowseColumn.
     CASE hBrowse:GET-BROWSE-COLUMN(ix):DATA-TYPE:
       WHEN "CHARACTER" THEN cBuffDistinct = cBuffDistinct + QUOTER(hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE).
       WHEN "DATE"      THEN cBuffDistinct = cBuffDistinct + "DATE('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
-      WHEN "DECIMAL"   THEN cBuffDistinct = cBuffDistinct + "DECIMAL(" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + ")".
-      WHEN "INTEGER"   THEN cBuffDistinct = cBuffDistinct + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE.
-      WHEN "LOGICAL"   THEN cBuffDistinct = cBuffDistinct + "LOGICAL(" + hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE + ")".
+      WHEN "DECIMAL"   THEN cBuffDistinct = cBuffDistinct + "DECIMAL('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "INTEGER"   THEN cBuffDistinct = cBuffDistinct + "INTEGER('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "INT64"     THEN cBuffDistinct = cBuffDistinct + "INT64('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "LOGICAL"   THEN cBuffDistinct = cBuffDistinct + "LOGICAL('" + hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE + "')".
     END CASE.
     cBuffDistinct = cBuffDistinct + " AND".
   END.
   ELSE IF CAN-DO(cDistinctCols,cBrowseColumn) AND CAN-DO(cCalcFields,cBrowseColumn) THEN 
-    ASSIGN cCalcFieldFilter = cCalcFieldFilter + cBrowseColumn + "¤=¤" + REPLACE(hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE,",",CHR(1)) + "|"
+    ASSIGN cCalcFieldFilter = cCalcFieldFilter + cBrowseColumn + "¤=¤" 
+                            + (IF hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE NE ? THEN
+                                 REPLACE(hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE,",",CHR(1))
+                               ELSE "?")  
+                            + "|"
            cFilterExclude   = cFilterExclude + "," + cBrowseColumn
            cCalcFilterTitle = cCalcFilterTitle + " AND " +
                        (IF cBrowseColumn BEGINS "jb_month_" THEN "MONTH(" + SUBSTR(cBrowseColumn,10) + ")"
                         ELSE IF cBrowseColumn BEGINS "jb_quarter_" THEN "QUARTER(" + SUBSTR(cBrowseColumn,12) + ")"
                         ELSE IF cBrowseColumn BEGINS "jb_week_" THEN "WEEK(" + SUBSTR(cBrowseColumn,9) + ")"
                         ELSE IF cBrowseColumn BEGINS "jb_year_" THEN "YEAR(" + SUBSTR(cBrowseColumn,9) + ")"
-                        ELSE cBrowseColumn) + " = " +
-                        hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE.
+                        ELSE cBrowseColumn) + " = " 
+                      + (IF hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE NE ? THEN
+                           REPLACE(hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE,",",CHR(1))
+                         ELSE "?")  
+                        .
   ELSE IF CAN-DO(cDistinctCols,cBrowseColumn) AND LOOKUP(cFieldBuffer,cBufferList) > 1 THEN DO:
     cFilterExclude = cFilterExclude + "," + cBrowseColumn.
     CASE hBrowse:GET-BROWSE-COLUMN(ix):DATA-TYPE:
       WHEN "CHARACTER" THEN cPreScanValue = QUOTER(REPLACE(hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE,",",CHR(1))).
       WHEN "DATE"      THEN cPreScanValue = "DATE('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
-      WHEN "DECIMAL"   THEN cPreScanValue = "DECIMAL(" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + ")".
-      WHEN "INTEGER"   THEN cPreScanValue = hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE.
-      WHEN "LOGICAL"   THEN cPreScanValue = "LOGICAL(" + hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE + ")".
+      WHEN "DECIMAL"   THEN cPreScanValue = "DECIMAL('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "INTEGER"   THEN cPreScanValue = "INTEGER('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "INT64"     THEN cPreScanValue = "INT64('" + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + "')".
+      WHEN "LOGICAL"   THEN cPreScanValue = "LOGICAL('" + hBrowse:GET-BROWSE-COLUMN(ix):INPUT-VALUE + "')".
     END CASE.
     cBuffPreScanQry[LOOKUP(cFieldBuffer,cBufferList)] = cBuffPreScanQry[LOOKUP(cFieldBuffer,cBufferList)] +
        (IF cBuffPreScanQry[LOOKUP(cFieldBuffer,cBufferList)] NE "" THEN " AND " ELSE cFieldBuffer + ".") +
@@ -1195,7 +1340,9 @@ DO ix = 1 TO hBrowse:NUM-COLUMNS:
   END.
 
   IF CAN-DO(cDistinctCols,cBrowseColumn) THEN
-    cWindowTitle = cWindowTitle + DYNAMIC-FUNCTION("getBrowseColumnLabel",hBrowse,cBrowseColumn) + " = " + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE + ", ". 
+    cWindowTitle = cWindowTitle
+                 + (IF cWindowTitle NE "" THEN ", " ELSE "") 
+                 + DYNAMIC-FUNCTION("getBrowseColumnLabel",hBrowse,cBrowseColumn) + " = " + hBrowse:GET-BROWSE-COLUMN(ix):SCREEN-VALUE. 
   
 END.
 IF LENGTH(cBuffDistinct) > 6 THEN
@@ -1242,17 +1389,19 @@ cOperatorAttributes = DYNAMIC-FUNCTION("getAttributeList",hBrowse,"operatorInUse
 IF cOperatorAttributes NE "|" THEN DO:
   ASSIGN cFieldsForOperators = ENTRY(1,cOperatorAttributes,"|")
          cOperatorAttributes = ENTRY(2,cOperatorAttributes,"|").
-  DO ix = 1 TO NUM-ENTRIES(cFieldsForOperators):
-    cWindowTitle = cWindowTitle + DYNAMIC-FUNCTION("getBrowseColumnLabel",hBrowse,
-                                                   SUBSTR(ENTRY(ix,cFieldsForOperators),R-INDEX(ENTRY(ix,cFieldsForOperators),"_") + 1))
-                                + " " + ENTRY(ix,cOperatorAttributes,CHR(1))
-                                + " " + DYNAMIC-FUNCTION("getAttribute",hBrowse,"filtervalue" +
-                                                         SUBSTR(ENTRY(ix,cFieldsForOperators),INDEX(ENTRY(ix,cFieldsForOperators),"_")))
-                                + ", ".
-  END.
-  cWindowTitle = REPLACE(TRIM(cWindowTitle,", "),CHR(1),",").
+  IF cWindowTitle = "" THEN DO:       
+    DO ix = 1 TO NUM-ENTRIES(cFieldsForOperators):
+      cWindowTitle = cWindowTitle + DYNAMIC-FUNCTION("getBrowseColumnLabel",hBrowse,
+                                                     SUBSTR(ENTRY(ix,cFieldsForOperators),R-INDEX(ENTRY(ix,cFieldsForOperators),"_") + 1))
+                                  + " " + ENTRY(ix,cOperatorAttributes,CHR(1))
+                                  + " " + DYNAMIC-FUNCTION("getAttribute",hBrowse,"filtervalue" +
+                                                           SUBSTR(ENTRY(ix,cFieldsForOperators),INDEX(ENTRY(ix,cFieldsForOperators),"_")))
+                                  + ", ".
+    END.
+    cWindowTitle = REPLACE(TRIM(cWindowTitle,", "),CHR(1),",").
+  END.  
 END.
-ELSE
+ELSE IF cWindowTitle = "" THEN
   cWindowTitle = TRIM(
                  TRIM(cWindowTitle + DYNAMIC-FUNCTION("getAttribute",hBrowse,"prescanqueryfilter"),",")
                     + DYNAMIC-FUNCTION("getAttribute",hBrowse,"basetable") + " "
@@ -1279,6 +1428,9 @@ DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"distinctcolumns",cCurrFlatDi
 DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"accumfields",cCurrFlatAccum).
 DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"filterexcludefields",TRIM(cFilterExclude,",")).
 
+IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") NE "" THEN 
+  DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"sqlbufferlist",TRIM(cBufferList,",")).
+
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"FieldGroup_").
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"FieldOperator_").
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"FilterLookupFields_").
@@ -1300,6 +1452,15 @@ DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"calcparam").
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"calcphrase").
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"shadedRows").
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"WindowsBrowse").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"numbuffers").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"switchedToLocal").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"fieldBuffer").
+IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"switchedToLocal") = "yes" THEN
+  DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"useLocalData","yes").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"grid").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"prescanquerywhere").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrwPlaceHolder,"filterExcludeFields").
+
 
 ihFlatView:CURRENT-WINDOW:TITLE = cTitlePrefixDetails + " "
 /*         (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Detaljer: " ELSE "Details: ") */
@@ -1315,14 +1476,23 @@ DYNAMIC-FUNCTION("setUseStdAppserver" IN ihFlatView,YES).
 /* No load of userfilter when doing drill-down.. */
 DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"usersettingcontext","-").
 
-RUN InitializeObject IN ihFlatView (DYNAMIC-FUNCTION("getAttribute",hBrowse,"viewbuffersandfields"),"where false" + 
-/*                                    ClearUseIndex(                                                                                                 */
-/*                                      DYNAMIC-FUNCTION("getAttribute",hBrowse,"basequery") + cBuffDistinct + " " +                                 */
-/*                                      (IF cBuffDistinct NE "" AND TRIM(DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryfilter")) BEGINS "WHERE " THEN*/
-/*                                        " AND" + SUBSTR(TRIM(DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryfilter")),6)                            */
-/*                                       ELSE                                                                                                        */
-/*                                        DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryfilter")) +                                                  */
-/*                                      DYNAMIC-FUNCTION("getAttribute",hBrowse,"querywhere") +                                                      */
+IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") NE "" 
+   OR DYNAMIC-FUNCTION("getAttribute",hNewBrwPlaceHolder,"originaltemptable") NE ""
+   OR DYNAMIC-FUNCTION("getAttribute",hBrowse,"switchedToLocal") = "yes" THEN DO:
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") NE ""
+     OR DYNAMIC-FUNCTION("getAttribute",hBrowse,"switchedToLocal") = "yes" THEN
+    hTT = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"temptablehandle")).
+  ELSE   
+    hTT = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"originalTempTable")).
+  CREATE TEMP-TABLE hNewTT.
+  hNewTT:CREATE-LIKE (hTT).
+  hNewTT:TEMP-TABLE-PREPARE (hTT:NAME).
+  DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"temptablehandle",STRING(hNewTT)).
+  DYNAMIC-FUNCTION("setAttribute",hNewBrwPlaceHolder,"sqlDbName",DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName")).
+END.  
+
+
+RUN InitializeObject IN ihFlatView (DYNAMIC-FUNCTION("getAttribute",hBrowse,"buffersandfields"),"where false" + 
                                       DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryjoin")
                                      ,"", 
                                    TRUE).
@@ -1339,11 +1509,19 @@ DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrowse,"queryFilter").
 IF DYNAMIC-FUNCTION("getAttribute",hNewBrowse,"queryFilter") BEGINS "WHERE " AND DYNAMIC-FUNCTION("getAttribute",hNewBrowse,"baseQuery") NE "" THEN
   DYNAMIC-FUNCTION("setAttribute",hNewBrowse,"queryFilter"," AND" + SUBSTR(DYNAMIC-FUNCTION("getAttribute",hNewBrowse,"queryFilter"),6)).
 DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrowse,"queryWhere").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrowse,"allCalcFields").
 
 //IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"tempTableHandle") NE "" THEN 
 //  hNewBrowse:QUERY:GET-BUFFER-HANDLE (1):TABLE-HANDLE:COPY-TEMP-TABLE (hBrowse:QUERY:GET-BUFFER-HANDLE(1):TABLE-HANDLE,NO,NO,YES).  
 //  run toexcelviafile.p (hBrowse:QUERY:GET-BUFFER-HANDLE(1):TABLE-HANDLE,0).
   
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrowse,"sqlDbName").
+DYNAMIC-FUNCTION("CopyAttributes",hBrowse,hNewBrowse,"sqlView").
+  
+IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") NE "" THEN DO:
+  DYNAMIC-FUNCTION("setAttribute",hNewBrowse,"uselocaldata","").
+  DYNAMIC-FUNCTION("setAttribute",hNewBrowse,"temptablehandle",STRING(hNewBrowse:QUERY:GET-BUFFER-HANDLE (1):TABLE-HANDLE)).
+END.  
 
 DYNAMIC-FUNCTION("RemoveUseIndex",hNewBrowse).
 
@@ -1436,6 +1614,122 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE FillTimeSeriesRecord C-Win 
+PROCEDURE FillTimeSeriesRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hqTime       AS HANDLE NO-UNDO.
+DEF VAR cDistinctCol AS CHAR NO-UNDO.
+DEF VAR cCalcProc    AS CHAR NO-UNDO.
+DEF VAR ix           AS INT  NO-UNDO.
+DEF VAR iy           AS INT  NO-UNDO.
+DEF VAR iPrevVal     AS INT  NO-UNDO.
+DEF VAR cValue       AS CHAR NO-UNDO.
+DEF VAR iValue       AS INT  NO-UNDO.
+DEF VAR hBuffer      AS HANDLE NO-UNDO.
+DEF VAR hTT          AS HANDLE NO-UNDO.
+DEF VAR iFirstYear   AS INT NO-UNDO.
+DEF VAR iLastYear    AS INT NO-UNDO.
+
+cDistinctCol = DYNAMIC-FUNCTION("getAttribute",hBrowse,"distinctcolumns").
+cCalcProc = DYNAMIC-FUNCTION("getAttribute",hBrowse,"calcProc" + cDistinctCol).
+
+IF NOT CAN-DO("jb_year,jb_quarter,jb_month,jb_weeknum",cCalcProc) THEN DO:
+  JBoxSession:Instance:ViewMessage(IF JBoxSession:Instance:Scandinavian THEN "Ugyldig kolonne for aggregeringsnivå (kan kun være kalkulert år/kvartal/mnd/uke)" ELSE "Invalid level for aggregation (can only be calculated year/quarter/month/week").
+  RETURN.
+END.  
+
+hBuffer = hBrowse:QUERY:GET-BUFFER-HANDLE(1).
+
+CREATE TEMP-TABLE hTT.
+hTT:CREATE-LIKE(hBuffer).
+hTT:TEMP-TABLE-PREPARE ("firstRow").
+
+CREATE QUERY hqTime.
+hqTime:SET-BUFFERS (hBuffer).
+hqTime:QUERY-PREPARE ("FOR EACH " + hBuffer:NAME + " BY " + cDistinctCol).
+hqTime:QUERY-OPEN ().
+REPEAT WHILE hqTime:GET-NEXT ():
+  IF iFirstYear = 0 THEN DO:
+    iFirstYear = INT(SUBSTR(hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE,1,4)).
+    hTT:DEFAULT-BUFFER-HANDLE:BUFFER-CREATE ().
+    hTT:DEFAULT-BUFFER-HANDLE:BUFFER-COPY(hBuffer).
+  END.  
+  iLastYear = INT(SUBSTR(hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE,1,4)).
+END.
+
+DO ix = iFirstYear TO iLastYear:
+  CASE cCalcProc:
+    WHEN "jb_year" THEN DO:
+      hBuffer:FIND-FIRST("WHERE " + cDistinctCol + " = '" + STRING(ix) + "'") NO-ERROR.
+      IF NOT hBuffer:AVAIL THEN DO:
+        hBuffer:BUFFER-CREATE().
+        hBuffer:BUFFER-COPY (hTT:DEFAULT-BUFFER-HANDLE).
+        ASSIGN hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE = STRING(ix)
+               hBuffer::jbCountDistinct = 0
+               hBuffer::RowIdent1 = STRING(ix)
+               hBuffer::RowCount = INT(STRING(ix))
+               .
+      END.          
+    END.
+    WHEN "jb_quarter" THEN DO iy = 1 TO 4:
+      hBuffer:FIND-FIRST("WHERE " + cDistinctCol + " = '" + STRING(ix) + "Q" + STRING(iy) + "'") NO-ERROR.
+      IF NOT hBuffer:AVAIL THEN DO:
+        hBuffer:BUFFER-CREATE().
+        hBuffer:BUFFER-COPY (hTT:DEFAULT-BUFFER-HANDLE).
+        ASSIGN hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE = STRING(ix) + "Q" + STRING(iy)
+               hBuffer::jbCountDistinct = 0
+               hBuffer::RowIdent1 = STRING(ix) + STRING(iy)
+               hBuffer::RowCount = INT(STRING(ix) + STRING(iy))
+               .
+      END.
+    END.
+    WHEN "jb_month" THEN DO iy = 1 TO 12:
+      hBuffer:FIND-FIRST("WHERE " + cDistinctCol + " = '" + STRING(ix) + STRING(iy,"99") + "'") NO-ERROR.
+      IF NOT hBuffer:AVAIL THEN DO:
+        hBuffer:BUFFER-CREATE().
+        hBuffer:BUFFER-COPY (hTT:DEFAULT-BUFFER-HANDLE).
+        ASSIGN hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE = STRING(ix) + STRING(iy,"99")
+               hBuffer::jbCountDistinct = 0
+               hBuffer::RowIdent1 = STRING(ix) + STRING(iy,"99")
+               hBuffer::RowCount = INT(STRING(ix) + STRING(iy,"99"))
+               . 
+      END.  
+    END.    
+    WHEN "jb_weeknum" THEN DO iy = 1 TO 52:
+      hBuffer:FIND-FIRST("WHERE " + cDistinctCol + " = '" + STRING(ix) + STRING(iy,"99") + "'") NO-ERROR.
+      IF NOT hBuffer:AVAIL THEN DO:
+        hBuffer:BUFFER-CREATE().
+        hBuffer:BUFFER-COPY (hTT:DEFAULT-BUFFER-HANDLE).
+        ASSIGN hBuffer:BUFFER-FIELD(cDistinctCol):BUFFER-VALUE = STRING(ix) + STRING(iy,"99")
+               hBuffer::jbCountDistinct = 0
+               hBuffer::RowIdent1 = STRING(ix) + STRING(iy,"99")
+               hBuffer::RowCount = INT(STRING(ix) + STRING(iy,"99"))
+               . 
+      END.  
+    END.    
+  END CASE.
+END.
+
+ix = 0.
+hqTime:QUERY-OPEN ().
+REPEAT WHILE hqTime:GET-NEXT ():
+  ix = ix + 1.
+  hBuffer::RowCount = ix.
+END.
+
+hBrowse:QUERY:QUERY-OPEN().  
+
+DELETE OBJECT hqTime.
+DELETE OBJECT hTT.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE FilterRecord C-Win 
 PROCEDURE FilterRecord :
 /*------------------------------------------------------------------------------
@@ -1473,10 +1767,13 @@ DEF INPUT PARAM icWhereString      AS CHAR NO-UNDO.
 DEF INPUT PARAM icInitSort         AS CHAR NO-UNDO.
 DEF INPUT PARAM ibRecordCount      AS LOG  NO-UNDO.
 
-RUN enable_UI.
+/* RUN enable_UI. */
+&IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+  RUN enable_UI.
 
-/* IF THIS-PROCEDURE:CURRENT-WINDOW:ICON = "" THEN                        */
-/*   THIS-PROCEDURE:CURRENT-WINDOW:LOAD-ICON("ico\admin%.ico") NO-ERROR.  */
+  oContainer = NEW JBoxContainer().
+  oContainer:addStatusBar().
+&ENDIF
 
 DEF VAR cNoColumnSearch   AS CHAR   NO-UNDO.
 DEF VAR hBrwMenu          AS HANDLE NO-UNDO.
@@ -1487,14 +1784,12 @@ DEF VAR cDefaultFrameFont AS CHAR   NO-UNDO.
 DEF VAR cDefaultBrwFont   AS CHAR   NO-UNDO.
 DEF VAR hAppServer        AS HANDLE NO-UNDO.
 DEF VAR cQueryAppS        AS CHAR   NO-UNDO.
-
-DYNAMIC-FUNCTION("CreateStatusBar",THIS-PROCEDURE:CURRENT-WINDOW,"",0,YES,?).
+DEF VAR hExportMenu       AS HANDLE NO-UNDO.
 
 DO WITH FRAME {&FRAME-NAME}:
   cDefaultFrameFont = DYNAMIC-FUNCTION("getAttribute",SESSION,"defaultFrameFont").
   IF cDefaultFrameFont NE "" THEN
     FRAME {&FRAME-NAME}:FONT = INTEGER(cDefaultFrameFont) NO-ERROR.
-
   cDefaultBrwFont = DYNAMIC-FUNCTION("getAttribute",SESSION,"defaultDataBrowseFont").
   IF cDefaultBrwFont = "" THEN
     cDefaultBrwFont = DYNAMIC-FUNCTION("getAttribute",SESSION,"defaultBrowseFont").
@@ -1503,9 +1798,15 @@ DO WITH FRAME {&FRAME-NAME}:
 
   ASSIGN fiCurrentQuery:LABEL   = (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Spørring" ELSE "Query")
          fiCurrentQuery:HIDDEN  = YES
+
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+         
          fiCurrentQuery:SIDE-LABEL-HANDLE:Y = fiCurrentQuery:SIDE-LABEL-HANDLE:Y - 2
-         cInitSort              = icInitSort
          cOrgWinTitle           = IF cOrgWinTitle = "" THEN THIS-PROCEDURE:CURRENT-WINDOW:TITLE ELSE cOrgWinTitle
+         
+  &endif         
+         
+         cInitSort              = icInitSort
          icInitSort             = IF NUM-ENTRIES(icInitSort,".") > 1 THEN TRIM(ENTRY(2,icInitSort,".")) ELSE TRIM(icInitSort)
          cTitlePrefixTotals     = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Totalt pr:" ELSE "Totals pr:"
          cTitlePrefixDetails    = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Detaljer:"  ELSE "Details:"
@@ -1517,7 +1818,7 @@ DO WITH FRAME {&FRAME-NAME}:
 
   IF NUM-ENTRIES(ENTRY(1,icBuffersAndFields),";") > 1 THEN
     icBuffersAndFields = ReduceFields(icBuffersAndFields).
-
+    
   IF cInitFilterFields NE "" THEN DO:
     DO ix = 1 TO NUM-ENTRIES(cInitFilterFields):
       cInitFilter = cInitFilter + " AND "
@@ -1528,13 +1829,13 @@ DO WITH FRAME {&FRAME-NAME}:
     END.
   END.
 
+  IF iRowsToBatch = 0 THEN
+    iRowsToBatch = IF cUseLocalData = "yes" THEN 60000 ELSE 200.
+
   IF VALID-HANDLE(hParent) AND DYNAMIC-FUNCTION("getAttribute",BrwFlatView:HANDLE,"usersettingcontext") = "" THEN
     DYNAMIC-FUNCTION("setAttribute",BrwFlatView:HANDLE,"usersettingcontext",hParent:FILE-NAME).
   ELSE IF NOT VALID-HANDLE(hParent) AND DYNAMIC-FUNCTION("getAttribute",BrwFlatView:HANDLE,"usersettingcontext") = "" THEN
     DYNAMIC-FUNCTION("setAttribute",BrwFlatView:HANDLE,"disablesavefilter","yes").
-
-  IF iRowsToBatch = 0 THEN
-    iRowsToBatch = IF cUseLocalData = "yes" THEN 60000 ELSE 200.
 
   IF NOT bUseStdAppServer OR CAN-DO(DYNAMIC-FUNCTION("getAttribute",SESSION,"use_query_appservice"),THIS-PROCEDURE:FILE-NAME) THEN DO:
     IF DYNAMIC-FUNCTION("getAttribute",SESSION,"query_appservice") = "" THEN DO:
@@ -1550,25 +1851,45 @@ DO WITH FRAME {&FRAME-NAME}:
       DYNAMIC-FUNCTION("setAttribute",BrwFlatView:HANDLE,"useAppserver","query_appservice").
   END.
 
+  IF DYNAMIC-FUNCTION("getAttribute",BrwFlatView:HANDLE,"switchedToLocal") = "yes" THEN
+    oContainer:statusBar:hHelpText:FRAME:BGCOLOR = 3.
+  
   IF icInitSort NE "" THEN
     DYNAMIC-FUNCTION("setAttribute",BrwFlatView:HANDLE,"InitialSortString",icInitSort).
-
   /* Create the browse: */
-  hBrowse = DYNAMIC-FUNCTION("NewBrowse",
-                           BrwFlatView:HANDLE, 
-                           iRowsToBatch,
-                           "MULTIPLE,!FIT-LAST-COLUMN" 
-                         + (IF cDefaultBrwFont NE "" THEN "FONT|" + cDefaultBrwFont ELSE ""), 
-                           icBuffersAndFields,  
-                           icWhereString + " " + cInitFilter,
-                           (IF ibRecordCount AND DYNAMIC-FUNCTION("getAttribute",BrwFlatView:HANDLE,"getrecordcount") NE "no" THEN ",getrecordcount" ELSE "") + 
-                           cInitCalcFieldProcs).
+  DO ON ERROR UNDO, THROW:
+    hBrowse = DYNAMIC-FUNCTION("NewBrowse",
+                             BrwFlatView:HANDLE, 
+                             iRowsToBatch,
+    &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+                             "MULTIPLE,!FIT-LAST-COLUMN" 
+                           + (IF cDefaultBrwFont NE "" THEN "FONT|" + cDefaultBrwFont ELSE ""), 
+    &else "",                          
+    &endif
+                             icBuffersAndFields,  
+                             icWhereString + " " + cInitFilter,
+                             (IF ibRecordCount AND DYNAMIC-FUNCTION("getAttribute",BrwFlatView:HANDLE,"getrecordcount") NE "no" THEN ",getrecordcount" ELSE "") + 
+                             cInitCalcFieldProcs).
+    CATCH eR AS Progress.Lang.Error :
+        MESSAGE eR:GetMessage(1)
+        VIEW-AS ALERT-BOX.
+    END CATCH.
+  END.
+  IF NOT VALID-OBJECT(oBrowse) AND hBrowse:TYPE = "browse" THEN 
+    oBrowse = NEW JBoxBrowse(BrwFlatView:HANDLE,THIS-PROCEDURE,YES).
+  IF VALID-OBJECT(oBrowse) THEN DO:  
+    oBrowse:setBrowseHandle(hBrowse).
+    oBrowse:DATABROWSE-PARENT-PROC = hParent.
+    JBoxLookupDef:Instance:assignFilterLookup(oBrowse).
+  END.  
 
   hBrowse:NAME = "JBoxDataBrw".
-  
   /* If any field are excluded from the browse they should also be excluded from the filter: */
   DYNAMIC-FUNCTION("setAttribute",hBrowse,"filterexcludefields",cExcludeFields).
 
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"fieldTypeForLogicalSearchFields","combo-box").
+//  DYNAMIC-FUNCTION("setAttribute",hBrowse,"searchdefault","filter").  
+  
   IF icWhereString NE "where false" THEN DO:
     DYNAMIC-FUNCTION("setAttribute",hBrowse,"basequery",DYNAMIC-FUNCTION("getAttribute",hBrowse,"querywhere")).
     DYNAMIC-FUNCTION("setAttribute",hBrowse,"querywhere","").
@@ -1582,6 +1903,10 @@ DO WITH FRAME {&FRAME-NAME}:
 
   IF bDisableSaveFilter THEN DYNAMIC-FUNCTION("setAttribute",hBrowse,"disablesavefilter","yes").
 
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") NE "" AND
+     DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlbufferlist") NE "" THEN 
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"bufferlist",DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlbufferlist")).
+
   /* If the extract should be treated as a temp-table after first retrieval from the database: */
   IF cUseLocalData = "yes" THEN
     DYNAMIC-FUNCTION("setAttribute",hBrowse,"uselocaldata",cUseLocalData).
@@ -1590,6 +1915,7 @@ DO WITH FRAME {&FRAME-NAME}:
       DYNAMIC-FUNCTION("setNoColumnSort",hBrowse,DYNAMIC-FUNCTION("getAttribute",hBrowse,"allcalcfields")).
     DYNAMIC-FUNCTION("setAttribute",hBrowse,"nocolumnsearch",
                      TRIM(DYNAMIC-FUNCTION("getAttribute",hBrowse,"alljoinviewfields") + "," + DYNAMIC-FUNCTION("getAttribute",hBrowse,"allcalcfields"),",")).
+    DYNAMIC-FUNCTION("setAttribute",hBrowse,"prescanlimit","50000").
   END.
 
   IF cInitFilterFields NE "" THEN DO:
@@ -1601,9 +1927,13 @@ DO WITH FRAME {&FRAME-NAME}:
     END.
   END.
 
-  IF icInitSort NE "" THEN 
-    CreateSearchField(ENTRY(1,icInitSort," ")).
-  ELSE searchField:HIDDEN = TRUE.
+
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+
+/*  IF icInitSort NE "" THEN                     */
+/*    CreateSearchField(ENTRY(1,icInitSort," ")).*/
+/*  ELSE                                         */
+    searchField:HIDDEN = TRUE.
 
   hBrwMenu = DYNAMIC-FUNCTION("NewMenuBand",
                    hBrowse,                                      /* Parent widget */
@@ -1614,16 +1944,57 @@ DO WITH FRAME {&FRAME-NAME}:
                     + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Kopier markerte rader" ELSE "Copy seleced rows")
                  + ",DeselectRow;"
                     + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Fjern markering av rad" ELSE "Deselect rows")
+                 + ",FillTimeSeries;"
+                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Komplettér tids-serie" ELSE "Complete time series")
                  + ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Excel graf" ELSE "Excel graph")
                  + ",SetQueryWhere;"
-                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett egne spørrekriterier" ELSE "Set query crit") 
+                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett egne spørrekriterier" ELSE "Set query crit") + "¤enable"
                  + ",RowsToBatch;"
-                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett antall rader i resultatsett" ELSE "Set rows to batch") 
+                    + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Sett antall rader i resultatsett" ELSE "Set rows to batch") + "¤enable" 
+                 + (IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"sqlDbName") = "" 
+                       AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"tempTableHandle") = "" THEN
+                     ",SwitchLocal;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Behold lokalt utvalg" ELSE "Keep local copy") + ";toggle"
+                    ELSE "")
+                 + (IF JBoxSession:Instance:SuperUser
+                       AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"orgdbfieldLogUserQueryExec") NE "" 
+                       AND bEnableSaveQuery AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "" AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "JBoxDataBrw.w" THEN
+                     ",LogUserQueryExec;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Kjør lagret spørring med logging av parametere" ELSE "Exec. saved query with log of parameters")
+                    ELSE "")
+                 + ",ViewRow;"
+                     + (IF JBoxSession:Instance:Scandinavian THEN "Vis rad som en kolonne" ELSE "View row as one column")    
+                 + (IF JBoxSession:Instance:SuperUser THEN
+                     ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Vis alle felter" ELSE "View all fields")
+                    ELSE "")  
+                 + (IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"childwindow") NE "yes" THEN  
+                      ",DrillInNewWin;" + (IF JBoxSession:Instance:Scandinavian THEN "Vis detaljer (drill-down) i nytt vindu" ELSE "View details (drill-down) in separate window")    
+                    ELSE "")  
+                 + ",|Export;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Eksporter" ELSE "Export")   
                    ,"").
-  hTotalsMenu = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder1")).
-  hExcelGraph = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder2")).
+                   
+  hExportMenu = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder3")).
+  DYNAMIC-FUNCTION("NewMenuBand",hExportMenu,
+                   "ToCsv;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Til csv-fil" ELSE "To csv-file")
+                 + ",ToJson;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Til Json-fil" ELSE "To Json-file")
+                 + ",ToXml;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Til XML-fil" ELSE "To XML-file")
+                   ,"").
+                   
+  hTotalsMenu       = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder1")).
+  hExcelGraph       = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder2")).
+  hFillTimeSeries   = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"menu-itemFillTimeSeries")).
+  IF DYNAMIC-FUNCTION("getAttribute",THIS-PROCEDURE,"childwindow") NE "yes" THEN 
+    hDrillInNewWindow = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"menu-itemDrillInNewWin")).
+  hSwitchLocal      = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"menu-itemSwitchLocal")).  
+    
   hExcelGraph:SENSITIVE = NO.
+  hFillTimeSeries:SENSITIVE = NO.
   setTotalFieldsMenu("details").
+  IF JBoxSession:Instance:SuperUser THEN DO:
+    hViewTablesMenu = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"placeholder3")).
+    setViewAllTablesMenu("details").
+  END.  
+
+  IF VALID-OBJECT(oBrowse) THEN 
+    oBrowse:createGridFilter(oBrowse:filterExcludeFields).
 
   ASSIGN cNavMenuLabel  = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Naviger" ELSE "Navigate"
          cEditMenuLabel = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Rediger" ELSE "Edit".
@@ -1645,7 +2016,7 @@ DO WITH FRAME {&FRAME-NAME}:
                                         ELSE "")
                            + ",filter|" + cEditMenuLabel
                            + (IF bAccumButton THEN 
-                               ",accum|" + cEditMenuLabel + ";" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Akkumuler" ELSE "Accumulate") 
+                               ",accum|" + cEditMenuLabel + ";" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Akkumuler" ELSE "Accumulate") + "¤enable"
                               ELSE "")
                            + (IF bWordButton THEN ",word" ELSE "")
                            + (IF bPrintButton THEN ",print" ELSE "")
@@ -1654,17 +2025,21 @@ DO WITH FRAME {&FRAME-NAME}:
                            + (IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "" AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "JBoxDataBrw.w" THEN 
                                ",Count|" + cEditMenuLabel + ";" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Vis antall rader" ELSE "View record count") + ";toggle¤menu enable" 
                               ELSE "")
+                           + ",showQuery|" + cEditMenuLabel + ";" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Vis siste spørring" ELSE "View last query") + ";¤menu enable" 
 /*                            + ",rule"  */
-                           + ",first|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Første" ELSE "")
-                              + ",prev|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";F&orrige" ELSE "")
-                              + ",next|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Neste" ELSE "")
-                              + ",last|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Siste" ELSE "")
+/*                           + ",first|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Første" ELSE "")    */
+/*                              + ",prev|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";F&orrige" ELSE "")*/
+/*                              + ",next|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Neste" ELSE "")   */
+/*                              + ",last|" + cNavMenuLabel + (IF DYNAMIC-FUNCTION("Scandinavian") THEN ";Siste" ELSE "")   */
                            + (IF bEnableSaveQuery AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "" AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") NE "JBoxDataBrw.w" THEN
                                ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Mine spørringer" ELSE "My queries") + "¤menu"
-                             + ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Delte spørringer" ELSE "Shared queries") + "¤menu"
+                             + (IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"canShare") NE "NO" THEN
+                                  ",|" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Delte spørringer" ELSE "Shared queries") + "¤menu"
+                                ELSE "")  
                               ELSE "")
 /*                            + ",rule" */
                             ,"maxborder").
+  &ENDIF
                             
   DYNAMIC-FUNCTION("setObjectSourceFileHandle",hBrowse,THIS-PROCEDURE).                            
 
@@ -1672,7 +2047,7 @@ DO WITH FRAME {&FRAME-NAME}:
   hSharedQueriesMenu = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"placeholder2")) NO-ERROR.
   IF VALID-HANDLE(hMyQueriesMenu) THEN SetMyQueriesMenu().
   IF VALID-HANDLE(hSharedQueriesMenu) THEN SetSharedQueriesMenu().
-  ASSIGN hFilterBtn = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"buttonFilter"))
+  ASSIGN hFilterBtn        = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"buttonFilter"))
          cActiveFilterBtn  = DYNAMIC-FUNCTION("getAttribute",SESSION,"activefilterbutton") /*DYNAMIC-FUNCTION("getActiveFilterButtonFile")*/
          cPassiveFilterBtn = DYNAMIC-FUNCTION("getAttribute",SESSION,"passivefilterbutton")
          hAccumBtn         = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"buttonAccum"))
@@ -1681,6 +2056,7 @@ DO WITH FRAME {&FRAME-NAME}:
          hConfigBtn        = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"buttonBrowseConfig"))
          cActiveConfigBtn  = DYNAMIC-FUNCTION("getAttribute",SESSION,"activeconfigbutton")
          cPassiveConfigBtn = DYNAMIC-FUNCTION("getAttribute",SESSION,"passiveconfigbutton")
+//         hShowQuery        = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-itemShowQuery"))
          .
 
   hMenuItemCountRows = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-itemCount")) NO-ERROR.
@@ -1693,28 +2069,52 @@ DO WITH FRAME {&FRAME-NAME}:
   IF cInitFilterFields NE "" THEN 
     hFilterBtn:LOAD-IMAGE(cActiveFilterBtn).
 
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"canSchedule") = "NO" THEN 
+    rectWinToolbar:X = rectWinToolbar:X - 22. 
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"canShare") = "NO" THEN 
+    rectWinToolbar:X = rectWinToolbar:X - 22. 
+
   hWinToolbar = DYNAMIC-FUNCTION("NewToolbar",
                              rectWinToolbar:HANDLE,
                              IF DYNAMIC-FUNCTION("Scandinavian") THEN "Fil" ELSE "File",
-/*                             "Close;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Avsluttalt-a" ELSE "Exitalt-x") */
-                             "Share;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Del definisjon av spørring" ELSE "Share query setup") + ";;;bmp/share16.bmp"
+                             (IF JBoxSession:Instance:getJBoxAttribute("queryScheduler") NE ""
+                                 AND DYNAMIC-FUNCTION("getAttribute",hBrowse,"canSchedule") NE "NO"
+                                 AND JBoxServerAPI:Instance:getActionPermission("scheduleQuery")
+                               THEN  
+                                "Schedule;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Planlegg" ELSE "Schedule")  + ";;;gif/sessionconfig16.gif"
+                              ELSE "")  
+                           + (IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"canShare") NE "NO" THEN
+                              ",Share;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Del definisjon av spørring" ELSE "Share query setup") + ";;;bmp/share16.bmp"
+                              ELSE "")
                            + ",Delete|;&;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Slett spørring" ELSE "Delete current query&")
                                       + ";DeleteQuery"
                            + ",Save|;Savectrl-s;" + (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Lagre spørring" ELSE "Save current query")
                                       + ";SaveCurrentQuery"
                             ,"right,enable").  
-  ASSIGN hBtnSaveQuery = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonSave"))
-         hBtnSaveQuery:HIDDEN = YES
-         hBtnDeleteQuery = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonDelete"))
-         hBtnDeleteQuery:HIDDEN = YES
-         hBtnShareQuery = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonShare"))
-         hBtnShareQuery:HIDDEN = YES
+  ASSIGN hBtnSaveQuery            = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonSave"))
+         hBtnSaveQuery:HIDDEN     = YES
+         hBtnDeleteQuery          = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonDelete"))
+         hBtnDeleteQuery:HIDDEN   = YES
+         hBtnShareQuery           = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonShare"))
+         hMenuItemShareQuery      = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"menu-itemShare"))
+         hBtnScheduleQuery        = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hWinToolbar,"buttonSchedule"))
          .
+
+
+  IF VALID-HANDLE(hBtnScheduleQuery) THEN
+    hBtnScheduleQuery:HIDDEN = YES.
+  IF VALID-HANDLE(hBtnShareQuery) THEN
+    ASSIGN hBtnShareQuery:HIDDEN = YES
+           hMenuItemShareQuery:SENSITIVE = NO.
 
   /* Link the browse and the toolbar */
   DYNAMIC-FUNCTION("CreateObjectLink",hBrowse,hToolbar).
+  &ENDIF
 
   SUBSCRIBE TO "ExcelSheetParams" ANYWHERE.
+  SUBSCRIBE TO "BeforeDynAccum" ANYWHERE.
   SUBSCRIBE TO "DynAccumDone" ANYWHERE.
   SUBSCRIBE TO "BeforeSetDynFilter" ANYWHERE.
 
@@ -1722,9 +2122,12 @@ DO WITH FRAME {&FRAME-NAME}:
 
   rectToolbar:WIDTH-PIXELS = rectToolbar:WIDTH-PIXELS - 3. 
 
-  DYNAMIC-FUNCTION("setNoResizeX", THIS-PROCEDURE:CURRENT-WINDOW, FRAME {&FRAME-NAME}:HANDLE, "searchField").
-  DYNAMIC-FUNCTION("setNoResizeY", THIS-PROCEDURE:CURRENT-WINDOW, FRAME {&FRAME-NAME}:HANDLE, "rectWinToolbar").
-  DYNAMIC-FUNCTION("setOrgWinSize",THIS-PROCEDURE:CURRENT-WINDOW,350,150,0,150).
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+    DYNAMIC-FUNCTION("setAddMoveX", THIS-PROCEDURE:CURRENT-WINDOW, FRAME {&FRAME-NAME}:HANDLE, "fiCurrentQuery").
+    DYNAMIC-FUNCTION("setNoResizeX", THIS-PROCEDURE:CURRENT-WINDOW, FRAME {&FRAME-NAME}:HANDLE, "searchField").
+    DYNAMIC-FUNCTION("setNoResizeY", THIS-PROCEDURE:CURRENT-WINDOW, FRAME {&FRAME-NAME}:HANDLE, "rectWinToolbar").
+    DYNAMIC-FUNCTION("setOrgWinSize",THIS-PROCEDURE:CURRENT-WINDOW,350,150,0,150).
+  &ENDIF  
 
   APPLY "value-changed" TO hBrowse.
   APPLY "entry" TO hBrowse.
@@ -1733,11 +2136,18 @@ DO WITH FRAME {&FRAME-NAME}:
 
 END.
 
+&IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
 IF NOT bManualView THEN DO:
   THIS-PROCEDURE:CURRENT-WINDOW:HIDDEN = FALSE.
   IF icWhereString BEGINS "where false" THEN 
     APPLY "cursor-up" to hBrowse.
 END.
+&ENDIF
+
+CATCH eAny AS Progress.Lang.Error :
+  MESSAGE 'Error InitializeObject' eAny:GetMessage(1)
+          VIEW-AS ALERT-BOX.
+END CATCH.
 
 END PROCEDURE.
 
@@ -1891,6 +2301,32 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE LogUserQueryExecRecord C-Win 
+PROCEDURE LogUserQueryExecRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+IF cJBoxUserSettingId = "" THEN DO:
+  IF JBoxSession:Instance:Scandinavian THEN
+    MESSAGE "Ingen bruker-definert spørring er valgt"
+            VIEW-AS ALERT-BOX ERROR.
+  ELSE
+    MESSAGE "No user-defined query is selected"
+            VIEW-AS ALERT-BOX ERROR.
+            
+  RETURN.   
+END.
+
+DYNAMIC-FUNCTION("setAttribute",hBrowse,"calcParamLogUserQueryExec",cJBoxUserSettingId).
+RUN InvokeMethod(hBrowse,"OpenQuery").
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MoveToTop C-Win 
 PROCEDURE MoveToTop :
 /*------------------------------------------------------------------------------
@@ -1904,6 +2340,24 @@ THIS-PROCEDURE:CURRENT-WINDOW:TOP-ONLY = YES.
 IF VALID-HANDLE(hBrowse) THEN
   APPLY "entry" TO hBrowse.
 THIS-PROCEDURE:CURRENT-WINDOW:TOP-ONLY = NO.
+END PROCEDURE.
+
+//PUBLISH "RebuildActionMenu".
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE MultiSortBrowse C-Win 
+PROCEDURE MultiSortBrowse :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RUN SUPER.
+
+resetRowCounter().
+
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1942,6 +2396,14 @@ IF bOpenQuery THEN DO:
 
   IF VALID-HANDLE(hExcelGraph) THEN 
     hExcelGraph:SENSITIVE = INT(DYNAMIC-FUNCTION("getAttribute",hBrowse,"recordCount")) < iMaxGraph AND NUM-ENTRIES(DYNAMIC-FUNCTION("getAttribute",hBrowse,"distinctcolumns")) = 1.
+/*  IF VALID-HANDLE(hShowQuery) AND hShowQuery:CHECKED AND VALID-OBJECT(oContainer) THEN            */
+/*    oContainer:statusBar:HelpText = DYNAMIC-FUNCTION("getAttribute",hBrowse,"statvalueLastQuery").*/
+  IF VALID-HANDLE(hSwitchLocal) THEN DO: 
+    IF hSwitchLocal:SENSITIVE THEN
+      hBrowse:MAX-DATA-GUESS = INT(DYNAMIC-FUNCTION("getAttribute",hBrowse,"recordCount")).
+    ELSE  
+      hBrowse:MAX-DATA-GUESS = INT(DYNAMIC-FUNCTION("getAttribute",hBrowse,"rowsToBatch")).
+  END.
 END.
     
 END PROCEDURE.
@@ -1993,8 +2455,10 @@ PROCEDURE RowDisplayBrowse :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
+
 RUN SUPER.
 PUBLISH "RowDisplayDataBrowse" (hBrowse).
+
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -2017,6 +2481,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE RowsToBatchRecord C-Win 
+PROCEDURE RowsToBatchRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RUN SUPER.
+
+IF JBoxSession:Instance:ViewQuestionYesNo(IF JBoxSession:Instance:Scandinavian THEN "Hent data på nytt?" ELSE "Refresh query?") THEN
+  RUN InvokeMethod (hBrowse,"OpenQuery").
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SaveCurrentQuery C-Win 
 PROCEDURE SaveCurrentQuery :
 /*------------------------------------------------------------------------------
@@ -2024,8 +2505,13 @@ PROCEDURE SaveCurrentQuery :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-IF cQueryOwner = JBoxSession:Instance:UserId OR cQueryOwner = "" THEN
-  SaveQuery(cCurrQueryId,IF fiCurrentQuery:MODIFIED IN FRAME {&FRAME-NAME} THEN REPLACE(fiCurrentQuery:SCREEN-VALUE,","," ") ELSE "").
+IF cQueryOwner = JBoxSession:Instance:UserId OR cQueryOwner = "" OR oDynDataBrowse:ViewDsId NE "" THEN DO:
+  IF JBoxSession:Instance:ViewQuestionYesNo((IF JBoxSession:Instance:Scandinavian THEN "Lagre endringer for" + CHR(10) ELSE "Save changes for" + CHR(10)) + fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} + "?") THEN DO: 
+//    SaveQuery(cCurrQueryId,"delete_setting").
+    SaveQuery(cCurrQueryId,REPLACE(fiCurrentQuery:SCREEN-VALUE,","," ")).
+//    SaveQuery(cCurrQueryId,IF fiCurrentQuery:MODIFIED IN FRAME {&FRAME-NAME} THEN REPLACE(fiCurrentQuery:SCREEN-VALUE,","," ") ELSE "").
+  END.  
+END.  
 ELSE IF cQueryOwner NE JBoxSession:Instance:UserId THEN
   JBoxSession:Instance:ViewMessage(IF JBoxSession:Instance:Scandinavian THEN 
                                     "Du er ikke eier av denne spørringen. Velg 'Lagre som ny..' for å lage din egen kopi"
@@ -2056,15 +2542,19 @@ RUN JBoxAskForValue.w (IF DYNAMIC-FUNCTION("Scandinavian") THEN
                        ,"CHARACTER|x(100)",INPUT-OUTPUT cName,OUTPUT iReturn).
 IF iReturn > 0 AND cName NE "" THEN DO:
 
-  cQueryIdList = JBoxServerAPI:Instance:FieldList("JBoxUserSetting;cSettingName",
-                        "WHERE cSourceFile = '" + THIS-PROCEDURE:FILE-NAME + "'"
-                      + " AND cObjectName = 'userquery'"
-                      + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
-                      + " AND cObjectName = 'userquery' BY cSettingName"). 
-  
-  IF cQueryIdList NE "" THEN
-    cCurrQueryId = "query" + STRING(INT(SUBSTR(ENTRY(NUM-ENTRIES(cQueryIdList,"|"),cQueryIdList,"|"),6)) + 1).
-  ELSE cCurrQueryId = "query1".
+  IF oDynDataBrowse:ViewDsId NE "" THEN
+    cCurrQueryId = oDynDataBrowse:getNextViewDsUserQueryId().
+  ELSE DO:
+    cQueryIdList = JBoxServerAPI:Instance:FieldList("JBoxUserSetting;cSettingName",
+                          "WHERE cSourceFile = '" + THIS-PROCEDURE:FILE-NAME + "'"
+                        + " AND cObjectName = 'userquery'"
+                        + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
+                        + " BY INT(SUBSTR(cSettingName,6))"). 
+    
+    IF cQueryIdList NE "" THEN
+      cCurrQueryId = "query" + STRING(INT(SUBSTR(ENTRY(NUM-ENTRIES(cQueryIdList,"|"),cQueryIdList,"|"),6)) + 1).
+    ELSE cCurrQueryId = "query1".
+  END.  
   SaveQuery(cCurrQueryId,REPLACE(cName,","," ")).
 
   APPLY "cursor-up" to hBrowse.
@@ -2079,21 +2569,88 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ScheduleRecord C-Win 
+PROCEDURE ScheduleRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+oDynDataBrowse:userSettingName = cCurrQueryId.
+oDynDataBrowse:queryName = fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME}.
+RUN VALUE(JBoxSession:Instance:getJBoxAttribute("queryScheduler")) (oDynDataBrowse).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SetQueryWhereRecord C-Win 
 PROCEDURE SetQueryWhereRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
 ------------------------------------------------------------------------------*/
-DEF VAR cQuery AS CHAR NO-UNDO.
+DEF VAR cQuery        AS CHAR   NO-UNDO.
+DEF VAR hSearchField  AS HANDLE NO-UNDO.
+DEF VAR cBaseTable    AS CHAR   NO-UNDO.
+DEF VAR cFlds         AS CHAR   NO-UNDO.
+DEF VAR ix            AS INT    NO-UNDO.
+DEF VAR cDataType     AS CHAR   NO-UNDO.
+DEF VAR cTry          AS CHAR   NO-UNDO.
 
 cQuery = DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryWhere").
 
-RUN JBoxDSmallEditor.w (INPUT-OUTPUT cQuery,"Set query string",NO,OUTPUT bOk).
+cBaseTable = DYNAMIC-FUNCTION("getAttribute",hBrowse,"baseTable").
 
+IF cQuery = "" THEN DO:
+  IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"baseQuery") NE "" OR DYNAMIC-FUNCTION("getAttribute",hBrowse,"queryFilter") NE "" THEN 
+    ASSIGN cQuery = "AND ("
+           cTry   = "WHERE true ".
+  ELSE 
+    cQuery = "WHERE (".
+  cFlds = DYNAMIC-FUNCTION("getAttribute",hBrowse,"basetablefields").
+  DO ix = 1 TO NUM-ENTRIES(cFlds):
+    cQuery = cQuery + CHR(10) + (IF ix > 1 THEN " AND " ELSE "") + ENTRY(ix,cFlds) + " = ".    
+    cDataType = DYNAMIC-FUNCTION("getFieldDataType",cBaseTable + "." + ENTRY(ix,cFlds)).
+    CASE cDataType:
+      WHEN "CHARACTER"  THEN cQuery = cQuery + "'<value>'".
+      WHEN "DATE" OR WHEN "DATETIME" OR WHEN "DATETIME-TZ"
+        THEN cQuery = cQuery + cDataType + "('" + (IF SESSION:DATE-FORMAT = "dmy" THEN "dd.mm.yyyy" ELSE "mm.dd.yyyy") + "')".
+      WHEN "DECIMAL"    THEN cQuery = cQuery + "DECIMAL('" + (IF SESSION:NUMERIC-FORMAT = "american" THEN "999.99" ELSE "999,99") + "')".
+      WHEN "LOGICAL"    THEN cQuery = cQuery + "true/false".
+      OTHERWISE cQuery = cQuery + "<value>".
+    END CASE.
+  END.
+  cQuery = cQuery + CHR(10) + ")".    
+END.
+ELSE IF NOT TRIM(cQuery) BEGINS "WHERE" THEN cTry = "WHERE true ". 
+
+REPEAT:
+  RUN JBoxDSmallEditor.w (INPUT-OUTPUT cQuery,
+                          IF DYNAMIC-FUNCTION("Scandinavian") THEN
+                            "Sett spørrekriterium (obs - fjerner mulighet for kolonnesøk)"
+                          ELSE 
+                            "Set query string (obs - disables column-search)",
+                          NO,OUTPUT bOk).
+  IF bOk AND cQuery NE "" AND NOT JBoxServerAPI:Instance:CallServerProc("jbserv_check_query_syntax.p",cBaseTable + CHR(1) + cTry + cQuery) THEN DO:
+    JBoxServerAPI:Instance:viewCallMessage().
+    NEXT.
+  END.   
+  ELSE LEAVE.  
+END.  
 IF bOK THEN DO:
-  DYNAMIC-FUNCTION("setAttribute",hBrowse,"queryWhere",cQuery).
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"queryWhere"," " + cQuery).
+  
   RUN InvokeMethod(hBrowse,"OpenQuery").
+  IF cQuery NE "" THEN DO:
+    hSearchField = DYNAMIC-FUNCTION("getLinkedObject",hBrowse,"browse-search-field","from").
+    IF hSearchField NE ? THEN DO:
+      DYNAMIC-FUNCTION("DeleteObjectLink",hBrowse,hSearchField).
+      hSearchField:HIDDEN = YES.
+    END.  
+  END.  
+  ELSE IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"1stSortColumn") NE "" THEN
+    CreateSearchField(DYNAMIC-FUNCTION("getAttribute",hBrowse,"1stSortColumn")).  
 END.  
 
 END PROCEDURE.
@@ -2108,7 +2665,6 @@ PROCEDURE ShareRecord :
  Notes:
 ------------------------------------------------------------------------------*/
  DEF VAR cRowIdList          AS CHAR NO-UNDO.
- DEF VAR cJBoxUserSettingId  AS CHAR NO-UNDO.
  DEF VAR bCompUserInstalled  AS LOG  NO-UNDO.
 
  IF JBoxServerAPI:Instance:Find("FIRST JBoxUserSetting",
@@ -2116,11 +2672,12 @@ PROCEDURE ShareRecord :
                      + " AND cObjectName = 'userquery'"
                      + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
                      + " AND cSettingName = '" + cCurrQueryId + "'"
+                     + " AND cJBoxUserId = '" + JBoxSession:Instance:UserId + "'"
                      + " AND cJboxUserId = cCreatedBy") THEN
     ASSIGN cJBoxUserSettingId = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.iJBoxUserSettingId")
            cQueryOwner        = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId").
   ELSE DO:
-    JBoxSession:Instance:ViewMessage("Error: Could not find user setting id").
+    JBoxSession:Instance:ViewMessage("Error: Could not find query id (did you create it..?)").
     RETURN.
   END.                   
 
@@ -2129,6 +2686,8 @@ PROCEDURE ShareRecord :
              + " AND cObjectName = 'userquery'"
              + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
              + " AND cSettingName = '" + cCurrQueryId + "'"
+             + " AND cCreatedBy = '" + JBoxSession:Instance:UserId + "'"
+             + " AND cJboxUserId NE cCreatedBy"
              + ",FIRST JBoxUser NO-LOCK OF JBoxUserSetting" 
                ).
 /*  cRowIdList = JBoxServerAPI:Instance:getRowIdList("<TableList>","<table for rowid>","<query>"). */
@@ -2157,6 +2716,55 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE showQueryRecord C-Win 
+PROCEDURE showQueryRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cQuery AS CHAR NO-UNDO.
+DEF VAR cTime  AS CHAR NO-UNDO.
+
+cQuery = DYNAMIC-FUNCTION("getAttribute",hBrowse,"statvalueLastQuery").
+cTime = DYNAMIC-FUNCTION("getAttribute",hBrowse,"statvalueElapseTime").
+IF cTime NE "" THEN
+  cTime = (IF JBoxSession:Instance:Scandinavian THEN "Kjøretid: " ELSE "Elapse time: ") + cTime + CHR(10) + CHR(10).
+   
+IF cQuery BEGINS "FOR" THEN cQuery = REPLACE(REPLACE(REPLACE(cQuery,",",CHR(10) + CHR(10) + ",")," BY ",CHR(10) + CHR(10) + "BY ")," WHERE ",CHR(10) + "WHERE ").
+ELSE DO:
+  cQuery = REPLACE(cQuery," LEFT OUTER JOIN "," LEFT_OUTER_JOIN ").
+  cQuery = REPLACE(cQuery," WHERE NOT EXISTS (SELECT * FROM "," WHERE_NOT_EXISTS_(SELECT_*_FROM " ).
+  cQuery = REPLACE(cQuery," FROM ",CHR(10) + CHR(10) + "FROM ").
+  cQuery = REPLACE(cQuery," JOIN ",CHR(10) + CHR(10) + "JOIN ").
+  cQuery = REPLACE(cQuery," WHERE ",CHR(10) + "WHERE ").
+  cQuery = REPLACE(cQuery," ORDER BY ",CHR(10) + CHR(10) + "ORDER BY ").
+  cQuery = REPLACE(cQuery," LEFT_OUTER_JOIN ",CHR(10) + CHR(10) + "LEFT OUTER JOIN ").
+  cQuery = REPLACE(cQuery," WHERE_NOT_EXISTS_(SELECT_*_FROM ",CHR(10) + "WHERE NOT EXISTS (SELECT * FROM ").
+END.  
+
+IF JBoxSession:Instance:ViewQuestionYesNo(cQuery + CHR(10) + CHR(10) + cTime
+    + (IF JBoxSession:Instance:Scandinavian THEN "Kopier til utklippstavle?" ELSE "Copy to clipboard?")) THEN
+  CLIPBOARD:VALUE = cQuery.
+
+/*
+IF NOT VALID-OBJECT(oContainer) THEN RETURN.
+IF hShowQuery:CHECKED THEN DO:
+  IF NOT VALID-OBJECT(oMenuStatusBar) THEN DO:
+    JBoxSession:Instance:ViewMessage(IF JBoxSession:Instance:Scandinavian THEN 
+                                       "Høyreklikk på statuslinjen for å kopiere spørring"
+                                     ELSE "Right-click on status-bar to copy query").
+    oMenuStatusBar = NEW JBoxPopupMenu().
+    oContainer:statusBar:hHelpText:FRAME:POPUP-MENU = oMenuStatusBar:POPUP-MENU-HANDLE.
+    oMenuStatusBar:addTool("copyHelpText",IF JBoxSession:Instance:Scandinavian THEN "Kopier" ELSE "Copy").
+    oContainer:statusBar:HelpText = DYNAMIC-FUNCTION("getAttribute",hBrowse,"statvalueLastQuery").                                 
+  END.                                     
+END.
+*/
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SMSRecord C-Win 
 PROCEDURE SMSRecord :
 /*------------------------------------------------------------------------------
@@ -2171,9 +2779,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartSearch C-Win 
+PROCEDURE StartSearch :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+RUN SUPER.
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartSharedQuery C-Win
-PROCEDURE StartSharedQuery:
+resetRowCounter ().
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartSharedQuery C-Win 
+PROCEDURE StartSharedQuery :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -2208,8 +2830,9 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
                       + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
                       + " AND cSettingName = '" + cCurrQueryId + "'"
                       + " AND cJboxUserId = cCreatedBy") THEN 
-    cQueryOwner = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId").
-    
+    ASSIGN cQueryOwner = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId")
+           cJBoxUserSettingId = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.iJBoxUserSettingId")
+           .
     
   cQueryAtt = DYNAMIC-FUNCTION("getUserSetting",THIS-PROCEDURE:FILE-NAME,
                                cCurrQueryId,
@@ -2222,7 +2845,6 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
            hBtnSaveQuery:HIDDEN        = NO
            hBtnSaveQuery:SENSITIVE     = NO
            hBtnDeleteQuery:HIDDEN      = NO
-           hBtnShareQuery:HIDDEN       = NO
            cCurrQuerySettings          = ENTRY(1,cQueryAtt,"|")
            cCurrFilterValues           = REPLACE(ENTRY(2,cQueryAtt,"|"),CHR(3),"|")
            FRAME {&FRAME-NAME}:WIDTH-PIXELS = {&WINDOW-NAME}:WIDTH-PIXELS
@@ -2230,6 +2852,11 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
            FRAME {&FRAME-NAME}:HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
            FRAME {&FRAME-NAME}:VIRTUAL-HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
            .
+    IF VALID-HANDLE(hBtnScheduleQuery) THEN
+      hBtnScheduleQuery:HIDDEN    = NO.
+    IF VALID-HANDLE(hBtnShareQuery) THEN
+      ASSIGN hBtnShareQuery:HIDDEN       = NO
+             hMenuItemShareQuery:SENSITIVE = YES.
 
     hAccum = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"accumhandle")) NO-ERROR.
     IF VALID-HANDLE(hAccum) THEN 
@@ -2300,6 +2927,7 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
     ELSE
       hFilterBtn:LOAD-IMAGE(cPassiveFilterBtn).
     
+    SetSharedQueriesMenu().
   END.
 END.
 ELSE ClearAttributes().
@@ -2316,11 +2944,9 @@ IF bRecordCount NE ? AND VALID-HANDLE(hMenuItemCountRows) THEN
 
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE StartUserQuery C-Win 
 PROCEDURE StartUserQuery :
@@ -2348,38 +2974,79 @@ IF bLocal THEN
 
 hCurrMenuId = DYNAMIC-FUNCTION("getCurrentWidget").
 
-IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
+IF
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
+ (VALID-HANDLE(hCurrMenuId) AND hCurrMenuId:CHECKED) OR
+  &ENDIF
+  BatchQueryId <> '' OR oDynDataBrowse:ViewDsRunQueryId NE "" 
+  THEN DO WITH FRAME {&FRAME-NAME}:
+
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
   cCurrQueryId = DYNAMIC-FUNCTION("getAttribute",hToolbar,"lasttoolbaraction").
-  
+  &ENDIF
+
   cQueryOwner = "".
 
-  IF JBoxServerAPI:Instance:Find("FIRST JBoxUserSetting",
-                        "WHERE cSourceFile = '" + THIS-PROCEDURE:FILE-NAME + "'"
-                      + " AND cObjectName = 'userquery'"
-                      + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
-                      + " AND cSettingName = '" + cCurrQueryId + "'"
-                      + " AND cJboxUserId = cCreatedBy") THEN 
-    cQueryOwner = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId").
+  IF VALID-OBJECT(oDynDataBrowse) AND oDynDataBrowse:ViewDsId NE "" THEN DO:
+    IF oDynDataBrowse:ViewDsRunQueryId NE "" THEN
+      cCurrQueryId = oDynDataBrowse:ViewDsRunQueryId. 
+    cQueryAtt = oDynDataBrowse:getViewDsUserSetting(IF BatchQueryId NE "" THEN BatchQueryId ELSE cCurrQueryId,"*").
+  END.             
+  ELSE DO:
+    IF BatchQueryId ne '' then do:
   
-  cQueryAtt = DYNAMIC-FUNCTION("getUserSetting",THIS-PROCEDURE:FILE-NAME,
-                               cCurrQueryId,
-                               DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
-                               "*" + (IF cQueryOwner NE "" THEN CHR(1) + cQueryOwner ELSE "")).
+      IF JBoxServerAPI:Instance:Find("FIRST JBoxUserSetting",
+                            "WHERE ijboxusersettingId = " + BatchQueryId) THEN
+        ASSIGN
+          cCurrQueryId       = JBoxServerAPI:Instance:FieldValue('JBoxUserSetting.cSettingName')
+          cQueryOwner        = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId")
+          cJBoxUserSettingId = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.iJBoxUserSettingId")
+          cMyMenuIdList      = cCurrQueryId
+          cMyMenuNameList    = JBoxServerAPI:Instance:FieldValue('JBoxUserSetting.cSetting')
+          .     
+    END.
+    ELSE IF JBoxServerAPI:Instance:Find("FIRST JBoxUserSetting",
+                          "WHERE cSourceFile = '" + THIS-PROCEDURE:FILE-NAME + "'"
+                        + " AND cObjectName = 'userquery'"
+                        + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
+                        + " AND cSettingName = '" + cCurrQueryId + "'"
+                        + " AND cJBoxUserId = '" + JBoxSession:Instance:UserId + "'"
+                        + " AND cJboxUserId = cCreatedBy") THEN 
+      ASSIGN cQueryOwner = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId")
+             cJBoxUserSettingId = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.iJBoxUserSettingId").
+    ELSE DO:
+      MESSAGE "Could not find query user settings"
+      VIEW-AS ALERT-BOX.
+      RETURN.
+    END.         
+    
+    cQueryAtt = DYNAMIC-FUNCTION("getUserSetting",THIS-PROCEDURE:FILE-NAME,
+                                 cCurrQueryId,
+                                 DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
+                                 "*" + (IF cQueryOwner NE "" THEN CHR(1) + cQueryOwner ELSE "")).
+  END.                               
+
   IF cQueryAtt NE "" THEN DO:
-    ASSIGN fiCurrentQuery:SCREEN-VALUE = ENTRY(LOOKUP(cCurrQueryId,cMyMenuIdList),cMyMenuNameList,"|")
-           fiCurrentQuery:HIDDEN       = NO           
-           fiCurrentQuery:MODIFIED     = NO
-           hBtnSaveQuery:HIDDEN        = NO
-           hBtnSaveQuery:SENSITIVE     = NO
-           hBtnDeleteQuery:HIDDEN      = NO
-           hBtnShareQuery:HIDDEN       = NO
-           cCurrQuerySettings          = ENTRY(1,cQueryAtt,"|")
+    IF (VALID-OBJECT(oDynDataBrowse) AND NOT oDynDataBrowse:BatchMode) AND BatchQueryId = "" THEN
+      ASSIGN fiCurrentQuery:SCREEN-VALUE = ENTRY(LOOKUP(cCurrQueryId,cMyMenuIdList),cMyMenuNameList,"|")
+             fiCurrentQuery:HIDDEN       = NO           
+             fiCurrentQuery:MODIFIED     = NO
+             hBtnSaveQuery:HIDDEN        = NO
+             hBtnSaveQuery:SENSITIVE     = YES
+             hBtnDeleteQuery:HIDDEN      = NO
+             FRAME {&FRAME-NAME}:WIDTH-PIXELS = {&WINDOW-NAME}:WIDTH-PIXELS
+             FRAME {&FRAME-NAME}:VIRTUAL-WIDTH-PIXELS = {&WINDOW-NAME}:WIDTH-PIXELS
+             FRAME {&FRAME-NAME}:HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
+             FRAME {&FRAME-NAME}:VIRTUAL-HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
+             .  
+    ASSIGN cCurrQuerySettings          = ENTRY(1,cQueryAtt,"|")
            cCurrFilterValues           = REPLACE(ENTRY(2,cQueryAtt,"|"),CHR(3),"|")
-           FRAME {&FRAME-NAME}:WIDTH-PIXELS = {&WINDOW-NAME}:WIDTH-PIXELS
-           FRAME {&FRAME-NAME}:VIRTUAL-WIDTH-PIXELS = {&WINDOW-NAME}:WIDTH-PIXELS
-           FRAME {&FRAME-NAME}:HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
-           FRAME {&FRAME-NAME}:VIRTUAL-HEIGHT-PIXELS = {&WINDOW-NAME}:HEIGHT-PIXELS
            .
+    IF VALID-HANDLE(hBtnScheduleQuery) THEN
+      hBtnScheduleQuery:HIDDEN    = NO.
+    IF VALID-HANDLE(hBtnShareQuery) THEN
+      ASSIGN hBtnShareQuery:HIDDEN       = NO
+             hMenuItemShareQuery:SENSITIVE = YES.
 
     hAccum = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"accumhandle")) NO-ERROR.
     IF VALID-HANDLE(hAccum) THEN 
@@ -2407,7 +3074,9 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
         bRecordCount = ENTRY(ix,cCurrFilterValues,CHR(1)) = "yes".
     END.
 
-    IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"localsort") NE "" AND
+    IF BatchQueryId NE "" THEN
+      DYNAMIC-FUNCTION("setAttribute",hBrowse,"RowsToBatch",999999).
+    ELSE IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"localsort") NE "" AND
        DYNAMIC-FUNCTION("GetLinkedObject",hBrowse,"browse-search-field","from") = ? THEN
       CreateSearchField(ENTRY(1,DYNAMIC-FUNCTION("getAttribute",hBrowse,"localsort"))).
 
@@ -2450,6 +3119,7 @@ IF hCurrMenuId:CHECKED THEN DO WITH FRAME {&FRAME-NAME}:
     ELSE
       hFilterBtn:LOAD-IMAGE(cPassiveFilterBtn).
     
+    IF BatchQueryId = "" AND (VALID-OBJECT(oDynDataBrowse) AND NOT oDynDataBrowse:BatchMode) THEN setMyQueriesMenu().
   END.
 END.
 ELSE ClearAttributes().
@@ -2495,6 +3165,103 @@ IF DYNAMIC-FUNCTION("DoMessage",0,4,(IF DYNAMIC-FUNCTION("Scandinavian") THEN "S
   CLIPBOARD:VALUE = STRING(fTotal).
 
 RUN MoveToTop.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SwitchLocalRecord C-Win 
+PROCEDURE SwitchLocalRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cLocal AS CHAR NO-UNDO.
+DEF VAR htt    AS HANDLE NO-UNDO.
+
+cLocal = IF hSwitchLocal:CHECKED THEN "yes" ELSE "".
+
+DYNAMIC-FUNCTION("setAttribute",hBrowse,"useLocalData",cLocal).
+DYNAMIC-FUNCTION("setAttribute",hBrowse,"switchedToLocal",cLocal).
+
+IF cLocal = "" THEN DO:
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"tempTableHandle","").
+  htt = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hBrowse,"originalTempTable")) NO-ERROR.
+  IF VALID-HANDLE(htt) THEN DELETE OBJECT htt.
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"originalTempTable","").
+  IF JBoxSession:Instance:ViewQuestionYesNo(IF JBoxSession:Instance:Scandinavian THEN "Hent data på nytt?" ELSE "Refresh query?") THEN
+    RUN InvokeMethod (hBrowse,"OpenQuery").
+END. 
+ELSE DO:
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"tempTableHandle",STRING(hBrowse:QUERY:GET-BUFFER-HANDLE(1):TABLE-HANDLE)).
+  CREATE TEMP-TABLE htt.
+  htt:CREATE-LIKE(hBrowse:QUERY:GET-BUFFER-HANDLE(1)).
+  htt:TEMP-TABLE-PREPARE(hBrowse:QUERY:GET-BUFFER-HANDLE(1):NAME).
+  htt:COPY-TEMP-TABLE(hBrowse:QUERY:GET-BUFFER-HANDLE(1)).
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"originalTempTable",STRING(htt)).
+  DYNAMIC-FUNCTION("setAttribute",hBrowse,"GoLocalWhenSmallDistinctCount","").
+END. 
+
+IF VALID-OBJECT(oContainer) THEN DO:
+  IF cLocal NE "" THEN
+    ASSIGN oContainer:statusBar:hHelpText:FRAME:BGCOLOR = 3
+//           THIS-PROCEDURE:CURRENT-WINDOW:TITLE = THIS-PROCEDURE:CURRENT-WINDOW:TITLE
+           oContainer:statusBar:HelpText = oContainer:statusBar:HelpText
+         + (IF JBoxSession:Instance:Scandinavian THEN " (lokal)" ELSE " (local)").
+  ELSE 
+    ASSIGN oContainer:statusBar:hHelpText:FRAME:BGCOLOR = ?
+//           THIS-PROCEDURE:CURRENT-WINDOW:TITLE = RIGHT-TRIM(THIS-PROCEDURE:CURRENT-WINDOW:TITLE,
+           oContainer:statusBar:HelpText = RIGHT-TRIM(oContainer:statusBar:HelpText,
+           IF JBoxSession:Instance:Scandinavian THEN " (lokal)" ELSE " (local)").
+END.  
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE TableDetails C-Win 
+PROCEDURE TableDetails :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hMenuItem AS HANDLE NO-UNDO.
+DEF VAR cTables   AS CHAR   NO-UNDO.
+DEF VAR iTableIdx AS INT    NO-UNDO.
+DEF VAR hDetail   AS HANDLE NO-UNDO.
+
+hMenuItem = DYNAMIC-FUNCTION("getCurrentWidget").
+cTables = DYNAMIC-FUNCTION("getAttribute",hBrowse,"bufferlist").
+iTableIdx = LOOKUP(hMenuItem:LABEL,cTables).
+IF iTableIdx > 0 THEN DO:
+
+  hDetail = oContainer:StartChildWindow("JBoxRecordBrw.w",hMenuItem:LABEL, YES).
+  RUN ViewDbRecord IN hDetail(hMenuItem:LABEL,hBrowse:QUERY:GET-BUFFER-HANDLE (1):BUFFER-FIELD("RowIdent" + STRING(iTableIdx)):BUFFER-VALUE).
+  RUN MoveToTop in hDetail NO-ERROR.
+END.  
+
+//RUN MoveToTop.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewRowRecord C-Win 
+PROCEDURE ViewRowRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hDetail AS HANDLE NO-UNDO.
+
+hDetail = oContainer:StartChildWindow("JBoxRecordBrw.w",IF JBoxSession:Instance:Scandinavian THEN "Detaljer" ELSE "Details", YES).
+RUN ViewTtRecord IN hDetail(hBrowse:QUERY:GET-BUFFER-HANDLE(1)).
+RUN MoveToTop in hDetail NO-ERROR.
+
 
 END PROCEDURE.
 
@@ -2560,14 +3327,19 @@ DEF VAR hConfig       AS HANDLE NO-UNDO.
 DEF VAR bRecordCount  AS LOG    NO-UNDO INIT ?.
 
 DO WITH FRAME {&FRAME-NAME}:
-  ASSIGN cCurrQueryId           = ""
-         fiCurrentQuery:HIDDEN  = YES
-         hBtnSaveQuery:HIDDEN   = YES
-         hBtnDeleteQuery:HIDDEN = YES
-         hBtnShareQuery:HIDDEN  = YES
-         cCurrQuerySettings     = ""
-         cQueryOwner            = ""
+  ASSIGN cCurrQueryId             = ""
+         fiCurrentQuery:HIDDEN    = YES
+         hBtnSaveQuery:HIDDEN     = YES
+         hBtnDeleteQuery:HIDDEN   = YES
+         cCurrQuerySettings       = ""
+         cQueryOwner              = ""
+         cJBoxUserSettingId       = ""
          .
+  IF VALID-HANDLE(hBtnScheduleQuery) THEN       
+    hBtnScheduleQuery:HIDDEN = YES.
+  IF VALID-HANDLE(hBtnShareQuery) THEN
+    ASSIGN hBtnShareQuery:HIDDEN       = YES
+           hMenuItemShareQuery:SENSITIVE = NO.
 
   hAccum = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"accumhandle")) NO-ERROR.
   IF VALID-HANDLE(hAccum) THEN 
@@ -2656,6 +3428,8 @@ FUNCTION CreateSearchField RETURNS LOGICAL
 DEF VAR ix              AS INT    NO-UNDO.
 DEF VAR hSearchField    AS HANDLE NO-UNDO.
 
+RETURN NO. // Search-field replaced by grid-filter sep 24
+/*
 IF DYNAMIC-FUNCTION("getLinkedObject",hBrowse,"browse-search-field","from") NE ? THEN RETURN NO.
 
 IF icInitSort NE "" THEN DO WITH FRAME {&FRAME-NAME}:
@@ -2670,8 +3444,7 @@ IF icInitSort NE "" THEN DO WITH FRAME {&FRAME-NAME}:
     hSearchField = DYNAMIC-FUNCTION("NewBrowseSearchField",SearchField:HANDLE,hBrowse,ix).
     IF VALID-HANDLE(hSearchField) THEN DO:
       DYNAMIC-FUNCTION("CreateObjectLink",hSearchField,hBrowse).
-      IF NUM-ENTRIES(icInitSort) > 1 THEN
-        hSearchField:HIDDEN = YES.
+      hSearchField:HIDDEN = NUM-ENTRIES(icInitSort) > 1.
     END.
   END.
   ELSE searchField:HIDDEN = TRUE.
@@ -2679,6 +3452,22 @@ END.
 ELSE searchField:HIDDEN = TRUE.
 
 RETURN FALSE.   /* Function return value. */
+*/
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getBatchQueryId C-Win 
+FUNCTION getBatchQueryId RETURNS CHARACTER
+  ( /* parameter-definitions */ ) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+
+return BatchQueryId.
+
 
 END FUNCTION.
 
@@ -2758,26 +3547,66 @@ DEF VAR cNewList   AS CHAR NO-UNDO.
 DEF VAR iy         AS INT  NO-UNDO.
 DEF VAR iFieldIdx  AS INT  NO-UNDO.
 DEF VAR bReduced   AS LOG  NO-UNDO.
+DEF VAR cFieldDef  AS CHAR NO-UNDO.
+DEF VAR cTable     AS CHAR NO-UNDO.
+DEF VAR cField     AS CHAR NO-UNDO.
+DEF VAR cDataType  AS CHAR NO-UNDO.
+DEF VAR cFormat    AS CHAR NO-UNDO.
+DEF VAR cFieldPos  AS CHAR NO-UNDO.
 
 cExcludedList = "".
-
 DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
   bReduced = NO.
+  cTable = ENTRY(1,ENTRY(ix,icBuffersAndFields),";").
   IF NUM-ENTRIES(ENTRY(ix,icBuffersAndFields),";") > 1 THEN
     DO iy = 2 TO NUM-ENTRIES(ENTRY(ix,icBuffersAndFields),";"):
       IF iy = 2 THEN
         cNewList = cNewList + ENTRY(iy - 1,ENTRY(ix,icBuffersAndFields),";") + ";".
   
-      iFieldIdx = iFieldIdx + 1.
+      ASSIGN iFieldIdx = iFieldIdx + 1
+             cFieldDef = ENTRY(iy,ENTRY(ix,icBuffersAndFields),";")
+             cField    = ENTRY(1,cFieldDef,"|").
+      IF NOT cField BEGINS "+" THEN
+        cDataType = DYNAMIC-FUNCTION("getFieldDataType",cTable + "." + cField).
+      ELSE
+        cDataType = "".
+        
+      IF CAN-DO("INTEGER,DECIMAL",cDataType) THEN DO:         
+        cFieldPos = IF NUM-ENTRIES(cFieldDef,"@") > 1 THEN ENTRY(2,cFieldDef,"@") ELSE "". /* skiller ut posisjon for at ikke formatet skal komme i posisjon.. */
+        cFieldDef = ENTRY(1,cFieldDef,"@").           
+        IF NUM-ENTRIES(cFieldDef,"|") > 2 THEN DO:
+          IF CAN-DO("-,9,>",SUBSTR(ENTRY(3,cFieldDef,"|"),1,1)) THEN DO:
+            IF ENTRY(3,cFieldDef,"|") BEGINS "-" THEN
+              ENTRY(3,cFieldDef,"|") = "->>>>>" + SUBSTR(ENTRY(3,cFieldDef,"|"),3).
+            ELSE   
+              ENTRY(3,cFieldDef,"|") = "->>>>>" + ENTRY(3,cFieldDef,"|").
+          END.    
+        END.  
+        ELSE DO:
+          cFormat = REPLACE(DYNAMIC-FUNCTION("getFieldFormat",cTable + "." + cField),",","<").
+          IF cFormat NE "" THEN DO:
+            IF CAN-DO("-,9,>",SUBSTR(cFormat,1,1)) THEN DO:
+              IF cFormat BEGINS "-" THEN cFormat = "->>>>>" + SUBSTR(cFormat,2). 
+              ELSE cFormat = "->>>>>" + cFormat.
+            END.        
+            IF NUM-ENTRIES(cFieldDef,"|") > 1 THEN  
+              cFieldDef = cFieldDef + "|" + cFormat.
+            ELSE    
+              cFieldDef = cFieldDef + "|" + DYNAMIC-FUNCTION("getFieldLabel",cTable + "." + cField) + "|" + cFormat.
+          END.    
+        END.       
+        IF cFieldPos NE "" THEN cFieldDef = cFieldDef + "@" + cFieldPos.
+      END.
+             
       IF NOT CAN-DO(cExcludeFields,TRIM(ENTRY(1,ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"|"),"!"))
          THEN DO:
-        cNewList = cNewList + ENTRY(iy,ENTRY(ix,icBuffersAndFields),";") + ";".
+        cNewList = cNewList + cFieldDef + ";".
       END.
-      ELSE ASSIGN cNewList = cNewList + "!" + TRIM(ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"!") + ";"
+      ELSE ASSIGN cNewList = cNewList + "!" + TRIM(cFieldDef,"!") + ";"
                   cExcludedList = cExcludedList + (IF cExcludedList NE "" THEN "," ELSE "") + STRING(iFieldIdx)
                   bReduced      = YES.
     END.
-  ELSE cNewList = cNewList + ENTRY(ix,icBuffersAndFields).
+  ELSE cNewList = cNewList + "," + ENTRY(ix,icBuffersAndFields).
 
 /*   IF NUM-ENTRIES(ENTRY(ix,cNewList),";") = 2 AND ENTRY(2,ENTRY(ix,cNewList),";") = "" AND bReduced THEN  */
 /*     cNewList = cNewList + ",".                                                                           */
@@ -2786,6 +3615,31 @@ DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
 END.
 
 RETURN TRIM(cNewList,","). 
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION resetRowCounter C-Win 
+FUNCTION resetRowCounter RETURNS LOGICAL
+  (  ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+
+DEF VAR ix AS INT NO-UNDO.
+IF DYNAMIC-FUNCTION("getAttribute",hBrowse,"uselocaldata") = "yes" THEN DO:
+  hBrowse:QUERY:GET-FIRST ().
+  REPEAT WHILE NOT hBrowse:QUERY:QUERY-OFF-END:
+    ix = ix + 1.
+    hBrowse:QUERY:GET-BUFFER-HANDLE (1)::RowCount = ix.
+    hBrowse:QUERY:GET-NEXT().
+  END.
+  hBrowse:QUERY:QUERY-OPEN().  
+END. 
+
+RETURN YES.
 
 END FUNCTION.
 
@@ -2805,18 +3659,25 @@ DEF VAR cValueList AS CHAR   NO-UNDO.
 DEF VAR cAttrList  AS CHAR   NO-UNDO.
 
 IF icName NE "" THEN DO:
-  DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
-                   "userquery",
-                   DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
-                   icCurrQueryId,
-                   icName).
+  IF oDynDataBrowse:ViewDsId NE "" THEN
+    oDynDataBrowse:setViewDsUserSetting("userquery",icCurrQueryId,icName). // "userquery" is object. (or type)
+  ELSE  
+    DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
+                     "userquery",
+                     DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
+                     icCurrQueryId, /* settingName */
+                     icName).       /* setting */
+                     
   SetMyQueriesMenu().
-  
-  DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
-                   icCurrQueryId,
-                   DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
-                   cCurrQuerySettings,
-                   "delete_setting").
+
+  IF oDynDataBrowse:ViewDsId NE "" THEN
+    oDynDataBrowse:setViewDsUserSetting(icCurrQueryId,cCurrQuerySettings,"delete_setting"). 
+  ELSE
+    DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
+                     icCurrQueryId,
+                     DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
+                     cCurrQuerySettings,
+                     "delete_setting").
 
   IF icName = "delete_setting" THEN DO:
     ClearAttributes().
@@ -2831,18 +3692,32 @@ DO ix = 1 TO NUM-ENTRIES(cQuerySettingList):
                                 ,ENTRY(ix,cQuerySettingList)
                                 ,""
                                 ,YES).
-  IF ENTRY(1,cAttrList,"|") NE "" THEN
+  IF cAttrList NE ? AND ENTRY(2,cAttrList,"|") NE "" AND ENTRY(2,cAttrList,"|") NE CHR(1) THEN
     ASSIGN cNameList  = cNameList  + ENTRY(1,cAttrList,"|") + ","
            cValueList = cValueList + ENTRY(2,cAttrList,"|") + CHR(1).
 END.
 ASSIGN cValueList = SUBSTR(cValueList,1,LENGTH(cValueList) - 1)
        cNameList  = SUBSTR(cNameList,1,LENGTH(cNameList) - 1).
 
-DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
-                 icCurrQueryId,
-                 DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
-                 cNameList,
-                 cValueList).
+IF oDynDataBrowse:ViewDsId NE "" THEN
+  oDynDataBrowse:setViewDsUserSetting(icCurrQueryId,cNameList,cValueList). 
+ELSE DO: 
+  DYNAMIC-FUNCTION("setUserSetting",THIS-PROCEDURE:FILE-NAME,
+                   icCurrQueryId,
+                   DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext"),
+                   cNameList,
+                   cValueList).
+
+  IF JBoxServerAPI:Instance:Find("FIRST JBoxUserSetting",
+                        "WHERE cSourceFile = '" + THIS-PROCEDURE:FILE-NAME + "'"
+                      + " AND cObjectName = 'userquery'"
+                      + " AND cContext = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
+                      + " AND cSettingName = '" + icCurrQueryId + "'"
+                      + " AND cJboxUserId = cCreatedBy") THEN 
+    ASSIGN cQueryOwner = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.cJBoxUserId")
+           cJBoxUserSettingId = JBoxServerAPI:Instance:FieldValue("JBoxUserSetting.iJBoxUserSettingId").
+END.
+                 
 RETURN YES.
 
 END FUNCTION.
@@ -2904,6 +3779,40 @@ FUNCTION setAccumFieldSort RETURNS LOGICAL
 bAccumFieldSort = ibAccumFieldSort.
 
 RETURN TRUE.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setBatchQueryId C-Win 
+FUNCTION setBatchQueryId RETURNS LOGICAL
+ ( input ipValue as char) :
+
+/*------------------------------------------------------------------------------
+
+  Purpose: 
+
+    Notes: 
+
+------------------------------------------------------------------------------*/
+  BatchQueryId = ipValue.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setBrowseObject C-Win 
+FUNCTION setBrowseObject RETURNS LOGICAL
+  ( INPUT ioBrowse AS JBoxBrowse ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+
+oBrowse = ioBrowse.
+ 
+RETURN YES.
 
 END FUNCTION.
 
@@ -2980,7 +3889,7 @@ FUNCTION setEnableSaveQuery RETURNS LOGICAL
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-IF DYNAMIC-FUNCTION("getIsTableInstalled","JBoxUserSetting") THEN
+IF DYNAMIC-FUNCTION("getIsTableInstalled","JBoxUserSetting") OR oDynDataBrowse:ViewDsId NE "" THEN
   bEnableSaveQuery = ibEnableSaveQuery.
 ELSE DO:
   MESSAGE "User setting table not installed. Cannot enable personalized query settings"
@@ -3061,6 +3970,8 @@ DEF VAR hNextItem AS HANDLE NO-UNDO.
 DEF VAR cMenuItems    AS CHAR NO-UNDO.
 DEF VAR cMenuDef      AS CHAR NO-UNDO.
 DEF VAR cLabel        AS CHAR NO-UNDO.
+DEF VAR iy            AS INT  NO-UNDO.
+DEF VAR iCurrMenuPos  AS INT  NO-UNDO.
 
 IF NOT VALID-HANDLE(hMyQueriesMenu) THEN RETURN NO.
 
@@ -3071,14 +3982,17 @@ REPEAT WHILE VALID-HANDLE(hMenuItem):
   hMenuItem = hNextItem.
 END.
 
-cMenuItems = JBoxServerAPI:Instance:FieldList("JBoxUserSetting;cSettingName;cSetting",
-                          "WHERE cSourceFile  = '" + THIS-PROCEDURE:FILE-NAME + "'"
-                         + " AND cObjectName  = 'userquery'"
-                         + " AND cContext     = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
-                         + " AND cJBoxUserId  = '" + JBoxSession:Instance:UserId + "'"
-                         + " AND cCreatedBy   = '" + JBoxSession:Instance:UserId + "'"
-                         + " BY cSetting")
-                         .
+IF VALID-OBJECT(oDynDataBrowse) AND oDynDataBrowse:ViewDsId NE "" THEN
+  cMenuItems = oDynDataBrowse:getViewDsUserQueryMenu().
+ELSE
+  cMenuItems = JBoxServerAPI:Instance:FieldList("JBoxUserSetting;cSettingName;cSetting",
+                            "WHERE cSourceFile  = '" + THIS-PROCEDURE:FILE-NAME + "'"
+                           + " AND cObjectName  = 'userquery'"
+                           + " AND cContext     = '" + DYNAMIC-FUNCTION("getAttribute",hBrowse,"usersettingcontext") + "'"
+                           + " AND cJBoxUserId  = '" + JBoxSession:Instance:UserId + "'"
+                           + " AND cCreatedBy   = '" + JBoxSession:Instance:UserId + "'"
+                           + " BY cSetting")
+                           .
 
 ASSIGN cMyMenuIdList = ""
        cMyMenuNameList = ""
@@ -3090,39 +4004,54 @@ IF cMenuItems NE "" THEN DO:
     ASSIGN cMyMenuIdList   = cMyMenuIdList + (IF cMyMenuIdList NE "" THEN "," ELSE "") + ENTRY(ix,cMenuItems,"|")
            cMyMenuNameList = cMyMenuNameList + (IF cMyMenuNameList NE "" THEN "|" ELSE "") + cLabel
            cMenuDef        = cMenuDef + (IF cMenuDef NE "" THEN "," ELSE "") + ENTRY(ix,cMenuItems,"|") + ";" + cLabel + "&;StartUserQuery;toggle¤enable"
+           iy              = iy + 1
            .
+    IF ENTRY(ix,cMenuItems,"|") = cCurrQueryId THEN iCurrMenuPos = iy.        
   END.
   DYNAMIC-FUNCTION("NewMenuBand",hMyQueriesMenu,
                    cMenuDef,"").
 
   DO ix = 1 TO NUM-ENTRIES(cMyMenuIdList):
     hMenuItem = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-item" + ENTRY(ix,cMyMenuIdList))) NO-ERROR.
-    IF VALID-HANDLE(hMenuItem) THEN
+    IF VALID-HANDLE(hMenuItem) THEN DO:
       hMenuItem:LABEL = REPLACE(hMenuItem:LABEL,CHR(3),",").
+      IF ix = iCurrMenuPos THEN 
+        hMenuItem:CHECKED = YES.
+    END.  
   END.
   cMyMenuNameList = REPLACE(cMyMenuNameList,CHR(3),",").
 
   hMyQueriesMenu:SENSITIVE = YES.
 
-  IF LOOKUP(cCurrQueryId,cMyMenuIdList) > 0 THEN 
-    ASSIGN fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} = ENTRY(LOOKUP(cCurrQueryId,cMyMenuIdList),cMyMenuNameList,CHR(1))
-           fiCurrentQuery:HIDDEN   = NO
-           fiCurrentQuery:MODIFIED = NO
-           hBtnSaveQuery:HIDDEN    = NO
-           hBtnSaveQuery:SENSITIVE = NO
-           hBtnDeleteQuery:HIDDEN  = NO
-           hBtnShareQuery:HIDDEN   = NO
-           hMenuItem               = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-item" + cCurrQueryId))
-           hMenuItem:CHECKED       = YES
+  IF LOOKUP(cCurrQueryId,cMyMenuIdList) > 0 THEN DO:
+    ASSIGN fiCurrentQuery:SCREEN-VALUE IN FRAME {&FRAME-NAME} = ENTRY(LOOKUP(cCurrQueryId,cMyMenuIdList),cMyMenuNameList,"|")
+           fiCurrentQuery:HIDDEN    = NO
+           fiCurrentQuery:MODIFIED  = NO
+           hBtnSaveQuery:HIDDEN     = NO
+           hBtnSaveQuery:SENSITIVE  = YES
+           hBtnDeleteQuery:HIDDEN   = NO
+           hMenuItem                = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-item" + cCurrQueryId))
+           hMenuItem:CHECKED        = YES
            NO-ERROR.
+    IF VALID-HANDLE(hBtnScheduleQuery) THEN       
+      ASSIGN hBtnScheduleQuery:HIDDEN = NO.
+    IF VALID-HANDLE(hBtnShareQuery) THEN
+      ASSIGN hBtnShareQuery:HIDDEN       = NO
+             hMenuItemShareQuery:SENSITIVE = YES.
+  END.         
 END.
-ELSE 
+ELSE DO:
   ASSIGN hMyQueriesMenu:SENSITIVE                     = NO
          fiCurrentQuery:HIDDEN IN FRAME {&FRAME-NAME} = YES
          hBtnSaveQuery:HIDDEN                         = YES
          hBtnDeleteQuery:HIDDEN                       = YES
-         hBtnShareQuery:HIDDEN                        = YES
          NO-ERROR.
+  IF VALID-HANDLE(hBtnScheduleQuery) THEN       
+    hBtnScheduleQuery:HIDDEN = YES.
+  IF VALID-HANDLE(hBtnShareQuery) THEN
+    ASSIGN hBtnShareQuery:HIDDEN       = YES
+           hMenuItemShareQuery:SENSITIVE = NO.
+END.         
 
 PUBLISH "RebuildActionMenu".
 
@@ -3163,6 +4092,7 @@ FUNCTION setParent RETURNS LOGICAL
 
   IF NOT VALID-OBJECT(oDynDataBrowse) THEN DO WITH FRAME {&FRAME-NAME}:
     oDynDataBrowse = NEW JBoxDynDataBrowse(THIS-PROCEDURE,hParent,BrwFlatView:HANDLE,rectToolbar:HANDLE,searchField:HANDLE).
+    DYNAMIC-FUNCTION("createParentLink",THIS-PROCEDURE,hParent,"parentproc").
   END.      
     
   IF CAN-DO(hParent:INTERNAL-ENTRIES,"myDatabrowseObject") THEN
@@ -3208,9 +4138,8 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION SetSharedQueriesMenu C-Win
-FUNCTION SetSharedQueriesMenu RETURNS LOGICAL 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION SetSharedQueriesMenu C-Win 
+FUNCTION SetSharedQueriesMenu RETURNS LOGICAL
   (  ):
 /*------------------------------------------------------------------------------
  Purpose:
@@ -3272,6 +4201,7 @@ IF cMenuItems NE "" THEN DO:
            hBtnSaveQuery:SENSITIVE = NO
            hBtnDeleteQuery:HIDDEN  = NO
            hBtnShareQuery:HIDDEN   = NO
+           hMenuItemShareQuery:SENSITIVE = YES
            hMenuItem               = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",hToolbar,"menu-item" + cCurrQueryId))
            hMenuItem:CHECKED       = YES
            NO-ERROR.
@@ -3282,6 +4212,7 @@ ELSE
          hBtnSaveQuery:HIDDEN                         = YES
          hBtnDeleteQuery:HIDDEN                       = YES
          hBtnShareQuery:HIDDEN                        = YES
+         hMenuItemShareQuery:SENSITIVE                = NO
          NO-ERROR.
 
 PUBLISH "RebuildActionMenu".
@@ -3289,11 +4220,9 @@ PUBLISH "RebuildActionMenu".
 RETURN YES.
 
 END FUNCTION.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setSMSButton C-Win 
 FUNCTION setSMSButton RETURNS LOGICAL
@@ -3495,6 +4424,54 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setViewAllTablesMenu C-Win 
+FUNCTION setViewAllTablesMenu RETURNS LOGICAL
+  ( INPUT icViewType AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR hMenuItem  AS HANDLE NO-UNDO.
+DEF VAR hNextItem  AS HANDLE NO-UNDO.
+DEF VAR hField     AS HANDLE NO-UNDO.
+DEF VAR cLabel     AS CHAR   NO-UNDO.
+DEF VAR hColumn    AS HANDLE NO-UNDO.
+DEF VAR cMenu      AS CHAR   NO-UNDO.
+DEF VAR cTables    AS CHAR   NO-UNDO.
+
+hMenuItem = hViewTablesMenu:FIRST-CHILD NO-ERROR.
+REPEAT WHILE VALID-HANDLE(hMenuItem):
+  hNextItem = hMenuItem:NEXT-SIBLING.
+  DELETE OBJECT hMenuItem.
+  hMenuItem = hNextItem.
+END.
+
+IF NOT JBoxSession:Instance:SuperUser THEN RETURN NO.
+
+IF icViewType = "details" THEN DO:
+  cTables = DYNAMIC-FUNCTION("getAttribute",hBrowse,"bufferlist").
+
+  DO ix = 1 TO NUM-ENTRIES(cTables):
+    cMenu   = cMenu   + "DetailsOf;" + ENTRY(ix,cTables) + ";TableDetails" + ",".
+  END.
+END.
+
+cMenu = TRIM(cMenu,",").
+
+IF cMenu NE "" THEN DO:
+  DYNAMIC-FUNCTION("setObjectSourceProc",THIS-PROCEDURE).
+  DYNAMIC-FUNCTION("NewMenuBand",hViewTablesMenu,cMenu,"").
+END.  
+ELSE 
+  hViewTablesMenu:SENSITIVE = NO.
+
+
+RETURN YES.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setWinTitle C-Win 
 FUNCTION setWinTitle RETURNS LOGICAL
   ( INPUT icWinTitle AS CHAR ) :
@@ -3528,9 +4505,6 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION StartQuery C-Win 
 FUNCTION StartQuery RETURNS LOGICAL
   ( INPUT icFilterFields    AS CHAR,
@@ -3543,8 +4517,11 @@ FUNCTION StartQuery RETURNS LOGICAL
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-DEF VAR hColumn AS HANDLE NO-UNDO.
-DEF VAR bLocal            AS LOG    NO-UNDO.
+DEF VAR hColumn AS HANDLE  NO-UNDO.
+DEF VAR bLocal             AS LOG    NO-UNDO.
+DEF VAR cDistDbFields      AS CHAR   NO-UNDO.
+DEF VAR cAccumDbFields     AS CHAR   NO-UNDO.
+DEF VAR ix                 AS INT    NO-UNDO.
           
 bLocal = DYNAMIC-FUNCTION("getAttribute",hBrowse,"useLocalData") = "yes".
 IF bLocal THEN
@@ -3552,6 +4529,22 @@ IF bLocal THEN
 
 DYNAMIC-FUNCTION("setAttribute",hBrowse,"distinctcolumns",icDistinctCols).
 DYNAMIC-FUNCTION("setAttribute",hBrowse,"accumfields",icAccumFields).
+
+DO ix = 1 TO NUM-ENTRIES(icDistinctCols):
+  IF NOT CAN-DO(cDistDbFields,DYNAMIC-FUNCTION("getAttribute",hBrowse,"fieldBuffer" + ENTRY(ix,icDistinctCols))) THEN
+    cDistDbFields = cDistDbFields + (IF cDistDbFields NE "" THEN "," ELSE "")
+                  + DYNAMIC-FUNCTION("getAttribute",hBrowse,"fieldBuffer" + ENTRY(ix,icDistinctCols))
+                  .
+END.  
+DYNAMIC-FUNCTION("setAttribute",hBrowse,"distinctTables",cDistDbFields).
+
+DO ix = 1 TO NUM-ENTRIES(icAccumFields):
+  IF NOT CAN-DO(cAccumDbFields,DYNAMIC-FUNCTION("getAttribute",hBrowse,"fieldBuffer" + ENTRY(ix,icAccumFields))) THEN
+    cAccumDbFields = cAccumDbFields + (IF cAccumDbFields NE "" THEN "," ELSE "")
+                   + DYNAMIC-FUNCTION("getAttribute",hBrowse,"fieldBuffer" + ENTRY(ix,icAccumFields))
+                   .
+END.  
+DYNAMIC-FUNCTION("setAttribute",hBrowse,"accumTables",cAccumDbFields).
 
 IF icInitSort NE "" AND icDistinctCols = "" THEN DO:
   DYNAMIC-FUNCTION("setSortString",hBrowse,icInitSort).

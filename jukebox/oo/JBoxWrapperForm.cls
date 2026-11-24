@@ -63,6 +63,7 @@ CLASS JBoxWrapperForm INHERITS Form:
   METHOD PUBLIC VOID OnFormClosing( INPUT sender AS System.Object, INPUT e AS System.Windows.Forms.FormClosingEventArgs ):  
      APPLY "close" to hProc.
     IF RETURN-VALUE = "cancel" THEN e:Cancel = YES.
+    ELSE DELETE PROCEDURE hSuperProc NO-ERROR.
   END METHOD.
 
 

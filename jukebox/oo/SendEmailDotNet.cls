@@ -124,11 +124,15 @@ CLASS SendEmailDotNet:
       smtp = NEW System.Net.Mail.SmtpClient(icMailServer).
       smtp:EnableSsl = ibSSL.
       smtp:Port = iiPort.
-
-      IF ibSSL THEN
-       smtp:UseDefaultCredentials = false.   
-
-      smtp:Credentials = NEW System.Net.NetworkCredential(icUser,icPwd).
+      
+      IF ibSSL THEN 
+        smtp:UseDefaultCredentials = FALSE.
+      IF iiPort = 587 THEN DO:
+        System.Net.ServicePointManager:SecurityProtocol = System.Net.SecurityProtocolType:Tls12. 
+        smtp:TargetName = "STARTTLS/" + smtp:Host.   
+      END.
+      IF icUser NE "" THEN 
+        smtp:Credentials = NEW System.Net.NetworkCredential(icUser,icPwd).
       smtp:Timeout = 200000.
         
       RETURN.
@@ -144,6 +148,8 @@ CLASS SendEmailDotNet:
       
       DEF VAR emes      AS System.Net.Mail.MailMessage NO-UNDO.
       DEF VAR cErrorMsg AS CHAR NO-UNDO.
+      
+      LogMessage = "".
       
       IF THIS-OBJECT:From = "" THEN 
         cErrorMsg = "Cannot send without a 'from' address".

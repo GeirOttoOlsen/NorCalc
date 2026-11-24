@@ -53,7 +53,8 @@ DEF TEMP-TABLE ttStruct
     FIELD  cMenuLabel AS CHAR  FORMAT "x(30)" COLUMN-LABEL "Label"
     FIELD  cLaunch    AS CHAR  FORMAT "x(30)" COLUMN-LABEL "Launch"
     .
-    
+
+{incl/validatesession.i}    
 
 /* Temp-table for transport. Default field is cText but the preview could also read another field */
 DEF TEMP-TABLE ttMenu

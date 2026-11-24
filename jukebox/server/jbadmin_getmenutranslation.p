@@ -9,7 +9,13 @@ DEF INPUT  PARAM icSessionId     AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOk            AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR hQuery AS HANDLE NO-UNDO.
+DEF VAR hbJBoxMenuTranslation AS HANDLE NO-UNDO.
+DEF VAR bFound                AS LOG    NO-UNDO.
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxMenuTranslation",OUTPUT hbJBoxMenuTranslation) THEN RETURN.
 
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(ihBuffer).
@@ -17,14 +23,12 @@ hQuery:QUERY-PREPARE("FOR EACH " + ihBuffer:NAME).
 hQuery:QUERY-OPEN().
 hQuery:GET-FIRST().
 REPEAT WHILE NOT hQuery:QUERY-OFF-END:
-  FIND FIRST JBoxMenuTranslation NO-LOCK
-       WHERE JBoxMenuTranslation.iJBoxMenuId = INT(ihBuffer:BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE)
-         AND JBoxMenuTranslation.cLanguage   = icParam
-       NO-ERROR.
-  IF AVAIL JBoxMenuTranslation THEN
-    ASSIGN ihBuffer:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE   = JBoxMenuTranslation.cMenuLabel
-           ihBuffer:BUFFER-FIELD("cAccelerator"):BUFFER-VALUE = JBoxMenuTranslation.cAccelerator
-           ihBuffer:BUFFER-FIELD("cMenuTooltip"):BUFFER-VALUE = JBoxMenuTranslation.cMenuTooltip
+  bFound = hbJBoxMenuTranslation:FIND-FIRST("WHERE JBoxMenuTranslation.iJBoxMenuId = " + STRING(INT(ihBuffer:BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE))
+                                          + " AND JBoxMenuTranslation.cLanguage = '" + icParam + "'",NO-LOCK) NO-ERROR.
+  IF bFound THEN
+    ASSIGN ihBuffer:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE   = hbJBoxMenuTranslation::cMenuLabel
+           ihBuffer:BUFFER-FIELD("cAccelerator"):BUFFER-VALUE = hbJBoxMenuTranslation::cAccelerator
+           ihBuffer:BUFFER-FIELD("cMenuTooltip"):BUFFER-VALUE = hbJBoxMenuTranslation::cMenuTooltip
            .
   ELSE
     ASSIGN ihBuffer:BUFFER-FIELD("cMenuLabel"):BUFFER-VALUE   = ""
@@ -34,8 +38,10 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   hQuery:GET-NEXT().
 END.
 
-DELETE OBJECT hQuery.
-
-obOk = ocReturn = "".
+FINALLY:
+  DELETE OBJECT hQuery NO-ERROR.
+  DELETE OBJECT hbJBoxMenuTranslation NO-ERROR.
+  obOk = ocReturn = "".
+END FINALLY.
    
 

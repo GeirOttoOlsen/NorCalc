@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId     AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn        AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOk            AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 FILE-INFO:FILE-NAME = icDiskCat.
 IF FILE-INFO:FULL-PATHNAME = ? THEN OS-CREATE-DIR VALUE(icDiskCat).
 

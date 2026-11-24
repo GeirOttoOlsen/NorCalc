@@ -73,6 +73,7 @@ Last Modified:
                          database name has no place in browse definition (_FldNameList and _TblList) 
                10.sep.14 Changes for JukeBox added to 11.4 version of original file that 
                          probably was patced to be able to insert triggers in PDS AB          
+               08.apr.20 Picks up the first table mentioned in a query to be used as first element in _DISP-NAME for columns          
 ---------------------------------------------------------------------------- */
 
 {adecomm/adestds.i}
@@ -88,10 +89,14 @@ Last Modified:
 {adeuib/uibhlp.i}
 {adecomm/oeideservice.i}
 
-DEF VAR bJukeBox AS LOG NO-UNDO.
+DEF VAR bJukeBox    AS LOG NO-UNDO.
+DEF VAR cFirstTable AS CHAR NO-UNDO.
+DEF VAR cDispName   AS CHAR NO-UNDO.
+DEF VAR cFirstTableList AS CHAR NO-UNDO.
 RUN JBoxLoadLib.p ("JukeBox\abTmpDrawObjSuper.p").
 RUN FindTablesAndFieldsInUse. /* Read from JukeBox view definitions in definition section */
 DYNAMIC-FUNCTION("setFirstColumnEnabled") NO-ERROR. /* For any JukeBox browsers make sure that at least one column is enabled */
+cFirstTableList = DYNAMIC-FUNCTION("getFirstTableList") NO-ERROR.
 
 /* FUNCTION PROTOTYPES */
 FUNCTION db-fld-name RETURNS CHARACTER
@@ -969,7 +974,12 @@ IF NOT CreatingSuper OR _P._TYPE = "SmartDataObject":U THEN DO:
                                  ELSE ("~"" + tmp_string + "~"") SKIP.
           END.  /* Extent-Stuff: Repeat: */
   
+          /* DEF VAR h_BC AS HANDLE NO-UNDO. */
+          /* h_BC = BUFFER _BC:HANDLE. */
+          /* RUN TOexcelviafile.p (h_BC,0). */
+
           i = 1.
+          cFirstTable = "". /* JukeBox */
           FOR EACH _BC WHERE _BC._x-recid = RECID(_U):
             /* this is the fix for bug number: 20000607-037. 07.25.00. Alex  */
             IF VALID-HANDLE(_BC._COL-HANDLE) THEN                                                   
@@ -1045,9 +1055,20 @@ IF NOT CreatingSuper OR _P._TYPE = "SmartDataObject":U THEN DO:
                   _BC._LABEL-FONT _BC._ENABLED output-help
                   _BC._MANDATORY _BC._WIDTH _BC._INHERIT-VALIDATION output-colLabel
                   .
-              ELSE
+              ELSE DO:
+                IF bJukeBox AND cFirstTable = "" AND _BC._DBNAME NE "_<CALC>" THEN 
+                  cFirstTable = _BC._TABLE.
+
+                IF bJukeBox AND cFirstTable NE "" AND _BC._DBNAME NE "_<CALC>" THEN 
+                  cDispName = cFirstTable + ".":U + _BC._NAME.
+                ELSE IF bJukeBox AND cFirstTable NE "" AND _BC._DBNAME = "_<CALC>" THEN 
+                  cDispName = cFirstTable + ".":U + ENTRY(NUM-ENTRIES(_BC._DISP-NAME,"."),_BC._DISP-NAME,".").
+                ELSE cDispName = "".
+
                 EXPORT STREAM P_4GL
-                  (IF bJukeBox AND NUM-ENTRIES(_BC._DISP-NAME,".") > 2 THEN SUBSTR(_BC._DISP-NAME,INDEX(_BC._DISP-NAME,".") + 1) ELSE _BC._DISP-NAME) 
+                  (IF bJukeBox AND cDispName NE "" THEN cDispName 
+                   ELSE IF bJukeBox AND NUM-ENTRIES(_BC._DISP-NAME,".") > 2 THEN SUBSTR(_BC._DISP-NAME,INDEX(_BC._DISP-NAME,".") + 1) 
+                   ELSE _BC._DISP-NAME) 
                   output-label output-format _BC._DATA-TYPE _BC._BGCOLOR
                   _BC._FGCOLOR _BC._FONT _BC._LABEL-BGCOLOR _BC._LABEL-FGCOLOR _BC._LABEL-FONT
                   _BC._ENABLED output-help _BC._DISABLE-AUTO-ZAP _BC._AUTO-RETURN output-width _BC._VISIBLE
@@ -1057,6 +1078,7 @@ IF NOT CreatingSuper OR _P._TYPE = "SmartDataObject":U THEN DO:
                   _BC._LABEL-ATTR
                   _BC._VIEW-AS-TYPE _BC._VIEW-AS-DELIMITER REPLACE(_BC._VIEW-AS-ITEMS, CHR(10), _BC._VIEW-AS-DELIMITER) REPLACE(_BC._VIEW-AS-ITEM-PAIRS, CHR(10), "" /*_BC._VIEW-AS-DELIMITER*/) _BC._VIEW-AS-INNER-LINES
                   _BC._VIEW-AS-SORT _BC._VIEW-AS-MAX-CHARS _BC._VIEW-AS-AUTO-COMPLETION _BC._VIEW-AS-UNIQUE-MATCH.
+              END.
             END. /* If NOT def-values */
             i = i + 1.
           END. /* _BC */

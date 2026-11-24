@@ -101,7 +101,7 @@ DEFINE TEMP-TABLE NPSHANLG
   FIELD RowCount             AS INTEGER
   INDEX idxRowids RowIdent1
   .
-DEFINE BUFFER v_NPSHANLG FOR NPSHANLG.
+DEFINE BUFFER v_NPSHANLG FOR temp-table NPSHANLG.
 
 FUNCTION getTableHandleQryNPSHANLG RETURNS HANDLE().
   RETURN BUFFER NPSHANLG:HANDLE:TABLE-HANDLE.
@@ -147,15 +147,15 @@ DEFINE VARIABLE otbNPSHANLG AS JBoxToolbar   NO-UNDO.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS tbNPSHANLG new_tbNPSHANLG edit_tbNPSHANLG ~
 copy_tbNPSHANLG save_tbNPSHANLG undo_tbNPSHANLG delete_tbNPSHANLG ~
-ProsjektId endrings_laas sikker anleggsnr anlegg Aktivt kundenr ~
-btnkonsulent Konsulentens_saksbeh Saksbehandler dato selger anbudsfrist ~
-salgsdistrikt byggestart Leveringstid entreprise beskrevet oppf_aar ~
-oppf_uke standardpris opplysninger 
-&Scoped-Define DISPLAYED-OBJECTS ProsjektId prosjektnavn endrings_laas ~
-sikker anleggsnr anlegg Aktivt kundenr Kundenavn Konsulentens_saksbeh ~
-Saksbehandler dato selger anbudsfrist salgsdistrikt byggestart Leveringstid ~
-entreprise beskrevet oppf_aar oppf_uke standardpris opplysninger ~
-lblOpplysninger 
+ProsjektId Aktivt endrings_laas sikker anleggsnr anlegg kundenr ~
+btnkonsulent Konsulentens_saksbeh Saksbehandler beskrevet byggestart ~
+entreprise selger Leveringstid dato salgsdistrikt oppf_aar oppf_uke ~
+anbudsfrist standardpris opplysninger 
+&Scoped-Define DISPLAYED-OBJECTS ProsjektId prosjektnavn Aktivt ~
+endrings_laas sikker anleggsnr anlegg kundenr Kundenavn ~
+Konsulentens_saksbeh Saksbehandler beskrevet byggestart entreprise selger ~
+Leveringstid dato salgsdistrikt oppf_aar oppf_uke anbudsfrist standardpris ~
+opplysninger lblOpplysninger 
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -168,7 +168,7 @@ lblOpplysninger
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON btnkonsulent 
@@ -178,44 +178,44 @@ DEFINE BUTTON btnkonsulent
 DEFINE BUTTON copy_tbNPSHANLG 
      IMAGE-UP FILE "img/ico/documents.ico":U
      LABEL "Copy" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Copy (ALT-C)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Copy (ALT-C)".
 
 DEFINE BUTTON delete_tbNPSHANLG 
      IMAGE-UP FILE "img\ico\document_delete.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_delete_disabled.gif":U
      LABEL "Delete" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Delete (CTRL-D)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Delete (CTRL-D)".
 
 DEFINE BUTTON edit_tbNPSHANLG 
      IMAGE-UP FILE "img/ico/document_edit.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_edit_disabled.gif":U
      LABEL "Edit" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Edit (CTRL-E)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Edit (CTRL-E)".
 
 DEFINE BUTTON new_tbNPSHANLG 
-     IMAGE-UP FILE "img/ico/document_add.ico":U
+     IMAGE-UP FILE "img\ico\document_add.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/document_add_disabled.gif":U
      LABEL "New" 
-     SIZE 7.8 BY 1.95 TOOLTIP "New (CTRL-N)".
+     SIZE 7.75 BY 1.94 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON save_tbNPSHANLG 
      IMAGE-UP FILE "img/ico/floppy_disk.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/floppy_disk_disabled.gif":U
      LABEL "Save" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Save (CTRL-S)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbNPSHANLG 
      IMAGE-UP FILE "img/ico/undo.ico":U
      IMAGE-INSENSITIVE FILE "img/gif/undo_disabled.gif":U
      LABEL "Undo" 
-     SIZE 7.8 BY 1.95 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 7.75 BY 1.94 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE beskrevet AS CHARACTER FORMAT "X(10)" 
      LABEL "Beskrevet" 
      VIEW-AS COMBO-BOX INNER-LINES 25
      LIST-ITEM-PAIRS "Item 1","1"
      DROP-DOWN-LIST
-     SIZE 35 BY 1.
+     SIZE 25 BY 1.
 
 DEFINE VARIABLE entreprise AS CHARACTER FORMAT "X(8)" 
      LABEL "Entreprise" 
@@ -229,25 +229,25 @@ DEFINE VARIABLE Saksbehandler AS CHARACTER FORMAT "X(22)"
      VIEW-AS COMBO-BOX INNER-LINES 25
      LIST-ITEM-PAIRS "Item 1","1"
      DROP-DOWN-LIST
-     SIZE 37 BY 1.
+     SIZE 31 BY 1.
 
 DEFINE VARIABLE salgsdistrikt AS CHARACTER FORMAT "X(30)" 
      LABEL "Salgsdistrikt" 
      VIEW-AS COMBO-BOX INNER-LINES 25
      LIST-ITEM-PAIRS "Item 1","1"
      DROP-DOWN-LIST
-     SIZE 37 BY 1 TOOLTIP "Velg distrikt".
+     SIZE 31 BY 1 TOOLTIP "Velg distrikt".
 
 DEFINE VARIABLE selger AS CHARACTER FORMAT "X(25)" 
      LABEL "Selger" 
      VIEW-AS COMBO-BOX INNER-LINES 25
      LIST-ITEM-PAIRS "Item 1","1"
      DROP-DOWN-LIST
-     SIZE 37 BY 1.
+     SIZE 31 BY 1.
 
 DEFINE VARIABLE opplysninger AS CHARACTER 
      VIEW-AS EDITOR SCROLLBAR-VERTICAL
-     SIZE 123 BY 4.76 NO-UNDO.
+     SIZE 145 BY 3.81 NO-UNDO.
 
 DEFINE VARIABLE anbudsfrist AS DATE FORMAT "99.99.9999":U 
      LABEL "Anbudsfrist" 
@@ -289,7 +289,7 @@ DEFINE VARIABLE kundenr AS CHARACTER FORMAT "X(8)"
 
 DEFINE VARIABLE lblOpplysninger AS CHARACTER FORMAT "X(256)":U INITIAL "Opplysninger:" 
       VIEW-AS TEXT 
-     SIZE 14 BY .62 TOOLTIP "Vil bli skrevet på anleggsrapport" NO-UNDO.
+     SIZE 14 BY .63 TOOLTIP "Vil bli skrevet pï¿½ anleggsrapport" NO-UNDO.
 
 DEFINE VARIABLE Leveringstid AS DATE FORMAT "99.99.9999":U 
      LABEL "Leveringstid" 
@@ -299,12 +299,12 @@ DEFINE VARIABLE Leveringstid AS DATE FORMAT "99.99.9999":U
 DEFINE VARIABLE oppf_aar AS INTEGER FORMAT "9999" INITIAL 0 
      LABEL "Oppf. år/uke" 
      VIEW-AS FILL-IN 
-     SIZE 7.6 BY 1 TOOLTIP "Oppgi år for neste oppfølging".
+     SIZE 7.63 BY 1 TOOLTIP "Oppgi låst for neste oppfølging".
 
 DEFINE VARIABLE oppf_uke AS INTEGER FORMAT "99" INITIAL 0 
      LABEL "/" 
      VIEW-AS FILL-IN 
-     SIZE 4.8 BY 1.
+     SIZE 4.75 BY 1.
 
 DEFINE VARIABLE ProsjektId AS INTEGER FORMAT ">>>>>>9":U INITIAL 0 
      LABEL "Prosjektid" 
@@ -322,12 +322,12 @@ DEFINE VARIABLE standardpris AS DECIMAL FORMAT ">>,>>>,>>9.99" INITIAL 0
 
 DEFINE RECTANGLE tbNPSHANLG
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 124 BY 2.14.
+     SIZE 124 BY 2.13.
 
 DEFINE VARIABLE Aktivt AS LOGICAL INITIAL no 
      LABEL "Aktivt" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 DEFINE VARIABLE endrings_laas AS LOGICAL INITIAL no 
      LABEL "Låst" 
@@ -337,7 +337,7 @@ DEFINE VARIABLE endrings_laas AS LOGICAL INITIAL no
 DEFINE VARIABLE sikker AS LOGICAL INITIAL no 
      LABEL "Sikker" 
      VIEW-AS TOGGLE-BOX
-     SIZE 13.4 BY .81 NO-UNDO.
+     SIZE 13.38 BY .81 NO-UNDO.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -348,42 +348,42 @@ DEFINE QUERY QUERY-2 FOR
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPSHANLG AT ROW 1.1 COL 1.2 WIDGET-ID 26
-     edit_tbNPSHANLG AT ROW 1.1 COL 9.2 WIDGET-ID 28
-     copy_tbNPSHANLG AT ROW 1.1 COL 17 WIDGET-ID 30
-     save_tbNPSHANLG AT ROW 1.1 COL 24.8 WIDGET-ID 34
-     undo_tbNPSHANLG AT ROW 1.1 COL 32.6 WIDGET-ID 32
-     delete_tbNPSHANLG AT ROW 1.1 COL 40.4 WIDGET-ID 36
-     ProsjektId AT ROW 3.62 COL 16 COLON-ALIGNED
-     prosjektnavn AT ROW 3.62 COL 26 COLON-ALIGNED NO-LABEL
-     endrings_laas AT ROW 4.33 COL 88 WIDGET-ID 50
-     sikker AT ROW 4.33 COL 103 WIDGET-ID 58
+     new_tbNPSHANLG AT ROW 1.09 COL 1.25 WIDGET-ID 26
+     edit_tbNPSHANLG AT ROW 1.09 COL 9.25 WIDGET-ID 28
+     copy_tbNPSHANLG AT ROW 1.09 COL 17 WIDGET-ID 30
+     save_tbNPSHANLG AT ROW 1.09 COL 24.75 WIDGET-ID 34
+     undo_tbNPSHANLG AT ROW 1.09 COL 32.63 WIDGET-ID 32
+     delete_tbNPSHANLG AT ROW 1.09 COL 40.38 WIDGET-ID 36
+     ProsjektId AT ROW 3.63 COL 16 COLON-ALIGNED
+     prosjektnavn AT ROW 3.63 COL 26 COLON-ALIGNED NO-LABEL
+     Aktivt AT ROW 3.63 COL 87 WIDGET-ID 52
+     endrings_laas AT ROW 3.63 COL 98 WIDGET-ID 50
+     sikker AT ROW 3.63 COL 112 WIDGET-ID 58
      anleggsnr AT ROW 4.81 COL 16 COLON-ALIGNED
      anlegg AT ROW 4.81 COL 26 COLON-ALIGNED NO-LABEL
-     Aktivt AT ROW 5.05 COL 88 WIDGET-ID 52
      kundenr AT ROW 6 COL 16 COLON-ALIGNED
      btnkonsulent AT ROW 6 COL 28 WIDGET-ID 62 NO-TAB-STOP 
      Kundenavn AT ROW 6 COL 31 COLON-ALIGNED NO-LABEL
      Konsulentens_saksbeh AT ROW 6 COL 84 COLON-ALIGNED
-     Saksbehandler AT ROW 7.67 COL 16 COLON-ALIGNED WIDGET-ID 54
-     dato AT ROW 7.67 COL 92 COLON-ALIGNED
-     selger AT ROW 8.86 COL 16 COLON-ALIGNED WIDGET-ID 38
-     anbudsfrist AT ROW 8.86 COL 92 COLON-ALIGNED
-     salgsdistrikt AT ROW 10.05 COL 16 COLON-ALIGNED WIDGET-ID 40
-     byggestart AT ROW 10.05 COL 92 COLON-ALIGNED
-     Leveringstid AT ROW 11.24 COL 92 COLON-ALIGNED
-     entreprise AT ROW 11.71 COL 16 COLON-ALIGNED WIDGET-ID 44
-     beskrevet AT ROW 11.71 COL 42 COLON-ALIGNED WIDGET-ID 46
-     oppf_aar AT ROW 12.43 COL 92 COLON-ALIGNED
-     oppf_uke AT ROW 12.43 COL 102 COLON-ALIGNED
-     standardpris AT ROW 13.62 COL 92 COLON-ALIGNED
-     opplysninger AT ROW 15.29 COL 2 NO-LABEL WIDGET-ID 64
-     lblOpplysninger AT ROW 14.57 COL 2 NO-LABEL
+     Saksbehandler AT ROW 7.66 COL 16 COLON-ALIGNED WIDGET-ID 54
+     beskrevet AT ROW 7.66 COL 60 COLON-ALIGNED WIDGET-ID 46
+     byggestart AT ROW 7.75 COL 98 COLON-ALIGNED
+     entreprise AT ROW 8.56 COL 60 COLON-ALIGNED WIDGET-ID 44
+     selger AT ROW 8.88 COL 16 COLON-ALIGNED WIDGET-ID 38
+     Leveringstid AT ROW 8.91 COL 98 COLON-ALIGNED
+     dato AT ROW 9.59 COL 60 COLON-ALIGNED
+     salgsdistrikt AT ROW 10.06 COL 16 COLON-ALIGNED WIDGET-ID 40
+     oppf_aar AT ROW 10.16 COL 99 COLON-ALIGNED
+     oppf_uke AT ROW 10.16 COL 109 COLON-ALIGNED
+     anbudsfrist AT ROW 10.75 COL 60 COLON-ALIGNED
+     standardpris AT ROW 11.84 COL 60 COLON-ALIGNED
+     opplysninger AT ROW 14.5 COL 2 NO-LABEL WIDGET-ID 64
+     lblOpplysninger AT ROW 13.5 COL 2 NO-LABEL
      tbNPSHANLG AT ROW 1 COL 1 WIDGET-ID 24
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SCROLLABLE SIZE 124.6 BY 19.52 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SIZE 151.63 BY 17.66 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -402,12 +402,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 19.52
-         WIDTH              = 124.6
-         MAX-HEIGHT         = 23.52
-         MAX-WIDTH          = 124.6
-         VIRTUAL-HEIGHT     = 23.52
-         VIRTUAL-WIDTH      = 124.6
+         HEIGHT             = 17.66
+         WIDTH              = 151.63
+         MAX-HEIGHT         = 23.53
+         MAX-WIDTH          = 151.63
+         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-WIDTH      = 151.63
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -440,10 +440,6 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
-ASSIGN 
-       FRAME DEFAULT-FRAME:HEIGHT           = 19.52
-       FRAME DEFAULT-FRAME:WIDTH            = 124.6.
-
 /* SETTINGS FOR FILL-IN Kundenavn IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
 /* SETTINGS FOR FILL-IN lblOpplysninger IN FRAME DEFAULT-FRAME
@@ -473,7 +469,7 @@ THEN C-Win:HIDDEN = yes.
 OPEN QUERY {&SELF-NAME} FOR EACH NPSHANLG NO-LOCK INDEXED-REPOSITION.
      _END_FREEFORM
      _Options          = "NO-LOCK INDEXED-REPOSITION"
-     _Design-Parent    is FRAME DEFAULT-FRAME @ ( 2.91 , 93 )
+     _Design-Parent    is FRAME DEFAULT-FRAME @ ( 4.56 , 126 )
 */  /* QUERY QUERY-2 */
 &ANALYZE-RESUME
 
@@ -677,17 +673,17 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY ProsjektId prosjektnavn endrings_laas sikker anleggsnr anlegg Aktivt 
-          kundenr Kundenavn Konsulentens_saksbeh Saksbehandler dato selger 
-          anbudsfrist salgsdistrikt byggestart Leveringstid entreprise beskrevet 
-          oppf_aar oppf_uke standardpris opplysninger lblOpplysninger 
+  DISPLAY ProsjektId prosjektnavn Aktivt endrings_laas sikker anleggsnr anlegg 
+          kundenr Kundenavn Konsulentens_saksbeh Saksbehandler beskrevet 
+          byggestart entreprise selger Leveringstid dato salgsdistrikt oppf_aar 
+          oppf_uke anbudsfrist standardpris opplysninger lblOpplysninger 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE tbNPSHANLG new_tbNPSHANLG edit_tbNPSHANLG copy_tbNPSHANLG 
-         save_tbNPSHANLG undo_tbNPSHANLG delete_tbNPSHANLG ProsjektId 
-         endrings_laas sikker anleggsnr anlegg Aktivt kundenr btnkonsulent 
-         Konsulentens_saksbeh Saksbehandler dato selger anbudsfrist 
-         salgsdistrikt byggestart Leveringstid entreprise beskrevet oppf_aar 
-         oppf_uke standardpris opplysninger 
+         save_tbNPSHANLG undo_tbNPSHANLG delete_tbNPSHANLG ProsjektId Aktivt 
+         endrings_laas sikker anleggsnr anlegg kundenr btnkonsulent 
+         Konsulentens_saksbeh Saksbehandler beskrevet byggestart entreprise 
+         selger Leveringstid dato salgsdistrikt oppf_aar oppf_uke anbudsfrist 
+         standardpris opplysninger 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -718,7 +714,7 @@ PROCEDURE InitializeObject :
     oFmNPSHANLG = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
     oFmNPSHANLG:updateFields = 'anlegg,anbudsfrist,byggestart,konsulentens_saksbeh,kundenr,leveringstid,oppf_aar,oppf_uke,dato,standardpris,saksbehandler,salgsdistrikt,endrings_laas,aktivt,beskrevet,entreprise,selger,sikker,btnKonsulent,opplysninger'.  
     oFmNPSHANLG:DisplayFields = 'Prosjektid,anleggsnr'.
-    oFmNPSHANLG:customCreateProc = 'crt_npshanlg.p'.
+    oFmNPSHANLG:customCreateProc = 'npshanlg_create.p'.
     oFmNPSHANLG:customDeleteValProc = 'dlt_npshanlg.p'.
     oFmNPSHANLG:customUpdateValProc = 'upd_npshanlg.p'.
     
@@ -765,7 +761,7 @@ PROCEDURE InitializeObject :
   END.
 
 
-  oContainer:initResize(200,700).
+  oContainer:initResize(900,700).
 
 END PROCEDURE.
 
@@ -821,17 +817,18 @@ PROCEDURE NewRecord :
    Notes:
   ------------------------------------------------------------------------------*/
   DO WITH FRAME {&FRAME-NAME}:
-    IF VALID-OBJECT(oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT) THEN 
-    DO:
+    IF VALID-OBJECT(oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT) THEN DO:
       IF VALID-HANDLE(oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT:BUFFER-HANDLE) AND oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT:BUFFER-HANDLE:avail THEN 
         ASSIGN
           iProsjektid   = oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::prosjektid
           cProsjektnavn = oQryNPSHANLG:PARENT-BROWSE-OBJECT:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::Prosjekt_navn
-          iAnleggsnr    = oQryNPSHANLG:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::anleggsnr
-          cAnlegg       = oQryNPSHANLG:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::anlegg
+/*          iAnleggsnr    = oQryNPSHANLG:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::anleggsnr*/
+/*          cAnlegg       = oQryNPSHANLG:PARENT-BROWSE-OBJECT:BUFFER-HANDLE::anlegg   */
           .
     END.
+    
     RUN super.
+    
     ASSIGN
       dato:screen-value         = STRING(TODAY)
       oppf_aar:screen-value     = STRING(YEAR(TODAY))

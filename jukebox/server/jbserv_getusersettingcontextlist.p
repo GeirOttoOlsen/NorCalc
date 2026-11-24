@@ -17,8 +17,10 @@ DEF VAR cContextList AS CHAR   NO-UNDO.
 CREATE BUFFER hBuffer FOR TABLE "JBoxUserSetting" NO-ERROR.
 IF ERROR-STATUS:ERROR THEN RETURN "No setting table".
 
-IF icSourceFile = "" AND icObjectName = "" AND icSettingName = "" THEN
+IF icSourceFile = "" AND icObjectName = "" AND icSettingName = "" THEN DO:
+  DELETE OBJECT hBuffer.
   RETURN "Invalid qualifier".
+END.  
 
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(hBuffer).
@@ -48,4 +50,4 @@ DELETE OBJECT hBuffer.
 IF NOT bOk THEN
   RETURN "Invalid query for user setting".
 ELSE 
-  RETURN cContextList.
+  ocReturn = cContextList.

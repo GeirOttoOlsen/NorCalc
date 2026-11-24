@@ -8,6 +8,8 @@ DEF INPUT  PARAM icSessionId AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEFINE VAR hQuery            AS HANDLE NO-UNDO.
 DEFINE VAR cUserId           AS CHAR   NO-UNDO.
 DEFINE VAR ix                AS INT    NO-UNDO.
@@ -18,9 +20,24 @@ DEFINE VAR cSubject          AS CHAR   NO-UNDO.
 DEFINE VAR iProcessStepId    AS INT    NO-UNDO.
 DEFINE VAR iProcessTriggerId AS INT    NO-UNDO.
 DEFINE VAR cAttachments      AS CHAR   NO-UNDO.
+DEF VAR hbJBoxProcessStepParam AS HANDLE NO-UNDO.
+DEF VAR hqStepParam            AS HANDLE NO-UNDO.
+DEF VAR hbJBoxEmailInbox       AS HANDLE NO-UNDO.
+DEF VAR hbJBoxEmailAccount     AS HANDLE NO-UNDO.
+DEF VAR hbJBoxDocRel           AS HANDLE NO-UNDO.
+DEF VAR hbJBoxDocument         AS HANDLE NO-UNDO.
+DEF VAR cParamName             AS CHAR   NO-UNDO.
+DEF VAR bFound                 AS LOG    NO-UNDO.
+DEF VAR hqDoc                  AS HANDLE NO-UNDO.
 
 ASSIGN cUserId    = DYNAMIC-FUNCTION("getASuserId" IN SOURCE-PROCEDURE)
        .
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxProcessStepParam",OUTPUT hbJBoxProcessStepParam) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxJBoxEmailInbox",OUTPUT hbJBoxEmailInbox) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxEmailAccount",OUTPUT hbJBoxEmailAccount) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxDocRel",OUTPUT hbJBoxDocRel) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxDocument",OUTPUT hbJBoxDocument) THEN RETURN.
 
 DO ix = 1 TO NUM-ENTRIES(icParam,";"):
   CASE ENTRY(1,ENTRY(ix,icParam,";"),"|"):
@@ -29,13 +46,16 @@ DO ix = 1 TO NUM-ENTRIES(icParam,";"):
   END CASE.
 END.
 
-FOR EACH JBoxProcessStepParam NO-LOCK
-    WHERE JBoxProcessStepParam.iJBoxProcessStepId = iProcessStepId
-      AND (JBoxProcessStepParam.iJBoxProcessRelId = iProcessTriggerId OR JBoxProcessStepParam.iJBoxProcessRelId = 0)
-    :
-  CASE JBoxProcessStepParam.cParameterName:
-    WHEN "MailSubject" THEN cSubject = JBoxProcessStepParam.cParameterText.
-    WHEN "MailTo"      THEN cTo      = cTo + (IF cTo NE "" THEN "," ELSE "") + JBoxProcessStepParam.cParameterText.
+CREATE QUERY hqStepParam.
+hqStepParam:SET-BUFFERS(hbJBoxProcessStepParam).
+hqStepParam:QUERY-PREPARE("FOR EACH JBoxProcessStepParam NO-LOCK WHERE JBoxProcessStepParam.iJBoxProcessStepId = " + STRING(iProcessStepId)
+                        + " AND (JBoxProcessStepParam.iJBoxProcessRelId = iProcessTriggerId OR JBoxProcessStepParam.iJBoxProcessRelId = 0)").
+hqStepParam:QUERY-OPEN ().
+REPEAT WHILE hqStepParam:GET-NEXT():
+  cParamName = hbJBoxProcessStepParam::cParameterName.                        
+  CASE cParamName:
+    WHEN "MailSubject" THEN cSubject = hbJBoxProcessStepParam::cParameterText.
+    WHEN "MailTo"      THEN cTo      = cTo + (IF cTo NE "" THEN "," ELSE "") + hbJBoxProcessStepParam::cParameterText.
   END CASE.
 END.
 
@@ -48,52 +68,52 @@ END.
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(ihBuffer).
 
+CREATE QUERY hqDoc.
+hqDoc:SET-BUFFERS (hbJBoxDocRel,hbJBoxDocument).
+
 hQuery:QUERY-PREPARE("FOR EACH " + ihBuffer:NAME).
 hQuery:QUERY-OPEN().
 hQuery:GET-FIRST().
 REPEAT WHILE NOT hQuery:QUERY-OFF-END:
-  FIND FIRST JBoxEmailInbox NO-LOCK
-       WHERE JBoxEmailInbox.iJBoxEmailInboxId = INTEGER(ihBuffer:BUFFER-FIELD("iJBoxEmailInboxId"):BUFFER-VALUE)
-       NO-ERROR.
-  IF AVAIL JBoxEmailInbox THEN DO:
+  bFound = hbJBoxEmailInbox:FIND-FIRST("WHERE JBoxEmailInbox.iJBoxEmailInboxId = INTEGER('" + STRING(ihBuffer::iJBoxEmailInboxId) + "')",NO-LOCK) NO-ERROR.
+  IF bFound THEN DO:
 
-    FIND FIRST JBoxEmailAccount NO-LOCK
-         OF JBoxEmailInbox
-         NO-ERROR.
-    IF AVAIL JBoxEmailAccount THEN DO:
-      cFrom = JBoxEmailAccount.cEmailAddress.
+    bFound = hbJBoxEmailAccount:FIND-FIRST("WHERE iJBoxEmailAccountId = " + STRING(hbJBoxEmailInbox::iJBoxEmailAccountId),NO-LOCK) NO-ERROR.
+    IF bFound THEN DO:
+      cFrom = hbJBoxEmailAccount::cEmailAddress.
       IF OPSYS = "WIN32" THEN DO:
         cAttachments = "".
-        FOR EACH JBoxDocRel NO-LOCK
-            WHERE JBoxDocRel.cContext = "JBoxEmailInbox"
-              AND JBoxDocRel.cEntityId = STRING(JBoxEmailInbox.iJBoxEmailInboxId)
-           ,FIRST JBoxDocument FIELDS(cFileName cFullPathName) NO-LOCK
-                  OF JBoxDocRel
-            BY JBoxDocRel.iJBoxDocumentId DESC:
+        
+        hqDoc:QUERY-PREPARE ("FOR EACH JBoxDocRel NO-LOCK WHERE JBoxDocRel.cContext = 'JBoxEmailInbox'"
+                           + " AND JBoxDocRel.cEntityId = STRING('" + hbJBoxEmailInbox::iJBoxEmailInboxId + "')"
+                           + ",FIRST JBoxDocument FIELDS(cFileName cFullPathName) NO-LOCK OF JBoxDocRel"
+                           + " BY JBoxDocRel.iJBoxDocumentId DESC").
+        hqDoc:QUERY-OPEN ().
+        REPEAT WHILE hqDoc:GET-NEXT().
 
-          IF SEARCH(JBoxDocument.cFullPathName) NE ? THEN DO:
-            IF JBoxDocument.cFullPathName MATCHES "*.gz" AND SEARCH("gzip.exe") NE ? THEN DO:
-              OS-COMMAND SILENT VALUE(SEARCH("gzip.exe") + ' -df "' + JBoxDocument.cFullPathName + '"').
-              cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + SUBSTR(JBoxDocument.cFullPathName,1,LENGTH(JBoxDocument.cFullPathName) - 3).
+          IF SEARCH(hbJBoxDocument::cFullPathName) NE ? THEN DO:
+            IF hbJBoxDocument::cFullPathName MATCHES "*.gz" AND SEARCH("gzip.exe") NE ? THEN DO:
+              OS-COMMAND SILENT VALUE(SEARCH("gzip.exe") + ' -df "' + hbJBoxDocument::cFullPathName + '"').
+              cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + SUBSTR(hbJBoxDocument::cFullPathName,1,LENGTH(hbJBoxDocument::cFullPathName) - 3).
             END.
             ELSE
-              cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + JBoxDocument.cFullPathName.
+              cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + hbJBoxDocument::cFullPathName.
           END.
-          ELSE IF SEARCH(SESSION:TEMP-DIR + JBoxDocument.cFileName) NE ? THEN
-            cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + SESSION:TEMP-DIR + JBoxDocument.cFileName.
+          ELSE IF SEARCH(SESSION:TEMP-DIR + hbJBoxDocument::cFileName) NE ? THEN
+            cAttachments = cAttachments + (IF cAttachments NE "" THEN "," ELSE "") + SESSION:TEMP-DIR + hbJBoxDocument::cFileName.
         END.
 
         RUN JBoxSendBlatMail.p (
             cTo,
-            JBoxEmailAccount.cEmailAddress,
+            hbJBoxEmailAccount::cEmailAddress,
             "",
             cSubject,
-            "Fra: " + JBoxEmailInbox.cDisplayFrom + CHR(10)
-          + "Emne: " + JBoxEmailInbox.cSubject,
+            "Fra: " + hbJBoxEmailInbox::cDisplayFrom + CHR(10)
+          + "Emne: " + hbJBoxEmailInbox::cSubject,
             cAttachments,
-            JBoxEmailAccount.cMailServer,
-            JBoxEmailAccount.cEmailAddress,
-            JBoxEmailAccount.cPassword,
+            hbJBoxEmailAccount::cMailServer,
+            hbJBoxEmailAccount::cEmailAddress,
+            hbJBoxEmailAccount::cPassword,
             "",
             "",
             "",
@@ -110,30 +130,14 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   hQuery:GET-NEXT().
 END.
   
-  /*
-    DEF INPUT  PARAM icRecipientList    AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icFrom             AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icReplyTo          AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icSubject          AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icBody             AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icAttachments      AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icMailServer       AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icEmailUserName    AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icEmailPwd         AS CHAR   NO-UNDO.
-    DEF INPUT  PARAM icEventType        AS CHAR   NO-UNDO. /* If blank no event is created */
-    DEF INPUT  PARAM icEventExtraText   AS CHAR   NO-UNDO. /* Event text will be email subject */
-    DEF INPUT  PARAM icContextRowidList AS CHAR   NO-UNDO. /* Link info: <table>;<rowid>,<table>;<rowid>,<table>.. */
-                                                           /* If used the list must correspond with icRecipientList */
-    DEF INPUT  PARAM icContextKeyFields AS CHAR   NO-UNDO. /* Key fields for event link: <table>;<key fields>,<table>;<Key.. */
-    DEF INPUT  PARAM ibAutoSend         AS LOG    NO-UNDO.
-    DEF INPUT  PARAM ibViewLogFile      AS LOG    NO-UNDO.
-    DEF INPUT  PARAM ihResBuffer        AS HANDLE NO-UNDO.
-    DEF OUTPUT PARAM obOk               AS LOG    NO-UNDO.
-    DEF OUTPUT PARAM ocReturn           AS CHAR   NO-UNDO.
-    */
-
-
-DELETE OBJECT hQuery.
-
 obOk = ocReturn = "".                                                    
 
+FINALLY:
+  DELETE OBJECT hqDoc NO-ERROR.
+  DELETE OBJECT hbJBoxProcessStepParam NO-ERROR.
+  DELETE OBJECT hbJBoxEmailInbox NO-ERROR.
+  DELETE OBJECT hbJBoxEmailAccount NO-ERROR.
+  DELETE OBJECT hbJBoxDocument NO-ERROR.
+  DELETE OBJECT hbJBoxDocRel NO-ERROR.
+  DELETE OBJECT hQuery NO-ERROR.
+END FINALLY.  

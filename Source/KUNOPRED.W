@@ -48,6 +48,7 @@ DEFINE VAR i AS INTEGER.
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE DIALOG-BOX
+&Scoped-define DB-AWARE no
 
 /* Name of first Frame and/or Browse and/or first Query                 */
 &Scoped-define FRAME-NAME Dialog-Frame
@@ -74,11 +75,7 @@ NPKUNDEOPPF.vedlegg NPKUNDEOPPF.haster NPKUNDEOPPF.til_orientering ~
 NPKUNDEOPPF.vennligst_ring NPKUNDEOPPF.svar_imotesees 
 &Scoped-define ENABLED-TABLES-IN-QUERY-Dialog-Frame NPKUNDEOPPF
 &Scoped-define FIRST-ENABLED-TABLE-IN-QUERY-Dialog-Frame NPKUNDEOPPF
-
-&Scoped-define FIELD-PAIRS-IN-QUERY-Dialog-Frame~
- ~{&FP1}kontakt_dato ~{&FP2}kontakt_dato ~{&FP3}~
- ~{&FP1}neste_kontakt ~{&FP2}neste_kontakt ~{&FP3}~
- ~{&FP1}deres_ref ~{&FP2}deres_ref ~{&FP3}
+&Scoped-define QUERY-STRING-Dialog-Frame FOR EACH NPKUNDEOPPF SHARE-LOCK
 &Scoped-define OPEN-QUERY-Dialog-Frame OPEN QUERY Dialog-Frame FOR EACH NPKUNDEOPPF SHARE-LOCK.
 &Scoped-define TABLES-IN-QUERY-Dialog-Frame NPKUNDEOPPF
 &Scoped-define FIRST-TABLE-IN-QUERY-Dialog-Frame NPKUNDEOPPF
@@ -93,10 +90,6 @@ NPKUNDEOPPF.iflg_avtale NPKUNDEOPPF.til_godkjennelse NPKUNDEOPPF.nor_firma ~
 NPKUNDEOPPF.bes_returnert NPKUNDEOPPF.takk_for_laanet NPKUNDEOPPF.vedlegg ~
 NPKUNDEOPPF.haster NPKUNDEOPPF.til_orientering NPKUNDEOPPF.vennligst_ring ~
 NPKUNDEOPPF.svar_imotesees 
-&Scoped-define FIELD-PAIRS~
- ~{&FP1}kontakt_dato ~{&FP2}kontakt_dato ~{&FP3}~
- ~{&FP1}neste_kontakt ~{&FP2}neste_kontakt ~{&FP3}~
- ~{&FP1}deres_ref ~{&FP2}deres_ref ~{&FP3}
 &Scoped-define ENABLED-TABLES NPKUNDEOPPF
 &Scoped-define FIRST-ENABLED-TABLE NPKUNDEOPPF
 &Scoped-Define ENABLED-OBJECTS RECT-31 RECT-32 Btn_OK Btn_Cancel Btn_Help ~
@@ -109,6 +102,9 @@ NPKUNDEOPPF.iflg_avtale NPKUNDEOPPF.til_godkjennelse NPKUNDEOPPF.nor_firma ~
 NPKUNDEOPPF.bes_returnert NPKUNDEOPPF.takk_for_laanet NPKUNDEOPPF.vedlegg ~
 NPKUNDEOPPF.haster NPKUNDEOPPF.til_orientering NPKUNDEOPPF.vennligst_ring ~
 NPKUNDEOPPF.svar_imotesees 
+&Scoped-define DISPLAYED-TABLES NPKUNDEOPPF
+&Scoped-define FIRST-DISPLAYED-TABLE NPKUNDEOPPF
+
 
 /* Custom List Definitions                                              */
 /* List-1,List-2,List-3,List-4,List-5,List-6                            */
@@ -143,11 +139,11 @@ DEFINE BUTTON BUTTON-hilsen
      SIZE 10.8 BY .95.
 
 DEFINE RECTANGLE RECT-31
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL 
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 124.6 BY 6.33.
 
 DEFINE RECTANGLE RECT-32
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL 
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 124 BY 12.19.
 
 /* Query definitions                                                    */
@@ -165,12 +161,13 @@ DEFINE FRAME Dialog-Frame
           BGCOLOR 15 FGCOLOR 0 FONT 2
      NPKUNDEOPPF.kontaktet_av AT ROW 1.76 COL 51.2 COLON-ALIGNED
           VIEW-AS COMBO-BOX 
-          LIST-ITEMS "","" 
-          SIZE 30.8 BY 1
+          DROP-DOWN-LIST
+          SIZE 30.8 BY 1.05
      NPKUNDEOPPF.kontaktet_pr AT ROW 1.76 COL 89 COLON-ALIGNED
           LABEL "Pr."
           VIEW-AS COMBO-BOX 
           LIST-ITEMS "Tlf.","Besøk","Fax","Brev","Annet" 
+          DROP-DOWN-LIST
           SIZE 14.4 BY 1
           BGCOLOR 15 FGCOLOR 0 FONT 2
      NPKUNDEOPPF.oppf_ok AT ROW 2.05 COL 109.4
@@ -184,11 +181,12 @@ DEFINE FRAME Dialog-Frame
      NPKUNDEOPPF.neste_kontakt_av AT ROW 6.38 COL 42.6 COLON-ALIGNED
           LABEL "v/"
           VIEW-AS COMBO-BOX 
-          LIST-ITEMS "","" 
+          DROP-DOWN-LIST
           SIZE 29.2 BY 1
      NPKUNDEOPPF.aktivitet AT ROW 6.43 COL 93.2 COLON-ALIGNED
           VIEW-AS COMBO-BOX 
           LIST-ITEMS "Besøkes","Kontaktes","Pleies" 
+          DROP-DOWN-LIST
           SIZE 20.4 BY 1
      NPKUNDEOPPF.neste_kontakt AT ROW 6.52 COL 20.4 COLON-ALIGNED
           VIEW-AS FILL-IN NATIVE 
@@ -245,22 +243,26 @@ DEFINE FRAME Dialog-Frame
      Btn_Cancel AT ROW 21 COL 52.4
      Btn_Help AT ROW 21 COL 63.4
      BUTTON-hilsen AT ROW 21 COL 73
-     "Rapport:" VIEW-AS TEXT
-          SIZE 11.8 BY .62 AT ROW 2.76 COL 4.8
-.
+    WITH VIEW-AS DIALOG-BOX 
+         SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
+         FONT 2
+         CANCEL-BUTTON Btn_Cancel.
+
 /* DEFINE FRAME statement is approaching 4K Bytes.  Breaking it up   */
 DEFINE FRAME Dialog-Frame
-     RECT-31 AT ROW 1.48 COL 1.4
-     RECT-32 AT ROW 8.1 COL 1.4
-     "Tekst:" VIEW-AS TEXT
-          SIZE 10 BY .67 AT ROW 8.81 COL 2.6
-     "Vedlegg:" VIEW-AS TEXT
-          SIZE 11.6 BY 1.1 AT ROW 17.43 COL 21
-     "Minibrev" VIEW-AS TEXT
-          SIZE 11.6 BY .62 AT ROW 7.91 COL 3
      "Oppfølging" VIEW-AS TEXT
           SIZE 14.2 BY .95 AT ROW 1.1 COL 3.8
-     SPACE(108.59) SKIP(21.13)
+     "Minibrev" VIEW-AS TEXT
+          SIZE 11.6 BY .62 AT ROW 7.91 COL 3
+     "Vedlegg:" VIEW-AS TEXT
+          SIZE 11.6 BY 1.1 AT ROW 17.43 COL 21
+     "Tekst:" VIEW-AS TEXT
+          SIZE 10 BY .67 AT ROW 8.81 COL 2.6
+     "Rapport:" VIEW-AS TEXT
+          SIZE 11.8 BY .62 AT ROW 2.76 COL 4.8
+     RECT-31 AT ROW 1.48 COL 1.4
+     RECT-32 AT ROW 8.1 COL 1.4
+     SPACE(1.19) SKIP(2.89)
     WITH VIEW-AS DIALOG-BOX 
          SIDE-LABELS NO-UNDERLINE THREE-D  SCROLLABLE 
          FONT 2
@@ -278,7 +280,8 @@ DEFINE FRAME Dialog-Frame
 &ANALYZE-RESUME _END-PROCEDURE-SETTINGS
 
 
-/* ***************  Runtime Attributes and UIB Settings  ************** */
+
+/* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR DIALOG-BOX Dialog-Frame
@@ -320,7 +323,6 @@ ASSIGN
 &ANALYZE-RESUME
 
  
-
 
 
 
@@ -528,7 +530,7 @@ RUN disable_UI.
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame _DEFAULT-DISABLE
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI Dialog-Frame  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
@@ -545,8 +547,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame _DEFAULT-ENABLE
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI Dialog-Frame  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     ENABLE the User Interface
@@ -588,7 +589,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE endreKundeOppf Dialog-Frame 
 PROCEDURE endreKundeOppf :
 /*------------------------------------------------------------------------------
@@ -619,7 +619,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE fyll_combo Dialog-Frame 
 PROCEDURE fyll_combo :
 /*------------------------------------------------------------------------------
@@ -643,7 +642,6 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE nyKundeOppf Dialog-Frame 
 PROCEDURE nyKundeOppf :
@@ -693,5 +691,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 

@@ -37,6 +37,7 @@ CLASS JBoxDevExDateEdit INHERITS UserControl:
                                         INPUT ihPlaceHolder AS HANDLE, /* Design widget (rectangle, field, etc) */
                                         INPUT iiDeltaWidth  AS INTEGER):
     SUPER().
+
     ASSIGN hWinSuper        = IF VALID-HANDLE(ihWinSuper) THEN ihWinSuper ELSE DYNAMIC-FUNCTION("getWindowSuper" IN ihWinProc)        
            hWinProc         = ihWinProc
            hWindow          = ihWinProc:CURRENT-WINDOW
@@ -45,7 +46,6 @@ CLASS JBoxDevExDateEdit INHERITS UserControl:
            iDefaultFontSize = THIS-OBJECT:Font:Size
            iDeltaWidth      = iiDeltaWidth.
            .
-
 
 /* Thread:CurrentThread:CurrentUICulture = new CultureInfo("en-us").  */
 /* Localizer:Active = Localizer:CreateDefaultLocalizer().             */

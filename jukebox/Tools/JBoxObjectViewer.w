@@ -106,6 +106,20 @@ DEF TEMP-TABLE ttFrames
     FIELD hFrame      AS HANDLE
     FIELD cSourceProc AS CHAR.
 
+DEF TEMP-TABLE ttTableFlds NO-UNDO
+    FIELD cTable        AS CHAR      LABEL "Table"
+    FIELD cTtFld        AS CHAR      LABEL "Field"
+    FIELD cDbFld        AS CHAR      LABEL "DbField"
+    FIELD cTtExtent     AS CHAR
+    FIELD cDbExtent     AS CHAR   
+    FIELD cLabel        AS CHAR      LABEL "Label"
+    FIELD cFormat       AS CHAR      LABEL "Format"
+    FIELD fWidthChars   AS DECIMAL   LABEL "Width-chars"
+    FIELD cDataType     AS CHAR      LABEL "Datatype"
+    FIELD cDisplayDef   AS CHAR
+    FIELD iSeq          AS INT
+    .
+    
 DEF STREAM sProgramFile.
 DEF STREAM sMethodFile.
 
@@ -131,8 +145,8 @@ DEF STREAM sMethodFile.
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS btnSplitBarY rectBrwObject rectBrwAttribute ~
 rectBrwObjectLink rectBrwEvent rectJukeBox RectBrowseSearch cmbWindow ~
-cAttrName cAttrValue fiAttributeLabel 
-&Scoped-Define DISPLAYED-OBJECTS cmbWindow cAttrName cAttrValue ~
+fiProcName cAttrName cAttrValue fiAttributeLabel 
+&Scoped-Define DISPLAYED-OBJECTS cmbWindow fiProcName cAttrName cAttrValue ~
 fiAttributeLabel 
 
 /* Custom List Definitions                                              */
@@ -143,6 +157,13 @@ fiAttributeLabel
 
 
 /* ************************  Function Prototypes ********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD BuildViperGrp C-Win 
+FUNCTION BuildViperGrp RETURNS LOGICAL
+  ( INPUT ihBuffer AS HANDLE )  FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD BuildWindowList C-Win 
 FUNCTION BuildWindowList RETURNS LOGICAL
@@ -177,15 +198,12 @@ FUNCTION FillObjectTable RETURNS LOGICAL
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCurrentWindowHandle C-Win
-FUNCTION getCurrentWindowHandle RETURNS HANDLE 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getCurrentWindowHandle C-Win 
+FUNCTION getCurrentWindowHandle RETURNS HANDLE
   (  ) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getProcNameForWindow C-Win 
 FUNCTION getProcNameForWindow RETURNS CHARACTER
@@ -239,6 +257,10 @@ DEFINE VARIABLE fiAttributeLabel AS CHARACTER FORMAT "X(256)":U INITIAL "Attribu
       VIEW-AS TEXT 
      SIZE 15.6 BY .62 NO-UNDO.
 
+DEFINE VARIABLE fiProcName AS CHARACTER FORMAT "X(256)":U 
+     VIEW-AS FILL-IN 
+     SIZE 47 BY 1 NO-UNDO.
+
 DEFINE RECTANGLE RectBrowseSearch
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 16.6 BY .91.
@@ -269,6 +291,7 @@ DEFINE RECTANGLE rectJukeBox
 DEFINE FRAME DEFAULT-FRAME
      btnSplitBarY AT ROW 11.33 COL 1.4
      cmbWindow AT ROW 1.33 COL 12.6 COLON-ALIGNED
+     fiProcName AT ROW 1.33 COL 80 COLON-ALIGNED NO-LABEL
      cAttrName AT ROW 17.86 COL 65.8 COLON-ALIGNED NO-LABEL
      cAttrValue AT ROW 18.86 COL 51 NO-LABEL
      fiAttributeLabel AT ROW 17.91 COL 50 COLON-ALIGNED NO-LABEL
@@ -344,6 +367,9 @@ ASSIGN
 
 ASSIGN 
        btnSplitBarY:MOVABLE IN FRAME DEFAULT-FRAME          = TRUE.
+
+ASSIGN 
+       fiProcName:READ-ONLY IN FRAME DEFAULT-FRAME        = TRUE.
 
 IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
@@ -422,7 +448,8 @@ DO:
 
   IF cmbWindow:SCREEN-VALUE NE ? AND VALID-HANDLE(WIDGET-HANDLE(cmbWindow:SCREEN-VALUE)) 
      AND WIDGET-HANDLE(cmbWindow:SCREEN-VALUE) NE SESSION AND WIDGET-HANDLE(cmbWindow:SCREEN-VALUE) NE SESSION:FIRST-PROCEDURE THEN
-    ViewWindowSource(WIDGET-HANDLE(cmbWindow:SCREEN-VALUE)).
+    fiProcName:SCREEN-VALUE = getProcNameForWindow(WIDGET-HANDLE(cmbWindow:SCREEN-VALUE)).
+//    ViewWindowSource(WIDGET-HANDLE(cmbWindow:SCREEN-VALUE)).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -613,10 +640,10 @@ ASSIGN cObjectType = hBrowseObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD("cObj
 
 IF CAN-DO("fieldMap,query,browse,temp-table",cObjectType) THEN 
   CASE cObjectType:
-    WHEN "fieldMap"   THEN DYNAMIC-FUNCTION("ToExcelViaFile",hObject,0).
-    WHEN "query"      THEN DYNAMIC-FUNCTION("ToExcelViaFile",hObject:GET-BUFFER-HANDLE(1),0).
+    WHEN "fieldMap"   THEN RUN ToExcelViaFile.p (hObject,-5).
+    WHEN "query"      THEN RUN ToExcelViaFile.p (hObject:GET-BUFFER-HANDLE(1),-5).
     WHEN "browse"     THEN DYNAMIC-FUNCTION("ToExcelViaFile",hObject:QUERY:GET-BUFFER-HANDLE(1),0).
-    WHEN "temp-table" THEN DYNAMIC-FUNCTION("ToExcelViaFile",hObject:DEFAULT-BUFFER-HANDLE,0).
+    WHEN "temp-table" THEN RUN ToExcelViaFile.p (hObject:DEFAULT-BUFFER-HANDLE,-5).
   END CASE.
 ELSE MESSAGE "Export of content is available for browsers, queries, fieldMaps and temp-tables"
              VIEW-AS ALERT-BOX INFORMATION.
@@ -741,9 +768,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DeleteRecord C-Win
-PROCEDURE DeleteRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE DeleteRecord C-Win 
+PROCEDURE DeleteRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -754,11 +780,9 @@ IF JBoxSession:Instance:ViewQuestionYesNo("Delete attribute " + hBrowseAttribute
 END.  
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI C-Win  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
@@ -805,9 +829,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE EditorRecord C-Win
-PROCEDURE EditorRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE EditorRecord C-Win 
+PROCEDURE EditorRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -815,11 +838,9 @@ PROCEDURE EditorRecord:
 RUN _edit.p PERSIST.
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE enable_UI C-Win  _DEFAULT-ENABLE
 PROCEDURE enable_UI :
@@ -832,11 +853,11 @@ PROCEDURE enable_UI :
                These statements here are based on the "Other 
                Settings" section of the widget Property Sheets.
 ------------------------------------------------------------------------------*/
-  DISPLAY cmbWindow cAttrName cAttrValue fiAttributeLabel 
+  DISPLAY cmbWindow fiProcName cAttrName cAttrValue fiAttributeLabel 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE btnSplitBarY rectBrwObject rectBrwAttribute rectBrwObjectLink 
-         rectBrwEvent rectJukeBox RectBrowseSearch cmbWindow cAttrName 
-         cAttrValue fiAttributeLabel 
+         rectBrwEvent rectJukeBox RectBrowseSearch cmbWindow fiProcName 
+         cAttrName cAttrValue fiAttributeLabel 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -1138,6 +1159,7 @@ DO WITH FRAM {&FRAME-NAME}:
                   + ",AttributeList;All attributes for window"
                   + ",DebugAttribute;Debug attribute setting"
                   + ",TTList;Dynamic temp-tables and buffers"
+                  + ",RecordLocks;List record locks"
                   + ",UserControls;View user controls"
                   + ",ContainerObjects;View container objects"
                   + (IF SEARCH("protools/_ppmgr.r") NE ? AND PROGRESS = "full" THEN
@@ -1155,6 +1177,9 @@ DO WITH FRAM {&FRAME-NAME}:
                     + ",ExecFunction;Excecute function"
                     + ",DumpStaticAsLibTables;Dump static ASlib tables"
                      ELSE "")
+                  + (IF SEARCH("viper.p") NE ? THEN
+                      ",Viper;Generate Viper design"
+                     ELSE "")   
                   + ",SetDebugAlert;Set DEBUG-ALERT flag"   
                   + ",SetSessionAttr;Set session attribute"   
                   + ",LogMethods;Log methods"
@@ -1163,6 +1188,8 @@ DO WITH FRAM {&FRAME-NAME}:
                   + ",LogServerTrans;Log transactions to custom log file"
                   + ",ViewQueryLog;View query log"
                   + ",ViewServerTransLog;View server trans log"
+                  + ",setLogMgrFile;Set LOG-MANAGER file name"
+                  + ",viewLogMgrFile;View LOG-MANAGER file"
                   + ",ViewMem;View memory usage"
                   + ",ViewPropath;View PROPATH"
                   + ",SearchPropath;Search for file in PROPATH"
@@ -1366,9 +1393,8 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE NewRecord C-Win
-PROCEDURE NewRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE NewRecord C-Win 
+PROCEDURE NewRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -1386,11 +1412,9 @@ IF JBoxSession:Instance:PromptValueOk THEN DO:
 END.  
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OpenFileRecord C-Win 
 PROCEDURE OpenFileRecord :
@@ -1414,10 +1438,26 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OS-COMMANDRecord C-Win 
+PROCEDURE OS-COMMANDRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cCmd AS CHAR NO-UNDO.
+DEF VAR iReturn AS INT  NO-UNDO.
 
+RUN JBoxAskForValue.w ("Enter OS-COMMAND","CHARACTER|x(320)",INPUT-OUTPUT cCmd,OUTPUT iReturn).
+IF iReturn = 2 THEN 
+  OS-COMMAND VALUE(cCmd).
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OS-COMMAND_NO-WAITRecord C-Win
-PROCEDURE OS-COMMAND_NO-WAITRecord:
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OS-COMMAND_NO-WAITRecord C-Win 
+PROCEDURE OS-COMMAND_NO-WAITRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
@@ -1431,31 +1471,9 @@ IF iReturn = 2 THEN
 
 
 END PROCEDURE.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE OS-COMMANDRecord C-Win
-PROCEDURE OS-COMMANDRecord:
-/*------------------------------------------------------------------------------
- Purpose:
- Notes:
-------------------------------------------------------------------------------*/
-DEF VAR cCmd AS CHAR NO-UNDO.
-DEF VAR iReturn AS INT  NO-UNDO.
-
-RUN JBoxAskForValue.w ("Enter OS-COMMAND","CHARACTER|x(320)",INPUT-OUTPUT cCmd,OUTPUT iReturn).
-IF iReturn = 2 THEN 
-  OS-COMMAND VALUE(cCmd).
-
-END PROCEDURE.
-  
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE PidCmdRecord C-Win 
 PROCEDURE PidCmdRecord :
@@ -1516,14 +1534,30 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ProToolsRecord C-Win
-PROCEDURE ProToolsRecord:
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ProToolsRecord C-Win 
+PROCEDURE ProToolsRecord :
 /*------------------------------------------------------------------------------
  Purpose:
  Notes:
 ------------------------------------------------------------------------------*/
 RUN "protools/_protool.p" PERSISTENT.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE RecordLocksRecord C-Win
+PROCEDURE RecordLocksRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR httLocks AS HANDLE NO-UNDO.
+
+httLocks = JBoxServerAPI:Instance:GetTempTable("jbadmin_checklocks.p","").
+RUN ToExcelViaFile.p (httLocks,-2).
 
 END PROCEDURE.
   
@@ -1707,6 +1741,30 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE setLogMgrFileRecord C-Win
+PROCEDURE setLogMgrFileRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cFileName  AS CHAR NO-UNDO.
+DEF VAR iReturn    AS INT  NO-UNDO.
+
+cFileName = LOG-MANAGER:LOGFILE-NAME.
+IF cFileName = ? THEN cFileName = SESSION:TEMP-DIR + "myLog.log".
+
+RUN JBoxAskForValue.w ("LOG-MANAGER:LOGFILE-NAME","CHARACTER|x(50)|" + cFileName + "|get_filename",INPUT-OUTPUT cFileName,OUTPUT iReturn).
+IF iReturn = 2 THEN 
+  LOG-MANAGER:LOGFILE-NAME = cFileName. 
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE SetSessionAttrRecord C-Win 
 PROCEDURE SetSessionAttrRecord :
@@ -1892,6 +1950,23 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE viewLogMgrFileRecord C-Win
+PROCEDURE viewLogMgrFileRecord:
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+IF LOG-MANAGER:LOGFILE-NAME NE ? AND SEARCH(LOG-MANAGER:LOGFILE-NAME) NE ? THEN
+  JBoxFunctions:Instance:viewFile(LOG-MANAGER:LOGFILE-NAME).
+
+END PROCEDURE.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViewMemRecord C-Win 
 PROCEDURE ViewMemRecord :
 /*------------------------------------------------------------------------------
@@ -1977,6 +2052,33 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE ViperRecord C-Win 
+PROCEDURE ViperRecord :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+IF cmbWindow:SCREEN-VALUE IN FRAME {&FRAME-NAME} = ? THEN DO:
+  MESSAGE "Select a window first"
+    VIEW-AS ALERT-BOX INFO BUTTONS OK.
+  RETURN.
+END.
+
+DEF VAR hbTableF AS HANDLE NO-UNDO.
+
+EMPTY TEMP-TABLE ttTableFlds.
+
+hbTableF = BUFFER ttTableFlds:HANDLE.
+
+BuildViperGrp(hBrowseObject:QUERY:GET-BUFFER-HANDLE (1)::hObject).
+
+RUN ffDlgOptions.w (hbTableF,"viper",OUTPUT bOK).
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE WidgetAttributesRecord C-Win 
 PROCEDURE WidgetAttributesRecord :
 /*------------------------------------------------------------------------------
@@ -2032,6 +2134,57 @@ END PROCEDURE.
 &ANALYZE-RESUME
 
 /* ************************  Function Implementations ***************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION BuildViperGrp C-Win 
+FUNCTION BuildViperGrp RETURNS LOGICAL
+  ( INPUT ihObject AS HANDLE ) :
+/*------------------------------------------------------------------------------
+  Purpose:
+------------------------------------------------------------------------------*/
+DEF VAR cTableName  AS CHAR NO-UNDO.
+DEF VAR cObjectType AS CHAR NO-UNDO.
+DEF VAR ix          AS INT  NO-UNDO.
+DEF VAR hChildObj   AS HANDLE NO-UNDO.
+
+DO WITH FRAME {&FRAME-NAME}:
+  cObjectType = DYNAMIC-FUNCTION("getObjectType",ihObject).
+  cTableName = DYNAMIC-FUNCTION("getAttribute",ihObject,"baseTable").
+  IF cObjectType = "browse" THEN
+    DO ix = 1 TO ihObject:NUM-COLUMNS:
+      CREATE ttTableFlds.
+      ASSIGN ttTableFlds.cTable      = cTableName
+             ttTableFlds.cTtFld      = ihObject:GET-BROWSE-COLUMN (ix):NAME
+             ttTableFlds.cDbFld      = DYNAMIC-FUNCTION("getAttribute",ihObject,"orgdbfield" + ttTableFlds.cTtFld)
+             ttTableFlds.cLabel      = ihObject:GET-BROWSE-COLUMN (ix):LABEL
+             ttTableFlds.cFormat     = ihObject:GET-BROWSE-COLUMN (ix):FORMAT
+             ttTableFlds.fWidthChars = ihObject:GET-BROWSE-COLUMN (ix):WIDTH-CHARS
+             ttTableFlds.cDataType   = ihObject:GET-BROWSE-COLUMN (ix):DATA-TYPE
+             ttTableFlds.iSeq        = ix
+             .
+    END. 
+  ELSE IF cObjectType = "query" THEN
+    DO ix = 1 TO ihObject:GET-BUFFER-HANDLE(1):NUM-FIELDS:
+      CREATE ttTableFlds.
+      ASSIGN ttTableFlds.cTable      = cTableName
+             ttTableFlds.cTtFld      = ihObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ix):NAME
+             ttTableFlds.cDbFld      = DYNAMIC-FUNCTION("getAttribute",ihObject,"orgdbfield" + ttTableFlds.cTtFld)
+             ttTableFlds.cLabel      = ihObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ix):LABEL
+             ttTableFlds.cFormat     = ihObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ix):FORMAT
+             ttTableFlds.fWidthChars = ihObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ix):WIDTH-CHARS
+             ttTableFlds.cDataType   = ihObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ix):DATA-TYPE
+             ttTableFlds.iSeq        = ix
+             .
+    END. 
+  hChildObj = DYNAMIC-FUNCTION("getLinkedObject",ihObject,"parent","to").
+  IF VALID-HANDLE(hChildObj) THEN BuildViperGrp(hChildObj).
+END.
+
+RETURN YES.
+
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION BuildWindowList C-Win 
 FUNCTION BuildWindowList RETURNS LOGICAL
@@ -2440,9 +2593,8 @@ END FUNCTION.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCurrentWindowHandle C-Win
-FUNCTION getCurrentWindowHandle RETURNS HANDLE 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getCurrentWindowHandle C-Win 
+FUNCTION getCurrentWindowHandle RETURNS HANDLE
   (  ):
 /*------------------------------------------------------------------------------
  Purpose:
@@ -2456,11 +2608,9 @@ DO WITH FRAME {&FRAME-NAME}:
 END.
 
 END FUNCTION.
-  
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
-
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getProcNameForWindow C-Win 
 FUNCTION getProcNameForWindow RETURNS CHARACTER

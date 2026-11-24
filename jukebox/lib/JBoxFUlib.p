@@ -55,26 +55,26 @@ DEF VAR cSubProcessWorkDir  AS CHAR NO-UNDO.
   DEF VAR oCmd AS JBoxCmd NO-UNDO.
 &ENDIF
 
-/* Open multiple files: */
-&GLOBAL-DEFINE OFN_OVERWRITEPROMPT  2
-&GLOBAL-DEFINE OFN_HIDEREADONLY     4
-&GLOBAL-DEFINE OFN_NOCHANGEDIR      8
-&GLOBAL-DEFINE OFN_ALLOWMULTISELECT 512
-&GLOBAL-DEFINE OFN_PATHMUSTEXIST    2048
-&GLOBAL-DEFINE OFN_FILEMUSTEXIST    4096
-&GLOBAL-DEFINE OFN_NOREADONLYRETURN 32768
-&GLOBAL-DEFINE OFN_EXPLORER         524288
+/*/* Open multiple files: */                          */
+/*&GLOBAL-DEFINE OFN_OVERWRITEPROMPT  2               */
+/*&GLOBAL-DEFINE OFN_HIDEREADONLY     4               */
+/*&GLOBAL-DEFINE OFN_NOCHANGEDIR      8               */
+/*&GLOBAL-DEFINE OFN_ALLOWMULTISELECT 512             */
+/*&GLOBAL-DEFINE OFN_PATHMUSTEXIST    2048            */
+/*&GLOBAL-DEFINE OFN_FILEMUSTEXIST    4096            */
+/*&GLOBAL-DEFINE OFN_NOREADONLYRETURN 32768           */
+/*&GLOBAL-DEFINE OFN_EXPLORER         524288          */
+/*                                                    */
+/*&IF "{&OPSYS}" = "WIN32" &THEN                      */
+/*PROCEDURE GetOpenFileNameA EXTERNAL "comdlg32.dll" :*/
+/*  DEFINE INPUT  PARAMETER lpOfn   AS LONG.          */
+/*  DEFINE RETURN PARAMETER pReturn AS LONG.          */
+/*END PROCEDURE.                                      */
 
-&IF "{&OPSYS}" = "WIN32" &THEN
-PROCEDURE GetOpenFileNameA EXTERNAL "comdlg32.dll" :
-  DEFINE INPUT  PARAMETER lpOfn   AS LONG.
-  DEFINE RETURN PARAMETER pReturn AS LONG.
-END PROCEDURE.
-
-PROCEDURE GetCurrentProcessId EXTERNAL "KERNEL32.DLL":
-  DEFINE RETURN PARAMETER intProcessHandle AS LONG.
-END PROCEDURE.
-&ENDIF
+/*PROCEDURE GetCurrentProcessId EXTERNAL "KERNEL32.DLL":*/
+/*  DEFINE RETURN PARAMETER intProcessHandle AS LONG.   */
+/*END PROCEDURE.                                        */
+/*&ENDIF                                                */
 
 /* Doc handling: */
 DEF VAR httDoc          AS HANDLE NO-UNDO.
@@ -379,6 +379,45 @@ FUNCTION getFirstDayOfMonthSomeMonthsBack RETURNS DATE
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getFirstDayOfNextMonth) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextMonth Procedure
+FUNCTION getFirstDayOfNextMonth RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextQuarter Procedure
+FUNCTION getFirstDayOfNextQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfNextYear Procedure
+FUNCTION getFirstDayOfNextYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getFirstDayOfPriorMonth) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorMonth Procedure 
@@ -389,6 +428,58 @@ FUNCTION getFirstDayOfPriorMonth RETURNS DATE
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorQuarter Procedure
+FUNCTION getFirstDayOfPriorQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfPriorYear Procedure
+FUNCTION getFirstDayOfPriorYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfQuarter Procedure
+FUNCTION getFirstDayOfQuarter RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getFirstDayOfYear Procedure
+FUNCTION getFirstDayOfYear RETURNS DATE 
+  (input ipDate as date) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getIsOfficeComHandleActive) = 0 &THEN
 
@@ -969,21 +1060,32 @@ FUNCTION ViewOpenDocError RETURNS CHARACTER
 cGZIP = SEARCH("gzip.exe").
 
 &IF "{&OPSYS}" = "WIN32" &THEN
-RUN GetCurrentProcessId (OUTPUT iPid).
+iPid = System.Diagnostics.Process:GetCurrentProcess():Id.
+//RUN GetCurrentProcessId (OUTPUT iPid).
 
 DEF VAR cWmicFile AS CHAR NO-UNDO.
 DEF VAR cProcess  AS CHAR NO-UNDO.
 cWmicFile = getUniqueFileName().
 
-OS-COMMAND SILENT VALUE("WMIC /OUTPUT:" + cWmicFile + " path win32_process get Caption,Processid,Commandline") NO-ERROR.
+OS-COMMAND SILENT VALUE("WMIC /OUTPUT:" + cWmicFile + " path win32_process get Caption,Processid,Commandline").
+REPEAT:
+  ix = ix + 1.
+  IF ix MOD 10000 = 0 THEN DO:
+    IF SEARCH(cWmicFile) NE ? THEN DO:
+      FILE-INFO:FILE-NAME = SEARCH(cWmicFile).
+      IF FILE-INFO:FILE-SIZE > 100 THEN LEAVE.
+    END.
+  END.
+  IF ix > 1000000 THEN LEAVE.
+END.
+
 IF SEARCH(cWmicFile) NE ? THEN DO:
   INPUT FROM VALUE(cWmicFile).
   REPEAT:
     IMPORT UNFORMATTED cProcess.
     cProcess = TRIM(cProcess).
     IF cProcess BEGINS "prow" AND cProcess MATCHES "*" + STRING(iPid) THEN DO:
-      
-      REPEAT WHILE cProcess MATCHES "*  *":
+      REPEAT WHILE INDEX(cProcess,"  ") > 0:
         cProcess = REPLACE(cProcess,"  "," ").
       END.    
       cExeFile = ENTRY(2,cProcess," ").
@@ -1001,6 +1103,22 @@ IF SEARCH(cWmicFile) NE ? THEN DO:
   END.
   INPUT CLOSE.
   OS-DELETE VALUE(cWmicFile) NO-ERROR.
+END.  
+ELSE DO:
+  DO ix = 0 TO System.Environment:GetCommandLineArgs():Length - 1:
+    cProcess = cProcess + (IF cProcess NE "" THEN " " ELSE "") + TRIM(STRING(System.Environment:GetCommandLineArgs():getValue(ix))).
+  END.  
+  cExeFile = '"' + ENTRY(1,cProcess," ") + '"'.
+  DO ix = 2 TO NUM-ENTRIES(cProcess," ") - 1:
+    IF ENTRY(ix,cProcess," ") BEGINS "-" THEN DO:
+      CREATE ttStartup.
+      ttStartup.cParam = ENTRY(ix,cProcess," ").
+      IF NOT ENTRY(ix + 1,cProcess," ") BEGINS "-" THEN
+        ttStartup.cValue = ENTRY(ix + 1,cProcess," ").
+      IF ttStartup.cParam BEGINS "-ini" THEN
+        cIniFile = ttStartup.cValue.  
+    END.
+  END.
 END.  
 &ENDIF
 
@@ -1647,6 +1765,8 @@ DEF VAR cOpenDocMsg AS CHAR NO-UNDO.
 DEF VAR oServer AS COM-HANDLE NO-UNDO.
 DEF VAR cDocType AS CHAR NO-UNDO.
 DEF VAR cOpenUsing AS CHAR NO-UNDO.
+DEF VAR ix         AS INT NO-UNDO.
+DEF VAR iOsErr     AS INT NO-UNDO.
 
 OUTPUT STREAM strmDoc TO VALUE(icOutFile) NO-MAP BINARY NO-CONVERT.
 EXPORT STREAM strmDoc impDocument.
@@ -1655,8 +1775,45 @@ OUTPUT STREAM strmDoc CLOSE.
 IF bCompressFiles AND cGZIP NE ? AND icOutFile MATCHES "*.gz" THEN DO:
 /*  OS-COMMAND SILENT VALUE(SEARCH("gzip.exe") + ' -df "' + icOutFile + '"').*/
 /*  oCMD = NEW jboxcmd(SEARCH("gzip.exe"),'-df ' + quoter(icOutFile)).*/
+  IF SEARCH(RIGHT-TRIM(icOutFile,".gz")) NE ? THEN DO:
+    &IF "{&OPSYS}" = "WIN32" &then
+      do on error undo, throw:
+        System.IO.File:Delete(RIGHT-TRIM(icOutFile,".gz")).
+        CATCH eOS AS Progress.Lang.Error :
+          iOsErr = eOS:GetMessageNum(1).  
+        END CATCH.
+      end.
+    &else
+      OS-DELETE VALUE(RIGHT-TRIM(icOutFile,".gz")).
+      iOsErr = OS-ERROR.
+    &ENDIF    
+    IF iOsErr <> 0 THEN DO:
+      IF DYNAMIC-FUNCTION("Scandinavian") THEN
+        MESSAGE "Filen " RIGHT-TRIM(icOutFile,".gz") " er allerede åpen" SKIP
+                VIEW-AS ALERT-BOX.
+      ELSE          
+        MESSAGE "The file " RIGHT-TRIM(icOutFile,".gz") " is already open" SKIP
+              VIEW-AS ALERT-BOX.
+      RETURN NO.
+    END.  
+  END.          
   &IF "{&OPSYS}" = "WIN32" &then
-    oCMD = NEW JBoxCmd(SEARCH("gzip.exe"),'-df ' + QUOTER(icOutFile)).
+    IF ibOpen THEN do on error undo, throw:
+      if System.IO.File:Exists(search("gzip.exe")) then 
+        oCMD = NEW JBoxCmd(SEARCH("gzip.exe"),'-df ' + QUOTER(icOutFile),5).
+      CATCH eOS AS Progress.Lang.Error :
+        MESSAGE 'WIN32 error:gzip.exe:' eOS:GetMessage(1)
+        VIEW-AS ALERT-BOX.  
+      END CATCH.
+    end.
+    ELSE do on error undo, throw:  
+      if System.IO.File:Exists(search("gzip.exe")) then 
+      oCMD = NEW JBoxCmd(SEARCH("gzip.exe"),'-df ' + QUOTER(icOutFile)).
+      CATCH eOS AS Progress.Lang.Error :
+        MESSAGE 'WIN32 error2:gzip.exe:' eOS:GetMessage(1)
+        VIEW-AS ALERT-BOX.  
+      END CATCH.
+    end.
   &else
     OS-COMMAND SILENT VALUE(SEARCH("gzip.exe") + ' -df "' + icOutFile + '"').
   &ENDIF
@@ -1672,7 +1829,9 @@ END.
 IF ibOpen THEN DO:
   cDocType = ENTRY(NUM-ENTRIES(icOutFile,"."),icOutFile,".").
   cOpenUsing = DYNAMIC-FUNCTION("getAttribute",SESSION,"ProgramToOpenFilType" + cDocType).
-  IF cOpenUsing NE "" AND SEARCH(cOpenUsing) NE ? THEN DO:
+  IF cOpenUsing = "System" THEN
+    System.Diagnostics.Process:Start(icOutFile).
+  ELSE IF cOpenUsing NE "" AND SEARCH(cOpenUsing) NE ? THEN DO:
     FILE-INFO:FILE-NAME = SEARCH(cOpenUsing).
     OS-COMMAND NO-WAIT VALUE(FILE-INFO:FULL-PATHNAME + " " + icOutFile).
   END.
@@ -2215,6 +2374,77 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getFirstDayOfNextMonth) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextMonth Procedure
+FUNCTION getFirstDayOfNextMonth RETURNS DATE 
+  ( input ipDate as date ):
+
+  IF ipDate = ? THEN ipDate = TODAY.
+
+  IF MONTH(TODAY) = 12 THEN
+    RETURN DATE(01,01,YEAR(TODAY) + 1).
+  ELSE 
+    RETURN DATE(MONTH(TODAY) + 1,1,YEAR(TODAY)).  
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextQuarter Procedure
+FUNCTION getFirstDayOfNextQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(4,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(10,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(01,01,YEAR(ipDate) + 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfNextYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfNextYear Procedure
+FUNCTION getFirstDayOfNextYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate) + 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getFirstDayOfPriorMonth) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfPriorMonth Procedure 
@@ -2235,6 +2465,103 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfPriorQuarter Procedure
+FUNCTION getFirstDayOfPriorQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(10,01,YEAR(ipDate) - 1).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(01,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(04,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+    
+  return tmpResult.
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfPriorYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfPriorYear Procedure
+FUNCTION getFirstDayOfPriorYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate) - 1).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfQuarter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfQuarter Procedure
+FUNCTION getFirstDayOfQuarter RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  IF MONTH(ipDate) < 4 THEN
+    tmpResult = DATE(01,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 7 THEN  
+    tmpResult = DATE(04,01,YEAR(ipDate)).
+  ELSE IF MONTH(ipDate) < 10 THEN  
+    tmpResult = DATE(07,01,YEAR(ipDate)).
+  ELSE  
+    tmpResult = DATE(10,01,YEAR(ipDate)).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
+&IF DEFINED(EXCLUDE-getFirstDayOfYear) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getFirstDayOfYear Procedure
+FUNCTION getFirstDayOfYear RETURNS DATE 
+  ( input ipDate as date ):
+
+  define variable tmpResult as date no-undo.
+  
+  tmpResult = DATE(01,01,YEAR(ipDate)).
+    
+  return tmpResult.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getIsOfficeComHandleActive) = 0 &THEN
 
@@ -2861,7 +3188,13 @@ DO ix = 1 TO NUM-ENTRIES(icFileNames,";"):
     OS-COPY VALUE(FILE-INFO:FULL-PATHNAME) VALUE(cFileName).
     
     &IF "{&OPSYS}" = "WIN32" &THEN
-      oCmd = NEW JBoxCmd(SEARCH("gzip.exe"),' ' + QUOTER(cFileName)).
+      IF System.IO.File:Exists(SEARCH("gzip.exe")) and System.IO.File:Exists(cFileName) then do on error undo, throw: 
+        oCmd = NEW JBoxCmd(SEARCH("gzip.exe"),' ' + QUOTER(cFileName)).
+        CATCH eOS AS Progress.Lang.Error :
+          MESSAGE 'Feil i loaddocs:gzip:' eOS:GetMessage(1)
+          VIEW-AS ALERT-BOX.  
+        END CATCH.
+      end.
     &ELSE
       OS-COMMAND SILENT VALUE(SEARCH("gzip.exe") + ' "' + cFileName + '"').
     &ENDIF
@@ -3002,115 +3335,121 @@ FUNCTION SelectFileNames RETURNS CHARACTER (
                                    "All (doc,rtf,xls,mdb,ppt)|*.doc;*.rtf;*.xls;*.mdb;*.ppt"  
 ------------------------------------------------------------------------------*/
   DEF VAR FileNames        AS CHARACTER NO-UNDO.
-
+  def var oSelectFiles as JBoxSelectFiles no-undo.
   IF PROVERSION GE "11" THEN
     RUN SelectFileNames.p (FilterList,InitialDirectory,DialogTitle,OUTPUT FileNames).
   ELSE DO:
-      
-
-    DEF VAR iOK              AS INTEGER   NO-UNDO.
-    
-    DEFINE VARIABLE Flags           AS INTEGER NO-UNDO.
-    DEFINE VARIABLE lpOfn           AS MEMPTR  NO-UNDO.
-    DEFINE VARIABLE lpstrFilter     AS MEMPTR  NO-UNDO.
-    DEFINE VARIABLE lpstrTitle      AS MEMPTR  NO-UNDO.
-    DEFINE VARIABLE lpstrInitialDir AS MEMPTR  NO-UNDO.
-    DEFINE VARIABLE lpstrFile       AS MEMPTR  NO-UNDO.
-    DEFINE VARIABLE offset          AS INTEGER NO-UNDO.
- 
-    IF VALID-HANDLE(SOURCE-PROCEDURE:CURRENT-WINDOW) THEN
-      CURRENT-WINDOW = SOURCE-PROCEDURE:CURRENT-WINDOW.
-
-    /* Flags controls the behaviour and appearance of the dialog-box. 
-             There is much room for experiments. This combination works nice: */
-    Flags = {&OFN_ALLOWMULTISELECT} + 
-            {&OFN_EXPLORER} + 
-            {&OFN_NOCHANGEDIR}.
- 
-    /* convert the "|"-separated list of filters to a CHR(0)-separated 
-       list and make sure it's terminated with a double CHR(0): */
-    FilterList = TRIM(FilterList,"|") + "|". /* this will cause the double CHR(0) */
-    SET-SIZE(lpstrFilter)      = LENGTH(FilterList) + 1.
-    PUT-STRING(lpstrFilter, 1) = FilterList.
-    DO offset=1 TO GET-SIZE(lpstrFilter) :
-       IF GET-BYTE(lpstrFilter,offset)=124 /* =ASC("|") */ THEN 
-          PUT-BYTE(lpstrFilter,offset)=0.
-    END.
- 
-    /* get memory-pointers to the string parameters: */
-    SET-SIZE(lpstrFile)   = 1024. /* room for a couple of files...     */
-    PUT-BYTE(lpstrFile,1) = 0.    /* don't initialize dialog to a file */
-   
-    SET-SIZE(lpstrTitle) = LENGTH(DialogTitle) + 1.
-    PUT-STRING(lpstrTitle,1) = DialogTitle.
-   
-    IF InitialDirectory NE ? THEN DO:
-       SET-SIZE(lpstrInitialDir) = LENGTH(InitialDirectory) + 1.
-       PUT-STRING(lpstrInitialDir,1) = InitialDirectory.
-    END.
- 
-    /* create and initialize an OPENFILENAME structure: */
-    SET-SIZE(lpOfn) = 76. /* = {&OPENFILENAME_SIZE_VERSION_400} 
-                               to be used in NT4 and Windows 95/98. 
-                               Windows 2000 supports a couple more fields. */
- 
-    /* size */              PUT-LONG (lpOfn, 1) = GET-SIZE(lpOfn).
-    /* hwndOwner */         PUT-LONG (lpOfn, 5) = CURRENT-WINDOW:HWND.
-    /* hInstance */         PUT-LONG (lpOfn, 9) = 0.
-    /* lpstrFilter */       PUT-LONG (lpOfn,13) = GET-POINTER-VALUE(lpstrFilter).
-    /* lpstrCustomFilter */ PUT-LONG (lpOfn,17) = 0.
-    /* nMaxCustFilter */    PUT-LONG (lpOfn,21) = 0.
-    /* nFilterIndex */      PUT-LONG (lpOfn,25) = 0.
-    /* lpstrFile */         PUT-LONG (lpOfn,29) = GET-POINTER-VALUE(lpstrFile).
-    /* nMaxFile */          PUT-LONG (lpOfn,33) = GET-SIZE(lpstrFile).
-    /* lpstrFileTitle */    PUT-LONG (lpOfn,37) = 0.
-    /* nMaxFileTitle */     PUT-LONG (lpOfn,41) = 0.
-    /* lpstrInitialDir */   PUT-LONG (lpOfn,45) = GET-POINTER-VALUE(lpstrInitialDir).
-    /* lpstrTitle */        PUT-LONG (lpOfn,49) = GET-POINTER-VALUE(lpstrTitle).
-    /* flags */             PUT-LONG (lpOfn,53) = Flags.
-     
-    /* nFileOffset */       PUT-SHORT(lpOfn,57) = 0.
-    /* nFileExtension */    PUT-SHORT(lpOfn,59) = 0.
-    /* lpstrDefExt */       PUT-LONG (lpOfn,61) = 0.
-    /* lCustData */         PUT-LONG (lpOfn,65) = 0.
-    /* lpfnHook */          PUT-LONG (lpOfn,69) = 0.
-    /* lpTemplateName */    PUT-LONG (lpOfn,73) = 0.
-   
-    /* run the dialog: */
-    RUN GetOpenFileNameA (GET-POINTER-VALUE(lpOfn), OUTPUT iOK).
- 
-    /* release memory: */
-    SET-SIZE(lpstrFilter)     = 0.
-    SET-SIZE(lpOfn)           = 0.
-    SET-SIZE(lpstrTitle)      = 0.
-    SET-SIZE(lpstrInitialDir) = 0.
- 
-    /* lpstrFilter now contains a path, followed by CHR(0), followed 
-       by a CHR(0)-separated list of filenames, terminated by a double CHR(0). 
-       Unless the user selected only one file: then lpstrFilter will simply
-       contain the fully-qualified filename.
-       Either way, let's convert the result to a comma-separated list of 
-       fully-qualified filenames: */
- 
-    IF iOK NE 0 THEN DO:
-      DEFINE VARIABLE cPath AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE cList AS CHARACTER NO-UNDO.
-      DEFINE VARIABLE cFile AS CHARACTER NO-UNDO.
-   
-      ASSIGN cPath  = GET-STRING(lpstrFile,1)
-             offset = LENGTH(cPath) + 2.
-   
-      REPEAT:
-        cFile = GET-STRING(lpstrFile, offset).
-        IF cFile = "" THEN LEAVE.
-        ASSIGN cList  = cList + ';' + cPath +  '\' + cFile
-               offset = offset + LENGTH(cFile) + 1.
-      END.
-      ASSIGN cList     = TRIM(cList, ";")
-             FileNames = IF cList = "" THEN cPath ELSE cList.
-    END.
-   
-    SET-SIZE(lpstrFile) = 0.
+    case OPSYS:
+      when 'win32' THEN DO:
+        oSelectFiles = new JBoxSelectFiles(FilterList, InitialDirectory, DialogTitle).
+        RETURN oSelectFiles:FileNames.
+      END.  
+    end case.
+/*                                                                                     */
+/*                                                                                     */
+/*    DEF VAR iOK              AS INTEGER   NO-UNDO.                                   */
+/*                                                                                     */
+/*    DEFINE VARIABLE Flags           AS INTEGER NO-UNDO.                              */
+/*    DEFINE VARIABLE lpOfn           AS MEMPTR  NO-UNDO.                              */
+/*    DEFINE VARIABLE lpstrFilter     AS MEMPTR  NO-UNDO.                              */
+/*    DEFINE VARIABLE lpstrTitle      AS MEMPTR  NO-UNDO.                              */
+/*    DEFINE VARIABLE lpstrInitialDir AS MEMPTR  NO-UNDO.                              */
+/*    DEFINE VARIABLE lpstrFile       AS MEMPTR  NO-UNDO.                              */
+/*    DEFINE VARIABLE offset          AS INTEGER NO-UNDO.                              */
+/*                                                                                     */
+/*    IF VALID-HANDLE(SOURCE-PROCEDURE:CURRENT-WINDOW) THEN                            */
+/*      CURRENT-WINDOW = SOURCE-PROCEDURE:CURRENT-WINDOW.                              */
+/*                                                                                     */
+/*    /* Flags controls the behaviour and appearance of the dialog-box.                */
+/*             There is much room for experiments. This combination works nice: */     */
+/*    Flags = {&OFN_ALLOWMULTISELECT} +                                                */
+/*            {&OFN_EXPLORER} +                                                        */
+/*            {&OFN_NOCHANGEDIR}.                                                      */
+/*                                                                                     */
+/*    /* convert the "|"-separated list of filters to a CHR(0)-separated               */
+/*       list and make sure it's terminated with a double CHR(0): */                   */
+/*    FilterList = TRIM(FilterList,"|") + "|". /* this will cause the double CHR(0) */ */
+/*    SET-SIZE(lpstrFilter)      = LENGTH(FilterList) + 1.                             */
+/*    PUT-STRING(lpstrFilter, 1) = FilterList.                                         */
+/*    DO offset=1 TO GET-SIZE(lpstrFilter) :                                           */
+/*       IF GET-BYTE(lpstrFilter,offset)=124 /* =ASC("|") */ THEN                      */
+/*          PUT-BYTE(lpstrFilter,offset)=0.                                            */
+/*    END.                                                                             */
+/*                                                                                     */
+/*    /* get memory-pointers to the string parameters: */                              */
+/*    SET-SIZE(lpstrFile)   = 1024. /* room for a couple of files...     */            */
+/*    PUT-BYTE(lpstrFile,1) = 0.    /* don't initialize dialog to a file */            */
+/*                                                                                     */
+/*    SET-SIZE(lpstrTitle) = LENGTH(DialogTitle) + 1.                                  */
+/*    PUT-STRING(lpstrTitle,1) = DialogTitle.                                          */
+/*                                                                                     */
+/*    IF InitialDirectory NE ? THEN DO:                                                */
+/*       SET-SIZE(lpstrInitialDir) = LENGTH(InitialDirectory) + 1.                     */
+/*       PUT-STRING(lpstrInitialDir,1) = InitialDirectory.                             */
+/*    END.                                                                             */
+/*                                                                                     */
+/*    /* create and initialize an OPENFILENAME structure: */                           */
+/*    SET-SIZE(lpOfn) = 76. /* = {&OPENFILENAME_SIZE_VERSION_400}                      */
+/*                               to be used in NT4 and Windows 95/98.                  */
+/*                               Windows 2000 supports a couple more fields. */        */
+/*                                                                                     */
+/*    /* size */              PUT-LONG (lpOfn, 1) = GET-SIZE(lpOfn).                   */
+/*    /* hwndOwner */         PUT-LONG (lpOfn, 5) = CURRENT-WINDOW:HWND.               */
+/*    /* hInstance */         PUT-LONG (lpOfn, 9) = 0.                                 */
+/*    /* lpstrFilter */       PUT-LONG (lpOfn,13) = GET-POINTER-VALUE(lpstrFilter).    */
+/*    /* lpstrCustomFilter */ PUT-LONG (lpOfn,17) = 0.                                 */
+/*    /* nMaxCustFilter */    PUT-LONG (lpOfn,21) = 0.                                 */
+/*    /* nFilterIndex */      PUT-LONG (lpOfn,25) = 0.                                 */
+/*    /* lpstrFile */         PUT-LONG (lpOfn,29) = GET-POINTER-VALUE(lpstrFile).      */
+/*    /* nMaxFile */          PUT-LONG (lpOfn,33) = GET-SIZE(lpstrFile).               */
+/*    /* lpstrFileTitle */    PUT-LONG (lpOfn,37) = 0.                                 */
+/*    /* nMaxFileTitle */     PUT-LONG (lpOfn,41) = 0.                                 */
+/*    /* lpstrInitialDir */   PUT-LONG (lpOfn,45) = GET-POINTER-VALUE(lpstrInitialDir).*/
+/*    /* lpstrTitle */        PUT-LONG (lpOfn,49) = GET-POINTER-VALUE(lpstrTitle).     */
+/*    /* flags */             PUT-LONG (lpOfn,53) = Flags.                             */
+/*                                                                                     */
+/*    /* nFileOffset */       PUT-SHORT(lpOfn,57) = 0.                                 */
+/*    /* nFileExtension */    PUT-SHORT(lpOfn,59) = 0.                                 */
+/*    /* lpstrDefExt */       PUT-LONG (lpOfn,61) = 0.                                 */
+/*    /* lCustData */         PUT-LONG (lpOfn,65) = 0.                                 */
+/*    /* lpfnHook */          PUT-LONG (lpOfn,69) = 0.                                 */
+/*    /* lpTemplateName */    PUT-LONG (lpOfn,73) = 0.                                 */
+/*                                                                                     */
+/*    /* run the dialog: */                                                            */
+/*    RUN GetOpenFileNameA (GET-POINTER-VALUE(lpOfn), OUTPUT iOK).                     */
+/*                                                                                     */
+/*    /* release memory: */                                                            */
+/*    SET-SIZE(lpstrFilter)     = 0.                                                   */
+/*    SET-SIZE(lpOfn)           = 0.                                                   */
+/*    SET-SIZE(lpstrTitle)      = 0.                                                   */
+/*    SET-SIZE(lpstrInitialDir) = 0.                                                   */
+/*                                                                                     */
+/*    /* lpstrFilter now contains a path, followed by CHR(0), followed                 */
+/*       by a CHR(0)-separated list of filenames, terminated by a double CHR(0).       */
+/*       Unless the user selected only one file: then lpstrFilter will simply          */
+/*       contain the fully-qualified filename.                                         */
+/*       Either way, let's convert the result to a comma-separated list of             */
+/*       fully-qualified filenames: */                                                 */
+/*                                                                                     */
+/*    IF iOK NE 0 THEN DO:                                                             */
+/*      DEFINE VARIABLE cPath AS CHARACTER NO-UNDO.                                    */
+/*      DEFINE VARIABLE cList AS CHARACTER NO-UNDO.                                    */
+/*      DEFINE VARIABLE cFile AS CHARACTER NO-UNDO.                                    */
+/*                                                                                     */
+/*      ASSIGN cPath  = GET-STRING(lpstrFile,1)                                        */
+/*             offset = LENGTH(cPath) + 2.                                             */
+/*                                                                                     */
+/*      REPEAT:                                                                        */
+/*        cFile = GET-STRING(lpstrFile, offset).                                       */
+/*        IF cFile = "" THEN LEAVE.                                                    */
+/*        ASSIGN cList  = cList + ';' + cPath +  '\' + cFile                           */
+/*               offset = offset + LENGTH(cFile) + 1.                                  */
+/*      END.                                                                           */
+/*      ASSIGN cList     = TRIM(cList, ";")                                            */
+/*             FileNames = IF cList = "" THEN cPath ELSE cList.                        */
+/*    END.                                                                             */
+/*                                                                                     */
+/*    SET-SIZE(lpstrFile) = 0.                                                         */
   END.
 
   RETURN FileNames.

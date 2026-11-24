@@ -8,40 +8,13 @@ F.ex like this:
                 DEF VAR hBuffMyTable AS HANDLE NO-UNDO.
                 hBuffMyTable = BUFFER ttMyTable:HANDLE.
 
-                DYNAMIC-FUNCTION("getMyTempTable","fill_my_table.p","",hBuffMyTable).
-Return type: LOGICAL
+                IF JBoxServerApi:Instance:getMyTempTable("fill_my_table.p","",hBuffMyTable) THEN
+		  ...
 
-   When a temp-table is passed from the client the corresponding default buffer is input param here.
-   Cleanup for buffer and TT is taken care of by the parent of this procedure which is jbserv_runproc.p
    
    Similar procedure can be used for the ProcessQuery and processSelectedRows methods.
 
-   To invoke existing server logic in a custom server procedure you can start an api super procedure that exposes a set of standard functions:
-
-   DYNAMIC-FUNCTION("startASlib" IN SOURCE-PROCEDURE).
-
-   If you f.ex are creating customers in the custom .p procedure and you want to re-use the logic for assigning customer numbers that exists 
-   in the hook customCreateProc you can now f.ex make this call after creating the Customer record:
-
-   hBufCustomer = BUFFER Customer:HANDLE.
-   CREATE Customer.
-   RUN InvokeCreateProc ("customer_create.p",hBufCustomer,OUTPUT ocReturn).
-
-   Or you can re-use an existing procedure (customDeleteValProc hook) to check if a record can be deleted:
-
-   hBufFormDetail = BUFFER FormDetail:HANDLE.
-   RUN InvokeDeleteValProc ("form_detail_delete.p",hBufFormDetail,
-                                                OUTPUT ocReturn).
-   IF ocReturn = "" THEN
-     DELETE FormDetail.
-     
-   For a complete list of available functions see jbserv_api_for_server.p
-   Probably the most used functions are:  
-      DYNAMIC-FUNCTION("getASuserId")               ABhack: gau 
-      DYNAMIC-FUNCTION("getCompany")                Character value of company id. ABhack: gcom  
-                        getCompanyId                returns integer value
-      DYNAMIC-FUNCTION("getFieldList","buffer;field;field..,buffer2..","WHERE ").       ABhack: gfl      
-
+Corresponding method for dataset: getMyDataSet
 
 <CODE> 
 /* Process a set of records sent from the client
@@ -55,17 +28,9 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
 
 DEF VAR hQuery AS HANDLE NO-UNDO.
-DEF VAR hAsLib AS HANDLE NO-UNDO.
-
-hAsLib = DYNAMIC-FUNCTION("startASlib" IN SOURCE-PROCEDURE).
-
-/* To make the lib available to a sub-procedure: */
-FUNCTION startASlib RETURNS HANDLE():
-  RETURN hAsLib.
-END FUNCTION.  
-
 
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(ihBuffer).
@@ -88,39 +53,37 @@ FINALLY:
 END FINALLY.  
 
        
-<NAME>addSomeChildRecords
+<NAME>callServerProc
 <DESC>
 Use similar procedure to add child records after f.ex using the selector:
 
-DEF VAR cUserRowIdList AS CHAR NO-UNDO.
+DEF VAR cRowIdList AS CHAR NO-UNDO.
 DEF VAR cUserIdList    AS CHAR NO-UNDO.
 
 THIS-PROCEDURE:CURRENT-WINDOW:SENSITIVE = FALSE.
 
-cUserRowIdList = DYNAMIC-FUNCTION("getRowIdList","JBoxUserMenu,JBoxUser","",
-                                   "WHERE iJBoxMenuId = " + STRING(hFieldMap:BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE) + ",FIRST JBoxUser OF JBoxUserMenu NO-LOCK"). 
+  DEF VAR cRowIdList  AS CHAR NO-UNDO.
 
-RUN JBoxSelector.w (THIS-PROCEDURE,0,
-                    "JBoxUser;cJBoxUserId;cUserName"
-                  + (IF bWriteAccessUser THEN
-                       ";+WriteAccess|LOGICAL|yes/no|jbadmin_usergroupwriteaccess.p(ROWID"
-                      + STRING(hFieldMap:BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE)
-                      + ")|Write access"
-                     ELSE "")
-                   ,"where true",
-                    INPUT-OUTPUT cUserRowIdList,
-                    "cJBoxUserId" + (IF bWriteAccessUser THEN ",WriteAccess" ELSE ""),
-                    INPUT-OUTPUT cUserIdList,
-                    "","",
-                    OUTPUT bOK).
+  cRowIdList = JBoxServerAPI:Instance:getRowIdList("SalesRep","WHERE RepName BEGINS 'B'").
+  
+/*  JBoxServerAPI:Instance:SelectorDialog("SalesRep" */      
+  JBoxServerAPI:Instance:Selector("SalesRep"      
+                      + ";SalesRep"  
+                      + ";RepName"
+                      + ";MonthQuota[1]"
+                      + ";MonthQuota[2]"
+                      ,"where true"
+                      ,cRowIdList
+		    /*,"SalesRep" - opt list of columns who's values will be returned from the selector */ 
+		      ).
+  IF JBoxServerAPI:Instance:SelectorOk THEN
+    MESSAGE JBoxServerAPI:Instance:SelectorRowidList skip(1)
+            JBoxServerAPI:Instance:SelectorDeselectRowidList
+/*	    JBoxServerAPI:Instance:SelectorReturnValueList */
+    VIEW-AS ALERT-BOX. 
 
-THIS-PROCEDURE:CURRENT-WINDOW:SENSITIVE = TRUE.
-
-IF bOk THEN DO:
-  IF NOT DYNAMIC-FUNCTION("runproc","jbadmin_editmenu_to_users.p",
-                          STRING(hFieldMap:BUFFER-FIELD("iJBoxMenuId"):BUFFER-VALUE) + ";" + cUserIdList,?) THEN
-    DYNAMIC-FUNCTION("DoMessage",0,1,DYNAMIC-FUNCTION("getTransactionMessage"),"Feil","").
-  ELSE ViewUserLinks().
+  IF NOT JBoxServerApi:Instance:CallServerProc("<my_dot_p.p>",JBoxServerAPI:Instance:SelectorReturnValueList) THEN
+    JBoxServerApi:Instance:ViewCallMessage().
 END.
 
 
@@ -138,14 +101,8 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
 DEF VAR ix          AS INT    NO-UNDO.
 DEF VAR cUserId     AS CHAR   NO-UNDO.
-DEF VAR hAsLib 	    AS HANDLE NO-UNDO.
 
-hAsLib = DYNAMIC-FUNCTION("startASlib" IN SOURCE-PROCEDURE).
-
-/* To make the lib available to a sub-procedure: */
-FUNCTION startASlib RETURNS HANDLE():
-  RETURN hAsLib.
-END FUNCTION.  
+{incl/validatecaller.i}
 
 cUserId = ENTRY(1,icParam,"|").
 
@@ -177,15 +134,20 @@ END FINALLY.
 <DESC>
 Retrieve a dynamic temp-table from the server by calling a bl procedure. 
 
+Corresponding method for dataset: getDataSet
+
 <CODE>
-/* You can use a static temp-table on the server and transfer the handle to it like you would do with a dynamic.
-   There are orders not assigned to salesrep in the db. Hence the extra loop.
+/* Use to return a temp-table from server when the client doesn't know it's structure.
+   If you create a dynamic temp-table, you must also delete it (in the FINALLY block)
+
+   Created: <cre.date> by <cre.user>
 -----------------------------------------------------------------*/
 
-DEF INPUT  PARAM icSessionId  AS CHAR NO-UNDO. 
-DEF INPUT  PARAM icParam      AS CHAR NO-UNDO.
-DEF OUTPUT PARAM TABLE-HANDLE hTempTable.
-DEF OUTPUT PARAM ocReturn     AS CHAR NO-UNDO.
+DEF INPUT  PARAM icParam       AS CHAR NO-UNDO.
+DEF OUTPUT PARAM TABLE-HANDLE  ohTempTable.
+DEF INPUT  PARAM icSessionId   AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocReturn      AS CHAR NO-UNDO.
+DEF OUTPUT PARAM obOK          AS LOG NO-UNDO.
 
 DEF VAR iOrderStatusKey     AS INT  NO-UNDO.
 DEF VAR iSalesRepKey        AS INT  NO-UNDO INIT 1000.  /* <- to make sure that order statuses and salesreps get unique node indexes */
@@ -194,6 +156,8 @@ DEF VAR iOrderSalesrepCount AS INT  NO-UNDO.
 DEF VAR cSalesRep           AS CHAR NO-UNDO.
 DEF VAR dFrom               AS DATE NO-UNDO.
 DEF VAR dTo                 AS DATE NO-UNDO.
+
+{incl/validatesession.i}
 
 ASSIGN cSalesRep = ENTRY(1,icParam,"|")
        dFrom     = DATE(ENTRY(2,icParam,"|"))
@@ -212,7 +176,8 @@ DEF TEMP-TABLE ttOrderTotals
     FIELD iStatusCount AS INT
     INDEX idxParentNode iParentIdx cNodeLabel
     INDEX idxLabel cNodeLabel.
-hTempTable = BUFFER ttOrderTotals:HANDLE:TABLE-HANDLE.
+
+ohTempTable = TEMP-TABLE ttOrderTotals:HANDLE.
 
 FOR EACH Salesrep WHERE (IF cSalesRep NE "" THEN Salesrep.Region = cSalesRep ELSE TRUE) NO-LOCK:
   RUN GetOrders (Salesrep.Salesrep,Salesrep.Repname).
@@ -226,7 +191,9 @@ IF cSalesRep = "" THEN
       RUN GetOrders(bOrder.Salesrep,bOrder.Salesrep).
   END.
 
-DELETE OBJECT hTempTable.
+FINALLY:
+  obOk = ocReturn = "".
+END FINALLY.
 
 PROCEDURE GetOrders:
   DEF INPUT PARAM icSalesRep AS CHAR NO-UNDO.
@@ -303,7 +270,7 @@ END.
 /* Process some records from the client
    Parameters:  
 
-   Created: 11/02/19 by brynj
+   Created: <cre.date> by <cre.user>
 -----------------------------------------------------------------------------------*/
 DEF INPUT  PARAM icParam     AS CHAR NO-UNDO.
 DEF INPUT  PARAM ihBuffer    AS HANDLE NO-UNDO.
@@ -312,19 +279,12 @@ DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
 DEF VAR ix          AS INT    NO-UNDO.
-DEF VAR cUserId     AS CHAR   NO-UNDO.
-DEF VAR hAsLib 	    AS HANDLE NO-UNDO.
+DEF VAR cSomeInput  AS CHAR   NO-UNDO.
 DEF VAR hQuery      AS HANDLE NO-UNDO.
 
-cUserId = ENTRY(1,icParam,"|").
+cSomeInput = ENTRY(1,icParam,"|").
 
-hAsLib = DYNAMIC-FUNCTION("startASlib" IN SOURCE-PROCEDURE).
-
-/* To make the lib available to a sub-procedure: */
-FUNCTION startASlib RETURNS HANDLE():
-  SOURCE-PROCEDURE:ADD-SUPER-PROCEDURE(hAsLib).
-  RETURN hAsLib.
-END FUNCTION.
+{incl/validatecaller.i}
 
 CREATE QUERY hQuery.
 hQuery:SET-BUFFERS(ihBuffer).
@@ -345,3 +305,117 @@ FINALLY:
   DELETE OBJECT hQuery.
   obOk = ocReturn = "".
 END FINALLY.
+
+<NAME>Create a Viper report
+<DESC>
+<CODE>
+/* Create a Viper report
+     
+   Created: <cre.date> by <cre.user>
+
+   Samples for running the report:
+
+     DEF VAR obOk         AS LOG  NO-UNDO.
+     DEF VAR ocReturn     AS CHAR NO-UNDO.
+     DEF VAR cTmpPdfFile  AS CHAR NO-UNDO.
+
+     DEF TEMP-TABLE ttReportPdf NO-UNDO
+         FIELD PdfBlob AS BLOB
+         .
+
+     /* Preview report (no pdf):
+     RUN <filename> ("<some parameter>|preview",?,"",OUTPUT ocReturn, OUTPUT obOk).
+     */
+
+     /* Preview pdf:
+     RUN <filename> ("<some parameter>|previewPdf",?,"",OUTPUT ocReturn, OUTPUT obOk).
+     */
+
+     /* Retrieve pdf from appserver
+     IF JBoxServerAPI:Instance:CallServerProc(<filename>, icParameter, BUFFER ttReportPdf:HANDLE) THEN DO:
+       FIND FIRST ttReportPdf NO-ERROR.
+       IF AVAIL ttReportPdf THEN DO:
+         cTmpPdfFile = SESSION:TEMP-DIR + STRING(TIME) + ".pdf".
+         COPY-LOB ttReportPdf.PdfBlob TO FILE cTmpPdfFile.
+         JBoxFunctions:Instance:ViewFile(cTmpPdfFile)
+       END.
+     END.
+     */
+
+     /* get tt-definition for field group in designer:
+     RUN <filename> ("getGrpTT|<group name>",?,"",OUTPUT ocReturn, OUTPUT obOk).
+     CLIPBOARD:VALUE = ocReturn.
+     */
+
+-----------------------------------------------------------------------------------*/
+DEF INPUT  PARAM icParam     AS CHAR NO-UNDO.
+DEF INPUT  PARAM ihBuffer    AS HANDLE NO-UNDO.
+DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
+DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
+DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
+
+DEF VAR ix          AS INT    NO-UNDO.
+DEF VAR cPdfFile    AS CHAR   NO-UNDO.
+DEF VAR bPreview    AS LOG    NO-UNDO.
+DEF VAR bPreviewPdf AS LOG    NO-UNDO.
+DEF VAR bGetGrpTT   AS LOG    NO-UNDO.
+DEF VAR oReport     AS JBoxViperReport NO-UNDO.
+DEF VAR cReportPdf  AS CHAR   NO-UNDO.
+DEF VAR hBlob       AS HANDLE NO-UNDO.
+DEF VAR cGroupTTdef AS CHAR   NO-UNDO.
+
+
+bPreview    = ENTRY(NUM-ENTRIES(icParam,"|"),icParam,"|") = "preview".
+bPreviewPdf = ENTRY(NUM-ENTRIES(icParam,"|"),icParam,"|") = "previewPdf".
+bGetGrpTT   = ENTRY(1,icParam,"|") = "getGrpTT".
+
+IF NOT bPreview AND NOT bPreviewPdf AND NOT bGetGrpTT THEN DO:
+  {incl/validatecaller.i}
+END.
+
+oReport = NEW JBoxViperReport().
+
+oReport:setPrinter(oReport:viperWebPrinter). /* As defined in viper.ini */
+
+oReport:loadVfrFile ("vfr\Tilbud.vfr","portrait").
+oReport:activateDocumentLayout("Tilbud").
+
+//fetch tt-def from designer for field group
+IF bGetGrpTT THEN DO:
+  IF NUM-ENTRIES(icParam,"|") > 1 THEN
+    cGroupTTdef = oReport:getGroupTTdef(ENTRY(2,icParam,"|")).
+  ELSE
+    ocReturn = "No group defined for getGrpTT (as ENTRY(2,icParam,'|')".
+  RETURN.
+END.
+
+DEF TEMP-TABLE ttHode NO-UNDO
+    FIELD Medlemsnr AS CHAR
+    .
+
+oReport:loadImage("logo\ansa.bmp", 50, 50, 200, 100).
+
+CREATE ttHode.
+ttHode.Medlemsnr = "12345".
+
+oReport:autoFillGroup(BUFFER ttHode:HANDLE,"Hode",?).
+
+IF bPreview THEN
+  oReport:showPreview().
+ELSE
+  oReport:printPDF("c:\temp\" + STRING(ttHode.Medlemsnr) + ".pdf",bPreviewPdf).
+
+FINALLY:
+  IF VALID-OBJECT(oReport) THEN
+    DELETE OBJECT oReport. /* Stop Viper */
+  obOk = ocReturn = "".
+  IF obOk AND VALID-HANDLE(ihBuffer) THEN DO: /* Return pdf */
+    hBlob = ihBuffer:BUFFER-FIELD("ReportFile") NO-ERROR.
+    IF VALID-HANDLE(hBlob) THEN DO:
+      ihBuffer:BUFFER-CREATE ().
+      COPY-LOB FROM FILE cReportPdf TO ihBuffer::ReportFile.
+    END.
+  END.
+  IF cGroupTTdef NE "" THEN ocReturn = cGroupTTdef.
+END FINALLY.
+

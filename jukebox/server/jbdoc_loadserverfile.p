@@ -14,6 +14,8 @@ DEF OUTPUT PARAM TABLE-HANDLE    httDoc.
 DEF OUTPUT PARAM ocReturn        AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obOK            AS LOG NO-UNDO INIT TRUE.
 
+{incl/validatecaller.i}
+
 DEF VAR cTemp             AS CHAR NO-UNDO.
 DEF VAR crBilde           AS CHAR NO-UNDO.
 DEF VAR cFileName         AS CHAR NO-UNDO.

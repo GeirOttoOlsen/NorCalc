@@ -1,0 +1,11 @@
+{"JBoxDataSource": [
+  {
+    "SourceName": "Mastercard_test",
+    "SourceType": "eFaktura",
+    "URI": "https:\/\/mtf.payments.mastercard.no\/efaktura\/invoicing-nets-submitter\/v1\/",
+    "User_": "IKOForlag",
+    "Pwd": "test123",
+    "CertPFX": "E:\/OpenSSL-3.0.5_win32\/IKOforlag\/test\/ikocertificate.pfx",
+    "CertSecretKey": "wOfIIil5El"
+  }
+]}

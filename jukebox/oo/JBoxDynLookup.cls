@@ -12,13 +12,11 @@
 USING Progress.Lang.*.
 
 CLASS JBoxDynLookup:
-  DEF VAR hSourceProc AS HANDLE NO-UNDO. 
-  DEF VAR hParent     AS HANDLE NO-UNDO. 
+  DEF PUBLIC PROPERTY LOOKUP-PROCEDURE AS HANDLE NO-UNDO GET. PROTECTED SET. 
+  DEF PUBLIC PROPERTY PARENT-PROCEDURE AS HANDLE NO-UNDO GET. PROTECTED SET. 
   DEF PUBLIC PROPERTY BROWSE-OBJECT  AS JBoxBrowse GET. PROTECTED SET. 
   DEF PUBLIC PROPERTY TOOLBAR-OBJECT AS JBoxToolbar GET. PROTECTED SET.
   DEF PUBLIC PROPERTY NAME           AS CHARACTER GET. SET.
-  DEF VAR bOk         AS LOG    NO-UNDO.
-  
                    
   CONSTRUCTOR PUBLIC JBoxDynLookup (INPUT ihParent  AS HANDLE
                                    ,INPUT ihLookup  AS HANDLE
@@ -26,8 +24,8 @@ CLASS JBoxDynLookup:
                                    ,INPUT ihToolbar AS HANDLE 
                                     ):
 
-    ASSIGN hSourceProc = SOURCE-PROCEDURE
-           hParent = ihParent
+    ASSIGN LOOKUP-PROCEDURE = SOURCE-PROCEDURE
+           PARENT-PROCEDURE = ihParent
            BROWSE-OBJECT = NEW JBoxBrowse(ihBrowse,ihParent)
            NAME = BROWSE-OBJECT:BUFFER-HANDLE:NAME
            .
@@ -42,11 +40,15 @@ CLASS JBoxDynLookup:
   END CONSTRUCTOR.
                                
   METHOD PUBLIC VOID ExpandSearchDialogX (iiPixels AS INT):
-    RUN ExpandSearchDialog IN hSourceProc (BROWSE-OBJECT:BROWSE-HANDLE,"X",iiPixels).  
+    RUN ExpandSearchDialog IN LOOKUP-PROCEDURE (BROWSE-OBJECT:BROWSE-HANDLE,"X",iiPixels).  
   END METHOD.
 
   METHOD PUBLIC VOID ExpandSearchDialogY (iiPixels AS INT):
-    RUN ExpandSearchDialog IN hSourceProc (BROWSE-OBJECT:BROWSE-HANDLE,"Y",iiPixels).  
+    RUN ExpandSearchDialog IN LOOKUP-PROCEDURE (BROWSE-OBJECT:BROWSE-HANDLE,"Y",iiPixels).  
+  END METHOD.
+
+  METHOD PUBLIC VOID CloseLookup ():
+    APPLY "CLOSE" TO LOOKUP-PROCEDURE.  
   END METHOD.
       
   DESTRUCTOR PUBLIC JBoxDynLookup ( ):

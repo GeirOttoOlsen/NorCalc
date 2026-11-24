@@ -16,6 +16,7 @@ DEF VAR hBuffer    AS HANDLE NO-UNDO.
 DEF VAR httBuffer  AS HANDLE NO-UNDO.
 DEF VAR hQuery     AS HANDLE NO-UNDO.
 DEF VAR hField     AS HANDLE NO-UNDO.
+DEF VAR cFind      AS CHAR   NO-UNDO.
 
 FUNCTION GetQueryFalseCrit RETURNS CHARACTER () FORWARD.
 
@@ -24,6 +25,8 @@ FUNCTION GetQueryFalseCrit RETURNS CHARACTER () FORWARD.
 icBufferName = ENTRY(1,icParam,"|").
 IF NUM-ENTRIES(icParam,"|") > 1 THEN 
   icCriteria = ENTRY(2,icParam,"|").
+IF NUM-ENTRIES(icParam,"|") > 2 THEN 
+  cFind = ENTRY(3,icParam,"|").
 
 CREATE TEMP-TABLE ohTempTable.
 ohTempTable:CREATE-LIKE(icBufferName) NO-ERROR.
@@ -55,6 +58,7 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
   httBuffer:BUFFER-CREATE.
   httBuffer:BUFFER-COPY(hBuffer).
   httBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE = STRING(hBuffer:ROWID).
+  IF cFind NE "" THEN LEAVE.
   hQuery:GET-NEXT().
 END.
 

@@ -1,4 +1,4 @@
-&ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI
+&ANALYZE-SUSPEND _VERSION-NUMBER UIB_v8r12 GUI ADM1
 &ANALYZE-RESUME
 /* Connected Databases 
           norcalc          PROGRESS
@@ -44,6 +44,7 @@ CREATE WIDGET-POOL.
 /* ********************  Preprocessor Definitions  ******************** */
 
 &Scoped-define PROCEDURE-TYPE SmartViewer
+&Scoped-define DB-AWARE no
 
 &Scoped-define ADM-SUPPORTED-LINKS Record-Source,Record-Target,TableIO-Target
 
@@ -58,13 +59,15 @@ CREATE WIDGET-POOL.
 /* Need to scope the external tables to this procedure                  */
 DEFINE QUERY external_tables FOR NPKONTAKT.
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-FIELDS NPKONTAKT.id NPKONTAKT.kontaktperson 
-&Scoped-define FIELD-PAIRS~
- ~{&FP1}id ~{&FP2}id ~{&FP3}~
- ~{&FP1}kontaktperson ~{&FP2}kontaktperson ~{&FP3}
+&Scoped-Define ENABLED-FIELDS NPKONTAKT.iNPKontaktId ~
+NPKONTAKT.kontaktperson 
 &Scoped-define ENABLED-TABLES NPKONTAKT
 &Scoped-define FIRST-ENABLED-TABLE NPKONTAKT
-&Scoped-Define DISPLAYED-FIELDS NPKONTAKT.id NPKONTAKT.kontaktperson 
+&Scoped-Define DISPLAYED-FIELDS NPKONTAKT.iNPKontaktId ~
+NPKONTAKT.kontaktperson 
+&Scoped-define DISPLAYED-TABLES NPKONTAKT
+&Scoped-define FIRST-DISPLAYED-TABLE NPKONTAKT
+
 
 /* Custom List Definitions                                              */
 /* ADM-CREATE-FIELDS,ADM-ASSIGN-FIELDS,List-3,List-4,List-5,List-6      */
@@ -82,15 +85,15 @@ DEFINE QUERY external_tables FOR NPKONTAKT.
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME F-Main
-     NPKONTAKT.id AT ROW 1.29 COL 7 COLON-ALIGNED
+     NPKONTAKT.iNPKontaktId AT ROW 1.24 COL 11 COLON-ALIGNED
           LABEL "Id"
           VIEW-AS FILL-IN NATIVE 
           SIZE 6 BY 1
           BGCOLOR 15 FGCOLOR 1 
-     NPKONTAKT.kontaktperson AT ROW 2.33 COL 7 COLON-ALIGNED
+     NPKONTAKT.kontaktperson AT ROW 2.29 COL 4.6
           LABEL "Navn"
           VIEW-AS FILL-IN NATIVE 
-          SIZE 40.4 BY 1
+          SIZE 36 BY 1
           BGCOLOR 15 FGCOLOR 1 
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
@@ -113,7 +116,7 @@ DEFINE FRAME F-Main
 /* This procedure should always be RUN PERSISTENT.  Report the error,  */
 /* then cleanup and return.                                            */
 IF NOT THIS-PROCEDURE:PERSISTENT THEN DO:
-  MESSAGE "{&FILE-NAME} should only be RUN PERSISTENT."
+  MESSAGE "{&FILE-NAME} should only be RUN PERSISTENT.":U
           VIEW-AS ALERT-BOX ERROR BUTTONS OK.
   RETURN.
 END.
@@ -126,13 +129,23 @@ END.
 /* DESIGN Window definition (used by the UIB) 
   CREATE WINDOW V-table-Win ASSIGN
          HEIGHT             = 2.67
-         WIDTH              = 48.4.
+         WIDTH              = 57.2.
 /* END WINDOW DEFINITION */
                                                                         */
 &ANALYZE-RESUME
 
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB V-table-Win 
+/* ************************* Included-Libraries *********************** */
 
-/* ***************  Runtime Attributes and UIB Settings  ************** */
+{src/adm/method/viewer.i}
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
+
+/* ***********  Runtime Attributes and AppBuilder Settings  *********** */
 
 &ANALYZE-SUSPEND _RUN-TIME-ATTRIBUTES
 /* SETTINGS FOR WINDOW V-table-Win
@@ -143,10 +156,10 @@ ASSIGN
        FRAME F-Main:SCROLLABLE       = FALSE
        FRAME F-Main:HIDDEN           = TRUE.
 
-/* SETTINGS FOR FILL-IN NPKONTAKT.id IN FRAME F-Main
+/* SETTINGS FOR FILL-IN NPKONTAKT.iNPKontaktId IN FRAME F-Main
    EXP-LABEL                                                            */
 /* SETTINGS FOR FILL-IN NPKONTAKT.kontaktperson IN FRAME F-Main
-   EXP-LABEL                                                            */
+   ALIGN-L EXP-LABEL                                                    */
 /* _RUN-TIME-ATTRIBUTES-END */
 &ANALYZE-RESUME
 
@@ -161,16 +174,6 @@ ASSIGN
 &ANALYZE-RESUME
 
  
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _INCLUDED-LIB V-table-Win 
-/* ************************* Included-Libraries *********************** */
-
-{src/adm/method/viewer.i}
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK V-table-Win 
@@ -190,7 +193,7 @@ ASSIGN
 
 /* **********************  Internal Procedures  *********************** */
 
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE adm-row-available V-table-Win _ADM-ROW-AVAILABLE
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE adm-row-available V-table-Win  _ADM-ROW-AVAILABLE
 PROCEDURE adm-row-available :
 /*------------------------------------------------------------------------------
   Purpose:     Dispatched to this procedure when the Record-
@@ -221,8 +224,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI V-table-Win _DEFAULT-DISABLE
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE disable_UI V-table-Win  _DEFAULT-DISABLE
 PROCEDURE disable_UI :
 /*------------------------------------------------------------------------------
   Purpose:     DISABLE the User Interface
@@ -240,8 +242,7 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE send-records V-table-Win _ADM-SEND-RECORDS
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE send-records V-table-Win  _ADM-SEND-RECORDS
 PROCEDURE send-records :
 /*------------------------------------------------------------------------------
   Purpose:     Send record ROWID's for all tables used by
@@ -263,7 +264,6 @@ END PROCEDURE.
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
-
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE state-changed V-table-Win 
 PROCEDURE state-changed :
 /* -----------------------------------------------------------
@@ -283,5 +283,4 @@ END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-
 

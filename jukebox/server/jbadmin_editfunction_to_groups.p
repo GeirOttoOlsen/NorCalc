@@ -13,6 +13,8 @@ DEF VAR ix           AS INT   NO-UNDO.
 DEF VAR iFunctionId  AS INT   NO-UNDO.
 DEF VAR cGroupIdList AS CHAR  NO-UNDO.
 
+{incl/validatecaller.i}
+
 ASSIGN iFunctionId  = INT(ENTRY(1,icParam,";"))
        cGroupIdList = ENTRY(2,icParam,";").
 

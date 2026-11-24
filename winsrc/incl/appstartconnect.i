@@ -1,12 +1,12 @@
 /* Connection parameters for the application appserver. Used in startup procedure */
 DO:
-  IF CAN-QUERY(SESSION,"WC-ADMIN-APP") OR ENTRY(1,SESSION:PARAM,";") MATCHES "*xxxx*" THEN DO:
+  IF CAN-QUERY(SESSION,"WC-ADMIN-APP") OR ENTRY(1,SESSION:PARAM,";") MATCHES "*norcalc*" THEN DO:
     CREATE SERVER hServer.
     IF ENTRY(1,SESSION:PARAM,";") NE "" THEN
       hServer:CONNECT(ENTRY(1,SESSION:PARAM,";")) NO-ERROR.
     ELSE
   /*     hServer:CONNECT("-H aia.appfarm.no -S 31234 -AppService sports2000 -DirectConnect") NO-ERROR. */
-      hServer:CONNECT("-URL http://aia.appfarm.no/aia/Aia?AppService=Sports2000") NO-ERROR.
+      //hServer:CONNECT("-URL http://aia.appfarm.no/aia/Aia?AppService=Sports2000") NO-ERROR.
 
     IF hServer:CLIENT-CONNECTION-ID = "" THEN DO:
       MESSAGE PROGRAM-NAME(1) SKIP 

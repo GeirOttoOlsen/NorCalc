@@ -1,0 +1,7 @@
+
+25/02/24 16:38:17 ------------------ 
+icBuffersAndFields: npshkobl;betegnelse
+icQueryCriteria:    WHERE true
+ix - cBufferFields[ix]: 1 - betegnelse
+Query string: FOR EACH npshkobl NO-LOCK WHERE true
+ocFieldPairs: NORSK KOBLING|TRE-VEIS SHUNTKOBLING|TRE-VEIS SHUNTKOBLING|TRE-VEIS SHUNTKOBLING|SVENSKEKOBLING|VARMEGJENVINNING|TO-VEIS VENTILKOBLING|TRE-VEIS VENTILKOBLING

@@ -48,7 +48,7 @@ CREATE WIDGET-POOL.
   DEF INPUT PARAM hDataBrwWin AS HANDLE NO-UNDO.
 &ENDIF
 
-
+DEF VAR hParent        AS HANDLE NO-UNDO.
 DEF VAR oDynDataBrowse AS JBoxDynDataBrowse NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
@@ -204,7 +204,7 @@ ASSIGN CURRENT-WINDOW                = {&WINDOW-NAME}
 /* terminate it.                                                        */
 ON CLOSE OF THIS-PROCEDURE DO:
   IF NOT DYNAMIC-FUNCTION("DoCleanUpObjects",THIS-PROCEDURE:CURRENT-WINDOW) THEN RETURN NO-APPLY.
-  DYNAMIC-FUNCTION("SetCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW).
+  DYNAMIC-FUNCTION("SetCleanUpResize",THIS-PROCEDURE:CURRENT-WINDOW) NO-ERROR.
   PUBLISH "InvalidateHandle" (THIS-PROCEDURE).
   RUN disable_UI.
 END.
@@ -217,6 +217,9 @@ PAUSE 0 BEFORE-HIDE.
 MAIN-BLOCK:
 DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
    ON END-KEY UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK:
+  
+  hParent = SOURCE-PROCEDURE.   
+     
   RUN enable_UI.
 
   &IF DEFINED(UIB_is_Running) NE 0 &THEN
@@ -284,8 +287,6 @@ PROCEDURE InitializeObject :
 
 oDynDataBrowse:EnableSaveQuery = YES.
 oDynDataBrowse:TotalFields = "OrderTot".
-oDynDataBrowse:BROWSE-OBJECT:userSettingContext = THIS-PROCEDURE:FILE-NAME.
-oDynDataBrowse:BROWSE-OBJECT:calcFieldProc = "customer_browsecalc.p".
 
 oDynDataBrowse:InitializeQuery(
     "Customer"
@@ -300,10 +301,13 @@ oDynDataBrowse:InitializeQuery(
      ,"Salesrep"  /* Initial sort column */
      ,TRUE). /* <- do record count */
 
+oDynDataBrowse:BROWSE-OBJECT:userSettingContext = THIS-PROCEDURE:FILE-NAME.
+oDynDataBrowse:BROWSE-OBJECT:calcFieldProc = "customer_browsecalc.p".
 
+/*
 IF JBoxServerAPI:Instance:getActionPermission("PurgeSalesRep") THEN
   oDynDataBrowse:POPUP-MENU-OBJECT:addTool("PurgeRep","Promote salesrep"). /* Add PurgeRepRecord procedure to handle the promotion.. */
-      
+*/      
 
 /* Set attributes to define lookups (and drop-downs) in the dynamic filter: */
 {incl/dynfilterlookups.i oDynDataBrowse:BROWSE-OBJECT:BROWSE-HANDLE}
@@ -327,9 +331,12 @@ DYNAMIC-FUNCTION("setAttribute",oDynDataBrowse:BROWSE-OBJECT,"availdistinctcolum
                  "Anlegg,AnleggTekst,AvgKode,AvgSystem,BetPeriode,BilagsArt,BilagsArtTekst,Bilagsdato,Bilagsnr,Bilagstype,cEiendomNavn,cKontoNavn,cProduktNavn,cProsjektNavn,cStedTekst,iEiendomNr,iHovedbokId,iJBoxCompanyId,iKontoNr,iProdukt,iProsjektNr,iSted,Kundegr,KundegrTekst,Linjenr,Periode,SrKonto,ValBelop,ValKode").
 */ 
 
-
+IF CAN-DO(hParent:INTERNAL-ENTRIES,"myDatabrowseObject") THEN
+  RUN myDatabrowseObject IN hParent (oDynDataBrowse).
+ELSE DO:
 /*oDynDataBrowse:BROWSE-OBJECT:setFilter("sperre <> 'O'").*/
-oDynDataBrowse:BROWSE-OBJECT:openQuery().
+  oDynDataBrowse:BROWSE-OBJECT:openQuery().
+END.  
 
 END PROCEDURE.
 

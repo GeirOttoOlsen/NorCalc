@@ -197,6 +197,20 @@ FUNCTION AddCalcParam RETURNS CHARACTER
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-addDistAndAccum) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD addDistAndAccum Procedure
+FUNCTION addDistAndAccum RETURNS CHARACTER 
+  (INPUT ihQueryObject AS HANDLE,
+   INPUT icQueryDef    AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-AddEditBtn) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD AddEditBtn Procedure 
@@ -307,7 +321,6 @@ FUNCTION ClearComboBox RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
-
 &IF DEFINED(EXCLUDE-ClearQueryFilter) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD ClearQueryFilter Procedure 
@@ -540,7 +553,9 @@ FUNCTION FillQuery RETURNS INTEGER
     INPUT iBatchSize         AS INT,
     INPUT iStartRow          AS INT,
     INPUT icBuffersAndFields AS CHAR,
-    INPUT icQueryCriteria    AS CHAR)  FORWARD.
+    INPUT icQueryCriteria    AS CHAR,
+   INPUT icQuerySort        AS CHAR,
+   INPUT ibDesc             AS LOG)  FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -629,6 +644,20 @@ FUNCTION getBrowseColumn RETURNS HANDLE
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getBrowseColumnFormat) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBrowseColumnFormat Procedure
+FUNCTION getBrowseColumnFormat RETURNS CHARACTER 
+  (INPUT ihBrowse    AS HANDLE,
+   INPUT icFieldName AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getBrowseColumnLabel) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getBrowseColumnLabel Procedure 
@@ -709,6 +738,21 @@ FUNCTION getEventAction RETURNS CHARACTER
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getEventLabel) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getEventLabel Procedure
+FUNCTION getEventLabel RETURNS CHARACTER 
+  (INPUT ihParent AS HANDLE,
+   INPUT ihWidget AS HANDLE,
+   INPUT icActionOrMethod AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getEventMethod) = 0 &THEN
 
@@ -821,6 +865,20 @@ FUNCTION getLocalDistinctRows RETURNS LOGICAL
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getLocalQueryString) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD getLocalQueryString Procedure
+FUNCTION getLocalQueryString RETURNS CHARACTER 
+  (INPUT ihBuffer AS HANDLE,
+   INPUT icQueryString AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getObjectActionList) = 0 &THEN
 
@@ -1135,6 +1193,23 @@ FUNCTION InitDynFilter RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-InitGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD InitGridFilter Procedure
+FUNCTION InitGridFilter RETURNS LOGICAL 
+  (INPUT ihQueryObject   AS HANDLE,
+   INPUT icFieldList     AS CHAR,
+   INPUT icOperatorList  AS CHAR,
+   INPUT icValueList     AS CHAR,
+   INPUT icAction        AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-InitToolbarWidgets) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD InitToolbarWidgets Procedure 
@@ -1362,6 +1437,26 @@ FUNCTION NewFilter RETURNS HANDLE
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-NewGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD NewGridFilter Procedure
+FUNCTION NewGridFilter RETURNS HANDLE 
+  (INPUT ihQuery                AS HANDLE,
+   INPUT ihFrame                AS HANDLE,
+   INPUT icInputFieldList       AS CHAR,
+   INPUT icBufferFieldList      AS CHAR,
+   INPUT icOperatorList         AS CHAR,
+   INPUT icOperatorFieldList    AS CHAR,
+   INPUT ibSearchOnValueChanged AS LOG,
+   INPUT icOtherProp            AS CHAR) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-NewMenuBand) = 0 &THEN
 
@@ -1734,6 +1829,20 @@ FUNCTION setObjectState RETURNS LOGICAL
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setObjectWindow) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setObjectWindow Procedure
+FUNCTION setObjectWindow RETURNS LOGICAL 
+  (INPUT ihObject AS HANDLE,
+   INPUT ihWindow AS HANDLE) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setSearchFieldLinkInfo) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setSearchFieldLinkInfo Procedure 
@@ -2006,12 +2115,15 @@ DEF VAR cDistinctList          AS CHAR   NO-UNDO.
 DEF VAR cAccumList             AS CHAR   NO-UNDO.
 DEF VAR cLocalCalcFieldList    AS CHAR   NO-UNDO.
 DEF VAR hColumn                AS HANDLE NO-UNDO.
+DEF VAR iNumCheck              AS INT    NO-UNDO.
+DEF VAR cFieldBuffer           AS CHAR   NO-UNDO.
 
 IF icQueryCriteria MATCHES "*(*Company)" OR icQueryCriteria MATCHES "*(Codemaster)" THEN DO:
   setAttribute(ihObject,"CompanyTag",SUBSTR(icQueryCriteria,R-INDEX(icQueryCriteria,"("))).
   icQueryCriteria = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,"(") - 1).
 END.
 
+icBuffersAndFields = REPLACE(icBuffersAndFields,",,NOT EXIST",",NOT EXIST").
 IF NUM-ENTRIES(icQueryCriteria) < NUM-ENTRIES(icBuffersAndFields) THEN DO:
   MESSAGE "Invalid browse/query definition" SKIP
           "Number of buffers i query criteria is less that number of buffers in buffer/field def"
@@ -2090,20 +2202,35 @@ DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
            ttFieldDef.cFieldName  = IF ttFieldDef.cFieldDef BEGINS "!+" OR ttFieldDef.cFieldDef BEGINS "+!" THEN SUBSTR(ENTRY(1,ttFieldDef.cFieldDef,"|"),3)
                                     ELSE IF ttFieldDef.cFieldDef BEGINS "!" OR ttFieldDef.cFieldDef BEGINS "+" THEN SUBSTR(ENTRY(1,ttFieldDef.cFieldDef,"|"),2)
                                     ELSE ENTRY(1,ttFieldDef.cFieldDef,"|")
-           ttFieldDef.bCalculated = ttFieldDef.cFieldDef BEGINS "+" OR
-                                    ttFieldDef.cFieldDef BEGINS "!+"
+           ttFieldDef.bCalculated = (ttFieldDef.cFieldDef BEGINS "+" OR
+                                     ttFieldDef.cFieldDef BEGINS "!+") 
            ttFieldDef.bVisible    = NOT ttFieldDef.cFieldDef BEGINS "!" AND
-                                    NOT ttFieldDef.cFieldDef BEGINS "+!"
+                                    NOT ttFieldDef.cFieldDef BEGINS "+!" AND
+                                    ttFieldDef.cFieldName NE "RowCount"
            iFieldIx               = iFieldIx + 10
            ttFieldDef.iFieldSeq   = iFieldIx
            .
-    IF NUM-ENTRIES(ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"|") = 1 THEN
-      ttFieldDef.cFieldLabel = ?. /* to be determined from browse if static */       
+    IF NUM-ENTRIES(ttFieldDef.cFieldDef,"|") = 1 THEN
+      ttFieldDef.cFieldLabel = ?. /* to be determined from browse if static */
+/*    ELSE DO:                                                                                                    */
+/*      IF NUM-ENTRIES(ttFieldDef.cFieldDef,"|") > 4 THEN DO:                                                     */
+/*        IF TRIM(ENTRY(5,ttFieldDef.cFieldDef,"|")) NE "" THEN                                                   */
+/*          setAttribute(ihObject,"fieldLabel_" + ttFieldDef.cFieldName,TRIM(ENTRY(5,ttFieldDef.cFieldDef,"|"))). */
+/*        setAttribute(ihObject,"fieldFormat_" + ttFieldDef.cFieldName,TRIM(ENTRY(3,ttFieldDef.cFieldDef,"|"))).  */
+/*      END.                                                                                                      */
+/*      ELSE DO:                                                                                                  */
+/*        IF NUM-ENTRIES(ttFieldDef.cFieldDef,"|") > 1 THEN                                                       */
+/*         setAttribute(ihObject,"fieldLabel_" + ttFieldDef.cFieldName,TRIM(ENTRY(2,ttFieldDef.cFieldDef,"|"))).  */
+/*        IF NUM-ENTRIES(ttFieldDef.cFieldDef,"|") > 2 THEN                                                       */
+/*          setAttribute(ihObject,"fieldFormat_" + ttFieldDef.cFieldName,TRIM(ENTRY(3,ttFieldDef.cFieldDef,"|"))).*/
+/*      END.                                                                                                      */
+/*    END.                                                                                                        */
+
 /*     IF R-INDEX(ttFieldDef.cFieldName,"[") > 0 THEN                                                     */
 /*       ttFieldDef.cFieldName = SUBSTR(ttFieldDef.cFieldName,1,R-INDEX(ttFieldDef.cFieldName,"[") - 1).  */
-    IF ttFieldDef.bCalculated AND NUM-ENTRIES(ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"|") GE 4 AND ENTRY(4,ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"|") = "" THEN
+    IF ttFieldDef.bCalculated AND NUM-ENTRIES(ttFieldDef.cFieldDef,"|") GE 4 AND ENTRY(4,ttFieldDef.cFieldDef,"|") = "" THEN
       cLocalCalcFieldList = cLocalCalcFieldList + ttFieldDef.cFieldName + ",".
-    ELSE IF ttFieldDef.bCalculated AND NUM-ENTRIES(ENTRY(iy,ENTRY(ix,icBuffersAndFields),";"),"|") LT 4 THEN 
+    ELSE IF ttFieldDef.bCalculated AND NUM-ENTRIES(ttFieldDef.cFieldDef,"|") LT 4 THEN 
       cLocalCalcFieldList = cLocalCalcFieldList + ttFieldDef.cFieldName + ",".
     IF ttFieldDef.cFieldName BEGINS "distinct " THEN
       ASSIGN ttFieldDef.cFieldName = TRIM(SUBSTR(ttFieldDef.cFieldName,10))
@@ -2117,14 +2244,24 @@ DO ix = 1 TO NUM-ENTRIES(icBuffersAndFields):
     cQueryJoin = cQueryJoin + "," + TRIM(ENTRY(ix,icQueryCriteria)).
   END.
 END.
+/*def var hbttfielddef as handle no-undo. */
+/*hbttfielddef = buffer ttFieldDef:handle.*/
+/*run  toexcelviafile.p (hbttfielddef,-2).*/
 
 IF ihObject:TYPE = "browse" THEN DO ix = 1 TO ihObject:NUM-COLUMNS:
   FIND FIRST ttFieldDef WHERE ttFieldDef.cFieldName = ihObject:GET-BROWSE-COLUMN(ix):NAME NO-ERROR.
   IF AVAIL ttFieldDef THEN DO:
     IF SESSION:DISPLAY-TYPE NE "TTY" AND NOT ihObject:GET-BROWSE-COLUMN (ix):VISIBLE THEN 
       ttFieldDef.bVisible = NO.
-    IF ttFieldDef.cFieldLabel = ? THEN ttFieldDef.cFieldDef = ttFieldDef.cFieldDef + "|" + REPLACE(ihObject:GET-BROWSE-COLUMN(ix):LABEL,","," ").  
+    IF ttFieldDef.cFieldLabel = ? THEN 
+      ttFieldDef.cFieldDef = ttFieldDef.cFieldDef + "|" + REPLACE(ihObject:GET-BROWSE-COLUMN(ix):LABEL,","," ") 
+                           + (IF ihObject:GET-BROWSE-COLUMN(ix):FORMAT NE ? THEN "|" + REPLACE(ihObject:GET-BROWSE-COLUMN(ix):FORMAT,",","<") ELSE "")
+                           .  
   END.  
+  setAttribute(ihObject,"fieldLabel_" + ihObject:GET-BROWSE-COLUMN(ix):NAME,
+                        IF ihObject:GET-BROWSE-COLUMN(ix):LABEL NE ? THEN ihObject:GET-BROWSE-COLUMN(ix):LABEL
+                        ELSE "").
+  setAttribute(ihObject,"fieldFormat_" + ihObject:GET-BROWSE-COLUMN(ix):NAME,ihObject:GET-BROWSE-COLUMN(ix):FORMAT).
 END.  
 
 IF cNotExistList NE "" THEN
@@ -2194,20 +2331,23 @@ FOR EACH ttBufferDef:
     ASSIGN cBufferFieldDefs = cBufferFieldDefs + ttFieldDef.cFieldDef + ";"
            cBufferFields    = cBufferFields + ttFieldDef.cFieldName + ",".
   
+    IF NUM-ENTRIES(ttFieldDef.cFieldDef,"|") > 5 THEN cFieldBuffer = ENTRY(6,ttFieldDef.cFieldDef,"|").   // already defined in field list for sql
+    ELSE cFieldBuffer = ttBufferDef.cBuffer.
+    
     IF CAN-DO(cAllViewFields,ttFieldDef.cFieldName) THEN DO:
       setAttribute(ihObject,"fieldbuffer" + ttFieldDef.cFieldName + STRING(ttFieldDef.iBufferNum)
-                           ,ttBufferDef.cBuffer).
+                           ,cFieldBuffer).
       setAttribute(ihObject,"orgdbfield" + ttFieldDef.cFieldName + STRING(ttFieldDef.iBufferNum),ttFieldDef.cFieldName).
       ttFieldDef.cClientFieldName = ttFieldDef.cFieldName + STRING(ttFieldDef.iBufferNum).
     END.
     ELSE DO:
-      setAttribute(ihObject,"fieldbuffer" + ttFieldDef.cFieldName,ttBufferDef.cBuffer).
+      setAttribute(ihObject,"fieldbuffer" + ttFieldDef.cFieldName,cFieldBuffer).
       setAttribute(ihObject,"orgdbfield" + ttFieldDef.cFieldName,ttFieldDef.cFieldName).
       ttFieldDef.cClientFieldName = ttFieldDef.cFieldName.
     END.
     IF SUBSTR(ttFieldDef.cFieldName,LENGTH(ttFieldDef.cFieldName)) = "]" THEN DO:
       setAttribute(ihObject,"orgDbField" + REPLACE(REPLACE(ttFieldDef.cFieldName,"[","_"),"]",""),ttFieldDef.cFieldName).
-      setAttribute(ihObject,"fieldbuffer" + REPLACE(REPLACE(ttFieldDef.cFieldName,"[","_"),"]",""),ttBufferDef.cBuffer).
+      setAttribute(ihObject,"fieldbuffer" + REPLACE(REPLACE(ttFieldDef.cFieldName,"[","_"),"]",""),cFieldBuffer).
     END.
 
     IF ttFieldDef.bVisible AND NOT ttFieldDef.bCalculated AND ttBufferDef.iBufferNum = 1 THEN
@@ -2217,7 +2357,7 @@ FOR EACH ttBufferDef:
       cBaseTableFields = cBaseTableFields + ttFieldDef.cFieldName + ",".
 
     IF ttFieldDef.bVisible THEN
-      ASSIGN cAllViewFields       = cAllViewFields       + ttFieldDef.cFieldName + ","
+      ASSIGN cAllViewFields       = cAllViewFields       + ttFieldDef.cClientFieldName + ","
              cViewBufferFieldDefs = cViewBufferFieldDefs + ttFieldDef.cFieldDef + ";"
              .
         
@@ -2234,6 +2374,13 @@ FOR EACH ttBufferDef:
     IF ttBufferDef.iBufferNum > 1 AND ttFieldDef.bVisible THEN
       cAllJoinViewFields = cAllJoinViewFields + ",".
 
+    IF NOT ttFieldDef.bCalculated AND NUM-ENTRIES(ttFieldDef.cFieldDef,"|") > 3 THEN DO:
+      iNumCheck = INT(ENTRY(4,ttFieldDef.cFieldDef,"|")) NO-ERROR.
+      IF NOT ERROR-STATUS:ERROR THEN
+        setAttribute(ihObject,"FieldWidthChars_" + ttFieldDef.cClientFieldName,ENTRY(4,ttFieldDef.cFieldDef,"|")).     
+    END.      
+    IF ttFieldDef.bCalculated AND NUM-ENTRIES(ttFieldDef.cClientFieldName,"|") > 5 THEN 
+      setAttribute(ihObject,"FieldWidthChars_" + ttFieldDef.cClientFieldName,ENTRY(6,ttFieldDef.cFieldDef,"|")).         
   END.
 
   ASSIGN cBufferFieldDefs      = TRIM(cBufferFieldDefs,";")
@@ -2391,7 +2538,8 @@ IF ihRectangle:TYPE NE "browse" THEN DO:
              ON ROW-LEAVE               PERSISTENT RUN DoProcessEvent (ihProcedure,"row-leave").
              ON ROW-DISPLAY             PERSISTENT RUN DoProcessEvent (ihProcedure,"row-display").
              ON END-MOVE                PERSISTENT RUN DoProcessEvent (ihProcedure,"view-overlay").
-             ON SCROLL-NOTIFY           PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-notify").
+             ON SCROLL-HORIZONTAL       PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-horizontal").
+             ON SCROLL-VERTICAL         PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-notify").
              ON CURSOR-RIGHT            PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-notify").
              ON CURSOR-LEFT             PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-notify").
              ON CURSOR-UP               PERSISTENT RUN DoProcessEvent (ihProcedure,"scroll-notify").
@@ -2420,6 +2568,7 @@ IF ihRectangle:TYPE NE "browse" THEN DO:
              ON shift-ctrl-CURSOR-RIGHT PERSISTENT RUN DoProcessEvent (ihProcedure,"shift-ctrl-cursor-right").
              ON shift-ctrl-CURSOR-LEFT  PERSISTENT RUN DoProcessEvent (ihProcedure,"shift-ctrl-cursor-left").
              ON alt-CURSOR-DOWN         PERSISTENT RUN DoProcessEvent (ihProcedure,"alt-cursor-down").
+             ON ctrl-a                  PERSISTENT RUN DoProcessEvent (ihProcedure,"select-all-rows").
            END TRIGGERS.
   PUBLISH "setPageQueryHandle" (ohBrowse).
 END.             
@@ -2506,6 +2655,13 @@ ASSIGN ttEvent.hObject       = ohBrowse
        ttEvent.cName         = "scroll-notify"
        ttEvent.cWidgetType   = "browse"
        ttEvent.cMethod       = "ScrollNotifyBrowse".
+CREATE ttEvent.
+ASSIGN ttEvent.hObject       = ohBrowse
+       ttEvent.hWidget       = ohBrowse
+       ttEvent.cAction       = "scroll-horizontal"
+       ttEvent.cName         = "scroll-horizontal"
+       ttEvent.cWidgetType   = "browse"
+       ttEvent.cMethod       = "ScrollHorizontalBrowse".
 CREATE ttEvent.
 ASSIGN ttEvent.hObject       = ohBrowse
        ttEvent.hWidget       = ohBrowse
@@ -2681,6 +2837,14 @@ ASSIGN ttEvent.hObject       = ohBrowse
        ttEvent.cName         = "excel"
        ttEvent.cWidgetType   = "browse"
        ttEvent.cMethod       = "ExcelRecord".
+CREATE ttEvent.
+ASSIGN ttEvent.hObject       = ohBrowse
+       ttEvent.hWidget       = ohBrowse
+       ttEvent.cAction       = "select-all-rows"
+       ttEvent.cName         = "select-all-rows"
+       ttEvent.cWidgetType   = "browse"
+       ttEvent.cMethod       = "SelectAllRowsRecord".
+
 
 END PROCEDURE.
 
@@ -2719,7 +2883,7 @@ DEF INPUT PARAM iBatchSize         AS INT    NO-UNDO.
 DEF INPUT PARAM iStartRow          AS INT    NO-UNDO.
 DEF INPUT PARAM icBuffersAndFields AS CHAR   NO-UNDO.
 DEF INPUT PARAM icQueryCriteria    AS CHAR   NO-UNDO.
-DEF INPUT PARAM icSortExpr       AS CHAR   NO-UNDO.
+DEF INPUT PARAM icSortExpr         AS CHAR   NO-UNDO.
 DEF INPUT PARAM ibDesc             AS LOG    NO-UNDO.
 DEF OUTPUT PARAM iMaxCount         AS INT    NO-UNDO.
 
@@ -2742,12 +2906,7 @@ DEF VAR iy                AS INT    NO-UNDO.
 DEF VAR hTmp              AS HANDLE NO-UNDO.
 DEF VAR hWin              AS HANDLE NO-UNDO.
 DEF VAR cCheckedRowIds    AS CHAR   NO-UNDO.
-DEF VAR cDistinctColumns  AS CHAR   NO-UNDO.
-DEF VAR cAccumFields      AS CHAR   NO-UNDO.
 DEF VAR cStatValues       AS CHAR   NO-UNDO.
-DEF VAR cDistBufFldList   AS CHAR   NO-UNDO.
-DEF VAR cAccBufFldList    AS CHAR   NO-UNDO.
-DEF VAR cCurrBuffer       AS CHAR   NO-UNDO.
                                     
 DEF VAR cTmp                AS CHAR   NO-UNDO.
 DEF VAR cTemp               AS CHAR   NO-UNDO.
@@ -2757,8 +2916,8 @@ DEF VAR bCalcField          AS LOG    NO-UNDO.
 DEF VAR cMatchQuery         AS CHAR   NO-UNDO.
 DEF VAR hTmpQuery           AS HANDLE NO-UNDO.
 DEF VAR hUseAppServer       AS HANDLE NO-UNDO.
-DEF VAR hAltExtentFields    AS HANDLE NO-UNDO EXTENT 50.
-DEF VAR hExtentFields       AS HANDLE NO-UNDO EXTENT 50.
+DEF VAR hAltExtentFields    AS HANDLE NO-UNDO EXTENT.
+DEF VAR hExtentFields       AS HANDLE NO-UNDO EXTENT.
 DEF VAR cExtentFields       AS CHAR   NO-UNDO.
 DEF VAR cAltExtFieldHandles AS CHAR   NO-UNDO.
 DEF VAR iCntExtFields       AS INT    NO-UNDO.
@@ -2773,7 +2932,6 @@ DEF VAR httTableQuery       AS HANDLE NO-UNDO.
 DEF VAR bBufferSwap         AS LOG    NO-UNDO.
 DEF VAR cCompanyTag         AS CHAR   NO-UNDO.
 DEF VAR cSortString         AS CHAR   NO-UNDO.
-DEF VAR bAccumDistinct      AS LOG    NO-UNDO.
 DEF VAR cMyQuerySort        AS CHAR   NO-UNDO.
 DEF VAR cMyLocalSort        AS CHAR   NO-UNDO.
 DEF VAR cModQuerySort       AS CHAR   NO-UNDO.
@@ -2781,6 +2939,7 @@ DEF VAR cModLocalSort       AS CHAR   NO-UNDO.
 DEF VAR cQueryWhere         AS CHAR   NO-UNDO.
 DEF VAR cQueryFilter        AS CHAR   NO-UNDO.
 DEF VAR cBaseQuery          AS CHAR   NO-UNDO.
+DEF VAR cUseSessionId       AS CHAR   NO-UNDO.
 
 /*{JBoxObjectDef.i}*/
 DEF BUFFER bbttObjectLink FOR ttObjectLink.
@@ -2802,12 +2961,17 @@ IF icQueryCriteria = "" THEN DO:
       cQueryWhere = " AND" + SUBSTR(cQueryWhere,6).
       setAttribute(ihBrowse,"queryWhere",cQueryWhere).
     END.    
-  END.         
+  END.        
+  ELSE IF cQueryFilter NE "" AND cQueryWhere BEGINS "WHERE " THEN DO:
+    cQueryWhere = " AND" + SUBSTR(cQueryWhere,6).
+    setAttribute(ihBrowse,"queryWhere",cQueryWhere).
+  END.   
   IF (DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryWhere") = "" 
      AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryFilter") = "" 
      AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanquerywhere") = ""
      AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanqueryfilter") = ""
      AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"uselocaldata") NE "yes" 
+     AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"sqlDbName") = "" 
      AND NOT CAN-DO(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"allcalcfields"),ENTRY(1,DYNAMIC-FUNCTION("getAttribute",ihBrowse,"querysort")," "))
      ) OR bBufferSwap
      THEN DO:
@@ -2857,7 +3021,7 @@ ASSIGN cTemp = REPLACE(icBuffersAndFields,"!","")
 IF icQueryCriteria MATCHES "*(*Company)" OR icQueryCriteria MATCHES "*(Codemaster)" THEN DO:
   ASSIGN cCompanyTag     = SUBSTR(icQueryCriteria,R-INDEX(icQueryCriteria,"("))
          icQueryCriteria = SUBSTR(icQueryCriteria,1,R-INDEX(icQueryCriteria,"(") - 1)
-         cQueryWhere     = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryWhere").
+         cQueryWhere     = (IF cQueryWhere = "" THEN DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryWhere") ELSE cQueryWhere).
   IF cQueryWhere MATCHES "*(*Company)" OR cQueryWhere MATCHES "*(Codemaster)" THEN
     cQueryWhere = SUBSTR(cQueryWhere,1,R-INDEX(cQueryWhere,"(") - 1).
   DYNAMIC-FUNCTION("setAttribute",ihBrowse,"queryWhere",cQueryWhere).
@@ -2887,53 +3051,15 @@ END.
 IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"enableondblclick") = "yes" THEN 
   DYNAMIC-FUNCTION("setAttribute",ihBrowse,"enableupdate","no").
 
-cDistinctColumns = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctcolumns").
-cAccumFields = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"accumfields").
-
-IF cDistinctColumns NE "" OR cAccumFields NE "" THEN DO:
-  DO ix = 1 TO ihBrowse:NUM-COLUMNS:
-    IF CAN-DO(cDistinctColumns,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN
-      cDistBufFldList = cDistBufFldList + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) 
-                      + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"orgdbfield" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) + ",".
-    ELSE IF CAN-DO(cAccumFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) THEN
-      cAccBufFldList = cAccBufFldList + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) 
-                      + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"orgdbfield" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) + ",".
-  END.
-  ASSIGN cDistBufFldList = TRIM(cDistBufFldList,",")
-         cAccBufFldList  = TRIM(cAccBufFldList,",").
-  DO ix = 1 TO NUM-ENTRIES(cTemp):
-    ASSIGN cTemp2 = cTemp2 + (IF cTemp2 NE "" THEN "," ELSE "") + ENTRY(1,ENTRY(ix,cTemp),";") + ";"
-           cCurrBuffer = ENTRY(1,ENTRY(ix,cTemp),";"). 
-    DO iy = 2 TO NUM-ENTRIES(ENTRY(ix,cTemp),";"):
-      ASSIGN cFieldDef = TRIM(ENTRY(1,ENTRY(iy,ENTRY(ix,cTemp),";"),"|"),"+")
-             bCalcField = ENTRY(iy,ENTRY(ix,cTemp),";") BEGINS "+".
-      IF cDistinctColumns NE "" AND 
-         CAN-DO(cDistBufFldList,cCurrBuffer + cFieldDef) AND
-         (CAN-DO(cDistinctColumns,cFieldDef) OR
-          CAN-DO(cDistinctColumns,cFieldDef + STRING(ix))) THEN
-        cTemp2 = cTemp2 + (IF bCalcField THEN "+" ELSE "") + "distinct " + TRIM(ENTRY(iy,ENTRY(ix,cTemp),";"),"+") + ";".
-      ELSE IF cAccumFields NE "" AND 
-         CAN-DO(cAccBufFldList,cCurrBuffer + cFieldDef) AND
-         (CAN-DO(cAccumFields,cFieldDef) OR
-          CAN-DO(cAccumFields,cFieldDef + STRING(ix))) THEN
-        cTemp2 = cTemp2 + (IF bCalcField THEN "+" ELSE "") + "accum " + TRIM(ENTRY(iy,ENTRY(ix,cTemp),";"),"+") + ";".
-      ELSE
-        cTemp2 = cTemp2 + ENTRY(iy,ENTRY(ix,cTemp),";") + ";".
-    END.
-    cTemp2 = TRIM(cTemp2,";").
-  END.
-  cTemp = cTemp2.
-END.
+cTemp = addDistAndAccum(ihBrowse, cTemp).
   
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"rowsadded","0").
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"rowsdeleted","0").
 DYNAMIC-FUNCTION("setAttribute",ihBrowse,"countPlus","").
-
-bAccumDistinct = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctColumns") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"accumFields") NE "".
+setAttribute(ihBrowse,"statvaluequerystop","").
 
 IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"uselocaldata") = "yes" 
    AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"accumViewFields") = ""
-/*   NOT bAccumDistinct*/
    THEN DO:
   IF VALID-HANDLE(hCurrSourceProc) AND CAN-DO(hCurrSourceProc:INTERNAL-ENTRIES,"FillLocalBrowse") THEN
     iMaxCount = DYNAMIC-FUNCTION("FillLocalBrowse" IN hCurrSourceProc,ihBrowse,cTemp,icQueryCriteria,icSortExpr,ibDesc).
@@ -2946,7 +3072,7 @@ ELSE IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"uselocaldata") = "yes"
           
   hBuffer = ihBrowse:QUERY:GET-BUFFER-HANDLE(1).
   ihBrowse:QUERY:QUERY-PREPARE("FOR EACH " + hBuffer:NAME  
-			       + " " + icQueryCriteria
+//			       + " " + icQueryCriteria
                                + (IF icSortExpr NE ""
                                     THEN
                                    " BY " + icSortExpr
@@ -3023,14 +3149,15 @@ ELSE DO:
       cMatchQuery = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"sortbuffer") + " WHERE " + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"sortbuffer") + "." + bbttObjectLink.cLinkInfo
                   + " MATCHES '" + bbttObjectLink.hToObject:INPUT-VALUE + "'".
   END.
-  IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanBaseQuery") NE "" OR 
-     DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanQueryFilter") NE "" OR 
+  IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanBaseQuery") NE "" THEN 
+    DYNAMIC-FUNCTION("setPreScanBaseQuery",REPLACE(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanBaseQuery"),"|",CHR(3))).
+    
+  IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanQueryFilter") NE "" OR 
      DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanQueryWhere") NE "" THEN
-    DYNAMIC-FUNCTION("setPreScanQuery",TRIM(REPLACE(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanBaseQuery"),"|",CHR(3)) + CHR(28) + 
-                                            REPLACE(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanqueryfilter"),"|",CHR(3)) + CHR(28) + 
+    DYNAMIC-FUNCTION("setPreScanQuery",TRIM(REPLACE(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanqueryfilter"),"|",CHR(3)) + CHR(28) + 
                                             REPLACE(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanquerywhere"),"|",CHR(3)) + CHR(28) +
                                             REPLACE(cMatchQuery,"|",CHR(3))
-                                            ,"|")).
+                                            ,CHR(28))).
   ELSE IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"prescanqueryfilter") NE "" THEN
     DYNAMIC-FUNCTION("setPreScanQuery",REPLACE(cMatchQuery,"|",CHR(3))).
 
@@ -3045,12 +3172,19 @@ ELSE DO:
 
   IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"useAppserver") NE "" THEN DO:
     hUseAppServer = WIDGET-HANDLE(DYNAMIC-FUNCTION("getAttribute",SESSION,DYNAMIC-FUNCTION("getAttribute",ihBrowse,"useAppserver"))) NO-ERROR.
-    IF VALID-HANDLE(hUseAppServer) THEN
+    IF VALID-HANDLE(hUseAppServer) THEN DO:
       DYNAMIC-FUNCTION("setUseAppserver",hUseAppServer).
+      cUseSessionId = DYNAMIC-FUNCTION("getAttribute",SESSION,DYNAMIC-FUNCTION("getAttribute",ihBrowse,"useSessionId")).
+      IF cUseSessionId NE "" THEN  
+        DYNAMIC-FUNCTION("setSessionId",cUseSessionId).
+    END.  
   END.
 
   DYNAMIC-FUNCTION("setUniqueBuffer",DYNAMIC-FUNCTION("getAttribute",ihBrowse,"uniqueBuffer")).
   DYNAMIC-FUNCTION("setQueryStopAfter",DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryStopAfter")).
+  IF DYNAMIC-FUNCTION("getIsUserSettingInstalled") AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryStopAfter") = "" THEN
+    DYNAMIC-FUNCTION("setQueryStopAfter",JBoxServerApi:Instance:getUserSetting(getObjectSourceFile(ihBrowse),ihBrowse:NAME,"query","queryStopAfter")).
+  
   DYNAMIC-FUNCTION("setOrgBuffersAndFields",DYNAMIC-FUNCTION("getAttribute",ihBrowse,"orgBuffersAndFields")).
 
   IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"NoMandatoryCalcFields") NE "" THEN 
@@ -3085,19 +3219,31 @@ ELSE DO:
     icSortExpr = cModQuerySort. 
   END.
 
+  IF cUseSessionId NE "" THEN DO: 
+    DYNAMIC-FUNCTION("setUseAppserver",hUseAppServer).
+    DYNAMIC-FUNCTION("setSessionId",cUseSessionId).
+  END.  
+
   httTable = DYNAMIC-FUNCTION("getTempTableJoin",
                               iBatchSize,
-                              IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"SmartComponentLibrary_QueryStart") NE "" THEN
-                                INT(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"SmartComponentLibrary_QueryStart"))
+                              IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"BatchQueryStart") NE "" THEN
+                                INT(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"BatchQueryStart"))
                               ELSE iStartRow,
                               DYNAMIC-FUNCTION("getAttribute",ihBrowse,"querydir"),
-                              cTemp,
-                              icQueryCriteria 
+                              IF getAttribute(ihBrowse,"sqlDbname") NE "" THEN 
+                                "sqlDb" 
+                                + CHR(3) + getAttribute(ihBrowse,"sqlDbname")  
+                                + CHR(3) + getAttribute(ihBrowse,"sqlView") 
+                                + CHR(3) + cTemp 
+                              ELSE cTemp,
+                              icQueryCriteria + CHR(3) 
                             + (IF icSortExpr NE "" AND DYNAMIC-FUNCTION("getAttribute",ihBrowse,"skipServerSort") NE "yes" THEN
-                                " BY " + icSortExpr + (IF ibDesc THEN " DESC" ELSE "")
+                                 " BY " + icSortExpr + (IF ibDesc THEN " DESC" ELSE "")
                                ELSE "")
                             + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"CompanyTag")
                               ).
+  
+  IF NOT VALID-HANDLE(httTable) THEN RETURN.
   
   httTableBuffer = httTable:DEFAULT-BUFFER-HANDLE.
   CREATE QUERY httTableQuery NO-ERROR.
@@ -3106,6 +3252,10 @@ ELSE DO:
   httTableQuery:QUERY-OPEN.
   cJoin = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"queryjoin").
   iNumRowIds = NUM-ENTRIES(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"buffersandfields")).
+  
+  IF getAttribute(ihBrowse,"sqlDbname") NE "" AND INT(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"numbuffers")) > 1 THEN
+    iNumRowIds = INT(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"numbuffers")). /* sql */
+  IF iNumRowIds = 0 THEN iNumRowIds = 1. /* sql */
   
   cSkipUniqueRows = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"SkipUniqueRows").
   DO ix = 1 TO NUM-ENTRIES(cSkipUniqueRows):
@@ -3118,6 +3268,10 @@ ELSE DO:
   ASSIGN cExtentFields       = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"extentFields")
          cAltExtFieldHandles = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"AltExtentFieldHandles")
          cExcludeLocalFields = DYNAMIC-FUNCTION("getAttribute",ihBrowse,"localcalcfields").
+  
+  EXTENT(hAltExtentFields) = MAX(1,NUM-ENTRIES(cExtentFields)).
+  EXTENT(hExtentFields) = MAX(1,NUM-ENTRIES(cExtentFields)).      
+         
   DO ix = 1 TO NUM-ENTRIES(cExtentFields):
     ASSIGN hAltExtentFields[ix] = WIDGET-HANDLE(ENTRY(ix,cAltExtFieldHandles))
 /*            hExtentFields[ix]    = httTableBuffer:BUFFER-FIELD(ENTRY(ix,cExtentFields)) */
@@ -3154,9 +3308,10 @@ ELSE DO:
       END.
     ELSE
     */
-      DO ix = 1 TO iNumRowIds:
+    DO ix = 1 TO iNumRowIds:
+      IF httTableBuffer:BUFFER-FIELD("RowIdent" + STRING(ix)):BUFFER-VALUE NE ? THEN
         cFindString = cFindString + "RowIdent" + STRING(ix) + " = '" + httTableBuffer:BUFFER-FIELD("RowIdent" + STRING(ix)):BUFFER-VALUE + "' AND ".
-      END.
+    END.
     cFindString = RIGHT-TRIM(cFindString," AND ").
     bOk = hBuffer:FIND-UNIQUE(cFindString) NO-ERROR.
     IF NOT bOk THEN DO:
@@ -3326,8 +3481,10 @@ ELSE DO:
   IF VALID-HANDLE(hWin) THEN
     DYNAMIC-FUNCTION("DoLockWindow",?).
 
-  IF DYNAMIC-FUNCTION("getQueryStatFieldValues") NE "" THEN 
+  IF DYNAMIC-FUNCTION("getQueryStatFieldValues") NE "" THEN DO:
     DYNAMIC-FUNCTION("setAttribute",ihBrowse,"recordcount",ENTRY(1,ENTRY(2,DYNAMIC-FUNCTION("getQueryStatFieldValues"),"|"),";")).
+    DYNAMIC-FUNCTION("setAttribute",ihBrowse,"currentcount",ENTRY(1,ENTRY(2,DYNAMIC-FUNCTION("getQueryStatFieldValues"),"|"),";")).
+  END.  
   ELSE DO:
     IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"getrecordcount") = "" THEN DYNAMIC-FUNCTION("setAttribute",ihBrowse,"recordcount","").
     IF NOT PROGRAM-NAME(2) BEGINS "StartSearch" AND NOT PROGRAM-NAME(2) BEGINS("MultiSortBrowse") THEN 
@@ -3352,10 +3509,12 @@ ELSE DO:
 
   IF DYNAMIC-FUNCTION("getAttribute",ihBrowse,"GoLocalWhenSmallDistinctCount") = "yes" AND 
      INT(DYNAMIC-FUNCTION("getAttribute",ihBrowse,"recordcount")) < 3000 AND
-     DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctcolumns") NE "" THEN DO:
+     DYNAMIC-FUNCTION("getAttribute",ihBrowse,"distinctcolumns") NE "" AND
+     getAttribute(ihBrowse,"statvaluequerystop") = "" THEN DO:
     DYNAMIC-FUNCTION("setAttribute",ihBrowse,"uselocaldata","yes").
     DYNAMIC-FUNCTION("setAttribute",ihBrowse,"firstrowid","").
     DYNAMIC-FUNCTION("setAttribute",ihBrowse,"lastrowid","").
+    setAttribute(ihBrowse,"countPlus","").
   END.
 END.
 
@@ -3388,6 +3547,8 @@ DEF INPUT  PARAM iBatchSize         AS INT    NO-UNDO.
 DEF INPUT  PARAM iStartRow          AS INT    NO-UNDO.
 DEF INPUT  PARAM icBuffersAndFields AS CHAR   NO-UNDO.
 DEF INPUT  PARAM icQueryCriteria    AS CHAR   NO-UNDO.
+DEF INPUT PARAM icSortExpr          AS CHAR   NO-UNDO.
+DEF INPUT PARAM ibDesc              AS LOG    NO-UNDO.
 DEF OUTPUT PARAM iMaxCount          AS INT    NO-UNDO.
 
 DEF VAR hBuffer             AS HANDLE NO-UNDO.
@@ -3402,14 +3563,14 @@ DEF VAR hField              AS HANDLE NO-UNDO.
 DEF VAR cSkipUniqueRows     AS CHAR   NO-UNDO.
 DEF VAR cSortMap            AS CHAR   NO-UNDO.
 DEF VAR cTemp               AS CHAR   NO-UNDO.
+DEF VAR cTemp2              AS CHAR   NO-UNDO.
 DEF VAR cFirstRowid         AS CHAR   NO-UNDO.
 DEF VAR cLastRowid          AS CHAR   NO-UNDO.
 DEF VAR iNumServerRec       AS INT    NO-UNDO.
 DEF VAR iTmpStartRow        AS INT    NO-UNDO.
 DEF VAR hTmpQuery           AS HANDLE NO-UNDO.
-DEF VAR cSortColumn         AS CHAR   NO-UNDO.
-DEF VAR hAltExtentFields    AS HANDLE NO-UNDO EXTENT 50.
-DEF VAR hExtentFields       AS HANDLE NO-UNDO EXTENT 50.
+DEF VAR hAltExtentFields    AS HANDLE NO-UNDO EXTENT.
+DEF VAR hExtentFields       AS HANDLE NO-UNDO EXTENT.
 DEF VAR cExtentFields       AS CHAR   NO-UNDO.
 DEF VAR cAltExtFieldHandles AS CHAR   NO-UNDO.
 DEF VAR iCntExtFields       AS INT    NO-UNDO.
@@ -3423,6 +3584,13 @@ DEF VAR cQueryFilter        AS CHAR   NO-UNDO.
 DEF VAR cBaseQuery          AS CHAR   NO-UNDO.
 DEF VAR cCompanyTag         AS CHAR   NO-UNDO.
 DEF VAR hUseAppServer       AS HANDLE NO-UNDO.
+DEF VAR cDistinctColumns    AS CHAR   NO-UNDO.
+DEF VAR cTmp                AS CHAR   NO-UNDO.
+DEF VAR cMyQuerySort        AS CHAR   NO-UNDO.
+DEF VAR cMyLocalSort        AS CHAR   NO-UNDO.
+DEF VAR cModQuerySort       AS CHAR   NO-UNDO.
+DEF VAR cModLocalSort       AS CHAR   NO-UNDO.
+DEF VAR cSortString         AS CHAR   NO-UNDO.
 
 IF icQueryCriteria = "" THEN DO:
   ASSIGN cBaseQuery   = DYNAMIC-FUNCTION("getAttribute",ihQuery,"baseQuery")
@@ -3445,6 +3613,7 @@ IF icQueryCriteria = "" THEN DO:
      AND getAttribute(ihQuery,"prescanquerywhere") = ""
      AND getAttribute(ihQuery,"prescanqueryfilter") = ""
      AND getAttribute(ihQuery,"uselocaldata") NE "yes" 
+     AND getAttribute(ihQuery,"sqlDbName") = "" 
      AND NOT CAN-DO(getAttribute(ihQuery,"allcalcfields"),ENTRY(1,getAttribute(ihQuery,"querysort")," "))
      THEN DO:
     IF CAN-DO(getAttribute(ihQuery,"altPrimaryBufferList"),getAttribute(ihQuery,"sortBuffer")) THEN
@@ -3464,6 +3633,7 @@ IF icQueryCriteria = "" THEN DO:
                                 " USE-INDEX " + getAttribute(ihQuery,"use-index")
                               ELSE "") +
                               getAttribute(ihQuery,"queryjoin")
+         icSortExpr         = DYNAMIC-FUNCTION("getAttribute",ihQuery,"querysort")
                               .
 END.
 
@@ -3480,6 +3650,10 @@ ASSIGN cTemp = REPLACE(icBuffersAndFields,"!","")
        cTemp = REPLACE(cTemp,";RowIdent7","")
        cTemp = REPLACE(cTemp,";RowIdent8","")
        cTemp = REPLACE(cTemp,";RowIdent9","")
+       cTemp = REPLACE(cTemp,";distinct ",";")
+       cTemp = REPLACE(cTemp,"+distinct ","+")
+       cTemp = REPLACE(cTemp,";accum ",";")
+       cTemp = REPLACE(cTemp,"+accum ","+")
        icQueryCriteria = DYNAMIC-FUNCTION("FixQuery",icQueryCriteria)
        .
        
@@ -3492,11 +3666,6 @@ IF icQueryCriteria MATCHES "*(*Company)" OR icQueryCriteria MATCHES "*(Codemaste
   DYNAMIC-FUNCTION("setAttribute",ihQuery,"queryWhere",cQueryWhere).
   DYNAMIC-FUNCTION("setAttribute",ihQuery,"CompanyTag",cCompanyTag).
 END.
-
-IF getAttribute(ihQuery,"querysort") NE "" AND 
-   (DYNAMIC-FUNCTION("getAttribute",ihQuery,"skipServerSort") NE "yes" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"useLocalData") NE "yes") THEN
-  icQueryCriteria = icQueryCriteria + " BY " + getAttribute(ihQuery,"querysort")
-                  + (IF getAttribute(ihQuery,"querydesc") = "desc" THEN " DESCENDING" ELSE "").
 
 IF getAttribute(ihQuery,"queryjoin") = "" THEN DO:
   DO ix = 1 TO LENGTH(icQueryCriteria):
@@ -3515,6 +3684,9 @@ IF getAttribute(ihQuery,"queryjoin") = "" THEN DO:
 END.
 
 hBuffer = ihQuery:GET-BUFFER-HANDLE(1).
+
+cTemp = addDistAndAccum(ihQuery,cTemp).
+
 iTmpStartRow = iStartRow.
 
 
@@ -3527,8 +3699,10 @@ IF getAttribute(ihQuery,"uselocaldata") = "yes" THEN DO:
 END.
 ELSE DO:
 
-  IF iStartRow = 0 AND ihQuery:IS-OPEN THEN 
-    hBuffer:EMPTY-TEMP-TABLE().
+  IF iStartRow = 0 AND ihQuery:IS-OPEN THEN DO:
+    IF getAttribute(ihQuery,"keepData") NE "yes" THEN
+      hBuffer:EMPTY-TEMP-TABLE().
+  END.  
   ELSE IF iStartRow > 0 OR iStartRow = -1 THEN 
     iTotCount = INT(getAttribute(ihQuery,"totalcount")).
   
@@ -3536,11 +3710,15 @@ ELSE DO:
   DYNAMIC-FUNCTION("setOrgBuffersAndFields",DYNAMIC-FUNCTION("getAttribute",ihQuery,"orgBuffersAndFields")).
   
   cTemp = DYNAMIC-FUNCTION("AddCalcParam",cTemp,ihQuery).
+
+  IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanBaseQuery") NE "" THEN 
+    DYNAMIC-FUNCTION("setPreScanBaseQuery",REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanBaseQuery"),"|",CHR(3))).
   
-  DYNAMIC-FUNCTION("setPreScanQuery",TRIM(REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanBaseQuery"),"|",CHR(3)) + CHR(28) + 
-                                          REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanqueryfilter"),"|",CHR(3)) + CHR(28) + 
-                                          REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanquerywhere"),"|",CHR(3))
-                                          ,CHR(28))).
+  IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanQueryFilter") NE "" OR 
+     DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanQueryWhere") NE "" THEN
+    DYNAMIC-FUNCTION("setPreScanQuery",TRIM(REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanqueryfilter"),"|",CHR(3)) + CHR(28) + 
+                                            REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanquerywhere"),"|",CHR(3))
+                                            ,CHR(28))).
 
   IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanlimit") NE "" THEN
     DYNAMIC-FUNCTION("setPreScanLimit",INT(DYNAMIC-FUNCTION("getAttribute",ihQuery,"prescanlimit"))).
@@ -3554,6 +3732,42 @@ ELSE DO:
   END.
 
   DYNAMIC-FUNCTION("setUniqueBuffer",DYNAMIC-FUNCTION("getAttribute",ihQuery,"uniqueBuffer")).
+
+  DYNAMIC-FUNCTION("setQueryStopAfter",DYNAMIC-FUNCTION("getAttribute",ihQuery,"queryStopAfter")).
+  
+  DYNAMIC-FUNCTION("setOrgBuffersAndFields",DYNAMIC-FUNCTION("getAttribute",ihQuery,"orgBuffersAndFields")).
+
+  IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"NoMandatoryCalcFields") NE "" THEN 
+    DYNAMIC-FUNCTION("setSkipCalcFields",ihQuery).
+
+  IF icSortExpr = "" THEN icSortExpr = DYNAMIC-FUNCTION("getAttribute",ihQuery,"localsort").
+  
+  IF DYNAMIC-FUNCTION("getAttributeList",ihQuery,"myQuerySort*","",NO) NE "|" THEN DO:
+    DO ix = 1 TO NUM-ENTRIES(icSortExpr," "):
+      cTmp = ENTRY(ix,icSortExpr," ").
+      cTmp = ENTRY(NUM-ENTRIES(cTmp,"."),cTmp,".").
+    
+      IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"myQuerySort" + cTmp) NE "" THEN DO:
+        cMyQuerySort = DYNAMIC-FUNCTION("getAttribute",ihQuery,"myQuerySort" + cTmp).
+        cMyQuerySort = REPLACE(cMyQuerySort," <desc> ",IF ibDesc OR (ix < NUM-ENTRIES(icSortExpr," ") AND ENTRY(ix + 1,icSortExpr," ") BEGINS "desc") THEN " desc " ELSE " ").
+        IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"myLocalSort" + cTmp) NE "" THEN
+          ASSIGN cMyLocalSort = DYNAMIC-FUNCTION("getAttribute",ihQuery,"myLocalSort" + cTmp)
+                 cMyLocalSort = REPLACE(cMyLocalSort," <desc> ",IF ibDesc THEN " desc " ELSE " ").
+        ELSE
+          DO iy = 1 TO NUM-ENTRIES(cMyQuerySort," "):   
+            cTemp2 = ENTRY(iy,cMyQuerySort," ").  
+            cMyLocalSort = cMyLocalSort + (IF cMyLocalSort NE "" THEN " " ELSE "") + ENTRY(NUM-ENTRIES(cTemp2,"."),cTemp2,".").
+          END.  
+        ASSIGN cModQuerySort = cModQuerySort + cMyQuerySort + " "
+               cModLocalSort = cModLocalSort + cMyLocalSort + " "
+               .    
+      END.
+      ELSE ASSIGN cModQuerySort = cModQuerySort + ENTRY(ix,icSortExpr," ") + " "
+                  cModLocalSort = cModLocalSort + cTmp + " "
+                  .    
+    END. 
+    icSortExpr = cModQuerySort. 
+  END.
                                           
   DYNAMIC-FUNCTION("setCalcFieldProc",getAttribute(ihQuery,"calcfieldproc")).
   DYNAMIC-FUNCTION("setCalcFieldFilter",DYNAMIC-FUNCTION("getAttribute",ihQuery,"calcfieldfilter")
@@ -3562,15 +3776,25 @@ ELSE DO:
                  ).
   
   httTable = DYNAMIC-FUNCTION("getTempTableJoin",iBatchSize,
-                              IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"SmartComponentLibrary_QueryStart") NE "" THEN
-                                INT(DYNAMIC-FUNCTION("getAttribute",ihQuery,"SmartComponentLibrary_QueryStart"))
+                              IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"BatchQueryStart") NE "" THEN
+                                INT(DYNAMIC-FUNCTION("getAttribute",ihQuery,"BatchQueryStart"))
                               ELSE IF iStartRow = -1 THEN 0 
                               ELSE iStartRow,
                               getAttribute(ihQuery,"querydir"),
-                              cTemp,
-                              icQueryCriteria
+                              IF getAttribute(ihQuery,"sqlDbname") NE "" THEN 
+                                "sqlDb" 
+                                + CHR(3) + getAttribute(ihQuery,"sqlDbname")  
+                                + CHR(3) + getAttribute(ihQuery,"sqlView") 
+                                + CHR(3) + cTemp 
+                              ELSE cTemp,
+                              icQueryCriteria + CHR(3) 
+                            + (IF icSortExpr NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"skipServerSort") NE "yes" THEN
+                                 " BY " + icSortExpr + (IF ibDesc THEN " DESC" ELSE "")
+                               ELSE "")
                             + DYNAMIC-FUNCTION("getAttribute",ihQuery,"CompanyTag")
                               ).
+
+  IF NOT VALID-HANDLE(httTable) THEN RETURN.
   
   httTableBuffer = httTable:DEFAULT-BUFFER-HANDLE.
   CREATE QUERY httTableQuery NO-ERROR.
@@ -3588,6 +3812,10 @@ ELSE DO:
   END. */
   iNumRowIds = NUM-ENTRIES(DYNAMIC-FUNCTION("getAttribute",ihQuery,"buffersandfields")).
 
+  IF getAttribute(ihQuery,"sqlDbname") NE "" AND INT(DYNAMIC-FUNCTION("getAttribute",ihQuery,"numbuffers")) > 1 THEN
+    iNumRowIds = INT(DYNAMIC-FUNCTION("getAttribute",ihQuery,"numbuffers")). /* sql */
+  IF iNumRowIds = 0 THEN iNumRowIds = 1. /* sql */
+
   cSkipUniqueRows = getAttribute(ihQuery,"SkipUniqueRows").
   DO ix = 1 TO NUM-ENTRIES(cSkipUniqueRows):
     hField = hBuffer:BUFFER-FIELD("RowIdent" + STRING(ix)) NO-ERROR.
@@ -3599,6 +3827,10 @@ ELSE DO:
   ASSIGN cExtentFields       = getAttribute(ihQuery,"extentFields")
          cAltExtFieldHandles = getAttribute(ihQuery,"AltExtentFieldHandles")
          cExcludeLocalFields = getAttribute(ihQuery,"localcalcfields").
+
+  EXTENT(hAltExtentFields) = MAX(1,NUM-ENTRIES(cExtentFields)).
+  EXTENT(hExtentFields) = MAX(1,NUM-ENTRIES(cExtentFields)).      
+
   DO ix = 1 TO NUM-ENTRIES(cExtentFields):
     ASSIGN hAltExtentFields[ix] = WIDGET-HANDLE(ENTRY(ix,cAltExtFieldHandles))
 /*            hExtentFields[ix]    = httTableBuffer:BUFFER-FIELD(ENTRY(ix,cExtentFields)) */
@@ -3634,9 +3866,10 @@ ELSE DO:
       END.
     ELSE
     */
-      DO ix = 1 TO iNumRowIds:
+    DO ix = 1 TO iNumRowIds:
+      IF httTableBuffer:BUFFER-FIELD("RowIdent" + STRING(ix)):BUFFER-VALUE NE ? THEN
         cFindString = cFindString + "RowIdent" + STRING(ix) + " = '" + httTableBuffer:BUFFER-FIELD("RowIdent" + STRING(ix)):BUFFER-VALUE + "' AND ".
-      END.
+    END.
     cFindString = RIGHT-TRIM(cFindString," AND ").
 
     bOk = hBuffer:FIND-UNIQUE(cFindString) NO-ERROR.
@@ -3669,72 +3902,140 @@ ELSE DO:
   END.
   setAttribute(ihQuery,"totalcount",STRING(iTotCount)).
 
-  /* If we go from the start or we go from the end and retrieve all records, set firstrowid to cFirstRowid: */ 
-  IF (iNumServerRec < INT(getAttribute(ihQuery,"rowstobatch")) AND getAttribute(ihQuery,"querydir") NE "") 
-     OR (getAttribute(ihQuery,"querydir") = "" AND iTmpStartRow = 0) THEN
-    setAttribute(ihQuery,"firstrowid",cFirstRowid).
-  ELSE IF getAttribute(ihQuery,"querydir") NE "" THEN
-    setAttribute(ihQuery,"firstrowid","").
+  IF iCount > 0 THEN DO:
 
-  /* If we go from the end or we go from the start and retrieve all records, set lastrowid to cLastRowid: */ 
-  IF iNumServerRec < INT(getAttribute(ihQuery,"rowstobatch")) 
-      OR getAttribute(ihQuery,"rowstobatch") = "0"
-      OR (getAttribute(ihQuery,"querydir") NE "" AND iTmpStartRow = 0) THEN
-    setAttribute(ihQuery,"lastrowid",cLastRowid).
-  ELSE
-    setAttribute(ihQuery,"lastrowid","").
-
-  IF getAttribute(ihQuery,"localsort") NE "" THEN cSortColumn = FixSortString(ihQuery).
-  ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + 
-                        (IF cSortColumn NE "" THEN 
-                          " BY " + cSortColumn + " " + getAttribute(ihQuery,"querydesc")
-                         ELSE "")) NO-ERROR.
-  IF ERROR-STATUS:GET-NUMBER(1) = 7328 THEN
-    ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME).
-
-  hTmpQuery = ihQuery NO-ERROR.
-
-  IF VALID-HANDLE(hTmpQuery) THEN
-    bOk = hTmpQuery:QUERY-OPEN() NO-ERROR.
-  ELSE DO: 
-    IF DYNAMIC-FUNCTION("getASlibBeaviour","QueryLogFile") NE "" THEN DO:
-      MESSAGE PROGRAM-NAME(1) SKIP
-              "Invalid query handle: " hTmpQuery SKIP
-              VIEW-AS ALERT-BOX ERROR.
-      iMaxCount = 0.
-      RETURN.
-    END.
-  END.
-
-  IF NOT bOk AND ERROR-STATUS:GET-NUMBER(1) = 141 THEN DO:
-    cSortColumn = "SUBSTR(" + getAttribute(ihQuery,"localsort") + ",1,50)".
+    /* If we go from the start or we go from the end and retrieve all records, set firstrowid to cFirstRowid: */ 
+    IF (iNumServerRec < INT(getAttribute(ihQuery,"rowstobatch")) AND getAttribute(ihQuery,"querydir") NE "") 
+       OR (getAttribute(ihQuery,"querydir") = "" AND iTmpStartRow = 0) THEN
+      setAttribute(ihQuery,"firstrowid",cFirstRowid).
+    ELSE IF getAttribute(ihQuery,"querydir") NE "" THEN
+      setAttribute(ihQuery,"firstrowid","").
+  
+    /* If we go from the end or we go from the start and retrieve all records, set lastrowid to cLastRowid: */ 
+    IF iNumServerRec < INT(getAttribute(ihQuery,"rowstobatch")) 
+        OR getAttribute(ihQuery,"rowstobatch") = "0"
+        OR (getAttribute(ihQuery,"querydir") NE "" AND iTmpStartRow = 0) THEN
+      setAttribute(ihQuery,"lastrowid",cLastRowid).
+    ELSE
+      setAttribute(ihQuery,"lastrowid","").
+  
+    IF getAttribute(ihQuery,"localsort") NE "" THEN icSortExpr = FixSortString(ihQuery).
+    IF cModLocalSort NE "" THEN 
+      icSortExpr = cModLocalSort.
+    
     ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + 
-                          " BY " + cSortColumn 
-                        + " " + getAttribute(ihQuery,"querydesc")).
-    bOK = ihQuery:QUERY:QUERY-OPEN() NO-ERROR.
-  END.
+                          (IF icSortExpr NE "" 
+                              OR (DYNAMIC-FUNCTION("getAttribute",ihQuery,"lastrowid") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"localsort") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"querydir") = "")
+                              OR (DYNAMIC-FUNCTION("getAttribute",ihQuery,"firstrowid") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"localsort") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"querydir") NE "")
+                           THEN 
+                            " BY " + icSortExpr 
+                            + (IF ibDesc THEN " DESC" ELSE "")
+                           ELSE "")
+                        + " BY RowCount"
+                          ) NO-ERROR.
+    IF ERROR-STATUS:GET-NUMBER(1) = 7328 THEN
+      ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME).
+  
+    hTmpQuery = ihQuery NO-ERROR.
+  
+    IF VALID-HANDLE(hTmpQuery) THEN
+      bOk = hTmpQuery:QUERY-OPEN() NO-ERROR.
+    ELSE DO: 
+      IF DYNAMIC-FUNCTION("getASlibBeaviour","QueryLogFile") NE "" THEN DO:
+        MESSAGE PROGRAM-NAME(1) SKIP
+                "Invalid query handle: " hTmpQuery SKIP
+                VIEW-AS ALERT-BOX ERROR.
+        iMaxCount = 0.
+        RETURN.
+      END.
+    END.
+  
+    IF NOT bOk AND ERROR-STATUS:GET-NUMBER(1) = 141 THEN DO:
+      IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"1stDbSortColumn") NE "" THEN DO:
+        IF DYNAMIC-FUNCTION("getFieldDataType",DYNAMIC-FUNCTION("getAttribute",ihQuery,"1stDbSortColumn")) = "CHARACTER" THEN
+          cSortString = " BY SUBSTR(" + DYNAMIC-FUNCTION("getAttribute",ihQuery,"1stSortColumn") + ",1,30)".
+        ELSE
+          cSortString = " BY " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"1stSortColumn").
+        cSortString = cSortString + " " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"1stSortColumndDesc").
+      END.
+      IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"2ndDbSortColumn") NE "" THEN DO:
+        IF DYNAMIC-FUNCTION("getFieldDataType",DYNAMIC-FUNCTION("getAttribute",ihQuery,"2ndDbSortColumn")) = "CHARACTER" THEN
+          cSortString = cSortString + " BY SUBSTR(" + DYNAMIC-FUNCTION("getAttribute",ihQuery,"2ndSortColumn") + ",1,30)".
+        ELSE
+          cSortString = cSortString + " BY " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"2ndSortColumn").
+        cSortString = cSortString + " " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"2ndSortColumndDesc").
+      END.
+      IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"3rdDbSortColumn") NE "" THEN DO:
+        IF DYNAMIC-FUNCTION("getFieldDataType",DYNAMIC-FUNCTION("getAttribute",ihQuery,"3rdDbSortColumn")) = "CHARACTER" THEN
+          cSortString = cSortString + " BY SUBSTR(" + DYNAMIC-FUNCTION("getAttribute",ihQuery,"3rdSortColumn") + ",1,30)".
+        ELSE
+          cSortString = cSortString + " BY " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"3rdSortColumn").
+        cSortString = cSortString + " " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"3rdSortColumndDesc").
+      END.
+      IF DYNAMIC-FUNCTION("getAttribute",ihQuery,"4thDbSortColumn") NE "" THEN DO:
+        IF DYNAMIC-FUNCTION("getFieldDataType",DYNAMIC-FUNCTION("getAttribute",ihQuery,"4thDbSortColumn")) = "CHARACTER" THEN
+          cSortString = cSortString + " BY SUBSTR(" + DYNAMIC-FUNCTION("getAttribute",ihQuery,"4thSortColumn") + ",1,30)".
+        ELSE
+          cSortString = cSortString + " BY " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"4thSortColumn").
+        cSortString = cSortString + " " + DYNAMIC-FUNCTION("getAttribute",ihQuery,"4thSortColumndDesc").
+      END.
+      IF cSortString = "" THEN DO:
+        ASSIGN cSortString  = "SUBSTR("
+               icSortExpr = " BY " + icSortExpr.
+        DO ix = 1 TO LENGTH(icSortExpr):
+          cSortString = cSortString + IF SUBSTR(icSortExpr,ix,4) = " BY " THEN " BY SUBSTR("
+                                      ELSE IF SUBSTR(icSortExpr,ix,1) = " " AND SUBSTR(icSortExpr,ix - 3,4) NE " BY " THEN ",1,50) "
+                                      ELSE IF SUBSTR(icSortExpr,ix - 1,4) NE " BY " AND SUBSTR(icSortExpr,ix - 2,4) NE " BY " THEN SUBSTR(icSortExpr,ix,1)
+                                      ELSE "".
+        END.
+        IF R-INDEX(icSortExpr,"DESC") = 0 OR R-INDEX(cSortString,"(") > R-INDEX(cSortString,")") THEN
+          cSortString = cSortString + ",1,50) ".
+      END.
 
-  IF rBuffer NE ? THEN DO:
-    ihQuery:REPOSITION-TO-ROWID(rBuffer) NO-ERROR.
-    IF NOT ERROR-STATUS:ERROR THEN
-      ihQuery:GET-NEXT().
-  END.
-  ELSE IF getAttribute(ihQuery,"querydir") NE "" THEN DO: 
-    ihQuery:GET-LAST().
-    IF ihQuery:GET-BUFFER-HANDLE(1):AVAIL THEN
-      setAttribute(ihQuery,"lastrowid",STRING(ihQuery:GET-BUFFER-HANDLE(1):ROWID)).
-  END.
-  ELSE DO:
-    ihQuery:GET-FIRST().
-    IF ihQuery:GET-BUFFER-HANDLE(1):AVAIL THEN
-      setAttribute(ihQuery,"firstrowid",STRING(ihQuery:GET-BUFFER-HANDLE(1):ROWID)).
-  END.
+      ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME 
+                           + (IF icSortExpr NE ""
+                                OR (DYNAMIC-FUNCTION("getAttribute",ihQuery,"lastrowid") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"localsort") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"querydir") = "")
+                                OR (DYNAMIC-FUNCTION("getAttribute",ihQuery,"firstrowid") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"localsort") NE "" AND DYNAMIC-FUNCTION("getAttribute",ihQuery,"querydir") NE "")
+                                THEN
+                              cSortString 
+                              ELSE "")
+                           + " BY RowCount"
+                             ).
+      bOK = ihQuery:QUERY-OPEN() NO-ERROR.
+      
+      /*
+      cSortColumn = "SUBSTR(" + getAttribute(ihQuery,"localsort") + ",1,50)".
+      ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + 
+                            " BY " + cSortColumn 
+                          + " " + getAttribute(ihQuery,"querydesc")).
+      bOK = ihQuery:QUERY:QUERY-OPEN() NO-ERROR.
+      */
+    END.
+
+    IF rBuffer NE ? THEN DO:
+      ihQuery:REPOSITION-TO-ROWID(rBuffer) NO-ERROR.
+      IF NOT ERROR-STATUS:ERROR THEN
+        ihQuery:GET-NEXT().
+    END.
+    ELSE IF getAttribute(ihQuery,"querydir") NE "" THEN DO: 
+      ihQuery:GET-LAST().
+      IF ihQuery:GET-BUFFER-HANDLE(1):AVAIL THEN
+        setAttribute(ihQuery,"lastrowid",STRING(ihQuery:GET-BUFFER-HANDLE(1):ROWID)).
+    END.
+    ELSE DO:
+      ihQuery:GET-FIRST().
+      IF ihQuery:GET-BUFFER-HANDLE(1):AVAIL THEN
+        setAttribute(ihQuery,"firstrowid",STRING(ihQuery:GET-BUFFER-HANDLE(1):ROWID)).
+    END.
+  END.  
   
   DELETE OBJECT httTableQuery.
   DELETE OBJECT httTable.
   
-  IF DYNAMIC-FUNCTION("getQueryStatFieldValues") NE "" THEN 
+  IF DYNAMIC-FUNCTION("getQueryStatFieldValues") NE "" THEN DO:
     setAttribute(ihQuery,"recordcount",ENTRY(1,ENTRY(2,DYNAMIC-FUNCTION("getQueryStatFieldValues"),"|"),";")).
+    setAttribute(ihQuery,"currentcount",ENTRY(1,ENTRY(2,DYNAMIC-FUNCTION("getQueryStatFieldValues"),"|"),";")).
+  END.  
   ELSE DO:
     IF (getAttribute(ihQuery,"querydir") = "" AND
         getAttribute(ihQuery,"lastrowid") NE "" AND iStartRow = 0) OR
@@ -3888,6 +4189,114 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-addDistAndAccum) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION addDistAndAccum Procedure
+ FUNCTION addDistAndAccum RETURNS CHARACTER 
+         (INPUT ihQueryObject AS HANDLE
+         ,INPUT icQueryDef    AS CHAR):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cQueryDef           AS CHAR   NO-UNDO.
+DEF VAR cDistBufFldList     AS CHAR   NO-UNDO.
+DEF VAR cAccBufFldList      AS CHAR   NO-UNDO.
+DEF VAR cDistinctTables     AS CHAR   NO-UNDO.
+DEF VAR cAccumTables        AS CHAR   NO-UNDO.
+DEF VAR cBuffer             AS CHAR   NO-UNDO.
+DEF VAR cDistinctColumns    AS CHAR   NO-UNDO.
+DEF VAR cAccumFields        AS CHAR   NO-UNDO.
+DEF VAR hBuffer             AS HANDLE NO-UNDO.
+DEF VAR ix                  AS INT    NO-UNDO.
+DEF VAR iy                  AS INT    NO-UNDO.
+DEF VAR bCalcField          AS LOG    NO-UNDO.
+DEF VAR cFieldName          AS CHAR   NO-UNDO.
+DEF VAR cFieldList          AS CHAR   NO-UNDO.
+DEF VAR cBufferFieldDef     AS CHAR   NO-UNDO.
+
+cDistinctColumns = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"distinctcolumns").
+cAccumFields = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"accumfields").
+cDistinctTables = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"distinctTables").
+cAccumTables = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"accumTables").
+
+IF icQueryDef = "" THEN
+  icQueryDef = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"buffersAndFields").
+
+IF ihQueryObject:TYPE = "query" THEN
+  hBuffer = ihQueryObject:GET-BUFFER-HANDLE (1).
+ELSE
+  hBuffer = ihQueryObject:QUERY:GET-BUFFER-HANDLE(1). 
+
+IF cDistinctColumns NE "" OR cAccumFields NE "" THEN DO:
+  DO ix = 1 TO hBuffer:NUM-FIELDS:
+    IF CAN-DO(cDistinctColumns,hBuffer:BUFFER-FIELD(ix):NAME) THEN
+      cDistBufFldList = cDistBufFldList + DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"fieldbuffer" + hBuffer:BUFFER-FIELD(ix):NAME) 
+                      + hBuffer:BUFFER-FIELD(ix):NAME
+//                      + DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"orgdbfield" + hBuffer:BUFFER-FIELD(ix):NAME)
+                      + ",".
+    ELSE IF CAN-DO(cAccumFields,hBuffer:BUFFER-FIELD(ix):NAME) THEN
+      cAccBufFldList = cAccBufFldList + DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"fieldbuffer" + hBuffer:BUFFER-FIELD(ix):NAME)
+                     + hBuffer:BUFFER-FIELD(ix):NAME 
+//                     + DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"orgdbfield" + hBuffer:BUFFER-FIELD(ix):NAME)
+                     + ",".
+  END.
+/*
+  DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+    IF CAN-DO(cDistinctColumns,ihBrowse:GET-BROWSE-COLUMN(ix):NAME) 
+       AND CAN-DO(cDistinctTables,DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME))
+       THEN
+      cDistBufFldList = cDistBufFldList + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) 
+                      + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"orgdbfield" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) + ",".
+    ELSE IF CAN-DO(cAccumFields,ihBrowse:GET-BROWSE-COLUMN(ix):NAME)
+       AND CAN-DO(cAccumTables,DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME))
+       THEN
+      cAccBufFldList = cAccBufFldList + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"fieldbuffer" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) 
+                      + DYNAMIC-FUNCTION("getAttribute",ihBrowse,"orgdbfield" + ihBrowse:GET-BROWSE-COLUMN(ix):NAME) + ",".
+  END.
+  */
+  ASSIGN cDistBufFldList = TRIM(cDistBufFldList,",")
+         cAccBufFldList  = TRIM(cAccBufFldList,",").
+         
+  DO ix = 1 TO NUM-ENTRIES(icQueryDef):
+    cQueryDef = cQueryDef + (IF cQueryDef NE "" THEN "," ELSE "") + ENTRY(1,ENTRY(ix,icQueryDef),";") + ";".
+    cBuffer = ENTRY(1,ENTRY(ix,icQueryDef),";").
+    DO iy = 2 TO NUM-ENTRIES(ENTRY(ix,icQueryDef),";"):
+      ASSIGN cBufferFieldDef = ENTRY(iy,ENTRY(ix,icQueryDef),";")
+             cFieldName = TRIM(ENTRY(1,cBufferFieldDef,"|"),"+")
+             bCalcField = cBufferFieldDef BEGINS "+"
+             .
+      IF getAttribute(ihQueryObject,"sqlDbname") NE "" AND NUM-ENTRIES(cBufferFieldDef,"|") > 5 THEN
+        cBuffer = ENTRY(6,cBufferFieldDef,"|"). 
+      IF CAN-DO(cFieldList,cFieldName) THEN cFieldName = cFieldName + STRING(ix).       
+      cFieldList = cFieldList + (IF cFieldList NE "" THEN "," ELSE "") + cFieldName.
+      IF cDistinctColumns NE "" AND 
+         CAN-DO(cDistBufFldList,getAttribute(ihQueryObject,"fieldbuffer" + cFieldName) + cFieldName) AND 
+         CAN-DO(cDistinctTables,cBuffer) THEN
+        cQueryDef = cQueryDef + (IF bCalcField THEN "+" ELSE "") + "distinct " + TRIM(ENTRY(iy,ENTRY(ix,icQueryDef),";"),"+") + ";".
+      ELSE IF cAccumFields NE "" AND 
+         CAN-DO(cAccBufFldList,getAttribute(ihQueryObject,"fieldbuffer" + cFieldName) + cFieldName) AND
+         CAN-DO(cAccumTables,cBuffer) THEN
+        cQueryDef = cQueryDef + (IF bCalcField THEN "+" ELSE "") + "accum " + TRIM(ENTRY(iy,ENTRY(ix,icQueryDef),";"),"+") + ";".
+      ELSE
+        cQueryDef = cQueryDef + ENTRY(iy,ENTRY(ix,icQueryDef),";") + ";".
+    END.
+    cQueryDef = TRIM(cQueryDef,";").
+  END.
+END.
+ELSE cQueryDef = icQueryDef.
+
+RETURN cQueryDef.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-AddEditBtn) = 0 &THEN
 
@@ -4552,7 +4961,6 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
-
 &IF DEFINED(EXCLUDE-ClearQueryFilter) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION ClearQueryFilter Procedure 
@@ -5129,6 +5537,10 @@ IF ttObject.cObjectType = "fieldMap"
     RETURN FALSE.
 END.
 
+/*MESSAGE "hepp1"                      */
+/*VIEW-AS ALERT-BOX.                   */
+/*  DYNAMIC-FUNCTION("DoLockWindow",?).*/
+
 FOR EACH ttObject 
     WHERE ttObject.hObject = ihObject:
 
@@ -5177,8 +5589,22 @@ FOR EACH ttObject
 
           IF NOT CAN-FIND(FIRST bttEvent 
                                 WHERE bttEvent.hWidget = ttEvent.hWidget
-                                  AND bttEvent.hObject NE ttEvent.hObject) THEN
+                                  AND bttEvent.hObject NE ttEvent.hObject) THEN DO:
+//            hFrame[iFrameIdx]:WIDTH-PIXELS  = MIN(hFrame[iFrameIdx]:WIDTH-PIXELS,hFrame[iFrameIdx]:WINDOW:WIDTH-PIXELS) NO-ERROR.                                    
+/*            MESSAGE 1 skip                                                                      */
+/*                    hFrame[iFrameIdx]:X hFrame[iFrameIdx]:Y SKIP                                */
+/*                    hFrame[iFrameIdx]:WIDTH-PIXELS hFrame[iFrameIdx]:HEIGHT-PIXELS skip(1)      */
+/*                    hFrame[iFrameIdx]:window:X hFrame[iFrameIdx]:window:Y SKIP                  */
+/*                    hFrame[iFrameIdx]:window:WIDTH-PIXELS hFrame[iFrameIdx]:window:HEIGHT-PIXELS*/
+/*            VIEW-AS ALERT-BOX.                                                                  */
             DELETE OBJECT ttEvent.hWidget NO-ERROR.
+/*            MESSAGE 2 error-status:GET-MESSAGE (1) skip                                         */
+/*                    hFrame[iFrameIdx]:X hFrame[iFrameIdx]:Y SKIP                                */
+/*                    hFrame[iFrameIdx]:WIDTH-PIXELS hFrame[iFrameIdx]:HEIGHT-PIXELS skip(1)      */
+/*                    hFrame[iFrameIdx]:window:X hFrame[iFrameIdx]:window:Y SKIP                  */
+/*                    hFrame[iFrameIdx]:window:WIDTH-PIXELS hFrame[iFrameIdx]:window:HEIGHT-PIXELS*/
+/*            VIEW-AS ALERT-BOX.                                                                  */
+          END.  
         END.
       END.
     END.
@@ -5208,7 +5634,8 @@ FOR EACH ttObject
             DELETE OBJECT hDeleteObject NO-ERROR.
         END.
       END CASE.
-      DELETE OBJECT ttObject.hObject NO-ERROR.
+      IF NOT (ttObject.cObjectType = "browse" AND VALID-HANDLE(ttObject.hObject) AND ttObject.hObject:TYPE = "rectangle") THEN 
+        DELETE OBJECT ttObject.hObject NO-ERROR.
     END.
     ELSE IF CAN-DO("tabfolder,container,procedure",ttObject.cObjectType) THEN DO:
       PUBLISH "InvalidateHandle" (ttObject.hObject).
@@ -5232,8 +5659,9 @@ END.
 
 DO ix = 1 TO iFrameIdx:
   IF VALID-HANDLE(hFrame[ix]) THEN
-    ASSIGN hFrame[ix]:WIDTH-PIXELS  = hFrame[ix]:WIDTH-PIXELS
+    ASSIGN hFrame[ix]:WIDTH-PIXELS  = MIN(hFrame[ix]:WIDTH-PIXELS,hFrame[ix]:WINDOW:WIDTH-PIXELS)
            hFrame[ix]:HEIGHT-PIXELS = hFrame[ix]:HEIGHT-PIXELS
+           hFrame[ix]:X             = hFrame[ix]:X
            hFrame[ix]:HIDDEN        = NO
            .
 END.
@@ -5297,6 +5725,11 @@ DEF VAR cColumnName   AS CHAR   NO-UNDO.
 DEF VAR hBrowseColumn AS HANDLE NO-UNDO.
 
 IF ihBrowse:TYPE NE "browse" THEN RETURN NO.
+IF NOT CAN-FIND(FIRST ttObjectLink 
+                WHERE ttObjectLink.hFromObject = ihBrowse
+                  AND ttObjectLink.cLinkType = "browseoverlay") THEN RETURN NO.
+
+DYNAMIC-FUNCTION("DoLockWindow",ihBrowse:WINDOW).
 
 FOR EACH ttObjectLink
     WHERE ttObjectLink.hFromObject = ihBrowse
@@ -5357,6 +5790,9 @@ IF SESSION:DISPLAY-TYPE NE "TTY" THEN DO:
   END.
   APPLY "end-resize" TO hWidget.
 END.
+IF getAttribute(SESSION,"userkeepswindowlocked") NE "yes" THEN
+  DYNAMIC-FUNCTION("DoRedrawWindow",ihBrowse:WINDOW).
+//  DYNAMIC-FUNCTION("DoLockWindow",?).
 
 RETURN YES.
 
@@ -5743,10 +6179,20 @@ FUNCTION FillBrowse RETURNS INTEGER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
-DEF VAR iMaxCount        AS INT    NO-UNDO.
+DEF VAR iMaxCount        AS INT  NO-UNDO.
+DEF VAR cGetRecCount     AS CHAR NO-UNDO.
+DEF VAR cCaller          AS CHAR NO-UNDO.        
+
+cGetRecCount = getAttribute(ihBrowse,"getRecordCount").
+
+IF getAttribute(ihBrowse,"uselocaldata") NE "yes" AND cGetRecCount = "yes" AND NOT CAN-DO("StartSortSearch,OpenQuery",ENTRY(1,PROGRAM-NAME(2)," ")) THEN
+  setAttribute(ihBrowse, "getRecordCount","").
+  
 
 /*RUN DoFillBrowse.p (ihBrowse,iBatchSize,iStartRow,icBuffersAndFields,icQueryCriteria,icSortColumn,ibDesc,hCurrSourceProc,OUTPUT iMaxCount).*/
 RUN DoFillBrowse(ihBrowse,iBatchSize,iStartRow,icBuffersAndFields,icQueryCriteria,icSortColumn,ibDesc,OUTPUT iMaxCount). 
+
+setAttribute(ihBrowse, "getRecordCount",cGetRecCount).
 
 RETURN iMaxCount.
 
@@ -5793,7 +6239,11 @@ IF getAttribute(ihBrowse,"temptablebuffer") NE "" THEN
 ELSE
   hBuffer = ihBrowse:QUERY:GET-BUFFER-HANDLE(1).
 
-ASSIGN cLocalSort    = IF getAttribute(ihBrowse,"localsort") NE "" THEN getAttribute(ihBrowse,"localsort") ELSE icSortColumn
+ASSIGN cLocalSort    = IF getAttribute(ihBrowse,"localsort") NE "" THEN 
+                         getAttribute(ihBrowse,"localsort") 
+                       ELSE IF NUM-ENTRIES(icSortColumn,".") > 0 THEN
+                         ENTRY(NUM-ENTRIES(icSortColumn,"."),icSortColumn,".")
+                       ELSE ""  
        cOrgLocalSort = cLocalSort.
 
 IF cLocalSort NE "" AND SUBSTR(cLocalSort,LENGTH(cLocalSort)) = "]" THEN DO:
@@ -5804,10 +6254,13 @@ IF cLocalSort NE "" AND SUBSTR(cLocalSort,LENGTH(cLocalSort)) = "]" THEN DO:
         VIEW-AS ALERT-BOX INFO BUTTONS OK.
 END.
 
-bOk = ihBrowse:QUERY:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " " + 
-                                   getAttribute(ihBrowse,"basequery") + 
-                                     getAttribute(ihBrowse,"queryfilter") + 
-                                     getAttribute(ihBrowse,"querywhere")  
+bOk = ihBrowse:QUERY:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " " +  
+                                   getLocalQueryString(hBuffer,getAttribute(ihBrowse,"basequery") + 
+                                        getAttribute(ihBrowse,"queryfilter") + 
+                                        getAttribute(ihBrowse,"querywhere"))
+/*                                   getAttribute(ihBrowse,"basequery") +    */
+/*                                     getAttribute(ihBrowse,"queryfilter") +*/
+/*                                     getAttribute(ihBrowse,"querywhere")   */
                                   + (IF cLocalSort NE "" THEN 
                                       " BY " + cLocalSort + (IF ibDesc THEN " DESC" ELSE "") 
                                      ELSE "")
@@ -5844,7 +6297,7 @@ END.
 IF getAttribute(ihBrowse,"distinctcolumns") NE "" AND getAttribute(ihBrowse,"originaltemptable") = "" THEN DO:
   CREATE TEMP-TABLE hOrgTable IN WIDGET-POOL "localTT".
   hOrgTable:CREATE-LIKE(hBuffer).
-  hOrgTable:TEMP-TABLE-PREPARE("org_" + hBuffer:NAME).
+  hOrgTable:TEMP-TABLE-PREPARE("org_" + SUBSTR(hBuffer:NAME,1,28)).
   hOrgBuffer = hOrgTable:DEFAULT-BUFFER-HANDLE.
   DYNAMIC-FUNCTION("NewObject",ihBrowse:WINDOW,hOrgTable,"").
   setAttribute(hOrgTable,"currentdistinctcolumns",getAttribute(ihBrowse,"distinctcolumns")).
@@ -5913,6 +6366,7 @@ END.
 
 ihBrowse:QUERY:GET-FIRST().
 setAttribute(ihBrowse,"firstrowid",STRING(ihBrowse:QUERY:GET-BUFFER-HANDLE(1):ROWID)).
+setAttribute(ihBrowse,"statvalueLastQuery",ihBrowse:QUERY:PREPARE-STRING).
 
 cStatFields = getAttribute(ihBrowse,"querystatfields").
 
@@ -5991,10 +6445,22 @@ ELSE
 ASSIGN cLocalSort = getAttribute(ihQuery,"localsort")
        bDesc      = getAttribute(ihQuery,"querydesc") = "desc".
 
-bOk = ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " " + 
-                                   getAttribute(ihQuery,"basequery") + 
-                                     getAttribute(ihQuery,"queryfilter") + 
-                                     getAttribute(ihQuery,"querywhere")  
+
+IF cLocalSort NE "" AND SUBSTR(cLocalSort,LENGTH(cLocalSort)) = "]" THEN DO:
+  cLocalSort = "jbextent_" + RIGHT-TRIM(SUBSTR(cLocalSort,R-INDEX(cLocalSort,"[") + 1),"]") + "_" + SUBSTR(cLocalSort,1,R-INDEX(cLocalSort,"[") - 1) NO-ERROR.
+  IF ERROR-STATUS:ERROR THEN
+    MESSAGE "Sort on " cLocalSort SKIP
+            ERROR-STATUS:GET-MESSAGE(1)
+        VIEW-AS ALERT-BOX INFO BUTTONS OK.
+END.
+
+bOk = ihQuery:QUERY-PREPARE("FOR EACH " + hBuffer:NAME + " " +
+                             getLocalQueryString(hBuffer,getAttribute(ihQuery,"basequery") + 
+                                        getAttribute(ihQuery,"queryfilter") + 
+                                        getAttribute(ihQuery,"querywhere"))  
+/*                                   getAttribute(ihQuery,"basequery") +    */
+/*                                     getAttribute(ihQuery,"queryfilter") +*/
+/*                                     getAttribute(ihQuery,"querywhere")   */
                              + (IF cLocalSort NE "" THEN " BY " + cLocalSort + (IF bDesc THEN " DESC" ELSE "") ELSE "")) NO-ERROR.
 
 
@@ -6055,6 +6521,7 @@ END.
 setAttribute(ihQuery,"querystatfieldvalues",cStatFieldValues).
 
 setAttribute(ihQuery,"recordcount",STRING(iRecordCount)).
+setAttribute(ihQuery,"statvalueLastQuery",ihQuery:PREPARE-STRING).
 
 RETURN iRecordCount. 
 
@@ -6073,14 +6540,16 @@ FUNCTION FillQuery RETURNS INTEGER
     INPUT iBatchSize         AS INT,
     INPUT iStartRow          AS INT,
     INPUT icBuffersAndFields AS CHAR,
-    INPUT icQueryCriteria    AS CHAR) :
+    INPUT icQueryCriteria    AS CHAR,
+    INPUT icQuerySort        AS CHAR,
+    INPUT ibDesc             AS LOG) :
 /*------------------------------------------------------------------------------
   Purpose:  
     Notes:  iStartRow = -1: Keep already read records in query            
 ------------------------------------------------------------------------------*/
 DEF VAR iMaxCount           AS INT    NO-UNDO.
 
-RUN DoFillQuery (ihQuery,iBatchSize,iStartRow,icBuffersAndFields,icQueryCriteria,OUTPUT iMaxCount).
+RUN DoFillQuery (ihQuery,iBatchSize,iStartRow,icBuffersAndFields,icQueryCriteria,icQuerySort,ibDesc,OUTPUT iMaxCount).
 
 RETURN iMaxCount.
 
@@ -6221,6 +6690,8 @@ FUNCTION getAttribute RETURNS CHARACTER
   Purpose:  
     Notes:  
 ------------------------------------------------------------------------------*/
+IF ihObject = ? THEN RETURN "".
+
 FIND FIRST ttAttribute 
      WHERE ttAttribute.hObject = ihObject
        AND ttAttribute.cName   = icName
@@ -6353,6 +6824,34 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getBrowseColumnFormat) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getBrowseColumnFormat Procedure
+FUNCTION getBrowseColumnFormat RETURNS CHARACTER 
+  ( INPUT ihBrowse    AS HANDLE,
+    INPUT icFieldName AS CHAR) :
+/*------------------------------------------------------------------------------
+  Purpose:  
+    Notes:  
+------------------------------------------------------------------------------*/
+DEF VAR ix      AS INT NO-UNDO.
+
+DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+  IF ihBrowse:GET-BROWSE-COLUMN(ix):NAME = icFieldName THEN 
+    RETURN ihBrowse:GET-BROWSE-COLUMN(ix):FORMAT.
+END.
+  
+RETURN "".
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getBrowseColumnLabel) = 0 &THEN
 
@@ -6560,6 +7059,46 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-getEventLabel) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getEventLabel Procedure
+FUNCTION getEventLabel RETURNS CHARACTER 
+   ( INPUT ihParent AS HANDLE,
+     INPUT ihWidget AS HANDLE,
+     INPUT icActionOrMethod AS CHAR) :
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF BUFFER ttEvent FOR ttEvent.
+
+FIND FIRST ttEvent 
+     WHERE ttEvent.hObject     = ihParent
+       AND ttEvent.hWidget     = ihWidget
+       AND ttEvent.cAction     = icActionOrMethod     
+     NO-ERROR.
+IF AVAIL ttEvent THEN
+  RETURN ttEvent.cLabel.
+
+FIND FIRST ttEvent 
+     WHERE ttEvent.hObject     = ihParent
+       AND ttEvent.hWidget     = ihWidget
+       AND ttEvent.cMethod     = icActionOrMethod     
+     NO-ERROR.
+IF AVAIL ttEvent THEN
+  RETURN ttEvent.cLabel.
+ELSE 
+  RETURN "".
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-getEventMethod) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getEventMethod Procedure 
@@ -6571,6 +7110,8 @@ FUNCTION getEventMethod RETURNS CHARACTER
     Notes: Parent might be anything (toolbar, buffer, popup..) 
            To distinguish corresoponding menu-items and buttons, use type (button / menu-item) - assumes button
 ------------------------------------------------------------------------------*/
+DEF BUFFER ttEvent FOR ttEvent.
+
 FIND FIRST ttEvent 
      WHERE ttEvent.hObject     = ihParent
        AND ttEvent.hWidget     = ihWidget
@@ -6893,6 +7434,7 @@ DEF VAR hPreScanBuffer      AS HANDLE NO-UNDO.
 DEF VAR hPreScanQuery       AS HANDLE NO-UNDO.
 DEF VAR cOrgPrepareString   AS CHAR   NO-UNDO.
 DEF VAR hOrgCountDistinct   AS HANDLE NO-UNDO.
+DEF VAR hOrgJbAverage       AS HANDLE NO-UNDO.
 DEF VAR hCountDistinct      AS HANDLE NO-UNDO.
 
 ASSIGN cAccumFields        = getAttribute(ihOrgBrowse,"accumfields")
@@ -6906,6 +7448,8 @@ DO ix = 1 TO iNumDistinctFields:
 END.
 
 hOrgCountDistinct = hOrgBuffer:BUFFER-FIELD ("jbCountDistinct") NO-ERROR.
+IF NUM-ENTRIES(cAccumFields) = 1 THEN
+  hOrgJbAverage = hOrgBuffer:BUFFER-FIELD ("jbAverage") NO-ERROR.
 
 CREATE TEMP-TABLE httPreScan.
 
@@ -6980,9 +7524,11 @@ REPEAT WHILE NOT hPreScanQuery:QUERY-OFF-END:
   DO ix = 1 TO iNumAccumFields:
     hOrgAccumFields[ix]:BUFFER-VALUE = hPreScanAccumFields[ix]:BUFFER-VALUE.
   END.
-  IF VALID-HANDLE(hOrgCountDistinct) THEN
-    hOrgCountDistinct:BUFFER-VALUE = hCountDistinct:BUFFER-VALUE
-    .
+  IF VALID-HANDLE(hOrgCountDistinct) THEN DO:
+    hOrgCountDistinct:BUFFER-VALUE = hCountDistinct:BUFFER-VALUE.
+    IF VALID-HANDLE (hOrgJbAverage) THEN
+      hOrgJbAverage:BUFFER-VALUE = hOrgAccumFields[1]:BUFFER-VALUE / hCountDistinct:BUFFER-VALUE.
+  END.  
   hPreScanQuery:GET-NEXT().
 END.
 
@@ -6998,6 +7544,53 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-getLocalQueryString) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION getLocalQueryString Procedure
+FUNCTION getLocalQueryString RETURNS CHARACTER 
+  ( INPUT ihBuffer AS HANDLE
+   ,INPUT icQueryString AS CHAR ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR ix AS INT NO-UNDO.
+DEF VAR cModQuery AS CHAR NO-UNDO.
+DEF VAR cEntry AS CHAR NO-UNDO.
+DEF VAR hField AS HANDLE NO-UNDO.
+DEF VAR cNumber AS CHAR NO-UNDO.
+DEF VAR iNumber AS INT  NO-UNDO.
+
+DO ix = 1 TO NUM-ENTRIES(icQueryString," "):
+  cEntry = ENTRY(ix,icQueryString," ").
+  IF NUM-ENTRIES(cEntry,".") > 1 THEN DO:
+    hField = ihBuffer:BUFFER-FIELD(ENTRY(NUM-ENTRIES(cEntry,"."),cEntry,".")) NO-ERROR.
+    IF VALID-HANDLE(hField) THEN
+      cEntry = hField:NAME.
+    ELSE DO:
+      cNumber = SUBSTR(cEntry,LENGTH(cEntry)).
+      iNumber = INT(cNumber) NO-ERROR.
+      IF NOT ERROR-STATUS:ERROR THEN DO:
+        hField = ihBuffer:BUFFER-FIELD(SUBSTR(cEntry,1,LENGTH(cEntry) - 1)) NO-ERROR.
+        IF VALID-HANDLE(hField) THEN
+          cEntry = hField:NAME.
+      END.
+    END.    
+  END.
+  cModQuery = cModQuery + (IF cModQuery NE "" THEN " " ELSE "") + cEntry.  
+END.  
+
+RETURN cModQuery.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-getObjectActionList) = 0 &THEN
 
@@ -7533,13 +8126,13 @@ DO iy = 1 TO NUM-ENTRIES(cSortMap):
     RETURN ENTRY(2,ENTRY(iy,cSortMap),";").
 END.
 
-IF icTarget = "db" THEN DO:
+IF icTarget = "db" AND getAttribute(ihQueryObject,"sqlDBname") = "" THEN DO:
   cReturn = IF NOT CAN-DO(cCalcFields,icLocalFieldName) THEN
               getAttribute(ihQueryObject,"fieldbuffer" + icLocalFieldName) + "." 
             + getAttribute(ihQueryObject,"orgdbfield" + icLocalFieldName)
             ELSE icLocalFieldName.
   IF cReturn = "." THEN DO:
-    cReturn = ENTRY(1,getAttribute(ihQueryObject,"buffersAndFields")) + "." + icLocalFieldName.
+    cReturn = ENTRY(1,getAttribute(ihQueryObject,"buffersAndFields"),";") + "." + icLocalFieldName.
 
     IF DYNAMIC-FUNCTION("getASlibBeaviour","QueryLogFile") NE "" THEN 
       MESSAGE PROGRAM-NAME(1) SKIP
@@ -7846,6 +8439,12 @@ DEF VAR cGroup          AS CHAR   NO-UNDO.
 DEF VAR iGroupIndex     AS INT    NO-UNDO.
 DEF VAR cGroupDef       AS CHAR   NO-UNDO.
 DEF VAR cFieldsInGroup  AS CHAR   NO-UNDO.
+DEF VAR iFieldInstCnt   AS INT    NO-UNDO INIT 1.
+DEF VAR iz              AS INT    NO-UNDO.
+DEF VAR hGridFilter     AS HANDLE NO-UNDO.
+DEF VAR cBufferList     AS CHAR   NO-UNDO.
+DEF VAR cFieldName      AS CHAR   NO-UNDO.
+DEF VAR cFieldBufferNum AS CHAR   NO-UNDO.
 
 IF AVAIL ttObject THEN
   hCurrObject = ttObject.hObject.
@@ -7880,143 +8479,6 @@ msetAttribute(ihQueryObject,"groupOperator_","").
 msetAttribute(ihQueryObject,"hiddenGroupOperator_","").
 msetAttribute(ihQueryObject,"operatorInUse_","").
 msetAttribute(ihQueryObject,"*rowid","").
-
-IF INDEX(icFieldList,CHR(3)) > 0 THEN 
-  ASSIGN cGroupDef   = SUBSTR(icFieldList,INDEX(icFieldList,CHR(3)) + 1)
-         icFieldList = ENTRY(1,icFieldList,CHR(3))
-         .
-ELSE DO:
-  cGroupList = mgetAttribute(ihQueryObject,"filterGroup_operator").
-  DO ix = 1 TO NUM-ENTRIES(cGroupList):
-    cGroup = ENTRY(1,ENTRY(ix,cGroupList),"|").
-    cGroupDef = cGroupDef + (IF cGroupDef NE "" THEN "¤" ELSE "") + ENTRY(2,ENTRY(ix,cGroupList),"|").
-              
-    cFieldsInGroup = mgetAttribute(ihQueryObject,"filterGroup_" + cGroup + "_FieldName").
-    DO iy = 1 TO NUM-ENTRIES(cFieldsInGroup):
-      cGroupDef = cGroupDef
-                + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_FieldOperator_" + ENTRY(iy,cFieldsInGroup))
-                + "|" + ENTRY(iy,cFieldsInGroup) 
-                + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_Operator_" + ENTRY(iy,cFieldsInGroup)) 
-                + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_Value_" + ENTRY(iy,cFieldsInGroup))
-                . 
-    END.            
-  END.             
-  msetAttribute(ihQueryObject,"filterGroup_","").
-END.
-
-DO ix = 1 TO NUM-ENTRIES(icFieldList):  
-  cOperator = ENTRY(ix,icOperatorList).
-  
-  CASE cOperator:
-    WHEN "GT" THEN cOperator = ">".
-    WHEN "GE" THEN cOperator = ">=".
-    WHEN "LT" THEN cOperator = "<".
-    WHEN "LE" THEN cOperator = "<=".
-    WHEN "NE" THEN cOperator = "<>".
-    WHEN "EQ" THEN cOperator = "=".
-  END CASE.
-  IF CAN-DO(cInUseFieldList,ENTRY(ix,icFieldList)) THEN DO:
-    IF NOT CAN-DO(cGroupList,ENTRY(ix,icFieldList)) THEN DO:
-      ASSIGN iGroupCount = iGroupCount + 1
-             cGroupList  = cGroupList + (IF cGroupList NE "" THEN "," ELSE "") + ENTRY(ix,icFieldList)
-             iGroupIndex = 0.
-      setAttribute(ihQueryObject,"GroupOperator_" + ENTRY(ix,icFieldList),"AND"). /* org: 1 */ 
-      setAttribute(ihQueryObject,"FieldGroup_" + ENTRY(ix,icFieldList),STRING(iGroupCount)). /* org: 1 */
-    END.  
-    iGroupIndex = iGroupIndex + 1.
-    setAttribute(ihQueryObject,"FieldGroup_" + STRING(iGroupIndex) + "_" + ENTRY(ix,icFieldList),STRING(iGroupCount)). /* org: 1 */
-    setAttribute(ihQueryObject,"OperatorInUse_" + STRING(iGroupIndex) + "_" + ENTRY(ix,icFieldList),cOperator).
-    setAttribute(ihQueryObject,"FieldOperator_" + STRING(iGroupIndex) + "_" + ENTRY(ix,icFieldList),
-                 (IF CAN-DO("matches,begins,=",cOperator) THEN "OR" ELSE "AND")).
-    setAttribute(ihQueryObject,"FilterValue_" + STRING(iGroupIndex) + "_" + ENTRY(ix,icFieldList),ENTRY(ix,icValueList,"|")).
-  END.
-  ELSE DO:
-    setAttribute(ihQueryObject,"OperatorInUse_" + ENTRY(ix,icFieldList),cOperator).
-    setAttribute(ihQueryObject,"FilterValue_" + ENTRY(ix,icFieldList),ENTRY(ix,icValueList,"|")).
-  END.
-
-  cInUseFieldList = cInUseFieldList + (IF cInUseFieldList NE "" THEN "," ELSE "") + ENTRY(ix,icFieldList).
-END.
-
-/* group pattern: <group operator>|<field>|<fieldop>|operator|filtervalue|<field>|<fieldop>|operator..;<group operator>|<field>.. */ 
-EMPTY TEMP-TABLE ttTempFilter.
-
-DO ix = 1 TO NUM-ENTRIES(cGroupDef,"¤"):
-  ASSIGN cGroup = ENTRY(ix,cGroupDef,"¤")
-         cGroupOper = ENTRY(1,cGroup,"|")
-         cGroup = SUBSTR(cGroup,INDEX(cGroup,"|") + 1)
-         .
-  DO iy = 1 TO NUM-ENTRIES(cGroup,"|") BY 4:
-    CREATE ttTempFilter.
-    ASSIGN ttTempFilter.cGroupOper = cGroupOper
-           ttTempFilter.iGroupIdx  = iGroupCount + ix
-           ttTempFilter.cFieldOper = ENTRY(iy,cGroup,"|")
-           ttTempFilter.cFieldName = ENTRY(iy + 1,cGroup,"|")
-           ttTempFilter.cOperator  = ENTRY(iy + 2,cGroup,"|")
-           ttTempFilter.cValue     = ENTRY(iy + 3,cGroup,"|")
-           . 
-    setAttribute(ihQueryObject,"FieldGroup_" + ENTRY(iy,cGroup,"|"),STRING(iGroupCount)). 
-  END.
-END.  
-FOR EACH ttTempFilter 
-    BREAK BY ttTempFilter.iGroupIdx
-          BY ttTempFilter.cFieldName
-    :
-  IF FIRST-OF(ttTempFilter.cFieldName) THEN DO: 
-    ix = 0.
-    IF FIRST-OF(ttTempFilter.iGroupIdx) THEN
-      setAttribute(ihQueryObject,"GroupOperator_" + ttTempFilter.cFieldName,ttTempFilter.cGroupOper).  
-    setAttribute(ihQueryObject,"FieldGroup_" + ttTempFilter.cFieldName,STRING(ttTempFilter.iGroupIdx)). 
-    setAttribute(ihQueryObject,"FieldOperator_" + ttTempFilter.cFieldName,ttTempFilter.cFieldOper).
-    setAttribute(ihQueryObject,"OperatorInUse_" + ttTempFilter.cFieldName,ttTempFilter.cOperator).
-    setAttribute(ihQueryObject,"FilterValue_" + ttTempFilter.cFieldName,ttTempFilter.cValue).
-  END.  
-  ELSE DO:
-    /* index duplicate occurances of fields: */
-    ix = ix + 1.
-/*    setAttribute(ihQueryObject,"GroupOperator_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cGroupOper).*/
-    setAttribute(ihQueryObject,"FieldGroup_" + STRING(ix) + "_" + ttTempFilter.cFieldName,STRING(ttTempFilter.iGroupIdx)). 
-    setAttribute(ihQueryObject,"FieldOperator_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cFieldOper).
-    setAttribute(ihQueryObject,"OperatorInUse_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cOperator).
-    setAttribute(ihQueryObject,"FilterValue_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cValue).
-  END.  
-END.
-
-hFilterWin = WIDGET-HANDLE(getAttribute(hToolbar,"filterhandle")) NO-ERROR.
-IF VALID-HANDLE(hFilterWin) AND CAN-DO(hFilterWin:INTERNAL-ENTRIES,"setFilter") THEN DO:
-  RUN SetFilter IN hFilterWin (OUTPUT bOk) NO-ERROR.
-  IF NOT ERROR-STATUS:ERROR AND bOk THEN RETURN YES.
-  ELSE IF ERROR-STATUS:ERROR THEN DO:
-    RUN SetFilter IN hFilterWin NO-ERROR.
-    RETURN YES.
-  END.
-END.
-
-DYNAMIC-FUNCTION("setObjectSourceProc",SOURCE-PROCEDURE).
-hQuery = DYNAMIC-FUNCTION("NewQuery",1,"",
-                           "temp-table"
-                         + ";+BufferName|CHARACTER"
-                         + ";+GroupOperator|CHARACTER"
-                         + ";+FieldGroup|INTEGER"
-                         + ";+FieldOperator|CHARACTER"
-                         + ";+ColumnLabel|CHARACTER"
-                         + ";+Operator|CHARACTER" 
-                         + ";+ColumnValue|CHARACTER"
-                         + ";+!ColumnName|CHARACTER" 
-                         + ";+!DataType|CHARACTER" 
-                         + ";+!Format|CHARACTER" 
-                         + ";+!Seq|INTEGER" 
-                         + ";+!HiddenGroupOperator|CHARACTER" 
-                         + ";+!DuplicateRow|LOGICAL"
-                         + ";+!CharValueTrue|CHARACTER"
-                         + ";+!CharValueFalse|CHARACTER"
-                         + (IF bDynamicsFilter THEN ";!NumInUse|INTEGER" ELSE "")
-                           ,
-                           "where false",
-                           "").
-
-hBuffer = hQuery:GET-BUFFER-HANDLE(1).
-CREATE BUFFER hNewBuff FOR TABLE hBuffer.
 
 cFilterFields = getAttribute(ihQueryObject,"allviewfields")      
               + (IF getAttribute(ihQueryObject,"nodisplayfields") NE "" THEN
@@ -8100,13 +8562,168 @@ DO ix = 1 TO NUM-ENTRIES(cExtraFilter):
 
   IF cExtraDbFldAttr NE "" THEN DO:
     ASSIGN cFilterFields = cFilterFields + (IF cFilterFields NE "" THEN "," ELSE "") + cExtraFieldDef
-           cExtraFieldAttr = cExtraFieldAttr + (IF cExtraFieldAttr NE "" THEN "," ELSE "") + cExtraDbFldAttr.
+           cExtraFieldAttr = cExtraFieldAttr + (IF cExtraFieldAttr NE "" THEN "¤" ELSE "") + cExtraDbFldAttr.
     IF NOT CAN-DO(cExtraBuffers,ENTRY(1,ENTRY(ix,cExtraFilter),".")) THEN
       cExtraBuffers = cExtraBuffers + (IF cExtraBuffers NE "" THEN "," ELSE "") + ENTRY(1,ENTRY(ix,cExtraFilter),".").
   END.
 END.
 IF cExtraBuffers NE "" THEN 
   DYNAMIC-FUNCTION("setAttribute",ihQueryObject,"extraFilterBuffers",cExtraBuffers).
+
+
+IF INDEX(icFieldList,CHR(3)) > 0 THEN 
+  ASSIGN cGroupDef   = SUBSTR(icFieldList,INDEX(icFieldList,CHR(3)) + 1)
+         icFieldList = ENTRY(1,icFieldList,CHR(3))
+         .
+ELSE DO:
+  cGroupList = mgetAttribute(ihQueryObject,"filterGroup_operator").
+  DO ix = 1 TO NUM-ENTRIES(cGroupList):
+    cGroup = ENTRY(1,ENTRY(ix,cGroupList),"|").
+    cGroupDef = cGroupDef + (IF cGroupDef NE "" THEN "¤" ELSE "") + ENTRY(2,ENTRY(ix,cGroupList),"|").
+              
+    cFieldsInGroup = mgetAttribute(ihQueryObject,"filterGroup_" + cGroup + "_FieldName").
+    DO iy = 1 TO NUM-ENTRIES(cFieldsInGroup):
+      iFieldInstCnt = INT(getAttribute(ihQueryObject, "filterGroup_" + cGroup + "_FieldCnt_" + ENTRY(iy,cFieldsInGroup))).
+      DO iz = 1 TO MAX(1,iFieldInstCnt):
+        cGroupDef = cGroupDef
+                  + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_FieldOperator_" + ENTRY(iy,cFieldsInGroup) + "_" + STRING(iz))
+                  + "|" + ENTRY(iy,cFieldsInGroup) 
+                  + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_Operator_" + ENTRY(iy,cFieldsInGroup) + "_" + STRING(iz)) 
+                  + "|" + getAttribute(ihQueryObject,"filterGroup_" + cGroup + "_Value_" + ENTRY(iy,cFieldsInGroup) + "_" + STRING(iz))
+                  .
+      END.             
+    END.            
+  END.             
+  msetAttribute(ihQueryObject,"filterGroup_","").
+END.
+
+cBufferList = getAttribute(ihQueryObject,"bufferList").
+DO ix = 1 TO NUM-ENTRIES(icFieldList):  
+  ASSIGN cOperator  = ENTRY(ix,icOperatorList)
+         cFieldName = ENTRY(ix,icFieldList).
+  
+  IF NUM-ENTRIES(cFieldName,".") > 1 THEN DO:
+    IF LOOKUP(ENTRY(1,cFieldName,"."),cBufferList) > 1 THEN
+      cFieldBufferNum = STRING(LOOKUP(ENTRY(1,cFieldName,"."),cBufferList)).
+    ELSE
+      cFieldBufferNum = "".
+      
+    cFieldName = ENTRY(NUM-ENTRIES(cFieldName,"."),cFieldName,".").
+    
+    IF cFieldBufferNum NE "" AND CAN-DO(cFilterFields,cFieldName + cFieldBufferNum) THEN
+      cFieldName = cFieldName + cFieldBufferNum.       
+  END.  
+  
+  CASE cOperator:
+    WHEN "GT" THEN cOperator = ">".
+    WHEN "GE" THEN cOperator = ">=".
+    WHEN "LT" THEN cOperator = "<".
+    WHEN "LE" THEN cOperator = "<=".
+    WHEN "NE" THEN cOperator = "<>".
+    WHEN "EQ" THEN cOperator = "=".
+  END CASE.
+  IF CAN-DO(cInUseFieldList,cFieldName) THEN DO:
+    IF NOT CAN-DO(cGroupList,cFieldName) THEN DO:
+      ASSIGN iGroupCount = iGroupCount + 1
+             cGroupList  = cGroupList + (IF cGroupList NE "" THEN "," ELSE "") + cFieldName
+             iGroupIndex = 0.
+      setAttribute(ihQueryObject,"GroupOperator_" + cFieldName,"AND"). /* org: 1 */ 
+      setAttribute(ihQueryObject,"FieldGroup_" + cFieldName,STRING(iGroupCount)). /* org: 1 */
+    END.  
+    iGroupIndex = iGroupIndex + 1.
+    setAttribute(ihQueryObject,"FieldGroup_" + STRING(iGroupIndex) + "_" + cFieldName,STRING(iGroupCount)). /* org: 1 */
+    setAttribute(ihQueryObject,"OperatorInUse_" + STRING(iGroupIndex) + "_" + cFieldName,cOperator).
+    setAttribute(ihQueryObject,"FieldOperator_" + STRING(iGroupIndex) + "_" + cFieldName,
+                 (IF cOperator = "=" THEN "OR" ELSE "AND")).
+    setAttribute(ihQueryObject,"FilterValue_" + STRING(iGroupIndex) + "_" + cFieldName,ENTRY(ix,icValueList,"|")).
+  END.
+  ELSE DO:
+    setAttribute(ihQueryObject,"OperatorInUse_" + cFieldName,cOperator).
+    setAttribute(ihQueryObject,"FilterValue_" + cFieldName,ENTRY(ix,icValueList,"|")).
+  END.
+
+  cInUseFieldList = cInUseFieldList + (IF cInUseFieldList NE "" THEN "," ELSE "") + cFieldName.
+END.
+
+/* group pattern: <group operator>|<field>|<fieldop>|operator|filtervalue|<field>|<fieldop>|operator..;<group operator>|<field>.. */ 
+EMPTY TEMP-TABLE ttTempFilter.
+
+DO ix = 1 TO NUM-ENTRIES(cGroupDef,"¤"):
+  ASSIGN cGroup = ENTRY(ix,cGroupDef,"¤")
+         cGroupOper = ENTRY(1,cGroup,"|")
+         cGroup = SUBSTR(cGroup,INDEX(cGroup,"|") + 1)
+         .
+  DO iy = 1 TO NUM-ENTRIES(cGroup,"|") BY 4:
+    CREATE ttTempFilter.
+    ASSIGN ttTempFilter.cGroupOper = cGroupOper
+           ttTempFilter.iGroupIdx  = iGroupCount + ix
+           ttTempFilter.cFieldOper = ENTRY(iy,cGroup,"|")
+           ttTempFilter.cFieldName = ENTRY(iy + 1,cGroup,"|")
+           ttTempFilter.cOperator  = ENTRY(iy + 2,cGroup,"|")
+           ttTempFilter.cValue     = ENTRY(iy + 3,cGroup,"|")
+           . 
+    setAttribute(ihQueryObject,"FieldGroup_" + ENTRY(iy,cGroup,"|"),STRING(iGroupCount)). 
+  END.
+END.  
+FOR EACH ttTempFilter 
+    BREAK BY ttTempFilter.iGroupIdx
+          BY ttTempFilter.cFieldName
+    :
+  IF FIRST-OF(ttTempFilter.cFieldName) THEN DO: 
+    ix = 0.
+    IF FIRST-OF(ttTempFilter.iGroupIdx) THEN
+      setAttribute(ihQueryObject,"GroupOperator_" + ttTempFilter.cFieldName,ttTempFilter.cGroupOper).  
+    setAttribute(ihQueryObject,"FieldGroup_" + ttTempFilter.cFieldName,STRING(ttTempFilter.iGroupIdx)). 
+    setAttribute(ihQueryObject,"FieldOperator_" + ttTempFilter.cFieldName,ttTempFilter.cFieldOper).
+    setAttribute(ihQueryObject,"OperatorInUse_" + ttTempFilter.cFieldName,ttTempFilter.cOperator).
+    setAttribute(ihQueryObject,"FilterValue_" + ttTempFilter.cFieldName,ttTempFilter.cValue).
+  END.  
+  ELSE DO:
+    /* index duplicate occurances of fields: */
+    ix = ix + 1.
+/*    setAttribute(ihQueryObject,"GroupOperator_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cGroupOper).*/
+    setAttribute(ihQueryObject,"FieldGroup_" + STRING(ix) + "_" + ttTempFilter.cFieldName,STRING(ttTempFilter.iGroupIdx)). 
+    setAttribute(ihQueryObject,"FieldOperator_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cFieldOper).
+    setAttribute(ihQueryObject,"OperatorInUse_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cOperator).
+    setAttribute(ihQueryObject,"FilterValue_" + STRING(ix) + "_" + ttTempFilter.cFieldName,ttTempFilter.cValue).
+  END.  
+END.
+
+hFilterWin = WIDGET-HANDLE(getAttribute(hToolbar,"filterhandle")) NO-ERROR.
+IF VALID-HANDLE(hFilterWin) AND CAN-DO(hFilterWin:INTERNAL-ENTRIES,"setFilter") THEN DO:
+  RUN SetFilter IN hFilterWin (OUTPUT bOk) NO-ERROR.
+  IF NOT ERROR-STATUS:ERROR AND bOk THEN RETURN YES.
+  ELSE IF ERROR-STATUS:ERROR THEN DO:
+    RUN SetFilter IN hFilterWin NO-ERROR.
+    RETURN YES.
+  END.
+END.
+
+DYNAMIC-FUNCTION("setObjectSourceProc",SOURCE-PROCEDURE).
+hQuery = DYNAMIC-FUNCTION("NewQuery",1,"",
+                           "temp-table"
+                         + ";+BufferName|CHARACTER"
+                         + ";+GroupOperator|CHARACTER"
+                         + ";+FieldGroup|INTEGER"
+                         + ";+FieldOperator|CHARACTER"
+                         + ";+ColumnLabel|CHARACTER"
+                         + ";+Operator|CHARACTER" 
+                         + ";+ColumnValue|CHARACTER"
+                         + ";+!ColumnName|CHARACTER" 
+                         + ";+!DataType|CHARACTER" 
+                         + ";+!Format|CHARACTER" 
+                         + ";+!Seq|INTEGER" 
+                         + ";+!HiddenGroupOperator|CHARACTER" 
+                         + ";+!DuplicateRow|LOGICAL"
+                         + ";+!CharValueTrue|CHARACTER"
+                         + ";+!CharValueFalse|CHARACTER"
+                         + (IF bDynamicsFilter THEN ";!NumInUse|INTEGER" ELSE "")
+                           ,
+                           "where false",
+                           "").
+
+hBuffer = hQuery:GET-BUFFER-HANDLE(1).
+CREATE BUFFER hNewBuff FOR TABLE hBuffer.
 
 DO ix = 1 TO NUM-ENTRIES(cFilterFields):
   hBuffer:BUFFER-CREATE().
@@ -8133,21 +8750,21 @@ DO ix = 1 TO NUM-ENTRIES(cFilterFields):
                  DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filtervalue_" + ENTRY(ix,cFilterFields))
          hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE =
                  IF CAN-DO(cExtraFields,ENTRY(ix,cFilterFields)) THEN
-                   ENTRY(1,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr),"|")
+                   ENTRY(1,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr,"¤"),"|")
                  ELSE IF ihQueryObject:TYPE = "browse" THEN
                    ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):DATA-TYPE
                  ELSE
                    ihQueryObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):DATA-TYPE
          hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE =
                  IF CAN-DO(cExtraFields,ENTRY(ix,cFilterFields)) THEN
-                   ENTRY(2,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr),"|")
+                   ENTRY(2,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr,"¤"),"|")
                  ELSE IF ihQueryObject:TYPE = "browse" THEN
                    ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):FORMAT
                  ELSE
                    ihQueryObject:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):FORMAT
          hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE =
                  IF CAN-DO(cExtraFields,ENTRY(ix,cFilterFields)) THEN
-                   ENTRY(3,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr),"|")
+                   ENTRY(3,ENTRY(LOOKUP(ENTRY(ix,cFilterFields),cExtraFields),cExtraFieldAttr,"¤"),"|")
                  ELSE IF ihQueryObject:TYPE = "browse" THEN
                    ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):LABEL
                  ELSE
@@ -8223,6 +8840,8 @@ DO ix = 1 TO NUM-ENTRIES(cFilterFields):
   END.
 END.
 
+hGridFilter = DYNAMIC-FUNCTION("getLinkedObject",ihQueryObject,"Filter","from").
+
 DYNAMIC-FUNCTION("setObjectSourceProc",SOURCE-PROCEDURE).
 hFilter = DYNAMIC-FUNCTION("NewDynFilter",
                            hQuery,
@@ -8232,6 +8851,9 @@ hFilter = DYNAMIC-FUNCTION("NewDynFilter",
 IF VALID-HANDLE(hToolbar) THEN
   DYNAMIC-FUNCTION("CreateObjectLink",hToolbar,hFilter).
 DYNAMIC-FUNCTION("CreateObjectLink",ihQueryObject,hFilter).
+
+IF VALID-HANDLE(hGridFilter) THEN
+  setAttribute(hFilter,"gridFilter",getAttribute(hGridFilter,"gridFilter")).  
   
 DELETE OBJECT hNewBuff.
 
@@ -8261,6 +8883,212 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-InitGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION InitGridFilter Procedure
+FUNCTION InitGridFilter RETURNS LOGICAL 
+  ( INPUT ihQueryObject   AS HANDLE,
+    INPUT icFieldList     AS CHAR,
+    INPUT icOperatorList  AS CHAR,
+    INPUT icValueList     AS CHAR,
+    INPUT icAction        AS CHAR
+    ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+DEF VAR cFilterFields   AS CHAR   NO-UNDO.
+DEF VAR iy              AS INT    NO-UNDO.
+DEF VAR hQuery          AS HANDLE NO-UNDO.
+DEF VAR hFilter         AS HANDLE NO-UNDO.
+DEF VAR hFilterButton   AS HANDLE NO-UNDO.
+DEF VAR hBuffer         AS HANDLE NO-UNDO.
+DEF VAR hNewBuff        AS HANDLE NO-UNDO.
+DEF VAR cOperator       AS CHAR   NO-UNDO.
+DEF VAR cInUseFieldList AS CHAR   NO-UNDO.
+DEF VAR cDuplicateList  AS CHAR   NO-UNDO.
+DEF VAR cDuplOperList   AS CHAR   NO-UNDO.
+DEF VAR cDuplValueList  AS CHAR   NO-UNDO.
+DEF VAR iGroupCount     AS INT    NO-UNDO.
+
+DEF VAR cExtraFilter    AS CHAR   NO-UNDO.
+DEF VAR cExtraBuffers   AS CHAR   NO-UNDO.
+DEF VAR cExtraFields    AS CHAR   NO-UNDO.
+DEF VAR cExtraFieldDef  AS CHAR   NO-UNDO.
+DEF VAR cExtraFieldLab  AS CHAR   NO-UNDO.
+DEF VAR cExtraFieldForm AS CHAR   NO-UNDO.
+DEF VAR cExtraFieldType AS CHAR   NO-UNDO.
+DEF VAR cExtraFieldAttr AS CHAR   NO-UNDO.
+DEF VAR cExtraDbFldAttr AS CHAR   NO-UNDO.
+DEF VAR bDynamicsFilter AS LOG    NO-UNDO.
+DEF VAR hFilterWin      AS HANDLE NO-UNDO.
+DEF VAR bOk             AS LOG    NO-UNDO.
+DEF VAR hCurrObject     AS HANDLE NO-UNDO.
+DEF VAR cValue          AS CHAR   NO-UNDO. 
+DEF VAR bValue          AS LOG    NO-UNDO.
+DEF VAR cFormat         AS CHAR   NO-UNDO.
+DEF VAR cGroupList      AS CHAR   NO-UNDO.
+DEF VAR cGroupOper      AS CHAR   NO-UNDO.
+DEF VAR cGroup          AS CHAR   NO-UNDO.
+DEF VAR iGroupIndex     AS INT    NO-UNDO.
+DEF VAR cGroupDef       AS CHAR   NO-UNDO.
+DEF VAR cFieldsInGroup  AS CHAR   NO-UNDO.
+DEF VAR iFieldInstCnt   AS INT    NO-UNDO INIT 1.
+DEF VAR iz              AS INT    NO-UNDO.
+DEF VAR hGridFilter     AS HANDLE NO-UNDO.
+DEF VAR hGridField      AS HANDLE NO-UNDO.
+
+IF AVAIL ttObject THEN
+  hCurrObject = ttObject.hObject.
+ELSE
+  hCurrObject = ihQueryObject.
+
+msetAttribute(ihQueryObject,"gridfilterValue_","").
+msetAttribute(ihQueryObject,"gridfieldOperator_","").
+msetAttribute(ihQueryObject,"gridoperatorInUse_","").
+msetAttribute(ihQueryObject,"*rowid","").
+
+hGridFilter = getLinkedObject(ihQueryObject,"gridfilter","from").
+
+DO ix = 1 TO NUM-ENTRIES(icFieldList):  
+  cOperator = ENTRY(ix,icOperatorList).
+  
+  CASE cOperator:
+    WHEN "GT" THEN cOperator = ">".
+    WHEN "GE" THEN cOperator = ">=".
+    WHEN "LT" THEN cOperator = "<".
+    WHEN "LE" THEN cOperator = "<=".
+    WHEN "NE" THEN cOperator = "<>".
+    WHEN "EQ" THEN cOperator = "=".
+  END CASE.
+  setAttribute(ihQueryObject,"gridOperatorInUse_" + ENTRY(ix,icFieldList),cOperator).
+  setAttribute(ihQueryObject,"gridFilterValue_" + ENTRY(ix,icFieldList),ENTRY(ix,icValueList,"|")).
+
+  IF VALID-HANDLE(hGridFilter) THEN DO:
+    hGridField = WIDGET-HANDLE(getAttribute(hGridFilter,"filterfield_search_" + ENTRY(ix,icFieldList))) NO-ERROR.
+    IF VALID-HANDLE(hGridField) THEN
+      hGridField:SCREEN-VALUE = ENTRY(ix,icValueList,"|").
+  END.  
+END.
+
+DYNAMIC-FUNCTION("setObjectSourceProc",SOURCE-PROCEDURE).
+hQuery = DYNAMIC-FUNCTION("NewQuery",1,"",
+                           "temp-table"
+                         + ";+BufferName|CHARACTER"
+                         + ";+GroupOperator|CHARACTER"
+                         + ";+FieldGroup|INTEGER"
+                         + ";+FieldOperator|CHARACTER"
+                         + ";+ColumnLabel|CHARACTER"
+                         + ";+Operator|CHARACTER" 
+                         + ";+ColumnValue|CHARACTER"
+                         + ";+!ColumnName|CHARACTER" 
+                         + ";+!DataType|CHARACTER" 
+                         + ";+!Format|CHARACTER" 
+                         + ";+!Seq|INTEGER" 
+                         + ";+!HiddenGroupOperator|CHARACTER" 
+                         + ";+!DuplicateRow|LOGICAL"
+                         + ";+!CharValueTrue|CHARACTER"
+                         + ";+!CharValueFalse|CHARACTER"
+                         + (IF bDynamicsFilter THEN ";!NumInUse|INTEGER" ELSE "")
+                           ,
+                           "where false",
+                           "").
+
+hBuffer = hQuery:GET-BUFFER-HANDLE(1).
+CREATE BUFFER hNewBuff FOR TABLE hBuffer.
+
+cFilterFields = getAttribute(ihQueryObject,"allviewfields")      
+              + (IF getAttribute(ihQueryObject,"nodisplayfields") NE "" THEN
+                  "," + getAttribute(ihQueryObject,"nodisplayfields")
+                 ELSE "").
+
+
+DO ix = 1 TO NUM-ENTRIES(cFilterFields):
+  hBuffer:BUFFER-CREATE().
+  ASSIGN hBuffer:BUFFER-FIELD("BufferName"):BUFFER-VALUE = 
+                 IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"uselocaldata") = "yes" THEN
+                   DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"basetable")
+                 ELSE DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"fieldbuffer" + ENTRY(ix,cFilterFields))
+         hBuffer:BUFFER-FIELD("FieldOperator"):BUFFER-VALUE = "AND"           
+         hBuffer:BUFFER-FIELD("ColumnName"):BUFFER-VALUE = ENTRY(ix,cFilterFields)
+         hBuffer:BUFFER-FIELD("Operator"):BUFFER-VALUE = 
+                 DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"gridoperatorInUse_" + ENTRY(ix,cFilterFields))           
+         hBuffer:BUFFER-FIELD("ColumnValue"):BUFFER-VALUE = 
+                 DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"gridfiltervalue_" + ENTRY(ix,cFilterFields))
+         hBuffer:BUFFER-FIELD("DataType"):BUFFER-VALUE =
+                 ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):DATA-TYPE
+         hBuffer:BUFFER-FIELD("Format"):BUFFER-VALUE =
+                 ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):FORMAT
+         hBuffer:BUFFER-FIELD("ColumnLabel"):BUFFER-VALUE =
+                 ihQueryObject:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD(ENTRY(ix,cFilterFields)):LABEL
+         hBuffer:BUFFER-FIELD("Seq"):BUFFER-VALUE = ix + 100 * ix
+         .
+  IF hFilterButton = ? THEN
+    hFilterButton = hBuffer:BUFFER-FIELD("Seq"). // Just to get a handle placeholder       
+         
+  IF hBuffer::DataType = "LOGICAL" THEN DO:
+    cValue = DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"filterDropdownValuelist_" + ENTRY(ix,cFilterFields)).
+    IF cValue NE "" THEN
+      ASSIGN hBuffer::CharValueTrue  = ENTRY(NUM-ENTRIES(cValue,"|") - 2,cValue,"|")
+             hBuffer::CharValueFalse = ENTRY(NUM-ENTRIES(cValue,"|"),cValue,"|")
+             . 
+    ELSE IF NUM-ENTRIES(cFormat,"/") = 2 AND ENTRY(1,cFormat,"/") NE "" AND ENTRY(2,cFormat,"/") NE "" THEN        
+      ASSIGN hBuffer::CharValueTrue  = ENTRY(1,cFormat,"/")
+             hBuffer::CharValueFalse = ENTRY(2,cFormat,"/")
+             . 
+    ELSE         
+      ASSIGN hBuffer::CharValueTrue  = "yes"
+             hBuffer::CharValueFalse = "no"
+             . 
+    IF hBuffer::ColumnValue NE "" THEN DO:        
+      bValue = LOGICAL(hBuffer::ColumnValue) NO-ERROR.
+      IF NOT ERROR-STATUS:ERROR AND bValue NE ? THEN DO:
+        IF bValue THEN
+          hBuffer::ColumnValue = hBuffer::CharValueTrue.
+        ELSE         
+          hBuffer::ColumnValue = hBuffer::CharValueFalse.
+      END.
+    END.
+  END.  
+END.
+
+DYNAMIC-FUNCTION("setObjectSourceProc",SOURCE-PROCEDURE).
+hFilter = DYNAMIC-FUNCTION("NewDynFilter",
+                           hQuery,
+                           hFilterButton,                                                             
+                           "").
+
+DYNAMIC-FUNCTION("CreateObjectLink",ihQueryObject,hFilter).
+  
+DELETE OBJECT hNewBuff.
+
+DYNAMIC-FUNCTION("setCurrentObject",hFilter).
+
+DYNAMIC-FUNCTION("setAttribute",hFilter,"gridFilter","yes").
+
+IF icAction MATCHES "*noexec*" THEN setAttribute(ihQueryObject,"executeDynFilter","NO").
+
+RUN StartDynFilterRecord.
+
+DYNAMIC-FUNCTION("DeleteObject",hQuery).
+DYNAMIC-FUNCTION("DeleteObject",hFilter).
+DELETE OBJECT hBuffer:TABLE-HANDLE NO-ERROR.
+DELETE OBJECT hBuffer NO-ERROR.
+
+IF VALID-HANDLE(hCurrObject) THEN 
+  DYNAMIC-FUNCTION("setCurrentObject",hCurrObject).
+
+RETURN getAttribute(ihQueryObject,"firstrowid") NE "".
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-InitToolbarWidgets) = 0 &THEN
 
@@ -8613,7 +9441,9 @@ DEF VAR iy              AS INT  NO-UNDO.
 DEF VAR cFieldReposList AS CHAR NO-UNDO.
 
 DO ix = 1 TO ihBrowse:NUM-COLUMNS:
+&IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
   IF NOT ihBrowse:GET-BROWSE-COLUMN(ix):VISIBLE THEN NEXT.
+&endif
   iy = iy + 1.
   IF ihBrowse:GET-BROWSE-COLUMN(ix):NAME = icColumnName THEN DO:
     ihBrowse:MOVE-COLUMN(iy,iiToPos).
@@ -8728,6 +9558,7 @@ DEF VAR cAltExtentFieldHandles AS CHAR   NO-UNDO.
 DEF VAR cExtent                AS CHAR   NO-UNDO.
 DEF VAR cOrgExtentField        AS CHAR   NO-UNDO.
 DEF VAR cOrgViewFields         AS CHAR   NO-UNDO.
+DEF VAR hSrcTT                 AS HANDLE NO-UNDO.  /* fikset for sql */
 
 {incl/methodlog.i ihRectOrBrw:NAME}
 
@@ -8739,32 +9570,58 @@ ASSIGN hObjectSourceProc = (IF NOT VALID-HANDLE(hObjectSourceProc) THEN SOURCE-P
        bUserFilter = LoadUserFilter(ihRectOrBrw,hObjectSourceProc)
        .
 
-IF ENTRY(1,icBuffersAndFields,";") BEGINS "temp-table" THEN DO:
+IF ENTRY(1,icBuffersAndFields,";") BEGINS "temp-table" THEN DO: /* fikset for sql */
   IF LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12,5)) BEGINS "like " THEN
     cTTfieldSpec = TRIM(SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields," like ") + 6)).
-  httTable = NewTempTable(ihRectOrBrw:WINDOW,
-                         (IF LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12,5)) BEGINS "like " THEN
-                            LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12))
-                          ELSE IF NUM-ENTRIES(ENTRY(1,icBuffersAndFields,";")," ") > 1 THEN
-                            ENTRY(2,ENTRY(1,icBuffersAndFields,";")," ")
-                          ELSE
-                            ihRectOrBrw:NAME),
-                          hObjectSourceProc,
-                          IF cTTfieldSpec NE "" THEN
-                            cTTfieldSpec
-                          ELSE
-                            SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields,";") + 1),
-                          "",
-                          IF cTTfieldSpec NE "" THEN icQueryCriteria
-                          ELSE "").
+  ELSE
+    cTTfieldSpec = SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields,";") + 1).
+
+  DO ix = 1 TO NUM-ENTRIES(cTTfieldspec,";"):
+    IF ENTRY(1,ENTRY(ix,cTTfieldspec,";"),"|") NE "RowCount" THEN
+      cAllViewFields = cAllViewFields + (IF cAllViewFields NE "" THEN "," ELSE "") + ENTRY(1,ENTRY(ix,cTTfieldspec,";"),"|").
+  END.
+          
+  IF getAttribute(ihRectOrBrw,"temptablehandle") NE "" THEN DO: /* added for SQL */
+    hSrcTT = WIDGET-HANDLE(getAttribute(ihRectOrBrw,"temptablehandle")).
+    CREATE TEMP-TABLE httTable.
+    httTable:CREATE-LIKE (hSrcTT).
+    httTable:TEMP-TABLE-PREPARE(hSrcTT:NAME). 
+    DO ix = 1 TO httTable:DEFAULT-BUFFER-HANDLE:NUM-FIELDS:
+      IF NOT CAN-DO(cAllViewFields,httTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ix):NAME) THEN
+        cNoDisplayFields = cNoDisplayFields + (IF cNoDisplayFields NE "" THEN "," ELSE "") + httTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ix):NAME. 
+    END.
+  END.
+  ELSE 
+    httTable = NewTempTable(ihRectOrBrw:WINDOW,
+                           (IF LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12,5)) BEGINS "like " THEN
+                              LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12))
+                            ELSE IF NUM-ENTRIES(ENTRY(1,icBuffersAndFields,";")," ") > 1 THEN
+                              ENTRY(2,ENTRY(1,icBuffersAndFields,";")," ")
+                            ELSE
+                              ihRectOrBrw:NAME),
+                            hObjectSourceProc,
+                            IF cTTfieldSpec NE "" THEN
+                              cTTfieldSpec
+                            ELSE
+                              SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields,";") + 1),
+                            "",
+                            IF cTTfieldSpec NE "" THEN icQueryCriteria
+                            ELSE "").
+                            
   setAttribute(ihRectOrBrw,"uselocaldata","yes").
+  setAttribute(ihRectOrBrw,"tempTableHandle",STRING(httTable)).
   hObjectSourceProc = hMySourceProc.
 END.
 ELSE IF getAttribute(ihRectOrBrw,"temptablehandle") = "" AND ihRectOrBrw:TYPE NE "browse" THEN DO:
   DYNAMIC-FUNCTION("setIndexOnRowids",YES).
   DYNAMIC-FUNCTION("setReturnQueryInfo",YES).
   httTable = DYNAMIC-FUNCTION("getTempTableJoin",iiRowsToBatch,0,"",
-                              getAttribute(ihRectOrBrw,"buffersandfields"),
+                              IF getAttribute(ihRectOrBrw,"sqlDbname") NE "" THEN 
+                                "sqlDb" 
+                                + CHR(3) + getAttribute(ihRectOrBrw,"sqlDbname")  
+                                + CHR(3) + getAttribute(ihRectOrBrw,"sqlView") 
+                                + CHR(3) + getAttribute(ihRectOrBrw,"buffersandfields") 
+                              ELSE getAttribute(ihRectOrBrw,"buffersandfields"),
                               "where false" + getAttribute(ihRectOrBrw,"queryjoin")).
   
   IF DYNAMIC-FUNCTION("getTransactionMessage") NE "" THEN DO:
@@ -8788,6 +9645,7 @@ ELSE IF getAttribute(ihRectOrBrw,"temptablehandle") = "" AND ihRectOrBrw:TYPE NE
 END.
 ELSE IF getAttribute(ihRectOrBrw,"temptablehandle") NE "" THEN DO:
   httTable = WIDGET-HANDLE(getAttribute(ihRectOrBrw,"temptablehandle")).
+  httTableBuffer = httTable:DEFAULT-BUFFER-HANDLE.
   setAttribute(ihRectOrBrw,"uselocaldata","yes").
 END.
 ELSE IF ihRectOrBrw:TYPE = "browse" THEN DO:
@@ -8856,7 +9714,7 @@ IF cBufferFieldSpec NE "" THEN DO:
     END.
   END.
 END.
-ELSE IF getAttribute(hBrowse,"uselocaldata") = "yes" THEN DO ix = 1 TO httTable:DEFAULT-BUFFER-HANDLE:NUM-FIELDS:
+ELSE IF getAttribute(hBrowse,"uselocaldata") = "yes" AND getAttribute(hBrowse,"sqlDbname") = "" THEN DO ix = 1 TO httTable:DEFAULT-BUFFER-HANDLE:NUM-FIELDS:
   setAttribute(hBrowse,"fieldbuffer" + httTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ix):NAME,httTable:DEFAULT-BUFFER-HANDLE:NAME).
   setAttribute(hBrowse,"orgdbfield" + httTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ix):NAME,httTable:DEFAULT-BUFFER-HANDLE:BUFFER-FIELD(ix):NAME).
 END.
@@ -8869,11 +9727,13 @@ hField = hBrowse:QUERY:GET-BUFFER-HANDLE(1):BUFFER-FIELD("RowCount") NO-ERROR.
 IF NOT ERROR-STATUS:ERROR THEN
   setAttribute(hBrowse,"RowCountFieldHandle",STRING(hField)).
 
-ASSIGN cNoDisplayFields = getAttribute(hBrowse,"nodisplayfields")
-       cAllViewFields   = getAttribute(hBrowse,"allviewfields").
+ASSIGN cNoDisplayFields = IF cNoDisplayFields = "" THEN getAttribute(hBrowse,"nodisplayfields") ELSE cNoDisplayFields /* sql */
+       cAllViewFields   = IF cAllViewFields = "" THEN getAttribute(hBrowse,"allviewfields") ELSE cAllViewFields. /* sql */
+
 DO ix = 1 TO httTableBuffer:NUM-FIELDS:
   IF (NOT httTableBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent" AND
       httTableBuffer:BUFFER-FIELD(ix):NAME NE "RowCount" AND
+      httTableBuffer:BUFFER-FIELD(ix):NAME NE "localRowid" AND
       LOOKUP(httTableBuffer:BUFFER-FIELD(ix):NAME,cNoDisplayFields) = 0) OR
       LOOKUP(httTableBuffer:BUFFER-FIELD(ix):NAME,cAllViewFields) > 0
      THEN DO:
@@ -8881,6 +9741,7 @@ DO ix = 1 TO httTableBuffer:NUM-FIELDS:
     IF httTableBuffer:BUFFER-FIELD(ix):DATA-TYPE = "blob" THEN NEXT.
 
     cReturnField = httTableBuffer:BUFFER-FIELD(ix):NAME.
+    if error-status:get-message(1) ne "" then
     IF CAN-DO("2,3,4,5,6,7,8,9",SUBSTR(cReturnField,LENGTH(cReturnField))) AND
        LOOKUP(SUBSTR(cReturnField,1,LENGTH(cReturnField) - 1),cNoDisplayFields) > 0
        THEN NEXT.
@@ -8910,10 +9771,21 @@ DO ix = 1 TO httTableBuffer:NUM-FIELDS:
         MESSAGE PROGRAM-NAME(1) SKIP
                 ERROR-STATUS:GET-MESSAGE(1) 
                 VIEW-AS ALERT-BOX ERROR.
+      ELSE DO:
+/*        IF getAttribute(hBrowse,"fieldFormat_" + hField:NAME) NE "" THEN     */
+/*          hField:FORMAT = getAttribute(hBrowse,"fieldFormat_" + hField:NAME).*/
+        IF getAttribute(hBrowse,"fieldWidthChars_" + hField:NAME) NE "" THEN
+          hField:WIDTH-CHARS = DECIMAL(getAttribute(hBrowse,"fieldWidthChars_" + hField:NAME)).
+        IF getAttribute(hBrowse,"fieldLabel_" + hField:NAME) NE "" THEN
+          hField:LABEL = getAttribute(hBrowse,"fieldLabel_" + hField:NAME).
+        ELSE
+          setAttribute(hBrowse,"fieldLabel_" + hField:NAME,hField:LABEL).  
+      END.            
     END.
     ELSE DO:
       hField = getBrowseColumn(hBrowse,httTableBuffer:BUFFER-FIELD(ix):NAME) NO-ERROR.
       IF NOT VALID-HANDLE(hField) THEN NEXT.
+      setAttribute(hBrowse,"fieldLabel_" + hField:NAME,hField:LABEL).  
     END.
 
     ON END-RESIZE    OF hField PERSISTENT RUN DoProcessEvent (hObjectSourceProc,"end-resize").
@@ -8944,6 +9816,7 @@ DO ix = 1 TO httTableBuffer:NUM-FIELDS:
     END.
     ELSE iStartCountPeriodFld = 0.
 
+  &IF "{&WINDOW-SYSTEM}" NE "TTY" &THEN  
     IF cReturnField = "jbCountDistinct" THEN 
       ASSIGN hField:VISIBLE = NO
              hField:LABEL   = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Antall" ELSE "Count"
@@ -8952,6 +9825,8 @@ DO ix = 1 TO httTableBuffer:NUM-FIELDS:
       ASSIGN hField:VISIBLE = NO
              hField:LABEL   = IF DYNAMIC-FUNCTION("Scandinavian") THEN "Gj.snitt" ELSE "Average"
              NO-ERROR.
+   &endif
+   
   END.
 END.
 setAttribute(hBrowse,"extentFields",TRIM(cExtentFields,",")).
@@ -8969,24 +9844,25 @@ DO ix = 1 TO NUM-ENTRIES(cFieldReposList):
          ttSort1.iSeq2  = INT(ENTRY(3,ENTRY(ix,cFieldReposList),";"))
          .
 END.
-DO ix = 1 TO NUM-ENTRIES(cFieldReposList):
-  FOR EACH ttSort1 BY iSeq:
-    MoveBrowseColumn(hBrowse,ttSort1.cText1,ttSort1.iSeq2).
+IF SESSION:DISPLAY-TYPE NE "TTY" THEN DO:
+  DO ix = 1 TO NUM-ENTRIES(cFieldReposList):
+    FOR EACH ttSort1 BY iSeq:
+      MoveBrowseColumn(hBrowse,ttSort1.cText1,ttSort1.iSeq2).
+    END.
+    FOR EACH ttSort1 BY iSeq2 DESC:
+      MoveBrowseColumn(hBrowse,ttSort1.cText1,ttSort1.iSeq2).
+    END.
   END.
-  FOR EACH ttSort1 BY iSeq2 DESC:
-    MoveBrowseColumn(hBrowse,ttSort1.cText1,ttSort1.iSeq2).
-  END.
-END.
 
-IF CAN-DO(ttObject.hSourceProc:INTERNAL-ENTRIES,"AdjustBrowseColumns") THEN
-  DYNAMIC-FUNCTION("AdjustBrowseColumns" IN ttObject.hSourceProc,ttObject.hObject,ttObject.cObjectName).
+  IF CAN-DO(ttObject.hSourceProc:INTERNAL-ENTRIES,"AdjustBrowseColumns") THEN
+    DYNAMIC-FUNCTION("AdjustBrowseColumns" IN ttObject.hSourceProc,ttObject.hObject,ttObject.cObjectName).
 
-IF SESSION:DISPLAY-TYPE NE "TTY" THEN 
   DO ix = 1 TO hBrowse:NUM-COLUMNS:
     IF hBrowse:GET-BROWSE-COLUMN(ix):VISIBLE THEN
       ASSIGN cAllViewFieldsReal = cAllViewFieldsReal + hBrowse:GET-BROWSE-COLUMN(ix):NAME + ","
              cWidthPixelsList   = cWidthPixelsList + STRING(hBrowse:GET-BROWSE-COLUMN(ix):WIDTH-PIXELS) + ",".
   END.
+END.  
 ELSE cAllViewFieldsReal = cAllViewFields.
 
 cAllViewFieldsReal = TRIM(cAllViewFieldsReal,",").
@@ -9583,7 +10459,7 @@ IF VALID-HANDLE(hField) AND hField:DATA-TYPE = "LOGICAL" THEN DO:
       ASSIGN DELIMITER        = "|"
              DATA-TYPE        = "LOGICAL"
              SUBTYPE          = "DROP-DOWN-LIST"
-             LIST-ITEM-PAIRS  = ENTRY(1,hField:FORMAT,"/") + "|true|" + ENTRY(2,hField:FORMAT,"/") + "|false"
+             LIST-ITEM-PAIRS  = "||" + ENTRY(1,hField:FORMAT,"/") + "|true|" + ENTRY(2,hField:FORMAT,"/") + "|false"
              INNER-LINES      = 3
              FRAME            = ihRectSearchField:FRAME
              X                = ihRectSearchField:X
@@ -10371,7 +11247,7 @@ IF NOT AVAIL ttObject THEN DO:
   CREATE ttObject.
   ASSIGN ttObject.hWindow       = ihFrame:WINDOW
          ttObject.hObject       = hFilter
-         ttObject.cObjectType   = "Filter"
+         ttObject.cObjectType   = IF icOtherProp = "gridFilter" THEN icOtherProp ELSE "Filter"
          ttObject.hDesignObject = ihFrame
          ttObject.cObjectName   = ihFrame:NAME
          ttObject.hSourceProc   = SOURCE-PROCEDURE
@@ -10446,6 +11322,104 @@ END FUNCTION.
 &ANALYZE-RESUME
 
 &ENDIF
+
+&IF DEFINED(EXCLUDE-NewGridFilter) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION NewGridFilter Procedure
+FUNCTION NewGridFilter RETURNS HANDLE 
+  ( INPUT ihQuery                AS HANDLE,
+    INPUT ihPlaceholder          AS HANDLE, // 1st search field
+    INPUT icInputFieldList       AS CHAR,
+    INPUT icBufferFieldList      AS CHAR,
+    INPUT icOperatorList         AS CHAR,
+    INPUT icOperatorFieldList    AS CHAR,
+    INPUT ibSearchOnValueChanged AS LOG,
+    INPUT icOtherProp            AS CHAR) :
+/*------------------------------------------------------------------------------
+  Purpose: Create an object to hold information on filter fields and their corresponding values.
+  Notes:   - The values are stored as attributes on the corresponding query 
+           - If the bufferfield list is empty (or entries in the list are empty)
+             the bufferfield are considered the same as the input fields
+           - If the operatorlist is empty (or entries in the list are empty)
+             the operator is assumed based on the datatype of the INPUT field
+------------------------------------------------------------------------------*/
+DEF VAR hFilter             AS HANDLE NO-UNDO.
+DEF VAR hWidget             AS HANDLE NO-UNDO.
+
+hFilter = ihPlaceholder.
+
+FIND FIRST ttObject WHERE ttObject.hObject = hFilter NO-ERROR.
+IF NOT AVAIL ttObject THEN DO:
+  CREATE ttObject.
+  ASSIGN ttObject.hWindow       = IF VALID-HANDLE(hFilter:WINDOW) THEN hFilter:WINDOW ELSE ?
+         ttObject.hObject       = hFilter
+         ttObject.cObjectType   = "GridFilter"
+         ttObject.hDesignObject = hFilter:FRAME
+         ttObject.cObjectName   = "GridFilter_" + ihQuery:NAME 
+         ttObject.hSourceProc   = SOURCE-PROCEDURE
+         ttObject.cInitProc     = PROGRAM-NAME(2)
+         ttObject.cGenProc      = PROGRAM-NAME(1)
+         .
+END.
+
+IF icOperatorList NE "" AND NUM-ENTRIES(icOperatorList) NE NUM-ENTRIES(icInputFieldList) THEN DO:
+  MESSAGE "Number of entries in operatorlist doesn't match number of fields in filter definition" SKIP(1)
+          "Field list: " SKIP icInputFieldList SKIP(1)
+          "Operator list: " SKIP icOperatorList
+          VIEW-AS ALERT-BOX ERROR TITLE "JukeBox, Design Error".
+  RETURN ?.
+END.
+IF icBufferFieldList NE "" AND NUM-ENTRIES(icBufferFieldList) NE NUM-ENTRIES(icInputFieldList) THEN DO:
+  MESSAGE "Number of entries in bufferfield list doesn't match number of fields in filter definition" SKIP(1)
+          "Field list: " SKIP icInputFieldList SKIP(1)
+          "Operator list: " SKIP icBufferFieldList
+          VIEW-AS ALERT-BOX ERROR TITLE "JukeBox, Design Error".
+  RETURN ?.
+END.
+
+hWidget = hFilter:FRAME:FIRST-CHILD:FIRST-CHILD.
+REPEAT WHILE hWidget NE ?:
+  IF CAN-DO(icInputFieldList,hWidget:NAME) THEN DO:
+    hWidget:SCREEN-VALUE = getAttribute(ihQuery,"gridfiltervalue_" + SUBSTR(hWidget:NAME,8)).
+    setAttribute(ttObject.hObject,"filterfield_" + hWidget:NAME,STRING(hWidget)).
+    setAttribute(ttObject.hObject,"bufferfield_" + hWidget:NAME,
+                 IF icBufferFieldList = "" THEN hWidget:NAME 
+                 ELSE ENTRY(LOOKUP(hWidget:NAME,icInputFieldList),icBufferFieldList)).
+    setAttribute(ttObject.hObject,"operator_" + hWidget:NAME,
+                 IF icOperatorList = "" THEN "" 
+                 ELSE ENTRY(LOOKUP(hWidget:NAME,icInputFieldList),icOperatorList)).
+
+    IF ibSearchOnValueChanged THEN DO:
+      IF hWidget:TYPE = "fill-in" THEN 
+        ON RETURN    OF hWidget PERSISTENT RUN DoProcessEvent (SOURCE-PROCEDURE,"execute-filter").  
+      ELSE 
+        ON VALUE-CHANGED OF hWidget PERSISTENT RUN DoProcessEvent (SOURCE-PROCEDURE,"execute-filter").
+
+      CREATE ttEvent.
+      ASSIGN ttEvent.hObject       = ttObject.hObject
+             ttEvent.hWidget       = hWidget
+             ttEvent.cAction       = "execute-filter"
+             ttEvent.cName         = "execute-filter"
+             ttEvent.cWidgetType   = "fill-in"
+             ttEvent.cMethod       = "StartGridFilterRecord".
+    END.
+  END.
+
+  IF CAN-QUERY(hWidget,"next-sibling") THEN 
+    hWidget = hWidget:NEXT-SIBLING.
+  ELSE hWidget = ?.
+END.
+
+RETURN hFilter.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
 
 &IF DEFINED(EXCLUDE-NewMenuBand) = 0 &THEN
 
@@ -11041,7 +12015,7 @@ setAttribute(ttObject.hObject,"browsecolumn",icBrowseColumn).
 setAttribute(ttObject.hObject,"buffercolumn",icBufferColumn).
 setAttribute(ttObject.hObject,"validation",icValidation).
 
-IF CAN-DO("date,datetime",hFillIn:DATA-TYPE) THEN DO:
+IF CAN-DO("date,datetime,datetime-tz",hFillIn:DATA-TYPE) THEN DO:
   ON "t" OF hFillIn PERSISTENT  RUN DoProcessEvent (SOURCE-PROCEDURE,"todays-date-key").
   ON "d" OF hFillIn PERSISTENT  RUN DoProcessEvent (SOURCE-PROCEDURE,"todays-date-key").
   CREATE ttEvent.
@@ -11085,7 +12059,7 @@ ASSIGN ttEvent.hObject       = ttObject.hObject
        ttEvent.cWidgetType   = "browse-fillin"
        ttEvent.cMethod       = "DeletePropertyOverlayValue".
 
-IF icBuffersAndFields NE "" OR CAN-DO("date,datetime",icDataType) THEN DO:
+IF icBuffersAndFields NE "" OR CAN-DO("date,datetime,datetime-tz",icDataType) THEN DO:
   CREATE BUTTON hButton
          ASSIGN FRAME         = ihBrowse:FRAME
                 WIDTH-PIXELS  = 17
@@ -11199,6 +12173,8 @@ IF NOT PROGRAM-NAME(2) BEGINS "propSet_" THEN
 IF ENTRY(1,icBuffersAndFields,";") = "temp-table" THEN DO:
   IF LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12,5)) BEGINS "like " THEN
     cTTfieldSpec = TRIM(SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields," like ") + 6)).
+  ELSE
+    cTTfieldSpec = SUBSTR(icBuffersAndFields,INDEX(icBuffersAndFields,";") + 1).
 
   httTable = NewTempTable(hWindow,
                           (IF LEFT-TRIM(SUBSTR(ENTRY(1,icBuffersAndFields,";"),12,5)) BEGINS "like " THEN
@@ -11369,6 +12345,20 @@ ASSIGN ttEvent.hObject       = ttObject.hObject
        ttEvent.cName         = "excel"
        ttEvent.cWidgetType   = "browse"
        ttEvent.cMethod       = "ExcelRecord".
+CREATE ttEvent.
+ASSIGN ttEvent.hObject       = ttObject.hObject
+       ttEvent.hWidget       = hQuery
+       ttEvent.cAction       = "first-record"
+       ttEvent.cName         = "first-record"
+       ttEvent.cWidgetType   = "query"
+       ttEvent.cMethod       = "FirstRecord".
+CREATE ttEvent.
+ASSIGN ttEvent.hObject       = ttObject.hObject
+       ttEvent.hWidget       = hQuery
+       ttEvent.cAction       = "last-record"
+       ttEvent.cName         = "last-record"
+       ttEvent.cWidgetType   = "query"
+       ttEvent.cMethod       = "LastRecord".
 
 DO ix = 1 TO httTableBuffer:NUM-FIELDS: 
   IF (NOT httTableBuffer:BUFFER-FIELD(ix):NAME BEGINS "RowIdent" AND
@@ -11389,7 +12379,7 @@ END.
 
 IF NOT LEFT-TRIM(icQueryCriteria) BEGINS "where false" 
    THEN DO:
-  FillQuery(hQuery,iiRowsToBatch,0,"","").
+  FillQuery(hQuery,iiRowsToBatch,0,"","","",NO).
 
   DYNAMIC-FUNCTION("setCurrentObject",hQuery).
 END.
@@ -11684,6 +12674,12 @@ IF icOtherProp BEGINS "append_toolbar" THEN DO:
   IF ihRect = ? OR ihRect = ttObject.hDesignObject THEN DO:
     ASSIGN iStartX  = INT(getAttribute(ttObject.hObject,"startX")) 
            ihRect   = ttObject.hDesignObject.
+    FOR EACH ttEvent
+        WHERE ttEvent.hObject = ttObject.hObject
+          AND ttEvent.cName = "choose":
+      IF VALID-HANDLE(ttEvent.hWidget) AND ttEvent.hWidget:TYPE = "button" THEN 
+        iStartX = MAX(ttEvent.hWidget:X + ttEvent.hWidget:WIDTH-PIXELS + iBtnGap,iStartX).
+    END.           
            
     ihButtonY = INT(getAttribute(ttObject.hObject,"firstStaticButtonY")) NO-ERROR.
     IF ihButtonY NE 0 THEN  /* This run extends a static toolbar */         
@@ -11992,7 +12988,8 @@ DO ix = 1 TO NUM-ENTRIES(icActList):
            FRAME         = (IF ihRect:TYPE = "rectangle" THEN ihRect:FRAME ELSE ihRect)
            AUTO-RESIZE   = TRUE
            FLAT-BUTTON   = IF ihButtonY NE 0 THEN bhButtonFlat 
-                           ELSE (IF icMenu NE "" OR cBtnMenu NE "" OR icOtherProp MATCHES "*flat*" THEN TRUE ELSE FALSE)
+                           ELSE (IF icMenu NE "" OR cBtnMenu NE "" OR icOtherProp MATCHES "*flat*" 
+                                    OR (getAttribute(hCurrObj,"dynamicButtonFlat") NE "" AND LOGICAL(getAttribute(hCurrObj,"dynamicButtonFlat"))) THEN TRUE ELSE FALSE)
            X             = IF bRightAdjust THEN 
                              ihRect:X + iStartX + ihRect:WIDTH-PIXELS - iPanelHeight + 2 - iBtnGap - (ix - 1 - iNumPlaceHold - iNumMenuOnly) * 23 
 /*                             ihRect:X + iStartX + ihRect:WIDTH-PIXELS - 22 - iBtnGap - (ix - 1 - iNumPlaceHold - iNumMenuOnly) * 23 */ 
@@ -12022,6 +13019,7 @@ DO ix = 1 TO NUM-ENTRIES(icActList):
           ON CHOOSE PERSISTENT RUN DoProcessEvent (hObjectSourceProc,"choose").
         END TRIGGERS.
       hButton = ttEvent.hWidget.   
+      setAttribute(hCurrObj,"dynamicButtonFlat",STRING(hButton:FLAT-BUTTON)).
     END.    
     ELSE DO:
       ttEvent.hWidget = hButton.
@@ -12057,7 +13055,7 @@ DO ix = 1 TO NUM-ENTRIES(icActList):
            ttEvent.hWidget:TAB-STOP = NOT ttEvent.hWidget:FLAT-BUTTON
            .
     /* GOO: */       
-    IF cImg = '' then 
+    IF cImg = '' AND getAttribute(SESSION,SUBSTITUTE("BtnImg_&1_&2",cAction,'disabled')) = '' then 
     do: 
       cImg = if can-do('Note,filter,BrowseConfig',cAction) then getAttribute(SESSION,'inSensitive' + cAction + 'Button') else getAttribute(SESSION,'Passive' + cAction + 'Button') .
       if cImg ne '' or cImg ne ? or length(cImg) gt 0 then
@@ -12428,8 +13426,10 @@ IF getAttribute(ihQueryObject,"keepsearchvalue") = "yes" AND getAttribute(ihQuer
     cMatchQuery = getAttribute(ihQueryObject,"sortbuffer") + " WHERE " + getAttribute(ihQueryObject,"sortbuffer") + "." + bbttObjectLink.cLinkInfo
                 + " MATCHES '" + bbttObjectLink.hToObject:INPUT-VALUE + "'".
 END.
-IF getAttribute(ihQueryObject,"prescanBaseQuery") NE "" OR 
-   getAttribute(ihQueryObject,"prescanqueryfilter") NE "" OR 
+
+IF DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"prescanBaseQuery") NE "" THEN 
+  DYNAMIC-FUNCTION("setPreScanBaseQuery",REPLACE(DYNAMIC-FUNCTION("getAttribute",ihQueryObject,"prescanBaseQuery"),"|",CHR(3))).
+IF getAttribute(ihQueryObject,"prescanqueryfilter") NE "" OR 
    getAttribute(ihQueryObject,"prescanquerywhere") NE "" THEN
   DYNAMIC-FUNCTION("setPreScanQuery",TRIM(getAttribute(ihQueryObject,"prescanBaseQuery") + "|" + 
                                           getAttribute(ihQueryObject,"prescanqueryfilter") + "|" + 
@@ -12449,27 +13449,56 @@ DYNAMIC-FUNCTION("setCalcFieldFilter",DYNAMIC-FUNCTION("getAttribute",ihQueryObj
                  ).
 
 IF icServerProgram = "jbserv_gettemptablejoin.p" THEN DO:
-  httCheck = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",cTemp,cQueryCriteria).
+  IF getAttribute(ihQueryObject,"sqlDbName") NE "" THEN
+    httCheck = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",
+               "sqlDb" 
+              + CHR(3) + getAttribute(ihQueryObject,"sqlDbName")  
+              + CHR(3) + getAttribute(ihQueryObject,"sqlView") 
+              + CHR(3) + cTemp,
+               cQueryCriteria).
+  ELSE
+    httCheck = DYNAMIC-FUNCTION("getTempTableJoin",1,0,"",cTemp,cQueryCriteria).
   httCheck:DEFAULT-BUFFER-HANDLE:FIND-FIRST("WHERE true") NO-ERROR.
   bOK = httCheck:DEFAULT-BUFFER-HANDLE:AVAIL.
   DELETE OBJECT httCheck.
   RETURN bOk.
 END.
 ELSE DO:
-  IF NOT DYNAMIC-FUNCTION("getTTJoinOnServer",getAttribute(ihQueryObject,"querydir"),
-                           cTemp,
-                           cQueryCriteria +
-                           IF getAttribute(ihQueryObject,"querysort") NE "" THEN
-                            " BY " + getAttribute(ihQueryObject,"querysort") 
-                          + (IF getAttribute(ihQueryObject,"querydesc") NE "" THEN " DESC" ELSE "")
-                           ELSE "",
-                          icServerProgram,
-                          icParamList) THEN DO:
-    IF getAttribute(ihQueryObject,"viewErrorsFromProcessRows") NE "no" THEN
-      DYNAMIC-FUNCTION("DoMessage",0,0,DYNAMIC-FUNCTION("getTransactionMessage"),"","").
-    RETURN NO.
+  IF getAttribute(ihQueryObject,"sqlDbName") NE "" THEN DO:
+    IF NOT DYNAMIC-FUNCTION("getTTJoinOnServer",getAttribute(ihQueryObject,"querydir"),
+                             "sqlDb" 
+                            + CHR(3) + getAttribute(ihQueryObject,"sqlDbName")  
+                            + CHR(3) + getAttribute(ihQueryObject,"sqlView") 
+                            + CHR(3) + cTemp,
+                             cQueryCriteria +
+                             IF getAttribute(ihQueryObject,"querysort") NE "" THEN
+                              " BY " + getAttribute(ihQueryObject,"querysort") 
+                            + (IF getAttribute(ihQueryObject,"querydesc") NE "" THEN " DESC" ELSE "")
+                             ELSE "",
+                            icServerProgram,
+                            icParamList) THEN DO:
+      IF getAttribute(ihQueryObject,"viewErrorsFromProcessRows") NE "no" THEN
+        DYNAMIC-FUNCTION("DoMessage",0,0,DYNAMIC-FUNCTION("getTransactionMessage"),"","").
+      RETURN NO.
+    END.
+    ELSE RETURN YES.
   END.
-  ELSE RETURN YES. 
+  ELSE DO:
+    IF NOT DYNAMIC-FUNCTION("getTTJoinOnServer",getAttribute(ihQueryObject,"querydir"),
+                             cTemp,
+                             cQueryCriteria +
+                             IF getAttribute(ihQueryObject,"querysort") NE "" THEN
+                              " BY " + getAttribute(ihQueryObject,"querysort") 
+                            + (IF getAttribute(ihQueryObject,"querydesc") NE "" THEN " DESC" ELSE "")
+                             ELSE "",
+                            icServerProgram,
+                            icParamList) THEN DO:
+      IF getAttribute(ihQueryObject,"viewErrorsFromProcessRows") NE "no" THEN
+        DYNAMIC-FUNCTION("DoMessage",0,0,DYNAMIC-FUNCTION("getTransactionMessage"),"","").
+      RETURN NO.
+    END.
+    ELSE RETURN YES.
+  END.   
 END.
 
 END FUNCTION.
@@ -12570,16 +13599,18 @@ ELSE DO:
       hRefreshQuery:QUERY-PREPARE("FOR EACH " + hTargetBuffer:NAME).
       hRefreshQuery:QUERY-OPEN().
       hRefreshQuery:GET-FIRST().
+      ix = 0.
       REPEAT WHILE NOT hRefreshQuery:QUERY-OFF-END:
-        cRowIdList = cRowIdList + hTargetBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE + ",".
+        ASSIGN cRowIdList = cRowIdList + hTargetBuffer:BUFFER-FIELD("RowIdent1"):BUFFER-VALUE + CHR(3)
+               ix = ix + 1.
         IF ix MOD 100 = 0 THEN DO:
-          DYNAMIC-FUNCTION("RefreshRowids",ihBrowse,TRIM(cRowIdList,",")).
+          DYNAMIC-FUNCTION("RefreshRowids",ihBrowse,TRIM(cRowIdList,CHR(3))).
           cRowIdList = "".
         END.
         hRefreshQuery:GET-NEXT().
       END.
       IF cRowIdList NE "" THEN
-        DYNAMIC-FUNCTION("RefreshRowids",ihBrowse,TRIM(cRowIdList,",")).
+        DYNAMIC-FUNCTION("RefreshRowids",ihBrowse,TRIM(cRowIdList,CHR(3))).
       
       DELETE OBJECT hRefreshQuery NO-ERROR.
       DYNAMIC-FUNCTION("setTransactionMessage",cTransMsg).
@@ -13063,6 +14094,8 @@ IF icColumns NE ""
       END.
     END.
   END.  
+  
+  DYNAMIC-FUNCTION("reDrawGridFilter",ihBrowse).
     
   hColumn = ihBrowse:GET-BROWSE-COLUMN(1).
   APPLY "end-resize" TO hColumn.
@@ -13625,6 +14658,32 @@ END FUNCTION.
 
 &ENDIF
 
+&IF DEFINED(EXCLUDE-setObjectWindow) = 0 &THEN
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setObjectWindow Procedure
+FUNCTION setObjectWindow RETURNS LOGICAL 
+  (INPUT ihObject AS HANDLE,
+   INPUT ihWindow AS HANDLE  ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+FIND ttObject WHERE ttObject.hObject = ihObject NO-ERROR.
+IF AVAIL ttObject THEN
+  ttObject.hWindow = ihWindow.
+ELSE RETURN NO.
+
+RETURN YES.
+
+END FUNCTION.
+  
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ENDIF
+
+
 &IF DEFINED(EXCLUDE-setSearchFieldLinkInfo) = 0 &THEN
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setSearchFieldLinkInfo Procedure 
@@ -13916,6 +14975,8 @@ IF NUM-ENTRIES(icSortString) = 1 THEN DO:
     ELSE
       setAttribute(ihQueryObject,"querydesc","").
   END.
+  ELSE
+    setAttribute(ihQueryObject,"querydesc","").
   setAttribute(ihQueryObject,"1stDbSortColumn",getAttribute(ihQueryObject,"querysort")).
   setAttribute(ihQueryObject,"1stSortColumn",getAttribute(ihQueryObject,"localsort")).
   setAttribute(ihQueryObject,"1stSortColumnDesc",getAttribute(ihQueryObject,"querydesc")).
@@ -13989,8 +15050,11 @@ FUNCTION setObjectSourceFileHandle RETURNS LOGICAL
 FIND FIRST ttObject 
      WHERE ttObject.hObject = ihObject
      NO-ERROR.
-IF AVAIL ttObject THEN 
+IF AVAIL ttObject THEN DO:
   ttObject.hSourceProc = ihSourceProc.
+  IF VALID-HANDLE(ihSourceProc:CURRENT-WINDOW) THEN
+    ttObject.hWindow = ihSourceProc:CURRENT-WINDOW.
+END.  
 ELSE RETURN NO.
 
 RETURN YES.         
@@ -14154,7 +15218,7 @@ FOR EACH ttEvent
     &ENDIF    
   END.
 
-  IF CAN-DO(cDisabledEvents,ttEvent.cAction) OR CAN-DO(cDbSecDisabledActions,ttEvent.cAction)
+  IF CAN-DO(cDisabledEvents,ttEvent.cAction) OR CAN-DO(cDbSecDisabledActions,ttEvent.cAction) 
      THEN DO:
     ttEvent.hWidget:SENSITIVE = FALSE.
     NEXT.
@@ -14222,6 +15286,19 @@ FOR EACH ttEvent
      ttEvent.hWidget:SENSITIVE = FALSE.
   ELSE
     ttEvent.hWidget:SENSITIVE = TRUE.
+END.
+
+FOR EACH ttEvent
+    WHERE ttEvent.hObject = ihToolbar
+      AND ttEvent.cAction NE "entry-of-widget"
+      AND ttEvent.cWidgetType = "button"
+      :
+  IF getAttribute(SESSION,SUBSTITUTE("BtnImg_&1_&2",ttEvent.cAction,'disabled')) NE '' THEN DO:
+    IF ttEvent.hWidget:SENSITIVE then
+      ttEvent.hWidget:LOAD-IMAGE (getAttribute(SESSION,SUBSTITUTE("BtnImg_&1",ttEvent.cAction))).
+    ELSE
+      ttEvent.hWidget:LOAD-IMAGE (getAttribute(SESSION,SUBSTITUTE("BtnImg_&1_&2",ttEvent.cAction,'disabled'))).
+  END.
 END.
 
 FIND FIRST ttObject WHERE ttObject.hObject = ihToolbar NO-ERROR.
@@ -14516,10 +15593,22 @@ ELSE DO:
     hRecordCountWidget = WIDGET-HANDLE(getAttribute(bttObject.hWindow,"RecordCountWidget")) NO-ERROR.
 END.
   
-IF VALID-HANDLE(hRecordCountWidget) THEN 
-  ASSIGN iNumZ = (hRecordCountWidget:WIDTH-PIXELS - FONT-TABLE:GET-TEXT-WIDTH-PIXELS("..9",hRecordCountWidget:FONT)) 
-               / FONT-TABLE:GET-TEXT-WIDTH-PIXELS("z",hRecordCountWidget:FONT)
-         hRecordCountWidget:SCREEN-VALUE = STRING(INT(cCount),FILL("z",iNumZ) + "9") + getAttribute(ihObject,"countPlus").
+IF VALID-HANDLE(hRecordCountWidget) THEN DO:
+  IF getAttribute(ihObject,"statvaluequerystop") = "" THEN
+    ASSIGN iNumZ = (hRecordCountWidget:WIDTH-PIXELS - FONT-TABLE:GET-TEXT-WIDTH-PIXELS("..9",hRecordCountWidget:FONT)) 
+                 / FONT-TABLE:GET-TEXT-WIDTH-PIXELS("z",hRecordCountWidget:FONT)
+           hRecordCountWidget:SCREEN-VALUE = STRING(INT(cCount),FILL("z",iNumZ) + "9") + getAttribute(ihObject,"countPlus")
+           hRecordCountWidget:TOOLTIP = ""
+           hRecordCountWidget:BGCOLOR = ?                             
+           .
+  ELSE         
+    ASSIGN hRecordCountWidget:SCREEN-VALUE = IF DYNAMIC-FUNCTION("Scandinavian") THEN "stoppet" ELSE "time-out"
+           hRecordCountWidget:TOOLTIP = (IF DYNAMIC-FUNCTION("Scandinavian") THEN "Maks " ELSE "Limit ") + getAttribute(ihObject,"statvaluequerystop")
+                                      + (IF DYNAMIC-FUNCTION("Scandinavian") THEN " sekunder" ELSE " seconds") 
+           hRecordCountWidget:BGCOLOR = 14                             
+           .
+                     
+END.         
 ELSE DO:
   cCount = (IF DYNAMIC-FUNCTION("Scandinavian") THEN "[Ant: " ELSE "[Count: ") + cCount + "]".
   IF ihObject:TYPE = "browse" THEN

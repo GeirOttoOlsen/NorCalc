@@ -13,40 +13,51 @@ DEF INPUT  PARAM icValues            AS CHAR NO-UNDO.
 DEF INPUT  PARAM icSessionId         AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn            AS CHAR NO-UNDO.  
 
-DEF VAR iCodemasterCompany AS INT NO-UNDO.
-DEF VAR iParentCompany     AS INT NO-UNDO.
+DEF VAR iCodemasterCompany     AS INT    NO-UNDO.
+DEF VAR iParentCompany         AS INT    NO-UNDO.
+DEF VAR hbJBoxCompany          AS HANDLE NO-UNDO.
+DEF VAR hbJBoxCompanyToCompany AS HANDLE NO-UNDO.
+DEF VAR bFound                 AS LOG    NO-UNDO. 
 
-FIND JBoxCompany WHERE ROWID(JBoxCompany) = TO-ROWID(icRowId) EXCLUSIVE-LOCK NO-ERROR.
-IF AVAIL JBoxCompany THEN DO:  
+{incl/validatecaller.i}
+
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxCompany",OUTPUT hbJBoxCompany) THEN RETURN.
+IF NOT JBoxServerSide:Instance:getTableBuffer("JBoxCompanyToCompany",OUTPUT hbJBoxCompanyToCompany) THEN RETURN.
+
+bFound = hbJBoxCompany:FIND-FIRST("WHERE ROWID(JBoxCompany) = TO-ROWID('" + icRowId + "')",EXCLUSIVE-LOCK,NO-WAIT) NO-ERROR.
+IF bFound THEN DO:  
   iCodeMasterCompany = INT(DYNAMIC-FUNCTION("getValue" IN SOURCE-PROCEDURE,"codemaster")).
-  FIND FIRST JBoxCompanyToCompany OF JBoxCompany EXCLUSIVE-LOCK
-       WHERE JBoxCompanyToCompany.cCompanyRole = "codemaster"
-       NO-ERROR.
-  IF AVAIL JBoxCompanyToCompany THEN DO:
-    IF iCodemasterCompany = 0 THEN DELETE JBoxCompanyToCompany.
-    ELSE JBoxCompanyToCompany.iJBoxToCompanyId = iCodeMasterCompany.
+  bFound = hbJBoxCompanyToCompany:FIND-FIRST("WHERE  JBoxCompanyToCompany.iJBoxCompanyId = " + STRING(hbJBoxCompany::iJBoxCompanyId)
+                                           + " AND JBoxCompanyToCompany.cCompanyRole = 'codemaster'",EXCLUSIVE-LOCK,NO-WAIT)
+                                             NO-ERROR.
+  IF bFound THEN DO:
+    IF iCodemasterCompany = 0 THEN hbJBoxCompanyToCompany:BUFFER-DELETE ().
+    ELSE hbJBoxCompanyToCompany::iJBoxToCompanyId = iCodeMasterCompany.
   END.
   ELSE IF iCodeMasterCompany NE 0 THEN DO:
-    CREATE JBoxCompanyToCompany.
-    ASSIGN JBoxCompanyToCompany.iJBoxCompanyId   = JBoxCompany.iJBoxCompanyId
-           JBoxCompanyToCompany.iJBoxToCompanyId = iCodeMasterCompany
-           JBoxCompanyToCompany.cCompanyRole     = "codemaster".
+    hbJBoxCompanyToCompany:BUFFER-CREATE ().
+    ASSIGN hbJBoxCompanyToCompany::iJBoxCompanyId   = hbJBoxCompany::iJBoxCompanyId
+           hbJBoxCompanyToCompany::iJBoxToCompanyId = iCodeMasterCompany
+           hbJBoxCompanyToCompany::cCompanyRole     = "codemaster".
   END.
 
   iParentCompany = INT(DYNAMIC-FUNCTION("getValue" IN SOURCE-PROCEDURE,"parent")).
-  FIND FIRST JBoxCompanyToCompany OF JBoxCompany EXCLUSIVE-LOCK
-       WHERE JBoxCompanyToCompany.cCompanyRole = "parent"
-       NO-ERROR.
-  IF AVAIL JBoxCompanyToCompany THEN DO:
-    IF iParentCompany = 0 THEN DELETE JBoxCompanyToCompany.
-    ELSE JBoxCompanyToCompany.iJBoxToCompanyId = iParentCompany.
+  bFound = hbJBoxCompanyToCompany:FIND-FIRST("WHERE  JBoxCompanyToCompany.iJBoxCompanyId = " + STRING(hbJBoxCompany::iJBoxCompanyId)
+                                           + " AND JBoxCompanyToCompany.cCompanyRole = 'parent'",EXCLUSIVE-LOCK,NO-WAIT)
+                                             NO-ERROR.
+  IF bFound THEN DO:
+    IF iParentCompany = 0 THEN hbJBoxCompanyToCompany:BUFFER-DELETE ().
+    ELSE hbJBoxCompanyToCompany::iJBoxToCompanyId = iParentCompany.
   END.
   ELSE IF iParentCompany NE 0 THEN DO:
-    CREATE JBoxCompanyToCompany.
-    ASSIGN JBoxCompanyToCompany.iJBoxCompanyId   = JBoxCompany.iJBoxCompanyId
-           JBoxCompanyToCompany.iJBoxToCompanyId = iParentCompany
-           JBoxCompanyToCompany.cCompanyRole     = "parent".
+    hbJBoxCompanyToCompany:BUFFER-CREATE ().
+    ASSIGN hbJBoxCompanyToCompany::iJBoxCompanyId   = hbJBoxCompany::iJBoxCompanyId
+           hbJBoxCompanyToCompany::iJBoxToCompanyId = iParentCompany
+           hbJBoxCompanyToCompany::cCompanyRole     = "parent".
   END.
 END.
 
-
+FINALLY:
+  DELETE OBJECT hbJBoxCompany NO-ERROR.
+  DELETE OBJECT hbJBoxCompanyToCompany NO-ERROR.
+END FINALLY.

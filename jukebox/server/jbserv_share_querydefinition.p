@@ -11,14 +11,8 @@ DEF OUTPUT PARAM obOK        AS LOG NO-UNDO.
 
 DEF VAR ix                 AS INT    NO-UNDO.
 DEF VAR iUserSettingId     AS INT    NO-UNDO.
-DEF VAR hAsLib 	           AS HANDLE NO-UNDO.
 
-hAsLib = DYNAMIC-FUNCTION("startASlib" IN SOURCE-PROCEDURE).
-
-/* To make the lib available to a sub-procedure: */
-FUNCTION startASlib RETURNS HANDLE():
-  RETURN hAsLib.
-END FUNCTION.
+{incl/validatecaller.i} 
 
 ASSIGN iUserSettingId = INT(ENTRY(1,icParam,";"))
        icParam        = ENTRY(2,icParam,";")
@@ -52,11 +46,14 @@ IF AVAIL JBoxUserSetting THEN DO TRANSACTION:
                                        WHERE bJUS.cSourceFile  = JBoxUserSetting.cSourceFile
                                          AND bJUS.cObjectName  = JBoxUserSetting.cObjectName
                                          AND bJUS.cContext     = JBoxUserSetting.cContext
-                                         AND bJUS.cSettingName = JBoxUserSetting.cSettingName) THEN DO:
+                                         AND bJUS.cSettingName = JBoxUserSetting.cSettingName
+                                         AND bJUS.cCreatedBy   = JBoxServerSide:Instance:UserId
+                                         AND bJUS.cJBoxUserId  = JBoxUser.cJBoxUserId 
+                                         ) THEN DO:
       CREATE bJUS.
       BUFFER-COPY JBoxUserSetting EXCEPT iJBoxUserSettingId cJBoxUserId TO bJUS.  
       ASSIGN bJUS.cJBoxUserId = JBoxUser.cJBoxUserId
-             bJUS.cCreatedBy  = DYNAMIC-FUNCTION("getASuserId")
+             bJUS.cCreatedBy  = JBoxServerSide:Instance:UserId
              bJUS.dCreated    = TODAY.
     END.
   END.                                                       

@@ -13,6 +13,8 @@ DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 
 DEF VAR iMsgNum AS INT NO-UNDO INIT 1.
 
+{incl/validatecaller.i}
+
 DO ON ERROR UNDO, RETURN:
   FIND LAST JBoxTranslation NO-LOCK 
        WHERE JBoxTranslation.iMsgNo > 0

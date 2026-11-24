@@ -16,6 +16,8 @@ DEF VAR iGroupId    AS INT    NO-UNDO.
 DEF VAR hCompId     AS HANDLE NO-UNDO.
 DEF VAR bOkUserComp AS LOG    NO-UNDO.
 
+{incl/validatecaller.i}
+
 hCompId = BUFFER JBoxUserGroup:BUFFER-FIELD("iJBoxCompanyId") NO-ERROR.
 
 iGroupId = INT(ENTRY(1,icParam,"|")).

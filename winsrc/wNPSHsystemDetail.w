@@ -62,6 +62,9 @@ DEF VAR dSekHastighet       AS DECIMAL NO-UNDO.
 DEF VAR dDimmVerdi          AS DECIMAL NO-UNDO.
 DEF VAR editModus           AS INT     NO-UNDO.
 
+
+DEF VAR otbPersonGruppe AS JBoxToolbar NO-UNDO.
+
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
 
@@ -75,14 +78,19 @@ DEF VAR editModus           AS INT     NO-UNDO.
 
 /* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME DEFAULT-FRAME
+&Scoped-define BROWSE-NAME BrwNPSHSYST
+
+/* Definitions for FRAME DEFAULT-FRAME                                  */
 
 /* Standard List Definitions                                            */
-&Scoped-Define ENABLED-OBJECTS rectToolbar rectOppsett rectInfo ~
-SHUNTTEGNING systemnr systembetegnelse koblings_alternativ sek_effekt ~
-prim_effekt beregnet_anvendelse sek_temp_inn prim_temp_inn sek_temp_ut ~
-prim_temp_ut sek_kapasitet prim_kapasitet btnReset type ~
-ms_shuntventil_i_leveranse ms_ventiltype tillegg_montasje tillegg_kapsling ~
-system_kode lblVentilType 
+&Scoped-Define ENABLED-OBJECTS rectOppsett rectInfo SHUNTTEGNING ~
+tbPersonGruppe new_tbPersonGruppe edit_tbPersonGruppe copy_tbPersonGruppe ~
+undo_tbPersonGruppe save_tbPersonGruppe delete_tbPersonGruppe ~
+filter_tbPersonGruppe excel_tbPersonGruppe systemnr systembetegnelse ~
+BrwNPSHSYST koblings_alternativ sek_effekt prim_effekt beregnet_anvendelse ~
+sek_temp_inn prim_temp_inn sek_temp_ut prim_temp_ut sek_kapasitet ~
+prim_kapasitet btnReset type ms_shuntventil_i_leveranse ms_ventiltype ~
+tillegg_montasje tillegg_kapsling system_kode lblVentilType 
 &Scoped-Define DISPLAYED-OBJECTS systemnr systembetegnelse anvendelse ~
 koblings_alternativ prim_konst_var sek_konst_var reguleringsventil ~
 ventil_type sek_effekt prim_effekt beregnet_anvendelse sek_temp_inn ~
@@ -110,12 +118,52 @@ FUNCTION InitializeResize RETURNS LOGICAL
 /* ***********************  Control Definitions  ********************** */
 
 /* Define the widget handle for the window                              */
-DEFINE VAR C-Win AS WIDGET-HANDLE NO-UNDO.
+DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 
 /* Definitions of the field level widgets                               */
 DEFINE BUTTON btnReset 
      LABEL "&Reset" 
-     SIZE 10.4 BY 1.14.
+     SIZE 10.38 BY 1.13.
+
+DEFINE BUTTON copy_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/copy.bmp":U
+     LABEL "Kopier" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Kopier (ALT-K)".
+
+DEFINE BUTTON delete_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/del16e.bmp":U
+     LABEL "Slett" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Slett (CTRL-D)".
+
+DEFINE BUTTON edit_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/edit16e.bmp":U
+     LABEL "Edit" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Edit (CTRL-E)".
+
+DEFINE BUTTON excel_tbPersonGruppe 
+     IMAGE-UP FILE "gif/afexcel.gif":U
+     LABEL "Eksporter til E&xcel" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Eksporter til E&xcel (ALT-X)".
+
+DEFINE BUTTON filter_tbPersonGruppe 
+     IMAGE-UP FILE "gif/filter.gif":U
+     LABEL "Filter" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Filter (CTRL-F)".
+
+DEFINE BUTTON new_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/new16e.bmp":U
+     LABEL "Ny" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Ny (CTRL-N)".
+
+DEFINE BUTTON save_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/save.bmp":U
+     LABEL "Lagre" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Lagre (CTRL-S)".
+
+DEFINE BUTTON undo_tbPersonGruppe 
+     IMAGE-UP FILE "bmp/undo16e.bmp":U
+     LABEL "Angre" 
+     SIZE 7.75 BY 1.94 TOOLTIP "Angre (CTRL-Z)".
 
 DEFINE VARIABLE koblings_alternativ AS CHARACTER FORMAT "X(2)" INITIAL "1" 
      LABEL "Kobl.alt." 
@@ -129,7 +177,7 @@ DEFINE VARIABLE ms_ventiltype AS CHARACTER FORMAT "X(256)":U
      VIEW-AS COMBO-BOX INNER-LINES 5
      LIST-ITEM-PAIRS "item1","item1"
      DROP-DOWN-LIST
-     SIZE 20.4 BY 1
+     SIZE 20.38 BY 1
      FONT 2 NO-UNDO.
 
 DEFINE VARIABLE anvendelse AS CHARACTER FORMAT "X(15)" INITIAL "Varme/Kjøle" 
@@ -139,7 +187,7 @@ DEFINE VARIABLE anvendelse AS CHARACTER FORMAT "X(15)" INITIAL "Varme/Kjøle"
 
 DEFINE VARIABLE lblVentilType AS CHARACTER FORMAT "X(256)":U INITIAL "Ventil:" 
       VIEW-AS TEXT 
-     SIZE 7 BY .62 NO-UNDO.
+     SIZE 7 BY .63 NO-UNDO.
 
 DEFINE VARIABLE prim_effekt AS INTEGER FORMAT ">>>>>>9" INITIAL 0 
      LABEL "Effekt" 
@@ -182,7 +230,7 @@ DEFINE VARIABLE sek_kapasitet AS DECIMAL FORMAT "->>9.999" INITIAL 0
 DEFINE VARIABLE sek_konst_var AS CHARACTER FORMAT "X(15)" INITIAL "Konstant" 
      LABEL "Sekundærkrets" 
      VIEW-AS FILL-IN 
-     SIZE 21.2 BY 1.
+     SIZE 21.25 BY 1.
 
 DEFINE VARIABLE sek_temp_inn AS DECIMAL FORMAT "->>9.99" INITIAL 0 
      VIEW-AS FILL-IN 
@@ -195,7 +243,7 @@ DEFINE VARIABLE sek_temp_ut AS DECIMAL FORMAT "->>9.99" INITIAL 0
 DEFINE VARIABLE shunt_dimmensjon AS CHARACTER FORMAT "X(3)" 
      LABEL "Shuntdimmensjon" 
      VIEW-AS FILL-IN 
-     SIZE 7.6 BY 1.
+     SIZE 7.63 BY 1.
 
 DEFINE VARIABLE systembetegnelse AS CHARACTER FORMAT "X(40)" 
      VIEW-AS FILL-IN 
@@ -227,87 +275,95 @@ DEFINE VARIABLE ventil_type AS CHARACTER FORMAT "X(10)"
      SIZE 27 BY 1.
 
 DEFINE IMAGE SHUNTTEGNING
-     SIZE 39.4 BY 11.67.
+     SIZE 39.38 BY 11.66.
 
 DEFINE VARIABLE beregnet_anvendelse AS CHARACTER 
      VIEW-AS RADIO-SET VERTICAL
      RADIO-BUTTONS 
           "item1", "item1"
-     SIZE 35.8 BY 6.91.
+     SIZE 35.75 BY 6.91.
 
 DEFINE VARIABLE type AS CHARACTER 
      VIEW-AS RADIO-SET HORIZONTAL
      RADIO-BUTTONS 
           "item1", "item1"
-     SIZE 16 BY .95.
+     SIZE 16 BY .94.
 
 DEFINE RECTANGLE rectInfo
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 86 BY 4.52.
+     SIZE 86 BY 4.53.
 
 DEFINE RECTANGLE rectOppsett
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
      SIZE 46 BY 7.38.
 
-DEFINE RECTANGLE rectToolbar
-     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL   
-     SIZE 148 BY 1.71.
+DEFINE RECTANGLE tbPersonGruppe
+     EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
+     SIZE 150 BY 2.13.
 
 DEFINE VARIABLE ms_shuntventil_i_leveranse AS LOGICAL INITIAL no 
      LABEL "MS - Shuntventil med i leveranse" 
      VIEW-AS TOGGLE-BOX
-     SIZE 36 BY .76.
+     SIZE 36 BY .75.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     systemnr AT ROW 4.1 COL 10 COLON-ALIGNED
-     systembetegnelse AT ROW 4.1 COL 21 COLON-ALIGNED NO-LABEL
-     anvendelse AT ROW 4.33 COL 77 COLON-ALIGNED
-     koblings_alternativ AT ROW 5.29 COL 10 COLON-ALIGNED WIDGET-ID 22
-     prim_konst_var AT ROW 5.29 COL 77 COLON-ALIGNED
-     sek_konst_var AT ROW 5.29 COL 120 COLON-ALIGNED
-     reguleringsventil AT ROW 6.24 COL 77 COLON-ALIGNED
-     ventil_type AT ROW 7.24 COL 77 COLON-ALIGNED
-     sek_effekt AT ROW 8.33 COL 31.8 COLON-ALIGNED NO-LABEL
-     prim_effekt AT ROW 8.38 COL 17.4 COLON-ALIGNED
-     beregnet_anvendelse AT ROW 9.1 COL 60 NO-LABEL WIDGET-ID 72
-     sek_temp_inn AT ROW 9.38 COL 31.8 COLON-ALIGNED NO-LABEL
-     prim_temp_inn AT ROW 9.43 COL 17.4 COLON-ALIGNED
-     sek_temp_ut AT ROW 10.48 COL 31.8 COLON-ALIGNED NO-LABEL
-     prim_temp_ut AT ROW 10.52 COL 17.4 COLON-ALIGNED
-     sek_kapasitet AT ROW 11.52 COL 31.8 COLON-ALIGNED NO-LABEL
-     prim_kapasitet AT ROW 11.57 COL 17.4 COLON-ALIGNED
-     btnReset AT ROW 12.91 COL 41 WIDGET-ID 88
-     type AT ROW 15.29 COL 22 NO-LABEL WIDGET-ID 76
-     ms_shuntventil_i_leveranse AT ROW 16.71 COL 22 WIDGET-ID 74
-     ms_ventiltype AT ROW 17.43 COL 20 COLON-ALIGNED WIDGET-ID 84
-     shunt_dimmensjon AT ROW 18.62 COL 20 COLON-ALIGNED
-     tillegg_montasje AT ROW 20.76 COL 25 COLON-ALIGNED
-     tillegg_kapsling AT ROW 21.71 COL 25 COLON-ALIGNED
-     system_kode AT ROW 22.67 COL 25 COLON-ALIGNED
-     lblVentilType AT ROW 15.29 COL 13 COLON-ALIGNED NO-LABEL
+     new_tbPersonGruppe AT ROW 1.09 COL 2.13 WIDGET-ID 92
+     edit_tbPersonGruppe AT ROW 1.09 COL 10 WIDGET-ID 94
+     copy_tbPersonGruppe AT ROW 1.09 COL 17.88 WIDGET-ID 96
+     undo_tbPersonGruppe AT ROW 1.09 COL 25.63 WIDGET-ID 98
+     save_tbPersonGruppe AT ROW 1.09 COL 33.38 WIDGET-ID 100
+     delete_tbPersonGruppe AT ROW 1.09 COL 41.25 WIDGET-ID 102
+     filter_tbPersonGruppe AT ROW 1.09 COL 49 WIDGET-ID 104
+     excel_tbPersonGruppe AT ROW 1.09 COL 56.88 WIDGET-ID 106
+     systemnr AT ROW 3.5 COL 60 COLON-ALIGNED
+     systembetegnelse AT ROW 3.5 COL 71 COLON-ALIGNED NO-LABEL
+     anvendelse AT ROW 3.75 COL 127 COLON-ALIGNED
+     koblings_alternativ AT ROW 4.69 COL 60 COLON-ALIGNED WIDGET-ID 22
+     prim_konst_var AT ROW 4.69 COL 127 COLON-ALIGNED
+     sek_konst_var AT ROW 4.69 COL 170 COLON-ALIGNED
+     reguleringsventil AT ROW 5.66 COL 127 COLON-ALIGNED
+     ventil_type AT ROW 6.66 COL 127 COLON-ALIGNED
+     sek_effekt AT ROW 7.66 COL 85.75 COLON-ALIGNED NO-LABEL
+     prim_effekt AT ROW 7.69 COL 71.38 COLON-ALIGNED
+     beregnet_anvendelse AT ROW 8.5 COL 110 NO-LABEL WIDGET-ID 72
+     sek_temp_inn AT ROW 8.69 COL 85.75 COLON-ALIGNED NO-LABEL
+     prim_temp_inn AT ROW 8.75 COL 71.38 COLON-ALIGNED
+     sek_temp_ut AT ROW 9.78 COL 85.75 COLON-ALIGNED NO-LABEL
+     prim_temp_ut AT ROW 9.84 COL 71.38 COLON-ALIGNED
+     sek_kapasitet AT ROW 10.84 COL 85.75 COLON-ALIGNED NO-LABEL
+     prim_kapasitet AT ROW 10.88 COL 71.38 COLON-ALIGNED
+     btnReset AT ROW 12.22 COL 95 WIDGET-ID 88
+     type AT ROW 14.69 COL 72 NO-LABEL WIDGET-ID 76
+     ms_shuntventil_i_leveranse AT ROW 16.13 COL 72 WIDGET-ID 74
+     ms_ventiltype AT ROW 16.84 COL 70 COLON-ALIGNED WIDGET-ID 84
+     shunt_dimmensjon AT ROW 18.03 COL 70 COLON-ALIGNED
+     tillegg_montasje AT ROW 20.16 COL 75 COLON-ALIGNED
+     tillegg_kapsling AT ROW 21.13 COL 75 COLON-ALIGNED
+     system_kode AT ROW 22.06 COL 75 COLON-ALIGNED
+     lblVentilType AT ROW 14.69 COL 63 COLON-ALIGNED NO-LABEL
      " Sekundær" VIEW-AS TEXT
-          SIZE 15 BY .67 AT ROW 7.48 COL 33.8 WIDGET-ID 52
-     " Primær" VIEW-AS TEXT
-          SIZE 10.8 BY .67 AT ROW 7.57 COL 19.4 WIDGET-ID 54
-     "W" VIEW-AS TEXT
-          SIZE 4.4 BY .67 AT ROW 8.48 COL 46.4 WIDGET-ID 56
-     "°C" VIEW-AS TEXT
-          SIZE 5.8 BY .67 AT ROW 9.48 COL 46.4 WIDGET-ID 58
-     "°C" VIEW-AS TEXT
-          SIZE 5.6 BY .67 AT ROW 10.76 COL 46 WIDGET-ID 60
+          SIZE 15 BY .66 AT ROW 6.78 COL 87.75 WIDGET-ID 52
      "l/s" VIEW-AS TEXT
-          SIZE 6.2 BY .62 AT ROW 11.81 COL 46 WIDGET-ID 62
-     rectToolbar AT ROW 1.24 COL 2 WIDGET-ID 2
-     rectOppsett AT ROW 6.95 COL 7 WIDGET-ID 42
-     rectInfo AT ROW 4.1 COL 59 WIDGET-ID 68
-     SHUNTTEGNING AT ROW 8.86 COL 105 WIDGET-ID 70
+          SIZE 6.25 BY .63 AT ROW 11.13 COL 100 WIDGET-ID 62
+     "°C" VIEW-AS TEXT
+          SIZE 5.63 BY .66 AT ROW 10.06 COL 100 WIDGET-ID 60
+     "°C" VIEW-AS TEXT
+          SIZE 5.75 BY .66 AT ROW 8.78 COL 100.38 WIDGET-ID 58
+     "W" VIEW-AS TEXT
+          SIZE 4.38 BY .66 AT ROW 7.78 COL 100.38 WIDGET-ID 56
+     " Primær" VIEW-AS TEXT
+          SIZE 10.75 BY .66 AT ROW 6.88 COL 73.38 WIDGET-ID 54
+     rectOppsett AT ROW 6.25 COL 61 WIDGET-ID 42
+     rectInfo AT ROW 3.5 COL 109 WIDGET-ID 68
+     SHUNTTEGNING AT ROW 8.28 COL 155 WIDGET-ID 70
+     tbPersonGruppe AT ROW 1 COL 2 WIDGET-ID 90
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
-         AT COL 1 ROW 1
-         SIZE 151.2 BY 24.52 WIDGET-ID 100.
+         AT COLUMN 1 ROW 1
+         SIZE 196.75 BY 24.53 WIDGET-ID 100.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -326,12 +382,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "Prosjekt"
-         HEIGHT             = 24.52
-         WIDTH              = 151.2
-         MAX-HEIGHT         = 28.57
-         MAX-WIDTH          = 165.6
-         VIRTUAL-HEIGHT     = 28.57
-         VIRTUAL-WIDTH      = 165.6
+         HEIGHT             = 24.53
+         WIDTH              = 196.75
+         MAX-HEIGHT         = 28.56
+         MAX-WIDTH          = 196.75
+         VIRTUAL-HEIGHT     = 28.56
+         VIRTUAL-WIDTH      = 196.75
          SHOW-IN-TASKBAR    = no
          RESIZE             = yes
          SCROLL-BARS        = no
@@ -365,6 +421,7 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
+/* BROWSE-TAB BrwNPSHSYST systembetegnelse DEFAULT-FRAME */
 /* SETTINGS FOR FILL-IN anvendelse IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
 ASSIGN 
@@ -387,6 +444,10 @@ ASSIGN
 
 /* SETTINGS FOR FILL-IN shunt_dimmensjon IN FRAME DEFAULT-FRAME
    NO-ENABLE                                                            */
+ASSIGN 
+       tbPersonGruppe:PRIVATE-DATA IN FRAME DEFAULT-FRAME     = 
+                "new;Ny,edit;Edit,copy;Kopier,undo;Angre,save;Lagre,delete;Slett,filter;Filter,excel;Eksporter til E&xcelmaxborder".
+
 /* SETTINGS FOR RADIO-SET type IN FRAME DEFAULT-FRAME
    NO-DISPLAY                                                           */
 /* SETTINGS FOR FILL-IN ventil_type IN FRAME DEFAULT-FRAME
@@ -398,6 +459,19 @@ IF SESSION:DISPLAY-TYPE = "GUI":U AND VALID-HANDLE(C-Win)
 THEN C-Win:HIDDEN = yes.
 
 /* _RUN-TIME-ATTRIBUTES-END */
+&ANALYZE-RESUME
+
+
+/* Setting information for Queries and Browse Widgets fields            */
+
+&ANALYZE-SUSPEND _QUERY-BLOCK BROWSE BrwNPSHSYST
+/* Query rebuild information for BROWSE BrwNPSHSYST
+     _Options          = "NO-LOCK INDEXED-REPOSITION"
+     _FldNameList[1]   = norcalc.NPSHSYST.anleggsnr
+     _FldNameList[2]   = norcalc.NPSHSYST.systemnr
+     _FldNameList[3]   = norcalc.NPSHSYST.systembetegnelse
+     _Query            is NOT OPENED
+*/  /* BROWSE BrwNPSHSYST */
 &ANALYZE-RESUME
 
  
@@ -505,6 +579,7 @@ END.
 &ANALYZE-RESUME
 
 
+&Scoped-define BROWSE-NAME BrwNPSHSYST
 &UNDEFINE SELF-NAME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK C-Win 
@@ -552,6 +627,16 @@ END.
 
 
 /* **********************  Internal Procedures  *********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE AdminSystemRecord C-Win 
+PROCEDURE AdminSystemRecord :
+RUN SUPER.
+
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE beregnPrim C-Win 
 PROCEDURE beregnPrim :
@@ -836,10 +921,12 @@ PROCEDURE enable_UI :
           ms_ventiltype shunt_dimmensjon tillegg_montasje tillegg_kapsling 
           system_kode lblVentilType 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
-  ENABLE rectToolbar rectOppsett rectInfo SHUNTTEGNING systemnr 
-         systembetegnelse koblings_alternativ sek_effekt prim_effekt 
-         beregnet_anvendelse sek_temp_inn prim_temp_inn sek_temp_ut 
-         prim_temp_ut sek_kapasitet prim_kapasitet btnReset type 
+  ENABLE rectOppsett rectInfo SHUNTTEGNING tbPersonGruppe new_tbPersonGruppe 
+         edit_tbPersonGruppe copy_tbPersonGruppe undo_tbPersonGruppe 
+         save_tbPersonGruppe delete_tbPersonGruppe filter_tbPersonGruppe 
+         excel_tbPersonGruppe systemnr systembetegnelse koblings_alternativ 
+         sek_effekt prim_effekt beregnet_anvendelse sek_temp_inn prim_temp_inn 
+         sek_temp_ut prim_temp_ut sek_kapasitet prim_kapasitet btnReset type 
          ms_shuntventil_i_leveranse ms_ventiltype tillegg_montasje 
          tillegg_kapsling system_kode lblVentilType 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
@@ -1038,28 +1125,6 @@ PROCEDURE InitializeObject :
 
 RUN enable_UI.
 DO WITH FRAME {&FRAME-NAME}:
-  DYNAMIC-FUNCTION("NewObject",THIS-PROCEDURE:CURRENT-WINDOW,THIS-PROCEDURE,"procedure").
-  hQuery = DYNAMIC-FUNCTION("NewQuery",1,
-                            "",
-                            "npshsyst"
-                            ,"where false"
-                            ,"").
-  
-  hFieldMap = DYNAMIC-FUNCTION("NewFieldMap",
-                             hQuery,
-                             FRAME {&FRAME-NAME}:HANDLE,
-                             "systembetegnelse,koblings_alternativ,prim_effekt,sek_effekt,prim_temp_inn,sek_temp_inn,prim_temp_ut,sek_temp_ut,prim_kapasitet,sek_kapasitet,beregnet_anvendelse,ms_shuntventil_i_leveranse,ms_ventiltype,type,shunt_dimmensjon"
-                             ,"",
-                             "systemnr,tillegg_montasje,tillegg_kapsling,system_kode,ventil_type"
-                             ,""
-                             ,"btnReset"). 
-
-  hToolbar = DYNAMIC-FUNCTION("NewToolBar",
-                    rectToolBar:HANDLE,             /* Rectangle to define coordinates for toolbar */
-                    "File",                         /* Corresponding menu label - no menu if blank */
-                    "edit,new,undo,delete,save,Beregn"
-                    ,"maxborder").                  /* Misc - enable, maxborder.. */
-  
   DYNAMIC-FUNCTION("CreateObjectLink",hQuery,hFieldMap).
   DYNAMIC-FUNCTION("CreateObjectLink",hFieldMap,hToolbar).
   DYNAMIC-FUNCTION("CreateObjectLink",hQuery,hToolbar).
@@ -1090,6 +1155,8 @@ DO WITH FRAME {&FRAME-NAME}:
   RUN InitializeComponents.
   
   
+  otbPersonGruppe = NEW JBoxToolbar(tbPersonGruppe:HANDLE).
+
 END.
 
 END PROCEDURE.

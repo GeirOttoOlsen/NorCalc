@@ -1,0 +1,130 @@
+UPDATE TABLE "NPKONTAKT"
+  TABLE-TRIGGER "CREATE" OVERRIDE PROCEDURE "trg/cre_npkontakt.p" CRC "?"
+
+RENAME FIELD "id" OF "NPKONTAKT" TO "iNPKontaktId"
+
+UPDATE FIELD "iNPKontaktId" OF "NPKONTAKT"
+  FORMAT ">>>>9"
+  LABEL "Kontakt"
+
+ADD FIELD "Fornavn" OF "NPKONTAKT" AS character
+  FORMAT "x(30)"
+  POSITION 4
+  INITIAL ""
+  LABEL "Fornavn"
+  ORDER 30
+  MAX-WIDTH 60
+
+ADD FIELD "Etternavn" OF "NPKONTAKT" AS character
+  FORMAT "x(50)"
+  POSITION 5
+  INITIAL ""
+  LABEL "Etternavn"
+  ORDER 40
+  MAX-WIDTH 100
+
+ADD FIELD "Telefon" OF "NPKONTAKT" AS character
+  FORMAT "x(15)"
+  POSITION 6
+  INITIAL ""
+  LABEL "Telefon"
+  ORDER 50
+  MAX-WIDTH 30
+
+ADD FIELD "Mobil" OF "NPKONTAKT" AS character
+  FORMAT "x(15)"
+  POSITION 7
+  INITIAL ""
+  LABEL "Mobil"
+  ORDER 60
+  MAX-WIDTH 30
+
+ADD FIELD "ePost" OF "NPKONTAKT" AS character
+  FORMAT "x(50)"
+  POSITION 8
+  INITIAL ""
+  LABEL "ePost"
+  ORDER 70
+  MAX-WIDTH 100
+
+ADD FIELD "Web" OF "NPKONTAKT" AS character
+  FORMAT "x(100)"
+  POSITION 9
+  INITIAL ""
+  LABEL "Web"
+  ORDER 80
+  MAX-WIDTH 200
+
+ADD FIELD "dCreated" OF "NPKONTAKT" AS date
+  FORMAT "99/99/9999"
+  POSITION 10
+  INITIAL ?
+  LABEL "Opprettet"
+  ORDER 100
+  MAX-WIDTH 4
+
+ADD FIELD "cCreatedBy" OF "NPKONTAKT" AS character
+  FORMAT "x(8)"
+  POSITION 11
+  INITIAL ""
+  LABEL "Av"
+  ORDER 110
+  MAX-WIDTH 16
+
+ADD FIELD "dModified" OF "NPKONTAKT" AS date
+  FORMAT "99/99/9999"
+  POSITION 12
+  INITIAL ?
+  LABEL "Endret"
+  ORDER 120
+  MAX-WIDTH 4
+
+ADD FIELD "cModifiedBy" OF "NPKONTAKT" AS character
+  FORMAT "x(8)"
+  POSITION 13
+  INITIAL ""
+  LABEL "Av"
+  ORDER 130
+  MAX-WIDTH 16
+
+ADD FIELD "kundenr" OF "NPKONTAKT" AS character
+  FORMAT "X(8)"
+  POSITION 14
+  INITIAL ""
+  LABEL "Kundenr"
+  COLUMN-LABEL "Kundenr"
+  ORDER 140
+  MANDATORY
+  MAX-WIDTH 16
+
+ADD FIELD "Notat" OF "NPKONTAKT" AS character
+  FORMAT "x(255)"
+  POSITION 15
+  INITIAL ""
+  LABEL "Notat"
+  ORDER 150
+  MAX-WIDTH 510
+
+RENAME INDEX "ndx_kontakt_id" TO "iKontaktId" ON "NPKONTAKT"
+
+
+ADD INDEX "Etternavn" ON "NPKONTAKT"
+  AREA "DataArea2"
+  INDEX-FIELD "Etternavn" ASCENDING
+
+ADD INDEX "Kundenr" ON "NPKONTAKT"
+  AREA "DataArea2"
+  INDEX-FIELD "kundenr" ASCENDING
+
+ADD SEQUENCE "seqNPKontaktId"
+  INITIAL 0
+  INCREMENT 1
+  CYCLE-ON-LIMIT no
+  MIN-VAL ?
+  MAX-VAL ?
+
+.
+PSC
+cpstream=ISO8859-1
+.
+0000002370

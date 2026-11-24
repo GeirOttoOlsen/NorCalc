@@ -485,6 +485,21 @@ CLASS JBoxXmlDoc:
     RETURN.
 
   END METHOD.
+
+  /*------------------------------------------------------------------------------
+   Purpose:
+   Notes:
+  ------------------------------------------------------------------------------*/
+
+  METHOD PUBLIC VOID setStartLevelZero(  ):
+    IF CAN-FIND(FIRST ttNodes WHERE ttNodes.iLevel = 0) THEN RETURN.
+    FOR EACH ttNodes:
+      ttNodes.iLevel = ttNodes.iLevel - 1.
+    END.
+      
+    RETURN.
+
+  END METHOD.
         
   DESTRUCTOR PUBLIC JBoxXmlDoc ( ):
     DELETE PROCEDURE hHelperProc NO-ERROR.    

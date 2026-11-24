@@ -153,10 +153,9 @@ DEFINE FRAME TILBUD
           SIZE 11.2 BY 1.24
           FONT 2
      NPSHTILBUD.lev_bet AT ROW 8.86 COL 37 COLON-ALIGNED
-          VIEW-AS COMBO-BOX 
-          LIST-ITEMS "AB LAGER","FOB","CIF" 
+          VIEW-AS COMBO-BOX INNER-LINES 7
           DROP-DOWN-LIST
-          SIZE 18.4 BY 1
+          SIZE 18.4 BY 1.05
           FONT 2
      NPSHTILBUD.bet_bet AT ROW 10.05 COL 37 COLON-ALIGNED
           VIEW-AS COMBO-BOX 
@@ -240,6 +239,17 @@ ASSIGN
 
 /* ************************  Control Triggers  ************************ */
 
+&Scoped-define SELF-NAME Btn_Cancel
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel TILBUD
+ON CHOOSE OF Btn_Cancel IN FRAME TILBUD /* Cancel */
+DO:
+  dynamic-function('setCurrentRec' in hParent,?).
+END.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
 &Scoped-define SELF-NAME Btn_Help
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Help TILBUD
 ON CHOOSE OF Btn_Help IN FRAME TILBUD /* Help */
@@ -271,16 +281,6 @@ DO:
             current-rec = ROWID(NPSHTILBUD).
         END.
   
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-&Scoped-define SELF-NAME Btn_Cancel
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL Btn_Cancel TILBUD
-ON CHOOSE OF Btn_Cancel IN FRAME TILBUD /* Cancel */
-DO:
-  dynamic-function('setCurrentRec' in hParent,?).
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -412,16 +412,17 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
   nyRecord    = logical(dynamic-function('getNyRecord' in hParent)).
   anleggsnrParam = int(dynamic-function("getAttribute",hParent,'AnleggsnrParam')).
    RUN fyll_combo.
+
    IF nyRecord THEN   
         RUN nyttTilbud.
    ELSE
-        DO:
-           SELECT endrings_laas INTO laast FROM NPSHANLG WHERE anleggsnr = anleggsnrParam.
-           IF laast THEN
-               RUN visTilbud.
-           ELSE  
-                RUN endreTilbud.
-      END.
+  DO:
+     SELECT endrings_laas INTO laast FROM NPSHANLG WHERE anleggsnr = anleggsnrParam.
+     IF laast THEN
+         RUN visTilbud.
+     ELSE  
+          RUN endreTilbud.
+END.
   
 END.
 RUN disable_UI.
@@ -479,30 +480,32 @@ PROCEDURE endreTilbud :
   Parameters:  <none>
   Notes:       
 ------------------------------------------------------------------------------*/
-  FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec EXCLUSIVE-LOCK 
-    NO-WAIT NO-ERROR.
-  IF AVAILABLE NPSHTILBUD THEN
-  DO:
-      DISPLAY NPSHTILBUD.anleggsnr   
-           NPSHTILBUD.tilbudsnr WITH FRAME TILBUD.
-      FIND NPKUNDE WHERE NPKUNDE.kundenr = NPSHTILBUD.kundenr NO-LOCK
-        NO-WAIT NO-ERROR.
-      IF AVAILABLE NPKUNDE THEN  FILL-IN-KUNDENAVN = NPKUNDE.kundenavn.  
-  
-       UPDATE 
-        NPSHTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
-        NPSHTILBUD.rabatt% NPSHTILBUD.deres_ref NPSHTILBUD.vaar_ref
-        NPSHTILBUD.lev_bet NPSHTILBUD.bet_bet NPSHTILBUD.gyldighetstid
-        NPSHTILBUD.opplysninger
-        Btn_OK Btn_Cancel Btn_Help 
-      WITH FRAME TILBUD.
-  END.
-  ELSE
+  do transaction:
+    FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec EXCLUSIVE-LOCK 
+      NO-WAIT NO-ERROR.
+    IF AVAILABLE NPSHTILBUD THEN
     DO:
-        MESSAGE 'Tabellen er opptatt. Prøv senere.' VIEW-AS ALERT-BOX TITLE 'STOPP'.
-        RETURN.
+        DISPLAY NPSHTILBUD.anleggsnr   
+             NPSHTILBUD.tilbudsnr WITH FRAME TILBUD.
+        FIND NPKUNDE WHERE NPKUNDE.kundenr = NPSHTILBUD.kundenr NO-LOCK
+          NO-WAIT NO-ERROR.
+        IF AVAILABLE NPKUNDE THEN  FILL-IN-KUNDENAVN = NPKUNDE.kundenavn.  
+    
+         UPDATE 
+          NPSHTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
+          NPSHTILBUD.rabatt% NPSHTILBUD.deres_ref NPSHTILBUD.vaar_ref
+          NPSHTILBUD.lev_bet NPSHTILBUD.bet_bet NPSHTILBUD.gyldighetstid
+          NPSHTILBUD.opplysninger
+          Btn_OK Btn_Cancel Btn_Help 
+        WITH FRAME TILBUD.
+        ASSIGN NPSHTILBUD.avgittpris = (NPSHTILBUD.pris - (NPSHTILBUD.pris  *  NPSHTILBUD.rabatt%) / 100).
     END.
-
+    ELSE
+      DO:
+          MESSAGE 'Tabellen er opptatt. Prøv senere.' VIEW-AS ALERT-BOX TITLE 'STOPP'.
+          RETURN.
+      END.
+  end.
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -513,7 +516,9 @@ PROCEDURE fyll_combo :
 /*------------------------------------------------------------------------------
   Purpose:     
   Parameters:  <none>
-  Notes:       
+  Notes:       AB LAGER
+FOB
+CIF
 ------------------------------------------------------------------------------*/
     temp-string = "".
     FOR EACH NPKONTAKT:
@@ -525,7 +530,10 @@ PROCEDURE fyll_combo :
     temp-string = temp-string + "," + " ".
 
     ASSIGN NPSHTILBUD.vaar_ref:LIST-ITEMS IN FRAME {&FRAME-NAME} = temp-string.
-
+    assign 
+      npshtilbud.lev_bet:delimiter = '|'
+      NPSHTILBUD.lev_bet:list-item-pairs = jboxserverapi:Instance:FieldListValid('NPLeveringsbetingelse;LeveringsBetingelseKortnavn;LeveringsBetingelse','where LeveringsbetingelseAktiv')
+      .
 END PROCEDURE.
 
 /* _UIB-CODE-BLOCK-END */
@@ -543,8 +551,7 @@ DEFINE VAR cAnleggsnr AS CHAR.
    iNextId = 0.
 
 /* Tilbudsnr må settes */
-  FIND LAST NPSHTILBUD  WHERE NPSHTILBUD.anleggsnr = anleggsnrParam 
-  USE-INDEX ndx_siste_tilbud  NO-LOCK NO-WAIT NO-ERROR.
+  FIND LAST NPSHTILBUD  WHERE NPSHTILBUD.anleggsnr = anleggsnrParam USE-INDEX ndx_siste_tilbud  NO-LOCK NO-WAIT NO-ERROR.
   /* Dersom det er gitt tilbud på dette anlegget tidligere - øk teller */
   IF AVAILABLE(NPSHTILBUD) THEN
      iNextTilbudsnr = NPSHTILBUD.tilbudsid + 1.
@@ -561,37 +568,84 @@ DEFINE VAR cAnleggsnr AS CHAR.
       /* Dette er første tilbud på dette anlegget */
       iNextTilbudsnr = 1.
   END.
-
+  
+  do transaction:
      create npshtilbud.
-     NPSHTILBUD.tilbudsdato = TODAY.
-     NPSHTILBUD.anleggsnr = anleggsnrParam.
-     NPSHTILBUD.id = iNextId.
-     NPSHTILBUD.tilbudsid = iNextTilbudsnr.
-    /* Tilbudsnr har dette format: år Varegruppe Anleggsnr Tilbudsid */
-     /* Legg anleggsnr på riktig format */
-     cAnleggsnr = String(anleggsnrParam).
-     CASE LENGTH(cAnleggsnr):
-        WHEN 1 THEN
-            cAnleggsnr = '000' + cAnleggsnr.
-        WHEN 2 THEN
-            cAnleggsnr = '00' + cAnleggsnr.
-        WHEN 3 THEN
-            cAnleggsnr = '0' + cAnleggsnr.
-      END CASE.
-     NPSHTILBUD.tilbudsnr = SUBSTRING(STRING(YEAR(Today)),3,2) + '.' +  '01.' + 
-         cAnleggsnr + '.' + STRING(iNextTilbudsnr).
-     DISPLAY NPSHTILBUD.anleggsnr 
-         NPSHTILBUD.tilbudsnr NPSHTILBUD.tilbudsdato 
-     WITH FRAME  {&FRAME-NAME}.
-
- UPDATE 
-        NPSHTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
-        NPSHTILBUD.rabatt%
-        NPSHTILBUD.deres_ref NPSHTILBUD.vaar_ref 
-        NPSHTILBUD.lev_bet NPSHTILBUD.bet_bet NPSHTILBUD.gyldighetstid
-        NPSHTILBUD.opplysninger
-        Btn_OK Btn_Cancel Btn_Help 
-      WITH FRAME TILBUD.
+     assign 
+       NPSHTILBUD.tilbudsdato = TODAY
+       NPSHTILBUD.anleggsnr = anleggsnrParam
+       NPSHTILBUD.id = iNextId
+       NPSHTILBUD.tilbudsid = iNextTilbudsnr
+       .
+      /* Tilbudsnr har dette format: år Varegruppe Anleggsnr Tilbudsid */
+       /* Legg anleggsnr på riktig format */
+       cAnleggsnr = String(anleggsnrParam).
+       CASE LENGTH(cAnleggsnr):
+          WHEN 1 THEN
+              cAnleggsnr = '000' + cAnleggsnr.
+          WHEN 2 THEN
+              cAnleggsnr = '00' + cAnleggsnr.
+          WHEN 3 THEN
+              cAnleggsnr = '0' + cAnleggsnr.
+        END CASE.
+       NPSHTILBUD.tilbudsnr = SUBSTRING(STRING(YEAR(Today)),3,2) + '.' +  '01.' +  cAnleggsnr + '.' + STRING(iNextTilbudsnr).
+       DISPLAY NPSHTILBUD.anleggsnr 
+           NPSHTILBUD.tilbudsnr NPSHTILBUD.tilbudsdato 
+       WITH FRAME  {&FRAME-NAME}.
+  
+       UPDATE 
+          NPSHTILBUD.tilbudsdato  FILL-IN-KUNDENAVN COMBO-SPINN 
+          NPSHTILBUD.rabatt%
+          NPSHTILBUD.deres_ref NPSHTILBUD.vaar_ref 
+          NPSHTILBUD.lev_bet NPSHTILBUD.bet_bet NPSHTILBUD.gyldighetstid
+          NPSHTILBUD.opplysninger
+          Btn_OK Btn_Cancel Btn_Help 
+        WITH FRAME TILBUD.
+        /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */
+        DEFINE VAR c_shuntpris AS DECIMAL INITIAL 0.
+        DEFINE VAR c_pris AS DECIMAL INITIAL 0.
+        DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.
+        FOR EACH NPSHSYST WHERE NPSHSYST.anleggsnr = anleggsnrParam:
+          c_shuntpris = c_shuntpris + NPSHSYST.standardpris.
+        END.
+        c_pris = c_shuntpris.
+        c_avgittpris = c_pris - ((c_pris *  NPSHTILBUD.rabatt%) / 100).
+        
+        ASSIGN 
+          NPSHTILBUD.pris_shuntgrupper  = c_shuntpris
+          NPSHTILBUD.pris = c_pris
+          NPSHTILBUD.avgittpris =  c_avgittpris
+          .
+        /* Opprett første record i oppfølging, og sett oppf.uke */
+        DEFINE VAR cUke LIKE NPSHANLG.oppf_uke.
+        DEFINE VAR cAar LIKE NPSHANLG.oppf_aar.
+  
+        FIND NPSHANLG WHERE NPSHANLG.anleggsnr = anleggsnrParam NO-WAIT NO-ERROR.
+        IF AVAILABLE NPSHANLG THEN do:
+          assign
+             cUke = NPSHANLG.oppf_uke
+             cAar = NPSHANLG.oppf_aar
+             .
+          define var cp_tabell_navn as char.
+          define var ip_neste_id as integer.
+    
+          cp_tabell_navn  = 'npshtopp'.
+          run neste_id.p (input cp_tabell_navn, output ip_neste_id).
+          CREATE NPSHTOPP.
+          ASSIGN
+            NPSHTOPP.id = npshtilbud.id
+            NPSHTOPP.oppf_nr = ip_neste_id
+            NPSHTOPP.neste_oppf_uke = cUke        
+            NPSHTOPP.neste_oppf_aar = cAar
+          .
+          NPSHANLG.endrings_laas = true.
+        end.
+  end.
+       /* Sett endringslås på anlegget */
+      
+/*      UPDATE NPSHANLG SET endrings_laas = TRUE WHERE anleggsnr = anleggsnrParam.*/
+     
+     
        Current-Rec = ROWID(npshtilbud).
        dynamic-function('setCurrentRec' in hParent,current-rec).
  

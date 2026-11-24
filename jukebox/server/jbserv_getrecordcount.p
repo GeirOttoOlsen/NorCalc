@@ -5,13 +5,16 @@ DEF OUTPUT PARAM oiCount            AS INT  NO-UNDO.
 DEF OUTPUT PARAM ocReturn           AS CHAR NO-UNDO.
 
 DEF VAR hQuery     AS HANDLE NO-UNDO.
-DEF VAR hBuffer    AS HANDLE NO-UNDO EXTENT 100.
+DEF VAR hBuffer    AS HANDLE NO-UNDO EXTENT.
 DEF VAR ix         AS INT    NO-UNDO.
 DEF VAR iy         AS INT    NO-UNDO.
 
 {incl/validatesession.i}
 
+EXTENT(hBuffer) = NUM-ENTRIES(icBufferList).
+
 CREATE QUERY hQuery.
+hQuery:FORWARD-ONLY = YES.
 
 DO ix = 1 TO NUM-ENTRIES(icBufferList):
   CREATE BUFFER hBuffer[ix] FOR TABLE ENTRY(1,ENTRY(ix,icBufferList),";") NO-ERROR.
@@ -22,9 +25,9 @@ DO ix = 1 TO NUM-ENTRIES(icBufferList):
   hQuery:ADD-BUFFER(hBuffer[ix]).
 END.
 
-hQuery:QUERY-PREPARE("FOR EACH " + ENTRY(1,ENTRY(1,icBufferList),";") + " NO-LOCK " + icQueryCriteria) NO-ERROR.
+hQuery:QUERY-PREPARE("FOR EACH " + ENTRY(1,ENTRY(1,icBufferList),";") + " FIELDS() NO-LOCK " + icQueryCriteria) NO-ERROR.
 IF ERROR-STATUS:ERROR THEN DO:
-  ocReturn = "FOR EACH " + ENTRY(1,ENTRY(1,icBufferList),";") + " NO-LOCK " + icQueryCriteria + CHR(10) + 
+  ocReturn = "FOR EACH " + ENTRY(1,ENTRY(1,icBufferList),";") + " FIELDS() NO-LOCK " + icQueryCriteria + CHR(10) + 
              ERROR-STATUS:GET-MESSAGE(1).
   RETURN.
 END.
@@ -40,7 +43,7 @@ REPEAT WHILE NOT hQuery:QUERY-OFF-END:
 END.
 
 FINALLY:
-  DO ix = 1 TO 100:
+  DO ix = 1 TO NUM-ENTRIES(icBufferList):
     IF VALID-HANDLE(hBuffer[ix]) THEN
       DELETE OBJECT hBuffer[ix].
     ELSE LEAVE.

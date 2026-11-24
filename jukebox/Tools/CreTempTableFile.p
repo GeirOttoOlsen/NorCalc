@@ -27,6 +27,10 @@ DEF SHARED TEMP-TABLE tt_index-field LIKE _index-field
     INDEX FieldNum iFieldNum
     INDEX IdxNum iIdxNum.
 
+DEF SHARED TEMP-TABLE tt_sequence LIKE _Sequence
+    FIELD cLDBname AS CHAR
+    .
+
 FOR EACH dictdb._file NO-LOCK:
   IF NOT CAN-FIND (FIRST tt_file WHERE 
                    tt_file._Db-recid  = _file._Db-recid AND
@@ -74,4 +78,8 @@ FOR EACH dictdb._file NO-LOCK:
   END.
 END.
 
- 
+FOR EACH dictdb._Sequence NO-LOCK:
+  CREATE tt_sequence.
+  BUFFER-COPY dictdb._Sequence TO tt_sequence.
+  tt_sequence.cLDBname = icLDBname.
+END.   

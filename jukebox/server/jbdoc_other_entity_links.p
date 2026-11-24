@@ -9,6 +9,8 @@ DEF INPUT  PARAM icSessionId AS CHAR NO-UNDO.
 DEF OUTPUT PARAM ocReturn    AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obExist     AS LOG NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR icEntityId    AS CHAR NO-UNDO.
 DEF VAR icContext     AS CHAR NO-UNDO.
 DEF VAR cOtherRefList AS CHAR NO-UNDO.

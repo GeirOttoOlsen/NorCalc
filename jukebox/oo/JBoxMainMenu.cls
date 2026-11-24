@@ -33,6 +33,8 @@ CLASS JBoxMainMenu:
               MainMenuHandle = ihMainMenuHandle.
          END SET.       
 
+  DEFINE PUBLIC PROPERTY MenuNodeBufferHandle AS HANDLE NO-UNDO GET. PROTECTED SET. 
+
   DEFINE PUBLIC PROPERTY oMainForm AS JBoxMainForm NO-UNDO GET. PROTECTED SET.       
 
   DEFINE PUBLIC PROPERTY ProgramMultiInstanceList AS CHAR NO-UNDO
@@ -101,7 +103,9 @@ CLASS JBoxMainMenu:
     DYNAMIC-FUNCTION("setWindowTitle" IN MainMenuHandle,DYNAMIC-FUNCTION("getAppTitle") + " [" + DYNAMIC-FUNCTION("getCompanyName") + "]").
     DYNAMIC-FUNCTION("setStatusText" IN MainMenuHandle,DYNAMIC-FUNCTION("getASuserName")).
     DYNAMIC-FUNCTION("setWinMenuGroupLabel" IN MainMenuHandle,IF DYNAMIC-FUNCTION("Scandinavian") THEN "Behandle" ELSE "Actions").
-    IF NOT OS-GETENV("SESSIONNAME") BEGINS "RDP" THEN
+    IF SEARCH("jukebox.isl") NE ? THEN
+      DYNAMIC-FUNCTION("setAppStyleSheet" IN MainMenuHandle,"jukebox.isl").
+    ELSE IF NOT OS-GETENV("SESSIONNAME") BEGINS "RDP" AND SEARCH("vs2008_test.isl") NE ? THEN
       DYNAMIC-FUNCTION("setAppStyleSheet" IN MainMenuHandle,"vs2008_test.isl").
   
     RUN getMainFormObject IN MainMenuHandle (OUTPUT oMainForm).
@@ -175,8 +179,11 @@ CLASS JBoxMainMenu:
       
       oMenuXml = NEW JBoxXmlDoc().
       oMenuXml:LoadXml(lcXML).
+      
+      oMenuXml:setStartLevelZero().
               
       RUN LoadFromXmlNodeTable IN MainMenuHandle (oMenuXml:hbttNodes).
+      MenuNodeBufferHandle = oMenuXml:hbttNodes.
 /*    END.*/
           
   END METHOD.
@@ -188,7 +195,7 @@ CLASS JBoxMainMenu:
 /*              VIEW-AS ALERT-BOX ERROR.                                             */
 /*    ELSE                                                                           */
       RUN LoadFromXmlNodeTable IN MainMenuHandle (ihNodeTable).
-          
+      MenuNodeBufferHandle = ihNodeTable.    
   END METHOD.
 
   METHOD PUBLIC VOID StartMenu(iiMenuId  AS INT):
@@ -254,6 +261,19 @@ CLASS JBoxMainMenu:
     ELSE hParent = SOURCE-PROCEDURE.
   
     RETURN THIS-OBJECT:StartChildWindow(icProcName,"",hParent,NO). 
+  END METHOD.    
+
+  METHOD PUBLIC HANDLE StartTabDataBrowse(icProcName   AS CHAR
+                                         ,icWinTitle  AS CHAR
+                                         ,ihParent    AS HANDLE
+                                         ,ibNew       AS LOG
+                                         ,ibKeepOpen  AS LOG):
+          
+    DEF VAR hChild AS HANDLE NO-UNDO.
+   
+    RUN StartTabDataBrowse IN MainMenuHandle(icProcName,icWinTitle,ihParent,ibNew,ibKeepOpen,OUTPUT hChild). 
+      
+    RETURN hChild.
   END METHOD.    
 
   METHOD PUBLIC HANDLE StartTabWindow(icProcName   AS CHAR

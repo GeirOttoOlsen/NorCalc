@@ -9,6 +9,8 @@ DEF INPUT  PARAM icAction       AS CHAR   NO-UNDO.  /* Delete, Create or Update 
 DEF INPUT  PARAM icSessionId    AS CHAR   NO-UNDO.
 DEF OUTPUT PARAM ocValue        AS CHAR   NO-UNDO.  /* Error message. If <> blank the transaction is backed out */
 
+{incl/validatecaller.i}
+
 DEF VAR iCompId    AS INT NO-UNDO.
 
 iCompId = DYNAMIC-FUNCTION("getCompanyId" IN SOURCE-PROCEDURE).

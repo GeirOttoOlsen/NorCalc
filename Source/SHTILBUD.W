@@ -86,7 +86,7 @@ IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = appdata.
 &Scoped-define PROCEDURE-TYPE WINDOW
 &Scoped-define DB-AWARE no
 
-/* Name of first Frame and/or Browse and/or first Query                 */
+/* Name of designated FRAME-NAME and/or first browse and/or first query */
 &Scoped-define FRAME-NAME Oppf_frame
 &Scoped-define BROWSE-NAME OPPF_BROWSE
 
@@ -111,8 +111,7 @@ NPSHTOPP.tiltak NPSHTOPP.id
 
 /* Definitions for BROWSE Tilbuds-Browse                                */
 &Scoped-define FIELDS-IN-QUERY-Tilbuds-Browse NPKUNDE.kundenavn ~
-NPSHTILBUD.tilbudsnr NPSHTILBUD.tilbudsdato ~
-STRING(NPSHTILBUD.pris  - (NPSHTILBUD.pris * NPSHTILBUD.rabatt%) / 100, ">,>>>,999") ~
+NPSHTILBUD.tilbudsnr NPSHTILBUD.tilbudsdato NPSHTILBUD.avgittpris ~
 NPSHTILBUD.rabatt% NPSHTILBUD.pris NPSHTILBUD.pris_shuntgrupper ~
 NPSHTILBUD.pris_tillegg 
 &Scoped-define ENABLED-FIELDS-IN-QUERY-Tilbuds-Browse 
@@ -188,6 +187,13 @@ FUNCTION getNyRecord RETURNS LOGICAL
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setCurrentRec Tilbuds-Window 
 FUNCTION setCurrentRec RETURNS LOGICAL
   (input ipRowid as rowid  ) FORWARD.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION-FORWARD setNyRecord Tilbuds-Window 
+FUNCTION setNyRecord RETURNS ROWID
+  ( input ipValue as logical ) FORWARD.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -283,8 +289,7 @@ DEFINE BROWSE Tilbuds-Browse
       NPKUNDE.kundenavn FORMAT "X(30)":U COLUMN-FONT 2
       NPSHTILBUD.tilbudsnr FORMAT "X(20)":U COLUMN-FONT 2
       NPSHTILBUD.tilbudsdato FORMAT "99.99.9999":U COLUMN-FONT 2
-      STRING(NPSHTILBUD.pris  - (NPSHTILBUD.pris * NPSHTILBUD.rabatt%) / 100, ">,>>>,999") COLUMN-LABEL "Avgitt Pris" FORMAT "x(9)":U
-            COLUMN-FONT 2
+      NPSHTILBUD.avgittpris FORMAT ">>,>>>,>>9.99":U
       NPSHTILBUD.rabatt% FORMAT "->>9.99":U COLUMN-FONT 2
       NPSHTILBUD.pris FORMAT ">>,>>>,>>9.99":U
       NPSHTILBUD.pris_shuntgrupper FORMAT ">>,>>>,>>9.99":U
@@ -398,7 +403,7 @@ IF NOT Tilbuds-Window:LOAD-SMALL-ICON("adeicon\progress":U) THEN
 /* SETTINGS FOR WINDOW Tilbuds-Window
   VISIBLE,,RUN-PERSISTENT                                               */
 /* SETTINGS FOR FRAME Oppf_frame
-                                                                        */
+   FRAME-NAME                                                           */
 /* BROWSE-TAB OPPF_BROWSE 1 Oppf_frame */
 /* SETTINGS FOR FRAME Tilbuds-Frame
    UNDERLINE                                                            */
@@ -450,8 +455,7 @@ THEN Tilbuds-Window:HIDDEN = yes.
 "NPSHTILBUD.tilbudsnr" ? ? "character" ? ? 2 ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > norcalc.NPSHTILBUD.tilbudsdato
 "NPSHTILBUD.tilbudsdato" ? ? "date" ? ? 2 ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
-     _FldNameList[4]   > "_<CALC>"
-"STRING(NPSHTILBUD.pris  - (NPSHTILBUD.pris * NPSHTILBUD.rabatt%) / 100, "">,>>>,999"")" "Avgitt Pris" "x(9)" ? ? ? 2 ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+     _FldNameList[4]   = norcalc.NPSHTILBUD.avgittpris
      _FldNameList[5]   > norcalc.NPSHTILBUD.rabatt%
 "NPSHTILBUD.rabatt%" ? ? "decimal" ? ? 2 ? ? ? no ? no no ? yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[6]   = norcalc.NPSHTILBUD.pris
@@ -522,26 +526,25 @@ END.
 ON CHOOSE OF MENU-ITEM m_Endre /* Endre... */
 DO:
     DEFINE VAR nyId AS INTEGER INITIAL 0.     
-
-    SESSION:SET-WAIT-STATE("GENERAL").
+    //SESSION:SET-WAIT-STATE("GENERAL").
     IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + String(NPSHTILBUD.tilbudsid).
     current-rec = ROWID(NPSHTILBUD).
     nyRecord = FALSE.
     RUN SHTLBRED.W.
-    IF nyId > 0 THEN DO:
-        /* Oppdater avgitt pris for dette tilbudet */
-        FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec EXCLUSIVE-LOCK 
-            NO-WAIT NO-ERROR.    
-        IF AVAILABLE NPSHTILBUD THEN DO:
-        ASSIGN NPSHTILBUD.avgittpris = 
-             (NPSHTILBUD.pris - (NPSHTILBUD.pris  *  NPSHTILBUD.rabatt%) / 100).
-
-          {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
-            REPOSITION Tilbuds-Browse TO ROWID(current-rec).           
-            APPLY 'VALUE-CHANGED' TO Tilbuds-Browse
-           IN FRAME TILBUDS-FRAME.
-        END.
-    END.
+/*    IF nyId > 0 THEN DO:                                                        */
+/*        /* Oppdater avgitt pris for dette tilbudet */                           */
+/*        FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec EXCLUSIVE-LOCK    */
+/*            NO-WAIT NO-ERROR.                                                   */
+/*        IF AVAILABLE NPSHTILBUD THEN DO:                                        */
+/*        ASSIGN NPSHTILBUD.avgittpris =                                          */
+/*             (NPSHTILBUD.pris - (NPSHTILBUD.pris  *  NPSHTILBUD.rabatt%) / 100).*/
+/*                                                                                */
+/*          {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}                               */
+/*            REPOSITION Tilbuds-Browse TO ROWID(current-rec).                    */
+/*            APPLY 'VALUE-CHANGED' TO Tilbuds-Browse                             */
+/*           IN FRAME TILBUDS-FRAME.                                              */
+/*        END.                                                                    */
+/*    END.                                                                        */
   
 END.
 
@@ -571,8 +574,7 @@ DO:
      dynamic-function('setAttribute',this-procedure,'TilbudsIdParam',int(NPSHTILBUD.tilbudsid)).
      RUN SHENDTLG.W.
     {&OPEN-BROWSERS-IN-QUERY-Tilleggs-Frame}            
-     APPLY 'VALUE-CHANGED' TO Tilbuds-Browse IN FRAME Tilbuds-Frame.
-     {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
+    {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
      REPOSITION Tilbuds-Browse TO ROWID(current-rec).           
 
 END.
@@ -586,15 +588,17 @@ END.
 ON CHOOSE OF MENU-ITEM m_Endre_oppf /* Endre... */
 DO:
     /* Endre oppfølging */
-    SESSION:SET-WAIT-STATE("GENERAL").
-    current-rec = ROWID(NPSHTOPP).
-    anleggsnrParam = NPSHTILBUD.anleggsnr.
-    RUN SHENDOPP.W.
+    if avail npshtopp then do: 
+      SESSION:SET-WAIT-STATE("GENERAL").
+      current-rec = ROWID(NPSHTOPP).
+      anleggsnrParam = NPSHTILBUD.anleggsnr.
+      
+      RUN SHENDOPP.W.
      {&OPEN-BROWSERS-IN-QUERY-Oppf_Frame}
      REPOSITION Oppf_Browse TO ROWID(current-rec).           
       /* Set aktivtflagg på prosjektnivå */
-      RUN SETAKTIV.P (INPUT prosjektidParam).
-      
+     RUN SETAKTIV.P (INPUT prosjektidParam).
+    end.    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -611,50 +615,49 @@ DO:
     IF THIS-PROCEDURE:PERSISTENT THEN THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(anleggsnrParam).
     RUN SHTLBRED.W.
     IF current-rec ne ? THEN DO:
-        FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec 
-            NO-LOCK NO-ERROR NO-WAIT.
+        FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec NO-LOCK NO-ERROR NO-WAIT.
         IF AVAILABLE NPSHTILBUD THEN DO:
-            /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */
-            DEFINE VAR c_shuntpris AS DECIMAL INITIAL 0.
-            DEFINE VAR c_pris AS DECIMAL INITIAL 0.
-            DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.
-            FOR EACH NPSHSYST WHERE NPSHSYST.anleggsnr = anleggsnrParam:
-                c_shuntpris = c_shuntpris + NPSHSYST.standardpris.
-            END.      
-            FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec NO-WAIT 
-                NO-ERROR.            
-            IF AVAILABLE NPSHTILBUD THEN
-            DO:
-                c_pris = c_shuntpris.
-                 c_avgittpris = c_pris - ((c_pris *  NPSHTILBUD.rabatt%) / 100).
-                 tilbudsIdParam = npshtilbud.id. 
-           
-                ASSIGN NPSHTILBUD.pris_shuntgrupper  = c_shuntpris
-                              NPSHTILBUD.pris = c_pris
-                              NPSHTILBUD.avgittpris =  c_avgittpris.
-            END.
-            /* Opprett første record i oppfølging, og sett oppf.uke */
-            DEFINE VAR cUke LIKE NPSHANLG.oppf_uke.
-            DEFINE VAR cAar LIKE NPSHANLG.oppf_aar.
-
-            FIND NPSHANLG WHERE NPSHANLG.anleggsnr = anleggsnrParam NO-LOCK 
-                NO-WAIT NO-ERROR.
-            IF AVAILABLE NPSHANLG THEN
-                    cUke = NPSHANLG.oppf_uke.
-                    cAar = NPSHANLG.oppf_aar.
-            define var cp_tabell_navn as char.
-            define var ip_neste_id as integer.
-
-            cp_tabell_navn  = 'npshtopp'.
-            run neste_id.p (input cp_tabell_navn, output ip_neste_id).
-            CREATE NPSHTOPP.
-            ASSIGN 
-            NPSHTOPP.id = tilbudsIdParam
-            NPSHTOPP.oppf_nr = ip_neste_id
-            NPSHTOPP.neste_oppf_uke = cUke.
-            NPSHTOPP.neste_oppf_aar = cAar.            
-           /* Sett endringslås på anlegget */
-           UPDATE NPSHANLG SET endrings_laas = TRUE WHERE anleggsnr = anleggsnrParam.
+/*            /* Oppdater shuntpris, prisog avgitt pris for dette tilbudet */            */
+/*            DEFINE VAR c_shuntpris AS DECIMAL INITIAL 0.                               */
+/*            DEFINE VAR c_pris AS DECIMAL INITIAL 0.                                    */
+/*            DEFINE VAR c_avgittpris AS DECIMAL INITIAL 0.                              */
+/*            FOR EACH NPSHSYST WHERE NPSHSYST.anleggsnr = anleggsnrParam:               */
+/*                c_shuntpris = c_shuntpris + NPSHSYST.standardpris.                     */
+/*            END.                                                                       */
+/*            FIND NPSHTILBUD WHERE ROWID(NPSHTILBUD) = current-rec NO-WAIT              */
+/*                NO-ERROR.                                                              */
+/*            IF AVAILABLE NPSHTILBUD THEN                                               */
+/*            DO:                                                                        */
+/*                c_pris = c_shuntpris.                                                  */
+/*                 c_avgittpris = c_pris - ((c_pris *  NPSHTILBUD.rabatt%) / 100).       */
+/*                 tilbudsIdParam = npshtilbud.id.                                       */
+/*                                                                                       */
+/*                ASSIGN NPSHTILBUD.pris_shuntgrupper  = c_shuntpris                     */
+/*                              NPSHTILBUD.pris = c_pris                                 */
+/*                              NPSHTILBUD.avgittpris =  c_avgittpris.                   */
+/*            END.                                                                       */
+/*            /* Opprett første record i oppfølging, og sett oppf.uke */                 */
+/*            DEFINE VAR cUke LIKE NPSHANLG.oppf_uke.                                    */
+/*            DEFINE VAR cAar LIKE NPSHANLG.oppf_aar.                                    */
+/*                                                                                       */
+/*            FIND NPSHANLG WHERE NPSHANLG.anleggsnr = anleggsnrParam NO-LOCK            */
+/*                NO-WAIT NO-ERROR.                                                      */
+/*            IF AVAILABLE NPSHANLG THEN                                                 */
+/*                    cUke = NPSHANLG.oppf_uke.                                          */
+/*                    cAar = NPSHANLG.oppf_aar.                                          */
+/*            define var cp_tabell_navn as char.                                         */
+/*            define var ip_neste_id as integer.                                         */
+/*                                                                                       */
+/*            cp_tabell_navn  = 'npshtopp'.                                              */
+/*            run neste_id.p (input cp_tabell_navn, output ip_neste_id).                 */
+/*            CREATE NPSHTOPP.                                                           */
+/*            ASSIGN                                                                     */
+/*            NPSHTOPP.id = tilbudsIdParam                                               */
+/*            NPSHTOPP.oppf_nr = ip_neste_id                                             */
+/*            NPSHTOPP.neste_oppf_uke = cUke.                                            */
+/*            NPSHTOPP.neste_oppf_aar = cAar.                                            */
+/*           /* Sett endringslås på anlegget */                                          */
+/*           UPDATE NPSHANLG SET endrings_laas = TRUE WHERE anleggsnr = anleggsnrParam.  */
            
           {&OPEN-BROWSERS-IN-QUERY-Tilbuds-Frame}
             REPOSITION Tilbuds-Browse TO ROWID(current-rec).           
@@ -720,15 +723,14 @@ DO:
     IF THIS-PROCEDURE:PERSISTENT THEN
         THIS-PROCEDURE:PRIVATE-DATA = appdata + "," + STRING(tilbudsIdParam).
     RUN SHNYOPPF.W.
-    IF nyRecord THEN
-        DO:
-          {&OPEN-BROWSERS-IN-QUERY-Oppf_Frame}
-           REPOSITION Oppf_Browse TO ROWID(Current-Rec). 
-            /* Set aktivtflagg på prosjektnivå */
-            RUN SETAKTIV.P (INPUT prosjektidParam).
-
-        END.
-  
+    IF nyRecord THEN DO:
+      {&OPEN-BROWSERS-IN-QUERY-Oppf_Frame}
+      REPOSITION Oppf_Browse TO ROWID(Current-Rec). 
+      /* Set aktivtflagg på prosjektnivå */
+      RUN SETAKTIV.P (INPUT prosjektidParam).
+      apply 'value-changed' to Tilbuds-Browse in frame Tilbuds-Frame.
+    END.
+    
 END.
 
 /* _UIB-CODE-BLOCK-END */
@@ -1174,7 +1176,7 @@ DO:
     IF svar THEN
         DO:
             /* Først må det sjekkes om ordre er produsert */
-            FIND NPSHORD WHERE NPSHORD.tilbudsid = NPSHTILBUD.tilbudsid NO-ERROR.
+            FIND NPSHORD WHERE NPSHORD.tilbudsid = NPSHTILBUD.id NO-ERROR.
             IF NOT AVAILABLE NPSHORD THEN
                 DO:
                     MESSAGE 'Ordre er ikke registrert for dette anlegget' VIEW-AS ALERT-BOX TITLE 'Feil'.
@@ -1194,7 +1196,7 @@ DO:
                        "Ordregrunnlag",
                       JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
                       "O", 
-                      "NPSHORD.tilbudsid = " + string(NPSHTILBUD.tilbudsid),
+                      "NPSHORD.tilbudsid = " + string(NPSHTILBUD.id),
                        "",
                        "",
         session:first-procedure:private-data,
@@ -1219,7 +1221,7 @@ DO:
                        "Ordregrunnlag - tillegg",
                      JBoxServerAPI:Instance:FieldValues('JBoxGenCode','where iJBoxCompanyId = ' + DYNAMIC-FUNCTION("getCompany") + ' AND cCodeType = "ConnectRB" and cCodeValue = "ProdDB"','cMisc1'),              
                      "O", 
-                      "NPSHORD.tilbudsid = " + string(tilbudsIdParam),
+                      "NPSHORD.tilbudsid = " + string(NPSHTILBUD.id),
                        "",
                        "",
         session:first-procedure:private-data,
@@ -1374,7 +1376,10 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     THIS-PROCEDURE:CURRENT-WINDOW:X = hParent:Current-window:X + 10.
     THIS-PROCEDURE:CURRENT-WINDOW:Y = hParent:current-window:Y + 10.
     DYNAMIC-FUNCTION("DoLockWindow",this-procedure:CURRENT-WINDOW).
-    current-rec = dynamic-function('getCurrentRec' in hParent).
+    
+    /*dette er shanlg rowid...*/
+/*    current-rec = dynamic-function('getCurrentRec' in hParent).*/
+    
     nyRecord    = logical(dynamic-function('getNyRecord' in hParent)).
     anleggsnrParam = int(dynamic-function('getAttribute',hParent,'anleggsnrParam')).
     anleggsnavnparam = dynamic-function('getAttribute',hParent,'anleggsnavnParam').
@@ -1382,6 +1387,7 @@ DO ON ERROR   UNDO MAIN-BLOCK, LEAVE MAIN-BLOCK
     prosjektidparam  = int(jboxSession:Instance:getJBoxAttribute('ProsjektId')).
    
    Tilbuds-Window:TITLE = 'Tilbud for anlegg: ' + anleggsNavnParam.
+   
    RUN enable_UI.
   RUN MoveToTop.
   APPLY "WINDOW-RESIZED" TO {&WINDOW-NAME}.
@@ -1591,6 +1597,21 @@ FUNCTION setCurrentRec RETURNS LOGICAL
 ------------------------------------------------------------------------------*/
     current-rec = ipRowid.
     return true.
+END FUNCTION.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _FUNCTION setNyRecord Tilbuds-Window 
+FUNCTION setNyRecord RETURNS ROWID
+  ( input ipValue as logical ):
+/*------------------------------------------------------------------------------
+ Purpose:
+ Notes:
+------------------------------------------------------------------------------*/
+
+    nyRecord = ipValue.
+
 END FUNCTION.
 
 /* _UIB-CODE-BLOCK-END */

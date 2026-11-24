@@ -33,7 +33,7 @@
   DEF INPUT        PARAM ibReadOnly     AS LOG  NO-UNDO.
   DEF INPUT        PARAM ibAddTimeStamp AS LOG  NO-UNDO.
   DEF INPUT        PARAM ibSplitEditor  AS LOG  NO-UNDO.
-  DEF INPUT        PARAM icDirection    AS CHAR NO-UNDO. /*Up / down (default) */
+  DEF INPUT        PARAM icDirection    AS CHAR NO-UNDO. /*Up / down (default) - or frame title */
   DEF OUTPUT       PARAM obOk           AS LOG  NO-UNDO.
 &ENDIF
 /* Local Variable Definitions ---                                       */
@@ -302,7 +302,7 @@ DO WITH FRAME {&FRAME-NAME}:
            edText:READ-ONLY     = YES.
     IF icDirection = "up" THEN
       edText:Y = edAppend:Y + edAppend:HEIGHT-PIXELS + 10.
-    ELSE
+    ELSE IF icDirection = "" OR icDirection = "down" THEN
       edAppend:Y = edText:Y + edText:HEIGHT-PIXELS + 10.
   END.
 
@@ -320,6 +320,7 @@ DO WITH FRAME {&FRAME-NAME}:
          cCurrNote           = iocValue.
   LocalTranslation().
   DYNAMIC-FUNCTION("InitTranslation",FRAME {&FRAME-NAME}:HANDLE).
+  IF icDirection NE "" AND NOT CAN-DO("up,down",icDirection) THEN FRAME {&FRAME-NAME}:TITLE = icDirection.
 END.
 END PROCEDURE.
 

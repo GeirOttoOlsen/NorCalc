@@ -2,6 +2,8 @@
    
 DEF INPUT   PARAM icDocIdList AS CHAR   NO-UNDO.
 
+{incl/validatecaller.i}
+
 DEF VAR ix              AS INT    NO-UNDO.
 DEF VAR bOk             AS LOG    NO-UNDO.
 DEF VAR hBuffDocLink    AS HANDLE NO-UNDO.

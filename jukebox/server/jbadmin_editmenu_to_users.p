@@ -16,6 +16,8 @@ DEF VAR iMenuId      AS INT   NO-UNDO.
 DEF VAR cUserIdList  AS CHAR  NO-UNDO.
 DEF VAR hWriteAccess AS HANDLE NO-UNDO.
 
+{incl/validatecaller.i}
+
 ASSIGN iMenuId     = INT(ENTRY(1,icParam,";"))
        cUserIdList = ENTRY(2,icParam,";").
 

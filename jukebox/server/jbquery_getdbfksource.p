@@ -6,6 +6,7 @@ DEF VAR hBuffer2 AS HANDLE NO-UNDO.
 
 DEF SHARED TEMP-TABLE ttJBoxQForeignKey LIKE JBoxQForeignKey.  
 
+{incl/validatecaller.i}
 
 CREATE BUFFER hBuffer  FOR TABLE "_file".
 CREATE BUFFER hBuffer2 FOR TABLE "_field".

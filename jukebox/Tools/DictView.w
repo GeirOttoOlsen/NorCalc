@@ -91,6 +91,8 @@ DEF NEW SHARED TEMP-TABLE tt_index-field LIKE _index-field
     INDEX FileNum iFileNum
     INDEX FieldNum iFieldNum
     INDEX IdxNum iIdxNum.
+DEF NEW SHARED TEMP-TABLE tt_sequence LIKE _Sequence
+    FIELD cLDBname AS CHAR.
 
 DEF BUFFER btt_field  FOR tt_field.
 DEF BUFFER bbtt_field FOR tt_field.
@@ -208,7 +210,6 @@ DEFINE MENU POPUP-MENU-BROWSE-2
        MENU-ITEM m_Copy_field_names_with_semic LABEL "Copy field names with semicolon separator"
        MENU-ITEM m_Copy_field_names_with__sepa LABEL "Copy field names with !~; separator"
        MENU-ITEM m_Copy_field_names_with_table LABEL "Copy field name(s) with table prefix"
-       MENU-ITEM m_Copy_field_names_with_field LABEL "Copy field name(s) with FIELD .... as ...."
        MENU-ITEM m_Copy_field_names_with_LF_pref LABEL "Copy field name(s) with  < LF + ~;> prefix"
        MENU-ITEM m_Copy_field_names_with_LF_2_pre LABEL "Copy field name(s) with < LF + ~;!> prefix"
        MENU-ITEM m_Browse_selected_fields2 LABEL "Browse selected fields"
@@ -499,19 +500,19 @@ DEFINE FRAME DEFAULT-FRAME
          SIZE 101.6 BY 21.05
          FONT 3.
 
-DEFINE FRAME frSplitBarY
-     btnSplitBarY AT ROW 1.95 COL 1
-    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
-         THREE-D 
-         AT COL 1 ROW 10.81
-         SIZE 44.14 BY 4.73.
-
 DEFINE FRAME frSplitBarX
      btnSplitBarX AT ROW 1 COL 8.2
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER 
          SIDE-LABELS THREE-D 
          AT COL 38.14 ROW 2.58
          SIZE 13.57 BY 16.5.
+
+DEFINE FRAME frSplitBarY
+     btnSplitBarY AT ROW 1.95 COL 1
+    WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
+         THREE-D 
+         AT COL 1 ROW 10.81
+         SIZE 44.14 BY 4.73.
 
 
 /* *********************** Procedure Settings ************************ */
@@ -866,44 +867,6 @@ END.
 
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-2 C-Win
-ON U1 OF BROWSE-2 IN FRAME DEFAULT-FRAME
-DO:
-  DEF VAR v-i  AS INTEGER.
-  DEF VAR v-i1  AS INTEGER.
-  DEF VAR v-ok AS LOGICAL.
-  DEF VAR cList AS CHAR NO-UNDO.
-  
-  ASSIGN tb-bLC.
-
-  CLIPBOARD:MULTIPLE = FALSE.
-  DO v-i = 1 TO SELF:NUM-SELECTED-ROWS:
-     v-ok = SELF:FETCH-SELECTED-ROW(v-i).
-     IF v-ok THEN DO:
-/*        IF t-kvalifiser THEN                                                                        */
-/*          cList = cList + (IF tb-bLC THEN LC(TRIM(tt_file._file-name + "." + tt_field._field-name)) */
-/*                           ELSE TRIM(tt_file._file-name + "." + tt_field._field-name)) + cSeparator.*/
-/*        ELSE                                                                                        */
-           cList = cList + "FIELD " + (IF tb-bLC THEN LC(TRIM(tt_field._field-name)) 
-                            ELSE TRIM(tt_field._field-name)) + " AS " + tt_field._data-type + " FORMAT " + quoter(tt_field._format) + " LABEL " + (if tt_field._label = ? then quoter(tt_field._field-name) else quoter(tt_field._label)) + cSeparator.
-     END.
-     ASSIGN v-i1 = v-i.
-  END.
-  assign 
-    cList = cList + "FIELD RowIdent1 AS CHARACTER" + cSeparator
-    cList = cList + "FIELD RowCount AS INTEGER" + cSeparator 
-    cList = cList + "INDEX idxRowids  RowIdent1" + cSeparator
-    .     
-    
-  CLIPBOARD:VALUE = '~t' + TRIM(cList,cSeparator).
-  
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL BROWSE-2 C-Win
 ON VALUE-CHANGED OF BROWSE-2 IN FRAME DEFAULT-FRAME
 DO:
   DO WITH FRAME {&FRAME-NAME}:
@@ -1135,21 +1098,6 @@ DO:
          cSeparator     = ",".
   DISP t-kvalifiser WITH FRAME {&FRAME-NAME}.
   APPLY "DEFAULT-ACTION":U TO BROWSE-2.
-END.
-
-/* _UIB-CODE-BLOCK-END */
-&ANALYZE-RESUME
-
-
-&Scoped-define SELF-NAME m_Copy_field_names_with_field
-&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CONTROL m_Copy_field_names_with_field C-Win
-ON CHOOSE OF MENU-ITEM m_Copy_field_names_with_field /* Copy field name(s) with FIELD .... as .... */
-DO:
-  ASSIGN t-kvalifiser   = no
-         cSeparator     = CHR(10) + '~t'
-         .
-  DISP t-kvalifiser WITH FRAME {&FRAME-NAME}.
-  APPLY "U1":U TO BROWSE-2.
 END.
 
 /* _UIB-CODE-BLOCK-END */

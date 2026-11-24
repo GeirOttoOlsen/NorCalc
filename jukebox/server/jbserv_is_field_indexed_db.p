@@ -6,6 +6,8 @@ DEF INPUT  PARAM icFileName  AS CHAR NO-UNDO.
 DEF INPUT  PARAM icFieldName AS CHAR NO-UNDO.
 DEF OUTPUT PARAM obIndexed   AS LOG  NO-UNDO.
 
+{incl/validatecaller.i} 
+
 
 FOR EACH dictdb._file NO-LOCK
     WHERE dictdb._file._tbl-type = "T"

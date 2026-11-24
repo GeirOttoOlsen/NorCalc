@@ -3,6 +3,8 @@ DEF INPUT  PARAM icParam       AS CHAR  NO-UNDO.
 DEF INPUT  PARAM icSessionId   AS CHAR  NO-UNDO.
 DEF OUTPUT PARAM ocReturn      AS CHAR  NO-UNDO.
 
+{incl/validatecaller.i}
+
 FIND JBoxUser WHERE ROWID(JBoxUser) = irBuffer NO-LOCK NO-ERROR.
 
 IF AVAIL JBoxUser THEN 

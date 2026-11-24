@@ -103,7 +103,7 @@
   DEF PUBLIC PROPERTY useLocalData AS LOG 
       GET(): RETURN DYNAMIC-FUNCTION("getAttribute",{1},"useLocalData") = "yes". END GET. 
       SET(ibSetting AS LOG): 
-        DYNAMIC-FUNCTION("setAttribute",{1},"useLocalData",STRING(ibSetting)).
+        DYNAMIC-FUNCTION("setAttribute",{1},"useLocalData",IF ibSetting THEN STRING(ibSetting) ELSE ""). /* endret for test sql */
       END SET.
       
   DEF PUBLIC PROPERTY IsCurrent  AS LOG 
