@@ -112,7 +112,6 @@ END FUNCTION.
 DEF VAR oFmKundeKontakt AS JBoxFieldMap NO-UNDO.
 
 
-DEF VAR otbKundeKontakt AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -631,10 +630,7 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmKundeKontakt:customCreateProc = 'crt_kundekontakt.p'.
   oFmKundeKontakt:customUpdateValProc = 'ignore'.
   oFmKundeKontakt:BROWSE-OBJECT = oBrwKundeKontakt.
-  otbKundeKontakt = NEW JBoxToolbar(tbKundeKontakt:HANDLE).
-
-  oBrwKundeKontakt:TOOLBAR-OBJECT = otbKundeKontakt.
-  oFmKundeKontakt:TOOLBAR-OBJECT = otbKundeKontakt.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbKundeKontakt:HANDLE, oBrwKundeKontakt, oFmKundeKontakt).
 END.
 oBrwKundeKontakt:OpenQuery().
 

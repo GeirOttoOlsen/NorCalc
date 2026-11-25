@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -86,7 +85,6 @@ FUNCTION getQueryJoinBrwKommune RETURNS CHARACTER():
   RETURN 'FIRST Distrikt OF Kommune NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmKommune AS JBoxFieldMap NO-UNDO.
-DEF VAR otbKommune AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -484,6 +482,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -491,17 +491,16 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwKommune:X + brwKommune:WIDTH-PIXELS.
   oBrwKommune = NEW JBoxBrowse(brwKommune:HANDLE).
+  oBrwKommune:CreateGridFilter("").
 
   oFmKommune = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmKommune:updateFields = 'Kommunekode,KommuneNavn,DistriktKode'.
   oFmKommune:primaryKeyFields = 'Kommunekode'.
 
   oFmKommune:BROWSE-OBJECT = oBrwKommune.
-  otbKommune = NEW JBoxToolbar(tbKommune:HANDLE).
-
-  oBrwKommune:TOOLBAR-OBJECT = otbKommune.
-  oFmKommune:TOOLBAR-OBJECT = otbKommune.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbKommune:HANDLE, oBrwKommune, oFmKommune).
   assign 
     DistriktKode:DELIMITER = '|'
     DistriktKode:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('Distrikt;DistriktNavn;DistriktKode','where true')
@@ -510,7 +509,7 @@ END.
 oBrwKommune:OpenQuery().
 
 
-oContainer:initResize(300,200).
+oContainer:initResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 

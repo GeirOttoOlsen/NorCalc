@@ -88,7 +88,6 @@ FUNCTION getQueryJoinBrwJBoxContact RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmJBoxContact AS JBoxFieldMap NO-UNDO.
-DEF VAR otbJBoxContact AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -528,10 +527,7 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmJBoxContact:bufferExtraFields = 'iJBoxCompanyId'.
   oFmJBoxContact:bufferExtraValues = dynamic-function('getCompanyId').
   oFmJBoxContact:BROWSE-OBJECT = oBrwJBoxContact.
-  otbJBoxContact = NEW JBoxToolbar(tbJBoxContact:HANDLE).
-
-  oBrwJBoxContact:TOOLBAR-OBJECT = otbJBoxContact.
-  oFmJBoxContact:TOOLBAR-OBJECT = otbJBoxContact.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbJBoxContact:HANDLE, oBrwJBoxContact, oFmJBoxContact).
 END.
 oBrwJBoxContact:OpenQuery().
 

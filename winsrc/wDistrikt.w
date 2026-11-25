@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -78,7 +77,6 @@ FUNCTION getQueryJoinBrwDistrikt RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmDistrikt AS JBoxFieldMap NO-UNDO.
-DEF VAR otbDistrikt AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -453,6 +451,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -460,22 +460,21 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwDistrikt:X + brwDistrikt:WIDTH-PIXELS.
   oBrwDistrikt = NEW JBoxBrowse(brwDistrikt:HANDLE).
+  oBrwDistrikt:CreateGridFilter("").
 
   oFmDistrikt = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmDistrikt:updateFields = 'DistriktKode,DistriktNavn'.
   oFmDistrikt:primaryKeyFields = 'DistriktKode'.
 
   oFmDistrikt:BROWSE-OBJECT = oBrwDistrikt.
-  otbDistrikt = NEW JBoxToolbar(tbDistrikt:HANDLE).
-
-  oBrwDistrikt:TOOLBAR-OBJECT = otbDistrikt.
-  oFmDistrikt:TOOLBAR-OBJECT = otbDistrikt.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbDistrikt:HANDLE, oBrwDistrikt, oFmDistrikt).
 END.
 oBrwDistrikt:OpenQuery().
 
 
-oContainer:initResize(300,200).
+oContainer:initResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 

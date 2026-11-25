@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -96,7 +95,6 @@ FUNCTION getQueryJoinBrwNPSHGruppe RETURNS CHARACTER():
   RETURN 'FIRST NPSHGruppeType  WHERE NPSHGruppeType.iNPSHGruppeTypeId = NPSHGruppe.iNPSHGruppeTypeId OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmNPSHGruppe AS JBoxFieldMap NO-UNDO.
-DEF VAR otbNPSHGruppe AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -533,6 +531,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -540,16 +540,15 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPSHGruppe:X + brwNPSHGruppe:WIDTH-PIXELS.
   oBrwNPSHGruppe = NEW JBoxBrowse(brwNPSHGruppe:HANDLE).
+  oBrwNPSHGruppe:CreateGridFilter("").
 
   oFmNPSHGruppe = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPSHGruppe:updateFields = 'iNPSHGruppeTypeId,grunnlag,gruppe#,ovre,storrelse,nedre'.
   oFmNPSHGruppe:displayFields = 'iNPSHGruppeId'.
   oFmNPSHGruppe:BROWSE-OBJECT = oBrwNPSHGruppe.
-  otbNPSHGruppe = NEW JBoxToolbar(tbNPSHGruppe:HANDLE).
-
-  oBrwNPSHGruppe:TOOLBAR-OBJECT = otbNPSHGruppe.
-  oFmNPSHGruppe:TOOLBAR-OBJECT  = otbNPSHGruppe.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHGruppe:HANDLE, oBrwNPSHGruppe, oFmNPSHGruppe).
   assign
     iNPSHGruppeTypeId:DELIMITER = '|'
     iNPSHGruppeTypeId:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList("NPSHGruppeType;NPSHGruppeTypeNavn;iNPSHGruppeTypeId","Where true")  
@@ -558,7 +557,7 @@ END.
 oBrwNPSHGruppe:OpenQuery().
 
 
-oContainer:initResize(400,300).
+oContainer:initResize(iDetailMoveX, 300).
 
 END PROCEDURE.
 

@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -82,7 +81,6 @@ FUNCTION getQueryJoinBrwNPSHVENTILTYPE RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPSHVENTILTYPE AS JBoxFieldMap NO-UNDO.
-DEF VAR otbNPSHVENTILTYPE AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -488,6 +486,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -495,16 +495,14 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPSHVENTILTYPE:X + brwNPSHVENTILTYPE:WIDTH-PIXELS.
   oBrwNPSHVENTILTYPE = NEW JBoxBrowse(brwNPSHVENTILTYPE:HANDLE).
   oBrwNPSHVENTILTYPE:setSearchField(fiSearch:handle).
   oFmNPSHVENTILTYPE = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPSHVENTILTYPE:updateFields = 'VentiltypeAktiv,fabrikat,ventiltype'.
   oFmNPSHVENTILTYPE:displayFields = 'id'.
   oFmNPSHVENTILTYPE:BROWSE-OBJECT = oBrwNPSHVENTILTYPE.
-  otbNPSHVENTILTYPE = NEW JBoxToolbar(tbNPSHVENTILTYPE:HANDLE).
-
-  oBrwNPSHVENTILTYPE:TOOLBAR-OBJECT = otbNPSHVENTILTYPE.
-  oFmNPSHVENTILTYPE:TOOLBAR-OBJECT = otbNPSHVENTILTYPE.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHVENTILTYPE:HANDLE, oBrwNPSHVENTILTYPE, oFmNPSHVENTILTYPE).
   assign
     fabrikat:DELIMITER = '|'
     fabrikat:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('NPFabrikat;NPFabrikatnavn;NPFabrikatKortnavn','Where true')
@@ -513,7 +511,7 @@ END.
 oBrwNPSHVENTILTYPE:OpenQuery().
 
 
-oContainer:initResize(550,500).
+oContainer:initResize(iDetailMoveX, 500).
 
 END PROCEDURE.
 

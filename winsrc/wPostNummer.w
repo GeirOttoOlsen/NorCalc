@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -108,7 +107,6 @@ FUNCTION getQueryJoinBrwPostNummer RETURNS CHARACTER():
   RETURN 'FIRST PostnummerKategori OF PostNummer OUTER-JOIN NO-LOCK,FIRST Land OF PostNummer OUTER-JOIN NO-LOCK,FIRST Kommune OF PostNummer OUTER-JOIN NO-LOCK,FIRST Distrikt OF Kommune OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmPostNummer AS JBoxFieldMap NO-UNDO.
-DEF VAR otbPostNummer AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -598,6 +596,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -605,7 +605,9 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwPostNummer:X + brwPostNummer:WIDTH-PIXELS.
   oBrwPostNummer = NEW JBoxBrowse(brwPostNummer:HANDLE).
+  oBrwPostNummer:CreateGridFilter("").
 
   oFmPostNummer = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmPostNummer:updateFields = 'cPostnr,cPoststed,Kommunekode,bActive'.
@@ -613,10 +615,7 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmPostNummer:primaryKeyFields = 'cPostnr'.
 
   oFmPostNummer:BROWSE-OBJECT = oBrwPostNummer.
-  otbPostNummer = NEW JBoxToolbar(tbPostNummer:HANDLE).
-
-  oBrwPostNummer:TOOLBAR-OBJECT = otbPostNummer.
-  oFmPostNummer:TOOLBAR-OBJECT = otbPostNummer.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbPostNummer:HANDLE, oBrwPostNummer, oFmPostNummer).
   assign 
     cLandKode:DELIMITER = '|'
     cLandKode:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('Land;cLand;cLandKode','where true')
@@ -626,7 +625,7 @@ DO WITH FRAME {&FRAME-NAME}:
 END.
 oBrwPostNummer:OpenQuery().
 
-oContainer:initResize(300,200).
+oContainer:initResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 

@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -82,7 +81,6 @@ END FUNCTION.
 DEF VAR oFmNPSHGruppeType AS JBoxFieldMap NO-UNDO.
 
 
-DEF VAR otbNPSHGruppe AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -473,6 +471,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -480,22 +480,20 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPSHGruppeType:X + brwNPSHGruppeType:WIDTH-PIXELS.
   oBrwNPSHGruppeType = NEW JBoxBrowse(brwNPSHGruppeType:HANDLE).
+  oBrwNPSHGruppeType:CreateGridFilter("").
 
   oFmNPSHGruppeType = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPSHGruppeType:updateFields = 'NPSHGruppeTypeNavn,NPSHGruppeTypeBeskrivelse'.
   oFmNPSHGruppeType:displayFields = 'iNPSHGruppeTypeId'.
   oFmNPSHGruppeType:BROWSE-OBJECT = oBrwNPSHGruppeType.
-  
-  otbNPSHGruppe = NEW JBoxToolbar(tbNPSHGruppe:HANDLE).
-
-  oBrwNPSHGruppeType:TOOLBAR-OBJECT = otbNPSHGruppe.
-  oFmNPSHGruppeType:TOOLBAR-OBJECT = otbNPSHGruppe.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHGruppe:HANDLE, oBrwNPSHGruppeType, oFmNPSHGruppeType).
 END.
 oBrwNPSHGruppeType:OpenQuery().
 oContainer:setNoResizeX('NPSHGruppeTypeBeskrivelse').
 
-oContainer:initResize(200,400).
+oContainer:initResize(iDetailMoveX, 400).
 
 END PROCEDURE.
 

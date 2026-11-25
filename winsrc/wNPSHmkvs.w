@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -90,7 +89,6 @@ END FUNCTION.
 DEF VAR oFmNPSHMKVS AS JBoxFieldMap NO-UNDO.
 
 
-DEF VAR otbNPSHMKVS AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -519,6 +517,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -526,6 +526,7 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPSHMKVS:X + brwNPSHMKVS:WIDTH-PIXELS.
   oBrwNPSHMKVS = NEW JBoxBrowse(brwNPSHMKVS:HANDLE).
   oBrwNPSHMKVS:setSearchField(fiSearch:handle).
 
@@ -538,15 +539,13 @@ DO WITH FRAME {&FRAME-NAME}:
     ventiltype:DELIMITER = '|' 
     ventiltype:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('NPSHVentiltype;ventiltype;ventiltype','where VentiltypeAktiv by ventiltype')
     .
-  otbNPSHMKVS = NEW JBoxToolbar(tbNPSHMKVS:HANDLE).
 
-  oBrwNPSHMKVS:TOOLBAR-OBJECT = otbNPSHMKVS.
-  oFmNPSHMKVS:TOOLBAR-OBJECT = otbNPSHMKVS.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHMKVS:HANDLE, oBrwNPSHMKVS, oFmNPSHMKVS).
 END.
 oBrwNPSHMKVS:OpenQuery().
 
 
-oContainer:initResize(400,200).
+oContainer:InitResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 

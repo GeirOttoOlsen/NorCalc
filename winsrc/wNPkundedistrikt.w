@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -78,7 +77,6 @@ FUNCTION getQueryJoinBrwNPkundedistrikt RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPkundedistrikt AS JBoxFieldMap NO-UNDO.
-DEF VAR otbNPkundedistrikt AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -463,6 +461,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -470,22 +470,21 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPkundedistrikt:X + brwNPkundedistrikt:WIDTH-PIXELS.
   oBrwNPkundedistrikt = NEW JBoxBrowse(brwNPkundedistrikt:HANDLE).
+  oBrwNPkundedistrikt:CreateGridFilter("").
 
   oFmNPkundedistrikt = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPkundedistrikt:updateFields = 'kundedistriktNr,kundedistriktnavn'.
   oFmNPkundedistrikt:primaryKeyFields = 'kundedistriktNr'.
 
   oFmNPkundedistrikt:BROWSE-OBJECT = oBrwNPkundedistrikt.
-  otbNPkundedistrikt = NEW JBoxToolbar(tbNPkundedistrikt:HANDLE).
-
-  oBrwNPkundedistrikt:TOOLBAR-OBJECT = otbNPkundedistrikt.
-  oFmNPkundedistrikt:TOOLBAR-OBJECT = otbNPkundedistrikt.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPkundedistrikt:HANDLE, oBrwNPkundedistrikt, oFmNPkundedistrikt).
 END.
 oBrwNPkundedistrikt:OpenQuery().
 
 
-oContainer:initResize(400,200).
+oContainer:initResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 

@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -80,7 +79,6 @@ END FUNCTION.
 DEF VAR oFmNPLeveringsmaate AS JBoxFieldMap NO-UNDO.
 
 
-DEF VAR otbNPLeveringsmaate AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -442,6 +440,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -449,10 +449,10 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = BrwNPLeveringsmaate:X + BrwNPLeveringsmaate:WIDTH-PIXELS.
   oBrwNPLeveringsmaate = new JBoxBrowse(BrwNPLeveringsmaate:handle).
-  otbNPLeveringsmaate = NEW JBoxToolbar(tbNPLeveringsmaate:HANDLE).
+  oBrwNPLeveringsmaate:CreateGridFilter("").
   
-  oBrwNPLeveringsmaate:TOOLBAR-OBJECT = otbNPLeveringsmaate.
 
 
   oFmNPLeveringsmaate = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
@@ -461,12 +461,12 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPLeveringsmaate:BROWSE-OBJECT = oBrwNPLeveringsmaate.
 
 
-  oFmNPLeveringsmaate:TOOLBAR-OBJECT = otbNPLeveringsmaate.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPLeveringsmaate:HANDLE, oBrwNPLeveringsmaate, oFmNPLeveringsmaate).
 END.
 oBrwNPLeveringsmaate:OpenQuery().
 
 
-oContainer:initResize().
+oContainer:InitResize(iDetailMoveX, 1200).
 
 END PROCEDURE.
 

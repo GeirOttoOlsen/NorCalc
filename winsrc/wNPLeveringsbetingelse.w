@@ -37,8 +37,7 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
@@ -82,7 +81,6 @@ FUNCTION getQueryJoinBrwNPLeveringsbetingelse RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPLeveringsbetingelse AS JBoxFieldMap NO-UNDO.
-DEF VAR otbNPLeveringsbetingelse AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -476,6 +474,8 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
+DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+
 RUN enable_UI.
 
 oContainer = NEW JBoxContainer().
@@ -483,7 +483,9 @@ oContainer:addStatusBar().
 
 DO WITH FRAME {&FRAME-NAME}:
 
+  iDetailMoveX = brwNPLeveringsbetingelse:X + brwNPLeveringsbetingelse:WIDTH-PIXELS.
   oBrwNPLeveringsbetingelse = NEW JBoxBrowse(brwNPLeveringsbetingelse:HANDLE).
+  oBrwNPLeveringsbetingelse:CreateGridFilter("").
   oBrwNPLeveringsbetingelse:setQuerySort("iNPLeveringsbetingelseId").
   
   oFmNPLeveringsbetingelse = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
@@ -491,15 +493,12 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPLeveringsbetingelse:DisplayFields = 'iNPLeveringsbetingelseId'.
   
   oFmNPLeveringsbetingelse:BROWSE-OBJECT = oBrwNPLeveringsbetingelse.
-  otbNPLeveringsbetingelse = NEW JBoxToolbar(tbNPLeveringsbetingelse:HANDLE).
-
-  oBrwNPLeveringsbetingelse:TOOLBAR-OBJECT = otbNPLeveringsbetingelse.
-  oFmNPLeveringsbetingelse:TOOLBAR-OBJECT = otbNPLeveringsbetingelse.
+  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPLeveringsbetingelse:HANDLE, oBrwNPLeveringsbetingelse, oFmNPLeveringsbetingelse).
 END.
 oBrwNPLeveringsbetingelse:OpenQuery().
 
 
-oContainer:initResize(250,200).
+oContainer:initResize(iDetailMoveX, 200).
 
 END PROCEDURE.
 
