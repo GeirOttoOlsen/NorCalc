@@ -37,20 +37,14 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
 /* Local Variable Definitions ---                                       */
 
-DEF VAR bOk         AS LOG    NO-UNDO.
-DEF VAR ix          AS INT    NO-UNDO.
-DEF VAR hBrowse     AS HANDLE NO-UNDO.
-DEF VAR hQuery      AS HANDLE NO-UNDO.
-DEF VAR hToolbar    AS HANDLE NO-UNDO.
-DEF VAR hFieldMap   AS HANDLE NO-UNDO.
-DEF VAR oContainer  AS JBoxContainer NO-UNDO.
+DEFINE VARIABLE oToolbar AS JBoxToolbar NO-UNDO.
+DEFINE VARIABLE oContainer AS JBoxContainer NO-UNDO.
 
 
 /*** Start instance property definitions for JBoxBrowse object oBrwNPKONTAKT ***/
@@ -102,7 +96,6 @@ FUNCTION getQueryJoinBrwNPKONTAKT RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPKONTAKT AS JBoxFieldMap NO-UNDO.
-DEF VAR otbNPKONTAKT AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -162,42 +155,42 @@ DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 DEFINE BUTTON copy_tbNPKONTAKT 
      IMAGE-UP FILE "bmp/copy.bmp":U
      LABEL "Copy" 
-     SIZE 6 BY 1.53 TOOLTIP "Copy (ALT-C)".
+     SIZE 6 BY 1.52 TOOLTIP "Copy (ALT-C)".
 
 DEFINE BUTTON delete_tbNPKONTAKT 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Delete" 
-     SIZE 6 BY 1.53 TOOLTIP "Delete (CTRL-D)".
+     SIZE 6 BY 1.52 TOOLTIP "Delete (CTRL-D)".
 
 DEFINE BUTTON new_tbNPKONTAKT 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "New" 
-     SIZE 6 BY 1.53 TOOLTIP "New (CTRL-N)".
+     SIZE 6 BY 1.52 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON refresh_tbNPKONTAKT 
      IMAGE-UP FILE "gif/refresh.gif":U
      LABEL "Refresh" 
-     SIZE 6 BY 1.53 TOOLTIP "Refresh (F5)".
+     SIZE 6 BY 1.52 TOOLTIP "Refresh (F5)".
 
 DEFINE BUTTON save_tbNPKONTAKT 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Save" 
-     SIZE 6 BY 1.53 TOOLTIP "Save (CTRL-S)".
+     SIZE 6 BY 1.52 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbNPKONTAKT 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Undo" 
-     SIZE 6 BY 1.53 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 6 BY 1.52 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE cCreatedBy AS CHARACTER FORMAT "x(8)" 
      LABEL "Opprettet" 
      VIEW-AS FILL-IN 
-     SIZE 13.63 BY 1.
+     SIZE 13.6 BY 1.
 
 DEFINE VARIABLE cModifiedBy AS CHARACTER FORMAT "x(8)" 
      LABEL "Modifisert" 
      VIEW-AS FILL-IN 
-     SIZE 13.63 BY 1.
+     SIZE 13.6 BY 1.
 
 DEFINE VARIABLE dCreated AS DATE FORMAT "99/99/9999" 
      VIEW-AS FILL-IN 
@@ -234,7 +227,7 @@ DEFINE VARIABLE kundenavn AS CHARACTER FORMAT "X(256)":U
 DEFINE VARIABLE kundenr AS CHARACTER FORMAT "X(8)" 
      LABEL "Kundenr" 
      VIEW-AS FILL-IN 
-     SIZE 13.63 BY 1.
+     SIZE 13.6 BY 1.
 
 DEFINE VARIABLE Mobil AS CHARACTER FORMAT "x(15)" 
      LABEL "Mobil" 
@@ -253,7 +246,7 @@ DEFINE VARIABLE Web AS CHARACTER FORMAT "x(100)"
 
 DEFINE RECTANGLE tbNPKONTAKT
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 104.38 BY 1.72.
+     SIZE 127 BY 1.71.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -268,11 +261,14 @@ DEFINE BROWSE BrwNPKONTAKT
       NPKONTAKT.cCreatedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       NPKONTAKT.cModifiedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       NPKONTAKT.dCreated COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
+            WIDTH 10
       NPKONTAKT.dModified COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
+            WIDTH 10
       NPKONTAKT.ePost COLUMN-LABEL "ePost" FORMAT "x(50)":U
       NPKONTAKT.Etternavn COLUMN-LABEL "Etternavn" FORMAT "x(50)":U
       NPKONTAKT.Fornavn COLUMN-LABEL "Fornavn" FORMAT "x(30)":U
       NPKONTAKT.iNPKontaktId COLUMN-LABEL "Kontakt" FORMAT ">>>>9":U
+            WIDTH 6.88
       NPKONTAKT.kontaktperson COLUMN-LABEL "kontaktperson" FORMAT "X(25)":U
       NPKONTAKT.kundenr COLUMN-LABEL "Kundenr" FORMAT "X(8)":U
       NPKONTAKT.Mobil COLUMN-LABEL "Mobil" FORMAT "x(15)":U
@@ -289,26 +285,26 @@ DEFINE BROWSE BrwNPKONTAKT
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbNPKONTAKT AT ROW 1.09 COL 1.25 WIDGET-ID 8
-     copy_tbNPKONTAKT AT ROW 1.09 COL 7.25 WIDGET-ID 10
-     undo_tbNPKONTAKT AT ROW 1.09 COL 13.38 WIDGET-ID 12
-     save_tbNPKONTAKT AT ROW 1.09 COL 19.38 WIDGET-ID 14
-     delete_tbNPKONTAKT AT ROW 1.09 COL 25.63 WIDGET-ID 16
-     refresh_tbNPKONTAKT AT ROW 1.09 COL 31.63 WIDGET-ID 18
+     new_tbNPKONTAKT AT ROW 1.1 COL 1.2 WIDGET-ID 8
+     copy_tbNPKONTAKT AT ROW 1.1 COL 7.2 WIDGET-ID 10
+     undo_tbNPKONTAKT AT ROW 1.1 COL 13.4 WIDGET-ID 12
+     save_tbNPKONTAKT AT ROW 1.1 COL 19.4 WIDGET-ID 14
+     delete_tbNPKONTAKT AT ROW 1.1 COL 25.6 WIDGET-ID 16
+     refresh_tbNPKONTAKT AT ROW 1.1 COL 31.6 WIDGET-ID 18
      iNPKontaktId AT ROW 2.91 COL 75 COLON-ALIGNED
      BrwNPKONTAKT AT ROW 3 COL 1 WIDGET-ID 200
-     kundenr AT ROW 3.94 COL 75 COLON-ALIGNED
-     kundenavn AT ROW 3.94 COL 89.5 COLON-ALIGNED NO-LABEL
-     Fornavn AT ROW 5.03 COL 75 COLON-ALIGNED
-     Etternavn AT ROW 6.06 COL 75 COLON-ALIGNED
-     Mobil AT ROW 7.44 COL 75 COLON-ALIGNED
-     Telefon AT ROW 8.44 COL 75 COLON-ALIGNED
-     ePost AT ROW 9.69 COL 75 COLON-ALIGNED
-     Web AT ROW 10.78 COL 71.62
-     cCreatedBy AT ROW 14.75 COL 75 COLON-ALIGNED
-     dCreated AT ROW 14.75 COL 88.25 COLON-ALIGNED NO-LABEL
-     cModifiedBy AT ROW 15.75 COL 75 COLON-ALIGNED
-     dModified AT ROW 15.75 COL 88.25 COLON-ALIGNED NO-LABEL
+     kundenr AT ROW 3.95 COL 75 COLON-ALIGNED
+     kundenavn AT ROW 3.95 COL 89.6 COLON-ALIGNED NO-LABEL
+     Fornavn AT ROW 5.05 COL 75 COLON-ALIGNED
+     Etternavn AT ROW 6.05 COL 75 COLON-ALIGNED
+     Mobil AT ROW 7.43 COL 75 COLON-ALIGNED
+     Telefon AT ROW 8.43 COL 75 COLON-ALIGNED
+     ePost AT ROW 9.67 COL 75 COLON-ALIGNED
+     Web AT ROW 10.76 COL 71.6
+     cCreatedBy AT ROW 14.76 COL 75 COLON-ALIGNED
+     dCreated AT ROW 14.76 COL 88.2 COLON-ALIGNED NO-LABEL
+     cModifiedBy AT ROW 15.76 COL 75 COLON-ALIGNED
+     dModified AT ROW 15.76 COL 88.2 COLON-ALIGNED NO-LABEL
      tbNPKONTAKT AT ROW 1 COL 1 WIDGET-ID 6
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
@@ -334,9 +330,9 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
          TITLE              = "Vedklikehold saksbehandler"
          HEIGHT             = 16.38
          WIDTH              = 127
-         MAX-HEIGHT         = 23.53
+         MAX-HEIGHT         = 23.52
          MAX-WIDTH          = 127
-         VIRTUAL-HEIGHT     = 23.53
+         VIRTUAL-HEIGHT     = 23.52
          VIRTUAL-WIDTH      = 127
          RESIZE             = yes
          SCROLL-BARS        = no
@@ -409,7 +405,7 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[7]   > "_<CALC>"
 "NPKONTAKT.Fornavn" "Fornavn" "x(30)" "character" ? ? ? ? ? ? no "" no no "30" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[8]   > "_<CALC>"
-"NPKONTAKT.iNPKontaktId" "Kontakt" ">>>>9" "integer" ? ? ? ? ? ? no "" no no "6.88" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"NPKONTAKT.iNPKontaktId" "Kontakt" ">>>>9" "integer" ? ? ? ? ? ? no "" no no "6.8" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[9]   > "_<CALC>"
 "NPKONTAKT.kontaktperson" "kontaktperson" "X(25)" "character" ? ? ? ? ? ? no "" no no "25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[10]   > "_<CALC>"
@@ -569,32 +565,36 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
-RUN enable_UI.
+  DEFINE VARIABLE iDetailMoveX AS INTEGER NO-UNDO.
+  DEFINE VARIABLE iAuditMoveY AS INTEGER NO-UNDO.
 
-oContainer = NEW JBoxContainer().
-oContainer:addStatusBar().
+  IF VALID-OBJECT(oToolbar) THEN RETURN.
 
-DO WITH FRAME {&FRAME-NAME}:
-  oBrwNPKONTAKT = NEW JBoxBrowse(brwNPKONTAKT:HANDLE).
+  RUN enable_UI.
+  oContainer = NEW JBoxContainer().
+  oContainer:AddStatusBar().
 
-  oFmNPKONTAKT = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmNPKONTAKT:updateFields = 'kundenr,Web,ePost,Mobil,Telefon,Etternavn,Fornavn'.
-  oFmNPKONTAKT:DisplayFields = 'iNPkontaktid,cModifiedBy,dModified,cCreatedBy,dCreated,kundenavn'.
-  oFmNPKONTAKT:bufferExtraFields = 'kundenavn'.
-  MESSAGE 'her..1'
-  VIEW-AS ALERT-BOX.
-  oFmNPKONTAKT:BROWSE-OBJECT = oBrwNPKONTAKT.
-  otbNPKONTAKT = NEW JBoxToolbar(tbNPKONTAKT:HANDLE).
-  
-  oBrwNPKONTAKT:TOOLBAR-OBJECT = otbNPKONTAKT.
-  oFmNPKONTAKT:TOOLBAR-OBJECT = otbNPKONTAKT.
-  MESSAGE 'her..2'
-  VIEW-AS ALERT-BOX.
-END.
-/*oBrwNPKONTAKT:OpenQuery().*/
+  DO WITH FRAME {&FRAME-NAME}:
+    /* Let the browse grow while the right-hand details follow its edge.
+       Only the audit fields below Web follow vertical resizing. */
+    ASSIGN
+      iDetailMoveX = BrwNPKONTAKT:X + BrwNPKONTAKT:WIDTH-PIXELS
+      iAuditMoveY = Web:Y + Web:HEIGHT-PIXELS.
 
-oContainer:setAddMoveY('cModifiedBy,dModified,cCreatedBy,dCreated').
-oContainer:initResize(550,400).
+    oBrwNPKONTAKT = NEW JBoxBrowse(BrwNPKONTAKT:HANDLE).
+    oBrwNPKONTAKT:CreateGridFilter("").
+    oFmNPKONTAKT = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
+    oFmNPKONTAKT:UpdateFields = "kundenr,Web,ePost,Mobil,Telefon,Etternavn,Fornavn".
+    oFmNPKONTAKT:DisplayFields = "iNPKontaktId,cModifiedBy,dModified,cCreatedBy,dCreated,kundenavn".
+    oFmNPKONTAKT:BufferExtraFields = "kundenavn".
+    oFmNPKONTAKT:BROWSE-OBJECT = oBrwNPKONTAKT.
+    oToolbar = NEW JBoxToolbar(tbNPKONTAKT:HANDLE).
+    oBrwNPKONTAKT:TOOLBAR-OBJECT = oToolbar.
+    oFmNPKONTAKT:TOOLBAR-OBJECT = oToolbar.
+  END.
+
+  oBrwNPKONTAKT:OpenQuery().
+  oContainer:InitResize(iDetailMoveX, iAuditMoveY).
 
 END PROCEDURE.
 

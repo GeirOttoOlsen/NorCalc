@@ -37,21 +37,15 @@ CREATE WIDGET-POOL.
 &IF "{1}" = "Developer_Studio_is_Running" &THEN
   &SCOPED-DEFINE UIB_is_Running 1 
 &ENDIF   
-/* Uncomment to enable use of .Net components: */
-/* &SCOPED-DEFINE AdvGuiWin */ 
+&SCOPED-DEFINE AdvGuiWin
 
 /* Parameters Definitions ---                                           */
 
 /* Local Variable Definitions ---                                       */
 
-DEF VAR bOk         AS LOG    NO-UNDO.
-DEF VAR ix          AS INT    NO-UNDO.
-DEF VAR hBrowse     AS HANDLE NO-UNDO.
-DEF VAR hQuery      AS HANDLE NO-UNDO.
-DEF VAR hToolbar    AS HANDLE NO-UNDO.
-DEF VAR hFieldMap   AS HANDLE NO-UNDO.
-DEF VAR oContainer  AS JBoxContainer NO-UNDO.
-
+DEFINE VARIABLE oToolbar AS JBoxToolbar NO-UNDO.
+DEFINE VARIABLE oContainer AS JBoxContainer NO-UNDO.
+DEFINE VARIABLE oFieldMap AS JBoxFieldMap NO-UNDO.
 
 /*** Start instance property definitions for JBoxBrowse object oBrwGruppe ***/
 DEF VAR oBrwGruppe AS JBoxBrowse NO-UNDO.
@@ -87,8 +81,6 @@ END FUNCTION.
 FUNCTION getQueryJoinBrwGruppe RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
-DEF VAR oFmGruppe AS JBoxFieldMap NO-UNDO.
-DEF VAR otbPerson AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -123,8 +115,8 @@ Gruppe.iJBoxCompanyId
 
 /* Standard List Definitions                                            */
 &Scoped-Define ENABLED-OBJECTS new_tbPerson copy_tbPerson undo_tbPerson ~
-save_tbPerson delete_tbPerson refresh_tbPerson filter_tbPerson ~
-excel_tbPerson Person_tbPerson tbPerson BrwGruppe iGruppeId GruppeNavn 
+save_tbPerson delete_tbPerson refresh_tbPerson filter_tbPerson tbPerson ~
+excel_tbPerson Person_tbPerson BrwGruppe iGruppeId GruppeNavn 
 &Scoped-Define DISPLAYED-OBJECTS iGruppeId GruppeNavn 
 
 /* Custom List Definitions                                              */
@@ -144,47 +136,47 @@ DEFINE VARIABLE C-Win AS WIDGET-HANDLE NO-UNDO.
 DEFINE BUTTON copy_tbPerson 
      IMAGE-UP FILE "bmp/copy.bmp":U
      LABEL "Copy" 
-     SIZE 6 BY 1.53 TOOLTIP "Copy (ALT-C)".
+     SIZE 6 BY 1.52 TOOLTIP "Copy (ALT-C)".
 
 DEFINE BUTTON delete_tbPerson 
      IMAGE-UP FILE "bmp/del16e.bmp":U
      LABEL "Delete" 
-     SIZE 6 BY 1.53 TOOLTIP "Delete (CTRL-D)".
+     SIZE 6 BY 1.52 TOOLTIP "Delete (CTRL-D)".
 
 DEFINE BUTTON excel_tbPerson 
      IMAGE-UP FILE "gif/afexcel.gif":U
      LABEL "Excel" 
-     SIZE 6 BY 1.53 TOOLTIP "Excel (ALT-E)".
+     SIZE 6 BY 1.52 TOOLTIP "Excel (ALT-E)".
 
 DEFINE BUTTON filter_tbPerson 
      IMAGE-UP FILE "gif/filter.gif":U
      LABEL "Filter" 
-     SIZE 6 BY 1.53 TOOLTIP "Filter (CTRL-F)".
+     SIZE 6 BY 1.52 TOOLTIP "Filter (CTRL-F)".
 
 DEFINE BUTTON new_tbPerson 
      IMAGE-UP FILE "bmp/new16e.bmp":U
      LABEL "New" 
-     SIZE 6 BY 1.53 TOOLTIP "New (CTRL-N)".
+     SIZE 6 BY 1.52 TOOLTIP "New (CTRL-N)".
 
 DEFINE BUTTON Person_tbPerson 
      IMAGE-UP FILE "ico\businesspeople.ico":U
      LABEL "Person" 
-     SIZE 6 BY 1.53 TOOLTIP "Velg personer til gruppen".
+     SIZE 6 BY 1.52 TOOLTIP "Velg personer til gruppen".
 
 DEFINE BUTTON refresh_tbPerson 
      IMAGE-UP FILE "gif/refresh.gif":U
      LABEL "Refresh" 
-     SIZE 6 BY 1.53 TOOLTIP "Refresh (F5)".
+     SIZE 6 BY 1.52 TOOLTIP "Refresh (F5)".
 
 DEFINE BUTTON save_tbPerson 
      IMAGE-UP FILE "bmp/save.bmp":U
      LABEL "Save" 
-     SIZE 6 BY 1.53 TOOLTIP "Save (CTRL-S)".
+     SIZE 6 BY 1.52 TOOLTIP "Save (CTRL-S)".
 
 DEFINE BUTTON undo_tbPerson 
      IMAGE-UP FILE "bmp/undo16e.bmp":U
      LABEL "Undo" 
-     SIZE 6 BY 1.53 TOOLTIP "Undo (CTRL-Z)".
+     SIZE 6 BY 1.52 TOOLTIP "Undo (CTRL-Z)".
 
 DEFINE VARIABLE GruppeNavn AS CHARACTER FORMAT "x(50)" 
      LABEL "Gruppe" 
@@ -194,11 +186,11 @@ DEFINE VARIABLE GruppeNavn AS CHARACTER FORMAT "x(50)"
 DEFINE VARIABLE iGruppeId AS INTEGER FORMAT ">>>>>>>9" INITIAL 0 
      LABEL "Gruppe id" 
      VIEW-AS FILL-IN 
-     SIZE 13.25 BY 1.
+     SIZE 13.2 BY 1.
 
 DEFINE RECTANGLE tbPerson
      EDGE-PIXELS 2 GRAPHIC-EDGE  NO-FILL  GROUP-BOX  ROUNDED 
-     SIZE 96 BY 1.72.
+     SIZE 96 BY 1.71.
 
 /* Query definitions                                                    */
 &ANALYZE-SUSPEND
@@ -211,38 +203,35 @@ DEFINE BROWSE BrwGruppe
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _DISPLAY-FIELDS BrwGruppe C-Win _STRUCTURED
   QUERY BrwGruppe NO-LOCK DISPLAY
       Gruppe.iGruppeId COLUMN-LABEL "Gruppe id" FORMAT ">>>>>>>9":U
-            WIDTH 10.25
+            WIDTH 10.2
       Gruppe.GruppeNavn COLUMN-LABEL "Gruppe" FORMAT "x(50)":U
       Gruppe.cCreatedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       Gruppe.cModifiedBy COLUMN-LABEL "Av" FORMAT "x(8)":U
       Gruppe.dCreated COLUMN-LABEL "Opprettet" FORMAT "99/99/9999":U
-            WIDTH 11.63
       Gruppe.dModified COLUMN-LABEL "Endret" FORMAT "99/99/9999":U
-            WIDTH 11.63
       Gruppe.iJBoxCompanyId COLUMN-LABEL "CompanyId" FORMAT "->,>>>,>>9":U
-            WIDTH 10.63
   ENABLE
       Gruppe.iGruppeId
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
-    WITH NO-ROW-MARKERS SEPARATORS SIZE 48 BY 9.47 FIT-LAST-COLUMN.
+    WITH NO-ROW-MARKERS SEPARATORS SIZE 48 BY 8.1 FIT-LAST-COLUMN.
 
 
 /* ************************  Frame Definitions  *********************** */
 
 DEFINE FRAME DEFAULT-FRAME
-     new_tbPerson AT ROW 1.09 COL 1.25 WIDGET-ID 8
-     copy_tbPerson AT ROW 1.09 COL 7.38 WIDGET-ID 10
-     undo_tbPerson AT ROW 1.09 COL 13.38 WIDGET-ID 12
-     save_tbPerson AT ROW 1.09 COL 19.38 WIDGET-ID 14
-     delete_tbPerson AT ROW 1.09 COL 25.38 WIDGET-ID 16
-     refresh_tbPerson AT ROW 1.09 COL 31.38 WIDGET-ID 18
-     filter_tbPerson AT ROW 1.09 COL 37.38 WIDGET-ID 20
-     excel_tbPerson AT ROW 1.09 COL 43.38 WIDGET-ID 22
-     Person_tbPerson AT ROW 1.09 COL 49.38 WIDGET-ID 24
-     BrwGruppe AT ROW 2.88 COL 1 WIDGET-ID 200
-     iGruppeId AT ROW 3.25 COL 60 COLON-ALIGNED
-     GruppeNavn AT ROW 4.34 COL 60 COLON-ALIGNED
+     new_tbPerson AT ROW 1.1 COL 1.2 WIDGET-ID 8
+     copy_tbPerson AT ROW 1.1 COL 7.4 WIDGET-ID 10
+     undo_tbPerson AT ROW 1.1 COL 13.4 WIDGET-ID 12
+     save_tbPerson AT ROW 1.1 COL 19.4 WIDGET-ID 14
+     delete_tbPerson AT ROW 1.1 COL 25.4 WIDGET-ID 16
+     refresh_tbPerson AT ROW 1.1 COL 31.4 WIDGET-ID 18
+     filter_tbPerson AT ROW 1.1 COL 37.4 WIDGET-ID 20
+     excel_tbPerson AT ROW 1.1 COL 43.4 WIDGET-ID 22
+     Person_tbPerson AT ROW 1.1 COL 49.4 WIDGET-ID 24
+     BrwGruppe AT ROW 3.86 COL 1.8 WIDGET-ID 200
+     iGruppeId AT ROW 4 COL 60 COLON-ALIGNED
+     GruppeNavn AT ROW 5.19 COL 60 COLON-ALIGNED
      tbPerson AT ROW 1 COL 1 WIDGET-ID 6
     WITH 1 DOWN NO-BOX KEEP-TAB-ORDER OVERLAY 
          SIDE-LABELS NO-UNDERLINE THREE-D 
@@ -266,12 +255,12 @@ IF SESSION:DISPLAY-TYPE = "GUI":U THEN
   CREATE WINDOW C-Win ASSIGN
          HIDDEN             = YES
          TITLE              = "<Insert window title>"
-         HEIGHT             = 11.34
-         WIDTH              = 96.25
-         MAX-HEIGHT         = 23.53
-         MAX-WIDTH          = 114.25
-         VIRTUAL-HEIGHT     = 23.53
-         VIRTUAL-WIDTH      = 114.25
+         HEIGHT             = 11.33
+         WIDTH              = 96.2
+         MAX-HEIGHT         = 23.52
+         MAX-WIDTH          = 114.2
+         VIRTUAL-HEIGHT     = 23.52
+         VIRTUAL-WIDTH      = 114.2
          RESIZE             = yes
          SCROLL-BARS        = no
          STATUS-AREA        = no
@@ -304,7 +293,7 @@ ELSE {&WINDOW-NAME} = CURRENT-WINDOW.
   NOT-VISIBLE,,RUN-PERSISTENT                                           */
 /* SETTINGS FOR FRAME DEFAULT-FRAME
    FRAME-NAME                                                           */
-/* BROWSE-TAB BrwGruppe tbPerson DEFAULT-FRAME */
+/* BROWSE-TAB BrwGruppe Person_tbPerson DEFAULT-FRAME */
 ASSIGN 
        Gruppe.cCreatedBy:VISIBLE IN BROWSE BrwGruppe = FALSE
        Gruppe.cModifiedBy:VISIBLE IN BROWSE BrwGruppe = FALSE
@@ -330,7 +319,7 @@ THEN C-Win:HIDDEN = yes.
      _TblList          = "norcalc.Gruppe"
      _Options          = "NO-LOCK INDEXED-REPOSITION"
      _FldNameList[1]   > "_<CALC>"
-"Gruppe.iGruppeId" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "10.25" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Gruppe.iGruppeId" "Gruppe id" ">>>>>>>9" "integer" ? ? ? ? ? ? yes "" no no "10.2" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[2]   > "_<CALC>"
 "Gruppe.GruppeNavn" "Gruppe" "x(50)" "character" ? ? ? ? ? ? no "" no no "50" yes no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[3]   > "_<CALC>"
@@ -338,11 +327,11 @@ THEN C-Win:HIDDEN = yes.
      _FldNameList[4]   > "_<CALC>"
 "Gruppe.cModifiedBy" "Av" "x(8)" "character" ? ? ? ? ? ? no "" no no "8" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[5]   > "_<CALC>"
-"Gruppe.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Gruppe.dCreated" "Opprettet" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[6]   > "_<CALC>"
-"Gruppe.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Gruppe.dModified" "Endret" "99/99/9999" "date" ? ? ? ? ? ? no "" no no "11.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _FldNameList[7]   > "_<CALC>"
-"Gruppe.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.63" no no no "U" "" "" "" "" "" "" 0 no 0 no no
+"Gruppe.iJBoxCompanyId" "CompanyId" "->,>>>,>>9" "integer" ? ? ? ? ? ? no "" no no "10.6" no no no "U" "" "" "" "" "" "" 0 no 0 no no
      _Query            is NOT OPENED
 */  /* BROWSE BrwGruppe */
 &ANALYZE-RESUME
@@ -472,8 +461,8 @@ PROCEDURE enable_UI :
   DISPLAY iGruppeId GruppeNavn 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   ENABLE new_tbPerson copy_tbPerson undo_tbPerson save_tbPerson delete_tbPerson 
-         refresh_tbPerson filter_tbPerson excel_tbPerson Person_tbPerson 
-         tbPerson BrwGruppe iGruppeId GruppeNavn 
+         refresh_tbPerson filter_tbPerson tbPerson excel_tbPerson 
+         Person_tbPerson BrwGruppe iGruppeId GruppeNavn 
       WITH FRAME DEFAULT-FRAME IN WINDOW C-Win.
   {&OPEN-BROWSERS-IN-QUERY-DEFAULT-FRAME}
 END PROCEDURE.
@@ -488,29 +477,26 @@ PROCEDURE InitializeObject :
   Parameters:  <none>
   Notes:       Refer to the <jukebox>\winsrc\samples for working examples for Sports2000
 ------------------------------------------------------------------------------*/
-RUN enable_UI.
+  IF VALID-OBJECT(oToolbar) THEN RETURN.
 
-oContainer = NEW JBoxContainer().
-oContainer:addStatusBar().
+  RUN enable_UI.
+  oContainer = NEW JBoxContainer().
+  oContainer:addStatusBar().
+  
+  DO WITH FRAME {&FRAME-NAME}:
+    oBrwGruppe = NEW JBoxBrowse(BrwGruppe:HANDLE).
+    oBrwGruppe:createGridFilter('').
+    oFieldMap = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
+    oFieldMap:UpdateFields = "GruppeNavn".
+    oFieldMap:DisplayFields = "iGruppeId".
+    oFieldMap:BROWSE-OBJECT = oBrwGruppe.
+    oToolbar = NEW JBoxToolbar(tbPerson:HANDLE).
+    oBrwGruppe:TOOLBAR-OBJECT = oToolbar.
+    oFieldMap:TOOLBAR-OBJECT = oToolbar.
+  END.
 
-DO WITH FRAME {&FRAME-NAME}:
-
-  oBrwGruppe = NEW JBoxBrowse(brwGruppe:HANDLE).
-
-  oFmGruppe = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
-  oFmGruppe:updateFields = 'GruppeNavn'.
-  oFmGruppe:DisplayFields = 'iGruppeId'.
-
-  oFmGruppe:BROWSE-OBJECT = oBrwGruppe.
-  otbPerson = NEW JBoxToolbar(tbPerson:HANDLE).
-
-  oBrwGruppe:TOOLBAR-OBJECT = otbPerson.
-  oFmGruppe:TOOLBAR-OBJECT = otbPerson.
-END.
-oBrwGruppe:OpenQuery().
-
-
-oContainer:initResize(470,200).
+  oBrwGruppe:OpenQuery().
+  oContainer:initResize(290,300).
 
 END PROCEDURE.
 
@@ -538,30 +524,41 @@ END PROCEDURE.
 
 &ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE PersonRecord C-Win 
 PROCEDURE PersonRecord :
-DEF VAR cRowIdList AS CHAR NO-UNDO.
-  DEF VAR cIdList    AS CHAR NO-UNDO.
-  
-  THIS-PROCEDURE:CURRENT-WINDOW:SENSITIVE = FALSE.
+  DEFINE VARIABLE iGroupId AS INTEGER NO-UNDO.
+  DEFINE VARIABLE hWindow AS HANDLE NO-UNDO.
+  DEFINE VARIABLE lWasSensitive AS LOGICAL NO-UNDO.
+  DEFINE VARIABLE lAccepted AS LOGICAL NO-UNDO.
+  DEFINE VARIABLE cRowIds AS CHARACTER NO-UNDO.
+  DEFINE VARIABLE cPersonIds AS CHARACTER NO-UNDO.
 
-  if not avail gruppe then leave.
-  
-  cRowIdList = JBoxServerAPI:Instance:getRowIdList("PersonGruppe,Person","","WHERE iGruppeId = " + string(Gruppe.iGruppeId) + ",FIRST person of PersonGruppe NO-LOCK").
-  
-  RUN JBoxSelector.w (THIS-PROCEDURE,0,
-                      "Person;iPersonId;cNavn"
-                     ,"where true",
-                      INPUT-OUTPUT cRowIdList,
-                      "cNavn,iPersonId",
-                      INPUT-OUTPUT cIdList,
-                      "","",
-                      OUTPUT bOK).
-  
-  THIS-PROCEDURE:CURRENT-WINDOW:SENSITIVE = TRUE.
-  IF bOk THEN 
-  DO:
-    cRowIdList = replace(cRowIdList,',','|').
-    if not JBoxServerAPI:Instance:CallServerProc('update_gruppeperson.p',if avail gruppe then string(gruppe.igruppeId) + '|' + cRowidList else '') THEN JBoxServerAPI:Instance:viewCallMessage().
-    else oBrwGruppe:refresh().
+  IF NOT AVAILABLE Gruppe OR NOT VALID-OBJECT(oBrwGruppe) THEN RETURN.
+
+  iGroupId = Gruppe.iGruppeId.
+  cRowIds = JBoxServerAPI:Instance:getRowIdList(
+    "PersonGruppe,Person", "",
+    "WHERE iGruppeId = " + STRING(iGroupId) + ",FIRST Person OF PersonGruppe NO-LOCK").
+
+  ASSIGN
+    hWindow = THIS-PROCEDURE:CURRENT-WINDOW
+    lWasSensitive = hWindow:SENSITIVE
+    hWindow:SENSITIVE = FALSE.
+
+  DO ON ERROR UNDO, THROW:
+    RUN JBoxSelector.w (THIS-PROCEDURE, 0, "Person;iPersonId;cNavn", "where true",
+      INPUT-OUTPUT cRowIds, "cNavn,iPersonId", INPUT-OUTPUT cPersonIds,
+      "", "", OUTPUT lAccepted).
+    FINALLY:
+      IF VALID-HANDLE(hWindow) THEN
+        hWindow:SENSITIVE = lWasSensitive.
+    END FINALLY.
+  END.
+
+  IF lAccepted THEN DO:
+    IF JBoxServerAPI:Instance:CallServerProc(
+      "update_gruppeperson.p", STRING(iGroupId) + "|" + REPLACE(cRowIds, ",", "|")) THEN
+      oBrwGruppe:Refresh().
+    ELSE
+      JBoxServerAPI:Instance:ViewCallMessage().
   END.
 
 END PROCEDURE.

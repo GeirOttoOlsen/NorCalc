@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <propath version="12.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="schema/propath.xsd">
-    <propathentry env="all" kind="src" path="@{ROOT}" platform="All"/>
     <propathentry env="all" kind="dir" path="@{WORK}" platform="All"/>
     <propathentry env="all" kind="dir" path="@{ROOT}\oo" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\winsrc" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\img" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\Source" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\server" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\server\trg" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\server" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\src" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\img" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\oo" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\winsrc" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\img" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\Source" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\server\trg" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\server" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\jukebox\oo" platform="All"/>
     <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\obj" platform="All"/>
     <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\lib" platform="All"/>
     <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\winsrc" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\winsrc\admin" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\Tools" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\Tools\12" platform="All"/>
-    <propathentry env="all" kind="dir" path="@{ROOT}\pasNorcalc\api\openedge" platform="All"/>
-    <propathentry env="all" kind="lib" path="@{ROOT}\jboxablib.pl" platform="All"/>
-    <propathentry env="all" kind="lib" path="@{ROOT}\jboxclientlib.pl" platform="All"/>
-    <propathentry env="all" kind="lib" path="@{ROOT}\jboxtoollib.pl" platform="All"/>
+    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\img" platform="All"/>
+    <propathentry env="all" kind="dir" path="@{ROOT}\jukebox\server" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\jukebox" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\jukebox\Tools\jukebox\Tools\12" platform="All"/>
+    <propathentry env="all" kind="dir" path="e:\oeworkspace\Norcalc\jukebox\Tools" platform="All"/>
+    <propathentry env="all" kind="lib" path="e:\oeworkspace\Norcalc\jboxablib.pl" platform="All"/>
+    <propathentry env="all" kind="lib" path="e:\oeworkspace\Norcalc\jboxclientlib.pl" platform="All"/>
+    <propathentry env="all" kind="lib" path="e:\oeworkspace\Norcalc\jboxtoollib.pl" platform="All"/>
     <propathentry env="all" kind="con" path="com.openedge.pdt.text.DLC_PATHS" platform="All"/>
     <propathentry env="gui" kind="con" path="com.openedge.pdt.text.GUI_LIBRARIES" platform="All"/>
     <propathentry env="tty" kind="con" path="com.openedge.pdt.text.TTY_LIBRARIES" platform="All"/>

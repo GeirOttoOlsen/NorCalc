@@ -71650,3 +71650,583 @@ cCalcStatFields:
 
 StatOutput:                  rowcount|1
 
+85455326 24/11/26 -- 23:44:15          ------------------------------
+
+9        icParam                       logfile;ServerQuery.log
+
+6        Main query                    WHERE true
+
+6        Persistent CalcFieldProcs      
+
+7        CalcField Filter              
+
+6        BuffersAndFields              Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+
+8        orgBuffersAndFields           
+
+7        Batch size                    200
+7        iiStartRow:                   0
+7        icDirection:                  
+7        QueryStopAfter:               0
+
+7        Main query (-sortphrase)      WHERE true
+
+7        Sorting                         Sortfields: 
+
+9        icStatFields:                 
+
+9        bCheckForSkipRow:             no
+
+10       Bufferdef 1:                  Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+8        Etime, create query:          ,113
+
+
+8        Result buffer indexes         default,0,1,0,
+
+10       Duplicate fields:             
+7        Gruppe:                       
+10                                     
+
+8        Returned fields:              
+8        Gruppe:                       iGruppeId GruppeNavn cCreatedBy cModifiedBy dCreated dModified iJBoxCompanyId
+6                                      
+
+7        Fields not returned:          
+7        Gruppe:                       
+6        cBufferList                   Gruppe
+7        cOrgBufferList                
+
+6        cAccumFields:                 
+
+7        cCalcStatFields:              
+
+7        cCalcSortFields                cCalcSortFldTypes: 
+
+
+5        Extra fields:                 
+
+7        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+6                                      
+
+7        Etime, query def:             ,122
+
+
+6        cQueryString                  FOR EACH Gruppe NO-LOCK WHERE true
+
+7        Index usage:                  
+8        Gruppe                        WHOLE-INDEX,iGruppeId
+8                                      
+
+6        Count:                        2
+
+6        Etime, run:                   ,035
+
+
+8        Return param:                 
+
+6                                      
+
+
+7        icStatFields:                 
+
+8        cCalcStatFields:              
+
+6        StatOutput:                   rowcount|2;lastQuery|FOR EACH Gruppe NO-LOCK WHERE true
+
+85982591 24/11/26 -- 23:53:02          ------------------------------
+
+9        icParam                       logfile;ServerQuery.log
+
+7        Main query                    WHERE true
+
+8        Persistent CalcFieldProcs      
+
+7        CalcField Filter              
+
+9        BuffersAndFields              Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+
+9        orgBuffersAndFields           
+
+11       Batch size                    200
+9        iiStartRow:                   0
+10       icDirection:                  
+8        QueryStopAfter:               0
+
+11       Main query (-sortphrase)      WHERE true
+
+11       Sorting                         Sortfields: 
+
+10       icStatFields:                 
+
+9        bCheckForSkipRow:             no
+
+7        Bufferdef 1:                  Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+8        Etime, create query:          ,136
+
+
+9        Result buffer indexes         default,0,1,0,
+
+6        Duplicate fields:             
+8        Gruppe:                       
+7                                      
+
+8        Returned fields:              
+7        Gruppe:                       iGruppeId GruppeNavn cCreatedBy cModifiedBy dCreated dModified iJBoxCompanyId
+8                                      
+
+7        Fields not returned:          
+9        Gruppe:                       
+7        cBufferList                   Gruppe
+8        cOrgBufferList                
+
+6        cAccumFields:                 
+
+7        cCalcStatFields:              
+
+6        cCalcSortFields                cCalcSortFldTypes: 
+
+
+7        Extra fields:                 
+
+7        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+7                                      
+
+8        Etime, query def:             ,124
+
+
+7        cQueryString                  FOR EACH Gruppe NO-LOCK WHERE true
+
+8        Index usage:                  
+9        Gruppe                        WHOLE-INDEX,iGruppeId
+8                                      
+
+9        Count:                        2
+
+7        Etime, run:                   ,041
+
+
+7        Return param:                 
+
+7                                      
+
+
+7        icStatFields:                 
+
+7        cCalcStatFields:              
+
+8        StatOutput:                   rowcount|2;lastQuery|FOR EACH Gruppe NO-LOCK WHERE true
+
+86021532 24/11/26 -- 23:53:41          ------------------------------
+
+7        icParam                       logfile;ServerQuery.log
+
+6        Main query                    WHERE true
+
+7        Persistent CalcFieldProcs      
+
+6        CalcField Filter              
+
+7        BuffersAndFields              Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+
+6        orgBuffersAndFields           
+
+7        Batch size                    200
+7        iiStartRow:                   0
+8        icDirection:                  
+9        QueryStopAfter:               0
+
+8        Main query (-sortphrase)      WHERE true
+
+7        Sorting                         Sortfields: 
+
+8        icStatFields:                 
+
+7        bCheckForSkipRow:             no
+
+7        Bufferdef 1:                  Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+8        Etime, create query:          ,109
+
+
+7        Result buffer indexes         default,0,1,0,
+
+8        Duplicate fields:             
+8        Gruppe:                       
+6                                      
+
+8        Returned fields:              
+8        Gruppe:                       iGruppeId GruppeNavn cCreatedBy cModifiedBy dCreated dModified iJBoxCompanyId
+8                                      
+
+6        Fields not returned:          
+8        Gruppe:                       
+7        cBufferList                   Gruppe
+8        cOrgBufferList                
+
+8        cAccumFields:                 
+
+9        cCalcStatFields:              
+
+8        cCalcSortFields                cCalcSortFldTypes: 
+
+
+8        Extra fields:                 
+
+7        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+8                                      
+
+7        Etime, query def:             ,131
+
+
+8        cQueryString                  FOR EACH Gruppe NO-LOCK WHERE true
+
+8        Index usage:                  
+9        Gruppe                        WHOLE-INDEX,iGruppeId
+8                                      
+
+9        Count:                        2
+
+6        Etime, run:                   ,043
+
+
+9        Return param:                 
+
+7                                      
+
+
+9        icStatFields:                 
+
+6        cCalcStatFields:              
+
+8        StatOutput:                   rowcount|2;lastQuery|FOR EACH Gruppe NO-LOCK WHERE true
+
+86030372 24/11/26 -- 23:53:50          ------------------------------
+
+9        icParam                       logfile;ServerQuery.log
+
+8        Main query                    where true BY iPersonId
+
+11       Persistent CalcFieldProcs      
+
+9        CalcField Filter              
+
+10       BuffersAndFields              Person;iPersonId;cNavn;+iJBoxSelectIndex|INTEGER;+iJBoxDeSelectIndex|INTEGER
+
+10       orgBuffersAndFields           
+
+10       Batch size                    0
+9        iiStartRow:                   0
+10       icDirection:                  
+10       QueryStopAfter:               0
+
+8        Main query (-sortphrase)      where true
+
+9        Sorting                        BY iPersonId  Sortfields: iPersonId
+
+8        icStatFields:                 
+
+7        bCheckForSkipRow:             no
+
+8        Bufferdef 1:                  Person;iPersonId;cNavn;+iJBoxSelectIndex|INTEGER;+iJBoxDeSelectIndex|INTEGER
+9        Etime, create query:          ,139
+
+
+8        Result buffer indexes         default,0,1,0,
+
+7        Duplicate fields:             
+8        Person:                       
+6                                      
+
+7        Returned fields:              
+10       Person:                       iPersonId cNavn
+9                                      
+
+7        Fields not returned:          
+8        Person:                       cInitialer,cEpost,dCreated,cCreatedBy,dModified,cModifiedBy,iJBoxCompanyId,cTittel,bAktiv,cStilling,cRolle,cPostAdresse,cPostPnr,cPostSted,cLand,cTlf,cMob,cMerknad,iAnsattnr,cKontonr,iAvdelingNr,iVareId,cVarenr
+11       cBufferList                   Person
+11       cOrgBufferList                
+
+8        cAccumFields:                 
+
+8        cCalcStatFields:              
+
+7        cCalcSortFields                cCalcSortFldTypes: 
+
+
+7        Extra fields:                 
+
+7        Field exceptions, buffer# 1   cInitialer,cEpost,dCreated,cCreatedBy,dModified,cModifiedBy,iJBoxCompanyId,cTittel,bAktiv,cStilling,cRolle,cPostAdresse,cPostPnr,cPostSted,cLand,cTlf,cMob,cMerknad,iAnsattnr,cKontonr,iAvdelingNr,iVareId,cVarenr
+7        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+8                                      
+
+8        Etime, query def:             ,144
+
+
+7        cQueryString                  FOR EACH Person NO-LOCK where true BY iPersonId
+
+8        Index usage:                  
+6        Person                        WHOLE-INDEX,idxPersonId
+7                                      
+
+9        Count:                        9
+
+7        Etime, run:                   ,036
+
+
+7        Return param:                 
+
+7                                      
+
+
+8        icStatFields:                 
+
+7        cCalcStatFields:              
+
+8        StatOutput:                   rowcount|9;lastQuery|FOR EACH Person NO-LOCK where true BY iPersonId
+
+86049253 24/11/26 -- 23:54:09          ------------------------------
+
+9        icParam                       logfile;ServerQuery.log
+
+7        Main query                    where true BY iPersonId
+
+6        Persistent CalcFieldProcs      
+
+7        CalcField Filter              
+
+6        BuffersAndFields              Person;iPersonId;cNavn;+iJBoxSelectIndex|INTEGER;+iJBoxDeSelectIndex|INTEGER
+
+7        orgBuffersAndFields           
+
+8        Batch size                    0
+6        iiStartRow:                   0
+7        icDirection:                  
+9        QueryStopAfter:               0
+
+9        Main query (-sortphrase)      where true
+
+9        Sorting                        BY iPersonId  Sortfields: iPersonId
+
+9        icStatFields:                 
+
+10       bCheckForSkipRow:             no
+
+10       Bufferdef 1:                  Person;iPersonId;cNavn;+iJBoxSelectIndex|INTEGER;+iJBoxDeSelectIndex|INTEGER
+7        Etime, create query:          ,12
+
+
+10       Result buffer indexes         default,0,1,0,
+
+7        Duplicate fields:             
+7        Person:                       
+7                                      
+
+6        Returned fields:              
+8        Person:                       iPersonId cNavn
+7                                      
+
+7        Fields not returned:          
+6        Person:                       cInitialer,cEpost,dCreated,cCreatedBy,dModified,cModifiedBy,iJBoxCompanyId,cTittel,bAktiv,cStilling,cRolle,cPostAdresse,cPostPnr,cPostSted,cLand,cTlf,cMob,cMerknad,iAnsattnr,cKontonr,iAvdelingNr,iVareId,cVarenr
+7        cBufferList                   Person
+7        cOrgBufferList                
+
+7        cAccumFields:                 
+
+6        cCalcStatFields:              
+
+7        cCalcSortFields                cCalcSortFldTypes: 
+
+
+8        Extra fields:                 
+
+6        Field exceptions, buffer# 1   cInitialer,cEpost,dCreated,cCreatedBy,dModified,cModifiedBy,iJBoxCompanyId,cTittel,bAktiv,cStilling,cRolle,cPostAdresse,cPostPnr,cPostSted,cLand,cTlf,cMob,cMerknad,iAnsattnr,cKontonr,iAvdelingNr,iVareId,cVarenr
+7        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+7                                      
+
+7        Etime, query def:             ,127
+
+
+8        cQueryString                  FOR EACH Person NO-LOCK where true BY iPersonId
+
+7        Index usage:                  
+7        Person                        WHOLE-INDEX,idxPersonId
+7                                      
+
+7        Count:                        9
+
+7        Etime, run:                   ,037
+
+
+7        Return param:                 
+
+7                                      
+
+
+7        icStatFields:                 
+
+10       cCalcStatFields:              
+
+8        StatOutput:                   rowcount|9;lastQuery|FOR EACH Person NO-LOCK where true BY iPersonId
+
+1454842  25/11/26 -- 00:24:14          ------------------------------
+
+8        icParam                       logfile;ServerQuery.log
+
+9        Main query                    WHERE true
+
+8        Persistent CalcFieldProcs      
+
+9        CalcField Filter              
+
+8        BuffersAndFields              Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+
+7        orgBuffersAndFields           
+
+10       Batch size                    200
+7        iiStartRow:                   0
+8        icDirection:                  
+7        QueryStopAfter:               0
+
+7        Main query (-sortphrase)      WHERE true
+
+7        Sorting                         Sortfields: 
+
+6        icStatFields:                 
+
+7        bCheckForSkipRow:             no
+
+6        Bufferdef 1:                  Gruppe;iGruppeId|Gruppe id|>>>>>>>9;GruppeNavn|Gruppe|x(50);cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;iJBoxCompanyId|CompanyId|-><>>><>>9
+8        Etime, create query:          ,116
+
+
+10       Result buffer indexes         default,0,1,0,
+
+10       Duplicate fields:             
+9        Gruppe:                       
+8                                      
+
+8        Returned fields:              
+10       Gruppe:                       iGruppeId GruppeNavn cCreatedBy cModifiedBy dCreated dModified iJBoxCompanyId
+9                                      
+
+9        Fields not returned:          
+9        Gruppe:                       
+8        cBufferList                   Gruppe
+9        cOrgBufferList                
+
+9        cAccumFields:                 
+
+9        cCalcStatFields:              
+
+8        cCalcSortFields                cCalcSortFldTypes: 
+
+
+8        Extra fields:                 
+
+9        jbCountDistinct               () Distinct: no Accum: yes 2.phase calc: no Buffernum: 1 Statfld: no CalcSortFld: no Filter operator:  Filter value:  Extent: 0 Mandatory: no
+9                                      
+
+8        Etime, query def:             ,151
+
+
+9        cQueryString                  FOR EACH Gruppe NO-LOCK WHERE true
+
+8        Index usage:                  
+8        Gruppe                        WHOLE-INDEX,iGruppeId
+7                                      
+
+7        Count:                        2
+
+8        Etime, run:                   ,039
+
+
+8        Return param:                 
+
+8                                      
+
+
+8        icStatFields:                 
+
+9        cCalcStatFields:              
+
+13       StatOutput:                   rowcount|2;lastQuery|FOR EACH Gruppe NO-LOCK WHERE true
+
+26479591 25/11/26 -- 07:21:19          ------------------------------
+
+8        icParam                       logfile;ServerQuery.log
+
+6        Main query                    WHERE true
+
+7        Persistent CalcFieldProcs      
+
+7        CalcField Filter              
+
+6        BuffersAndFields              NPKONTAKT;cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;ePost|ePost|x(50);Etternavn|Etternavn|x(50);Fornavn|Fornavn|x(30);iNPKontaktId|Kontakt|>>>>9;kontaktperson|kontaktperson|X(25);kundenr|Kundenr|X(8);Mobil|Mobil|x(15);Notat|Notat|x(255);Telefon|Telefon|x(15);Web|Web|x(100)
+
+6        orgBuffersAndFields           
+
+7        Batch size                    200
+8        iiStartRow:                   0
+10       icDirection:                  
+9        QueryStopAfter:               0
+
+10       Main query (-sortphrase)      WHERE true
+
+10       Sorting                         Sortfields: 
+
+10       icStatFields:                 
+
+11       bCheckForSkipRow:             no
+
+9        Bufferdef 1:                  NPKONTAKT;cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;ePost|ePost|x(50);Etternavn|Etternavn|x(50);Fornavn|Fornavn|x(30);iNPKontaktId|Kontakt|>>>>9;kontaktperson|kontaktperson|X(25);kundenr|Kundenr|X(8);Mobil|Mobil|x(15);Notat|Notat|x(255);Telefon|Telefon|x(15);Web|Web|x(100)
+7        Field def ERROR               Field cCreatedBy
+doesn't exist in buffer NPKONTAKT
+
+8        Etime, create query:          ,132
+
+
+8        icStatFields:                 
+
+12       cCalcStatFields:              
+
+9        StatOutput:                   rowcount|0;querystop|0;lastQuery|
+
+26489362 25/11/26 -- 07:21:29          ------------------------------
+
+9        icParam                       logfile;ServerQuery.log
+
+8        Main query                    WHERE true
+
+9        Persistent CalcFieldProcs      
+
+6        CalcField Filter              
+
+7        BuffersAndFields              NPKONTAKT;cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;ePost|ePost|x(50);Etternavn|Etternavn|x(50);Fornavn|Fornavn|x(30);iNPKontaktId|Kontakt|>>>>9;kontaktperson|kontaktperson|X(25);kundenr|Kundenr|X(8);Mobil|Mobil|x(15);Notat|Notat|x(255);Telefon|Telefon|x(15);Web|Web|x(100)
+
+7        orgBuffersAndFields           
+
+7        Batch size                    200
+8        iiStartRow:                   0
+7        icDirection:                  
+7        QueryStopAfter:               0
+
+8        Main query (-sortphrase)      WHERE true
+
+10       Sorting                         Sortfields: 
+
+7        icStatFields:                 
+
+8        bCheckForSkipRow:             no
+
+7        Bufferdef 1:                  NPKONTAKT;cCreatedBy|Av|x(8);cModifiedBy|Av|x(8);dCreated|Opprettet|99/99/9999;dModified|Endret|99/99/9999;ePost|ePost|x(50);Etternavn|Etternavn|x(50);Fornavn|Fornavn|x(30);iNPKontaktId|Kontakt|>>>>9;kontaktperson|kontaktperson|X(25);kundenr|Kundenr|X(8);Mobil|Mobil|x(15);Notat|Notat|x(255);Telefon|Telefon|x(15);Web|Web|x(100)
+7        Field def ERROR               Field cCreatedBy
+doesn't exist in buffer NPKONTAKT
+
+8        Etime, create query:          ,122
+
+
+6        icStatFields:                 
+
+8        cCalcStatFields:              
+
+6        StatOutput:                   rowcount|0;querystop|0;lastQuery|
+
