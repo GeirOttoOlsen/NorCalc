@@ -79,6 +79,7 @@ FUNCTION getQueryJoinBrwNPFabrikat RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPFabrikat AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPFabrikat AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -455,7 +456,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPFabrikat:updateFields = 'NPFabrikatKortnavn,NPFabrikatNavn'.
 
   oFmNPFabrikat:BROWSE-OBJECT = oBrwNPFabrikat.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPFabrikat:HANDLE, oBrwNPFabrikat, oFmNPFabrikat).
+  otbNPFabrikat = NEW JBoxToolbar(tbNPFabrikat:HANDLE).
+  oBrwNPFabrikat:TOOLBAR-OBJECT = otbNPFabrikat.
+  oFmNPFabrikat:TOOLBAR-OBJECT = otbNPFabrikat.
 END.
 oBrwNPFabrikat:OpenQuery().
 

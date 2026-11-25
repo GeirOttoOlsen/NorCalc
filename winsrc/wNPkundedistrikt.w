@@ -77,6 +77,7 @@ FUNCTION getQueryJoinBrwNPkundedistrikt RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPkundedistrikt AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPkundedistrikt AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -479,7 +480,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPkundedistrikt:primaryKeyFields = 'kundedistriktNr'.
 
   oFmNPkundedistrikt:BROWSE-OBJECT = oBrwNPkundedistrikt.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPkundedistrikt:HANDLE, oBrwNPkundedistrikt, oFmNPkundedistrikt).
+  otbNPkundedistrikt = NEW JBoxToolbar(tbNPkundedistrikt:HANDLE).
+  oBrwNPkundedistrikt:TOOLBAR-OBJECT = otbNPkundedistrikt.
+  oFmNPkundedistrikt:TOOLBAR-OBJECT = otbNPkundedistrikt.
 END.
 oBrwNPkundedistrikt:OpenQuery().
 

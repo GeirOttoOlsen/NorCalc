@@ -77,6 +77,7 @@ FUNCTION getQueryJoinBrwDistrikt RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmDistrikt AS JBoxFieldMap NO-UNDO.
+DEF VAR otbDistrikt AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -469,7 +470,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmDistrikt:primaryKeyFields = 'DistriktKode'.
 
   oFmDistrikt:BROWSE-OBJECT = oBrwDistrikt.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbDistrikt:HANDLE, oBrwDistrikt, oFmDistrikt).
+  otbDistrikt = NEW JBoxToolbar(tbDistrikt:HANDLE).
+  oBrwDistrikt:TOOLBAR-OBJECT = otbDistrikt.
+  oFmDistrikt:TOOLBAR-OBJECT = otbDistrikt.
 END.
 oBrwDistrikt:OpenQuery().
 

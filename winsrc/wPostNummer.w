@@ -107,6 +107,7 @@ FUNCTION getQueryJoinBrwPostNummer RETURNS CHARACTER():
   RETURN 'FIRST PostnummerKategori OF PostNummer OUTER-JOIN NO-LOCK,FIRST Land OF PostNummer OUTER-JOIN NO-LOCK,FIRST Kommune OF PostNummer OUTER-JOIN NO-LOCK,FIRST Distrikt OF Kommune OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmPostNummer AS JBoxFieldMap NO-UNDO.
+DEF VAR otbPostNummer AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -615,7 +616,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmPostNummer:primaryKeyFields = 'cPostnr'.
 
   oFmPostNummer:BROWSE-OBJECT = oBrwPostNummer.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbPostNummer:HANDLE, oBrwPostNummer, oFmPostNummer).
+  otbPostNummer = NEW JBoxToolbar(tbPostNummer:HANDLE).
+  oBrwPostNummer:TOOLBAR-OBJECT = otbPostNummer.
+  oFmPostNummer:TOOLBAR-OBJECT = otbPostNummer.
   assign 
     cLandKode:DELIMITER = '|'
     cLandKode:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('Land;cLand;cLandKode','where true')

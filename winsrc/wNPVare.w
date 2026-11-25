@@ -114,6 +114,7 @@ FUNCTION getQueryJoinBrwNPVare RETURNS CHARACTER():
   RETURN 'FIRST NPVaregruppe OF NPVare OUTER-JOIN NO-LOCK,FIRST NPVareType OF NPVare OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmNPVare AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPVare AS JBoxToolbar NO-UNDO.
 
 
 DEF VAR opopupNPVare AS JBoxPopupMenu NO-UNDO.
@@ -668,7 +669,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPVare:DisplayFields = 'iNPVareId'.
 
   oFmNPVare:BROWSE-OBJECT = oBrwNPVare.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPVare:HANDLE, oBrwNPVare, oFmNPVare).
+  otbNPVare = NEW JBoxToolbar(tbNPVare:HANDLE).
+  oBrwNPVare:TOOLBAR-OBJECT = otbNPVare.
+  oFmNPVare:TOOLBAR-OBJECT = otbNPVare.
 
   assign 
     iNPVaregruppeId:DELIMITER = '|'

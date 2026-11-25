@@ -79,6 +79,7 @@ FUNCTION getQueryJoinBrwNPVaregruppe RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPVaregruppe AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPVaregruppe AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -471,7 +472,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPVaregruppe:DisplayFields = 'iNPVaregruppeId'.
 
   oFmNPVaregruppe:BROWSE-OBJECT = oBrwNPVaregruppe.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPVaregruppe:HANDLE, oBrwNPVaregruppe, oFmNPVaregruppe).
+  otbNPVaregruppe = NEW JBoxToolbar(tbNPVaregruppe:HANDLE).
+  oBrwNPVaregruppe:TOOLBAR-OBJECT = otbNPVaregruppe.
+  oFmNPVaregruppe:TOOLBAR-OBJECT = otbNPVaregruppe.
 END.
 oBrwNPVaregruppe:OpenQuery().
 

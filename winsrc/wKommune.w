@@ -85,6 +85,7 @@ FUNCTION getQueryJoinBrwKommune RETURNS CHARACTER():
   RETURN 'FIRST Distrikt OF Kommune NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmKommune AS JBoxFieldMap NO-UNDO.
+DEF VAR otbKommune AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -500,7 +501,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmKommune:primaryKeyFields = 'Kommunekode'.
 
   oFmKommune:BROWSE-OBJECT = oBrwKommune.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbKommune:HANDLE, oBrwKommune, oFmKommune).
+  otbKommune = NEW JBoxToolbar(tbKommune:HANDLE).
+  oBrwKommune:TOOLBAR-OBJECT = otbKommune.
+  oFmKommune:TOOLBAR-OBJECT = otbKommune.
   assign 
     DistriktKode:DELIMITER = '|'
     DistriktKode:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('Distrikt;DistriktNavn;DistriktKode','where true')

@@ -81,6 +81,7 @@ FUNCTION getQueryJoinBrwNPLeveringsbetingelse RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPLeveringsbetingelse AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPLeveringsbetingelse AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -493,7 +494,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPLeveringsbetingelse:DisplayFields = 'iNPLeveringsbetingelseId'.
   
   oFmNPLeveringsbetingelse:BROWSE-OBJECT = oBrwNPLeveringsbetingelse.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPLeveringsbetingelse:HANDLE, oBrwNPLeveringsbetingelse, oFmNPLeveringsbetingelse).
+  otbNPLeveringsbetingelse = NEW JBoxToolbar(tbNPLeveringsbetingelse:HANDLE).
+  oBrwNPLeveringsbetingelse:TOOLBAR-OBJECT = otbNPLeveringsbetingelse.
+  oFmNPLeveringsbetingelse:TOOLBAR-OBJECT = otbNPLeveringsbetingelse.
 END.
 oBrwNPLeveringsbetingelse:OpenQuery().
 

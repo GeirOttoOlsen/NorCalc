@@ -79,6 +79,7 @@ FUNCTION getQueryJoinBrwNPSHGruppeType RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPSHGruppeType AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPSHGruppe AS JBoxToolbar NO-UNDO.
 
 
 
@@ -488,7 +489,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPSHGruppeType:updateFields = 'NPSHGruppeTypeNavn,NPSHGruppeTypeBeskrivelse'.
   oFmNPSHGruppeType:displayFields = 'iNPSHGruppeTypeId'.
   oFmNPSHGruppeType:BROWSE-OBJECT = oBrwNPSHGruppeType.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHGruppe:HANDLE, oBrwNPSHGruppeType, oFmNPSHGruppeType).
+  otbNPSHGruppe = NEW JBoxToolbar(tbNPSHGruppe:HANDLE).
+  oBrwNPSHGruppeType:TOOLBAR-OBJECT = otbNPSHGruppe.
+  oFmNPSHGruppeType:TOOLBAR-OBJECT = otbNPSHGruppe.
 END.
 oBrwNPSHGruppeType:OpenQuery().
 oContainer:setNoResizeX('NPSHGruppeTypeBeskrivelse').

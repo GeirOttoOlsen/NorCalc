@@ -77,6 +77,7 @@ FUNCTION getQueryJoinBrwNPLeveringsmaate RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPLeveringsmaate AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPLeveringsmaate AS JBoxToolbar NO-UNDO.
 
 
 
@@ -455,13 +456,16 @@ DO WITH FRAME {&FRAME-NAME}:
   
 
 
+  otbNPLeveringsmaate = NEW JBoxToolbar(tbNPLeveringsmaate:HANDLE).
+  oBrwNPLeveringsmaate:TOOLBAR-OBJECT = otbNPLeveringsmaate.
+
   oFmNPLeveringsmaate = NEW JBoxFieldMap(FRAME {&FRAME-NAME}:HANDLE).
   oFmNPLeveringsmaate:updateFields = 'LeveringsmaateNavn'.
   oFmNPLeveringsmaate:DisplayFields = 'iNPLeveringsmaateId'.
   oFmNPLeveringsmaate:BROWSE-OBJECT = oBrwNPLeveringsmaate.
 
 
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPLeveringsmaate:HANDLE, oBrwNPLeveringsmaate, oFmNPLeveringsmaate).
+  oFmNPLeveringsmaate:TOOLBAR-OBJECT = otbNPLeveringsmaate.
 END.
 oBrwNPLeveringsmaate:OpenQuery().
 

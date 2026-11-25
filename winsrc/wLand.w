@@ -91,6 +91,7 @@ FUNCTION getQueryJoinBrwLand RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmLand AS JBoxFieldMap NO-UNDO.
+DEF VAR otbPostNummer AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -538,7 +539,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmLand:primaryKeyFields = 'cLandKode'.
 
   oFmLand:BROWSE-OBJECT = oBrwLand.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbPostNummer:HANDLE, oBrwLand, oFmLand).
+  otbPostNummer = NEW JBoxToolbar(tbPostNummer:HANDLE).
+  oBrwLand:TOOLBAR-OBJECT = otbPostNummer.
+  oFmLand:TOOLBAR-OBJECT = otbPostNummer.
 END.
 oBrwLand:OpenQuery().
 

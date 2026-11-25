@@ -77,6 +77,7 @@ FUNCTION getQueryJoinBrwNPkundekategori RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPkundekategori AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPkundekategori AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -482,7 +483,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPkundekategori:primaryKeyFields = 'kundekategoriID'.
 
   oFmNPkundekategori:BROWSE-OBJECT = oBrwNPkundekategori.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPkundekategori:HANDLE, oBrwNPkundekategori, oFmNPkundekategori).
+  otbNPkundekategori = NEW JBoxToolbar(tbNPkundekategori:HANDLE).
+  oBrwNPkundekategori:TOOLBAR-OBJECT = otbNPkundekategori.
+  oFmNPkundekategori:TOOLBAR-OBJECT = otbNPkundekategori.
 END.
 oBrwNPkundekategori:OpenQuery().
 

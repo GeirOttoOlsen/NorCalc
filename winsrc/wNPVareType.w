@@ -77,6 +77,7 @@ FUNCTION getQueryJoinBrwNPVareType RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPVareType AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPVareType AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -467,7 +468,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPVareType:displayFields = 'iNPVareTypeId'.
   
   oFmNPVareType:BROWSE-OBJECT = oBrwNPVareType.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPVareType:HANDLE, oBrwNPVareType, oFmNPVareType).
+  otbNPVareType = NEW JBoxToolbar(tbNPVareType:HANDLE).
+  oBrwNPVareType:TOOLBAR-OBJECT = otbNPVareType.
+  oFmNPVareType:TOOLBAR-OBJECT = otbNPVareType.
 END.
 oBrwNPVareType:OpenQuery().
 

@@ -87,6 +87,7 @@ FUNCTION getQueryJoinBrwNPSHMKVS RETURNS CHARACTER():
   RETURN ''.
 END FUNCTION.
 DEF VAR oFmNPSHMKVS AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPSHMKVS AS JBoxToolbar NO-UNDO.
 
 
 
@@ -540,7 +541,9 @@ DO WITH FRAME {&FRAME-NAME}:
     ventiltype:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList('NPSHVentiltype;ventiltype;ventiltype','where VentiltypeAktiv by ventiltype')
     .
 
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHMKVS:HANDLE, oBrwNPSHMKVS, oFmNPSHMKVS).
+  otbNPSHMKVS = NEW JBoxToolbar(tbNPSHMKVS:HANDLE).
+  oBrwNPSHMKVS:TOOLBAR-OBJECT = otbNPSHMKVS.
+  oFmNPSHMKVS:TOOLBAR-OBJECT = otbNPSHMKVS.
 END.
 oBrwNPSHMKVS:OpenQuery().
 

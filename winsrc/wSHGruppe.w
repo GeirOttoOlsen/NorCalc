@@ -95,6 +95,7 @@ FUNCTION getQueryJoinBrwNPSHGruppe RETURNS CHARACTER():
   RETURN 'FIRST NPSHGruppeType  WHERE NPSHGruppeType.iNPSHGruppeTypeId = NPSHGruppe.iNPSHGruppeTypeId OUTER-JOIN NO-LOCK'.
 END FUNCTION.
 DEF VAR oFmNPSHGruppe AS JBoxFieldMap NO-UNDO.
+DEF VAR otbNPSHGruppe AS JBoxToolbar NO-UNDO.
 
 /* _UIB-CODE-BLOCK-END */
 &ANALYZE-RESUME
@@ -548,7 +549,9 @@ DO WITH FRAME {&FRAME-NAME}:
   oFmNPSHGruppe:updateFields = 'iNPSHGruppeTypeId,grunnlag,gruppe#,ovre,storrelse,nedre'.
   oFmNPSHGruppe:displayFields = 'iNPSHGruppeId'.
   oFmNPSHGruppe:BROWSE-OBJECT = oBrwNPSHGruppe.
-  NorcalcBrowseWindow:ConnectToolbar(THIS-PROCEDURE, tbNPSHGruppe:HANDLE, oBrwNPSHGruppe, oFmNPSHGruppe).
+  otbNPSHGruppe = NEW JBoxToolbar(tbNPSHGruppe:HANDLE).
+  oBrwNPSHGruppe:TOOLBAR-OBJECT = otbNPSHGruppe.
+  oFmNPSHGruppe:TOOLBAR-OBJECT  = otbNPSHGruppe.
   assign
     iNPSHGruppeTypeId:DELIMITER = '|'
     iNPSHGruppeTypeId:LIST-ITEM-PAIRS = JBoxServerAPI:Instance:FieldList("NPSHGruppeType;NPSHGruppeTypeNavn;iNPSHGruppeTypeId","Where true")  
